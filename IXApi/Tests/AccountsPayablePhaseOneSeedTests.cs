@@ -473,6 +473,67 @@ public sealed class AccountsPayablePhaseOneSeedTests
             AccountsPayableReconciliationSnapshot.Checks.Select(x => x.GetType()).Distinct().Count());
     }
 
+    /// <summary>
+    /// Two whole cycles posting the same documents at the same moment. The single-threaded rerun
+    /// test shows business keys make a repeat a no-op; this shows the same holds when the repeat is
+    /// concurrent rather than sequential, which is the realistic failure - two users, or a retried
+    /// request arriving twice, posting the same invoice at once. Each runner gets its own context
+    /// and connection, so they contend for real.
+    /// <para>
+    /// Measured outcome: <b>both runners complete</b> and every table count is identical to the
+    /// single run, so the seeder lock and the business keys together make a concurrent repeat a
+    /// no-op rather than a second set of documents. The assertion compares a count of every mapped
+    /// table, so one duplicated row anywhere fails it.
+    /// </para>
+    /// </summary>
+    [SqlServerPhaseOneFact]
+    public async Task Two_concurrent_runs_of_the_same_cycle_do_not_duplicate_any_document()
+    {
+        var database = "IXApi_APV2_Concurrent_" + Guid.NewGuid().ToString("N");
+        var connection = new SqlConnectionStringBuilder { DataSource = Environment.GetEnvironmentVariable("IXAPI_AP_PHASE_ONE_SQLSERVER")!,
+            InitialCatalog = database, IntegratedSecurity = true, TrustServerCertificate = true, ConnectTimeout = 30 };
+        // Each stage gets its own context: TransactionServices registers the one it is given as a
+        // singleton, and the provider disposes it, so a shared instance would be dead afterwards.
+        ApplicationDbContext Context() => new(new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseSqlServer(connection.ConnectionString).Options);
+        try
+        {
+            await using (var schema = Context()) await schema.Database.EnsureCreatedAsync();
+
+            // Establish the full cycle once, so the concurrent pair below are both repeats.
+            async Task RunAsync()
+            {
+                using var provider = TransactionServices(Context());
+                using var scope = provider.CreateScope();
+                await scope.ServiceProvider.GetRequiredService<AccountsPayableTransactionExamples>()
+                    .RunAsync(new(2026, "concurrent-test"));
+            }
+            await RunAsync();
+            string settled;
+            await using (var baseline = Context()) settled = await CountsAsync(baseline);
+
+            var runners = new[] { RunAsync(), RunAsync() };
+            var outcomes = await Task.WhenAll(runners.Select(async r =>
+            {
+                try { await r; return null; }
+                catch (Exception ex) { return (ex.InnerException ?? ex).Message.ReplaceLineEndings(" "); }
+            }));
+
+            // Both are expected to complete: the lock serializes them and the keys make the
+            // second a no-op. The database must be what the single run left behind.
+            await using (var after = Context()) Assert.Equal(settled, await CountsAsync(after));
+            Assert.All(outcomes, x => Assert.Null(x));
+        }
+        finally
+        {
+            Assert.StartsWith("IXApi_APV2_Concurrent_", database);
+            SqlConnection.ClearAllPools();
+            await using var cleanup = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseSqlServer(connection.ConnectionString).Options);
+            await cleanup.Database.EnsureDeletedAsync();
+        }
+    }
+
     private static ServiceProvider TransactionServices(ApplicationDbContext db)
     {
         var actor = new CycleIdentity();
