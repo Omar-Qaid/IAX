@@ -71,7 +71,7 @@ procedures. Posted-balance validator placeholders are intentionally unused in th
 
 The tests verify the four preparation steps, all 57 seeder IDs in execution order, persisted
 vendor/product/price references, JSON report scope, stable IDs and row counts across reruns,
-and zero rows in the 23 checked purchase/inventory/vendor/payment/tax/posting tables in a fresh
+and zero rows in the 27 checked purchase/inventory/vendor/payment/tax/posting tables in a fresh
 SQLite example database. SQL Server uses a generated disposable database and deletes it after
 the first-run/rerun checks. These results validate preparation, not purchase-to-settlement posting.
 

@@ -129,3 +129,12 @@ Field provenance: https://learn.microsoft.com/en-us/common-data-model/schema/cor
 The CycleErpExamples report includes AdditionalMasters with the persisted company, parameter,
 dimension-group, order-default and charge-code references. All additions remain inside the
 same atomic seed transaction and are validated before commit.
+
+## Transaction storage additions
+
+AccountingDistribution, SubledgerJournalEntry, SubledgerJournalAccountEntry and
+VendInvoiceInfoSubLine now have mapped entities and a separate generated migration. They are
+not seeders. Phase one leaves all 27 checked transaction/accounting tables empty. Mapping
+fields and references does not implement source-document generation or subledger transfer.
+See [Subledger accounting storage](../../../Modules/Finance/GeneralLedger/SubledgerAccounting/README.md)
+for the exact implementation boundary and Microsoft metadata references.
