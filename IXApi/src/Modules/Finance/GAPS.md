@@ -9,7 +9,7 @@ counted as gaps.
 | Module | File | Highest-priority open gap |
 | --- | --- | --- |
 | General ledger | [GeneralLedger/GAPS.md](GeneralLedger/GAPS.md) | Three failing journal posting tests (reversal, voucher allocation); journal tax calculation |
-| Accounts payable | [AccountsPayable/GAPS.md](AccountsPayable/GAPS.md) | No purchase **discount** agreements (prices now resolve); invoice matching tolerances; payment proposal |
+| Accounts payable | [AccountsPayable/GAPS.md](AccountsPayable/GAPS.md) | No purchase **discount** agreements (prices now resolve); payment proposal; net unit price / charges matching |
 | Accounts receivable | [AccountsReceivable/GAPS.md](AccountsReceivable/GAPS.md) | Return dispositions; settlement priority and cash discount on the settlement path |
 | Inventory | [Inventory/GAPS.md](Inventory/GAPS.md) | SQL Server verification; four unsupported inventory models |
 | Foundation | [Foundation/GAPS.md](Foundation/GAPS.md) | Tax calculation ignores every configured origin, silently; payment schedules make invoices unpostable |

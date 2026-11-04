@@ -331,32 +331,43 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
     /// <summary>
     /// Price totals matching: the invoiced net amount for a quantity is compared with the amount
     /// that quantity was ordered at, and the difference may not exceed
-    /// <see cref="VendParameters.PriceTotalMatchToleranceInPercent"/>. Matching applies when the
-    /// item or the vendor carries a two-way or three-way policy; the quantity side of a three-way
+    /// <see cref="VendParameters.TotalPriceTolerancePercentage"/>. The quantity side of a three-way
     /// policy is the received-and-uninvoiced check the caller already made.
+    /// Gated as D365 gates it: <see cref="VendParameters.UseInvoiceMatching"/> switches matching off
+    /// entirely, <see cref="VendParameters.UseTotalPriceMatching"/> switches off this comparison, and
+    /// the effective policy is the company <see cref="VendParameters.MatchingPolicy"/> unless the
+    /// vendor or item overrides it under <see cref="VendParameters.MatchingPolicyAllowOverride"/>.
     /// </summary>
     /// <returns>The refusal message, or null when the line matches.</returns>
     private async Task<string?> ValidatePriceMatchAsync(string area, PurchTable order, PurchLine line,
         decimal quantity, decimal unitPrice, CancellationToken ct)
     {
+        var parameters = await Db.Set<VendParameters>().AsNoTracking()
+            .Where(x => x.DataAreaId == area).OrderBy(x => x.Key).FirstOrDefaultAsync(ct);
+        // No parameters row means the field defaults, which are the behavior predating these fields.
+        if (parameters != null && parameters.UseInvoiceMatching == NoYes.No) return null;
+
         var itemPolicy = await Db.Set<InventTable>().AsNoTracking()
             .SingleAsync(x => x.DataAreaId == area && x.ItemId == line.ItemId, ct);
         var vendorPolicy = await Db.Set<VendTable>().AsNoTracking()
             .Where(x => x.DataAreaId == area && x.AccountNum == order.InvoiceAccount)
             .Select(x => x.MatchingPolicy).FirstOrDefaultAsync(ct);
-        // Either side requiring a match is enough. D365 also supports per vendor-and-item policy
-        // rows, which are not modelled, so no precedence between the two is assumed here.
-        var matched = itemPolicy.MatchingPolicy is MatchingPolicy.TwoWay or MatchingPolicy.ThreeWay
-            || vendorPolicy is MatchingPolicy.TwoWay or MatchingPolicy.ThreeWay;
+        // The company policy is the default; the vendor and the item override it only when allowed.
+        // Between those two, either one requiring a match is enough: D365 settles that with policy
+        // rows for a vendor-and-item combination, which are not modelled, so rather than invent a
+        // precedence this stays monotonic and only ever adds matching.
+        var overridable = parameters == null || parameters.MatchingPolicyAllowOverride == NoYes.Yes;
+        var matched = (overridable
+                && (itemPolicy.MatchingPolicy is MatchingPolicy.TwoWay or MatchingPolicy.ThreeWay
+                    || vendorPolicy is MatchingPolicy.TwoWay or MatchingPolicy.ThreeWay))
+            || parameters?.MatchingPolicy is MatchingPolicy.TwoWay or MatchingPolicy.ThreeWay;
         if (!matched || unitPrice == line.PurchPrice) return null;
+        if (parameters != null && parameters.UseTotalPriceMatching == NoYes.No) return null;
 
         var priceUnit = line.PriceUnit > 0 ? line.PriceUnit : 1m;
         var ordered = decimal.Round(quantity * line.PurchPrice / priceUnit, 2, MidpointRounding.AwayFromZero);
         var invoiced = decimal.Round(quantity * unitPrice / priceUnit, 2, MidpointRounding.AwayFromZero);
-        var tolerance = await Db.Set<VendParameters>().AsNoTracking()
-            .Where(x => x.DataAreaId == area)
-            .OrderBy(x => x.Key)
-            .Select(x => x.PriceTotalMatchToleranceInPercent).FirstOrDefaultAsync(ct);
+        var tolerance = parameters?.TotalPriceTolerancePercentage ?? 0m;
         if (tolerance > 0m && ordered != 0m)
         {
             var variance = Math.Abs(invoiced - ordered) * 100m / Math.Abs(ordered);

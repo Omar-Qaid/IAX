@@ -15,7 +15,13 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
             builder.HasIndex(x => new { x.DataAreaId, x.Key }).IsUnique();
 
             builder.Property(x => x.VendPostingProfile).HasMaxLength(FieldLengths.PostingProfile);
-            builder.Property(x => x.PriceTotalMatchToleranceInPercent).HasColumnType("decimal(32, 6)");
+            builder.Property(x => x.TotalPriceTolerancePercentage).HasColumnType("decimal(32, 6)");
+            // The column defaults mirror the entity initializers: a row written before these
+            // fields existed must keep matching enabled, not silently stop matching.
+            builder.Property(x => x.UseInvoiceMatching).HasDefaultValue(NoYes.Yes);
+            builder.Property(x => x.UseTotalPriceMatching).HasDefaultValue(NoYes.Yes);
+            builder.Property(x => x.MatchingPolicy).HasDefaultValue(MatchingPolicy.None);
+            builder.Property(x => x.MatchingPolicyAllowOverride).HasDefaultValue(NoYes.Yes);
             builder.Property(x => x.DataAreaId).HasMaxLength(4).HasDefaultValue("dat").IsRequired();
         }
     }

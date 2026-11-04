@@ -12,7 +12,16 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
         public string VendPostingProfile { get; set; } = string.Empty;
 
         /// <summary>Zero requires an exact invoice price match, as before this field existed.</summary>
-        public decimal PriceTotalMatchToleranceInPercent { get; set; }
+        public decimal TotalPriceTolerancePercentage { get; set; }
+
+        public NoYes UseInvoiceMatching { get; set; } = NoYes.Yes;
+
+        public NoYes UseTotalPriceMatching { get; set; } = NoYes.Yes;
+
+        /// <summary>Company default; a vendor or item policy overrides it when allowed.</summary>
+        public MatchingPolicy MatchingPolicy { get; set; } = MatchingPolicy.None;
+
+        public NoYes MatchingPolicyAllowOverride { get; set; } = NoYes.Yes;
 
         public long Partition { get; set; }
     }

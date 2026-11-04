@@ -3186,6 +3186,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<decimal>("TotalPriceTolerancePercentage")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(32, 6)");
+
                     b.Property<string>("VendPostingProfile")
                         .IsRequired()
                         .HasMaxLength(10)

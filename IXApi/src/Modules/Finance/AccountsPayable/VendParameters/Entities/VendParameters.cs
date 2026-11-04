@@ -33,13 +33,48 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
         public string VendPostingProfile { get; set; } = string.Empty;
 
         /// <summary>
-        /// Percentage by which a vendor invoice line's net amount may differ from the ordered amount
-        /// for the same quantity and still post, when a matching policy applies. Zero means an exact
-        /// match is required, which is the behavior before this field existed and remains the
-        /// default. Read by <c>VendorInvoiceService</c>; nothing else consumes it.
+        /// D365 <c>TOTALPRICETOLERANCEPERCENTAGE</c> (price totals match tolerance), verified against
+        /// real <c>VendParameters</c> metadata. Percentage by which a vendor invoice line's net amount
+        /// may differ from the ordered amount for the same quantity and still post, when a matching
+        /// policy applies. Zero means an exact match is required, which is the behavior before this
+        /// field existed and remains the default. Read by <c>VendorInvoiceService</c>; nothing else
+        /// consumes it. Gated by <see cref="UseInvoiceMatching"/> and
+        /// <see cref="UseTotalPriceMatching"/>, as in D365.
         /// </summary>
         [Column(TypeName = "decimal(32, 6)")]
-        public decimal PriceTotalMatchToleranceInPercent { get; set; }
+        public decimal TotalPriceTolerancePercentage { get; set; }
+
+        /// <summary>
+        /// D365 <c>USEINVOICEMATCHING</c>: the master switch for invoice matching. When this is
+        /// <see cref="NoYes.No"/> no matching runs at all, whatever the policies say.
+        /// </summary>
+        /// <remarks>
+        /// D365 ships this as No for a new company. It defaults to <see cref="NoYes.Yes"/> here, and
+        /// the column default matches, because matching already ran before this field existed:
+        /// shipping D365's default would silently stop matching invoices that are matched today.
+        /// Turning matching off is therefore an explicit opt-out rather than the starting state.
+        /// </remarks>
+        public NoYes UseInvoiceMatching { get; set; } = NoYes.Yes;
+
+        /// <summary>
+        /// D365 <c>USETOTALPRICEMATCHING</c>: gates price totals matching specifically, inside
+        /// <see cref="UseInvoiceMatching"/>. Defaults to <see cref="NoYes.Yes"/> for the same reason.
+        /// </summary>
+        public NoYes UseTotalPriceMatching { get; set; } = NoYes.Yes;
+
+        /// <summary>
+        /// D365 <c>MATCHINGPOLICY</c>: the company-wide default matching policy, used when the
+        /// vendor and the item say nothing or may not override it. <see cref="MatchingPolicy.None"/>
+        /// by default, so it adds nothing until it is configured.
+        /// </summary>
+        public MatchingPolicy MatchingPolicy { get; set; } = MatchingPolicy.None;
+
+        /// <summary>
+        /// D365 <c>MATCHINGPOLICYALLOWOVERRIDE</c>: whether a vendor or item policy may override
+        /// <see cref="MatchingPolicy"/>. Defaults to <see cref="NoYes.Yes"/> because the vendor and
+        /// item policies are what drove matching before this field existed.
+        /// </summary>
+        public NoYes MatchingPolicyAllowOverride { get; set; } = NoYes.Yes;
 
         public long Partition { get; set; }
     }

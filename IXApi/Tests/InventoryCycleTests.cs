@@ -1992,6 +1992,123 @@ public sealed class InventoryCycleTests
         Assert.All(liabilityLines.GroupBy(x => x.LedgerDimension), x => Assert.Equal(0m, x.Sum(y => y.AccountingCurrencyAmount)));
     }
 
+    // ---- Invoice price matching tolerance (D365: AP parameters > Invoice validation) ----
+
+    /// <summary>
+    /// Order 100 @ 50 and receive it, so only the price side of matching is left to test.
+    /// </summary>
+    private static async Task<(VendorInvoiceService Invoices, PurchTable Order, PurchLine Line)> ReceivedOrderForMatchingAsync(
+        CycleContext db, MatchingPolicy itemPolicy, MatchingPolicy vendorPolicy, decimal? tolerance)
+    {
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        db.Set<InventTable>().Local.Single().MatchingPolicy = itemPolicy;
+        db.Set<VendTable>().Local.Single().MatchingPolicy = vendorPolicy;
+        if (tolerance != null)
+            db.Set<VendParameters>().Add(new VendParameters
+            {
+                RecId = 1, DataAreaId = "dat", Key = 0, TotalPriceTolerancePercentage = tolerance.Value
+            });
+        await db.SaveChangesAsync();
+        var (orders, confirm, receipts, invoices) = PurchaseServices(db);
+        Assert.Equal(200, (await orders.CreateAsync(new PurchOrderCreateDto("V-0001", null, "SAR",
+            new DateTime(2026, 10, 28), "S01", "WH-01", null), default)).StatusCode);
+        var po = await db.Set<PurchTable>().SingleAsync();
+        Assert.Equal(200, (await orders.AddLineAsync(po.RecId,
+            new PurchLineInputDto("ITEM-001", 100, "PCS", 50, 1, null, null, null, null), default)).StatusCode);
+        var line = await db.Set<PurchLine>().SingleAsync();
+        Assert.Equal(200, (await confirm.ConfirmAsync(po.RecId, default)).StatusCode);
+        Assert.Equal(200, (await receipts.PostAsync(po.RecId,
+            new ProductReceiptPostDto("PR-0001", new DateTime(2026, 10, 28), [new(line.RecId, 100)]), default)).StatusCode);
+        return (invoices, po, await db.Set<PurchLine>().SingleAsync());
+    }
+
+    [Fact]
+    public async Task Without_a_configured_tolerance_an_invoice_price_difference_is_still_refused_by_name()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        var (invoices, po, line) = await ReceivedOrderForMatchingAsync(db, MatchingPolicy.ThreeWay, MatchingPolicy.None, null);
+
+        var result = await invoices.PostAsync(po.RecId,
+            new VendorInvoicePostDto("INV-1", new DateTime(2026, 10, 29), [new(line.RecId, 100, 51)]), default);
+        Assert.Equal(422, result.StatusCode);
+        Assert.Equal("Invoice price for item ITEM-001 is 51 against the ordered 50 under the configured "
+            + "matching policy, and no price match tolerance is configured.", result.Message);
+        Assert.Empty(await db.Set<VendInvoiceJour>().ToListAsync());
+    }
+
+    [Fact]
+    public async Task An_invoice_price_within_the_configured_tolerance_posts()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        var (invoices, po, line) = await ReceivedOrderForMatchingAsync(db, MatchingPolicy.ThreeWay, MatchingPolicy.None, 5m);
+
+        // 5100 invoiced against 5000 ordered is a 2% variance, inside the 5% tolerance.
+        Assert.Equal(200, (await invoices.PostAsync(po.RecId,
+            new VendorInvoicePostDto("INV-1", new DateTime(2026, 10, 29), [new(line.RecId, 100, 51)]), default)).StatusCode);
+        Assert.Equal(5100m, (await db.Set<VendInvoiceJour>().SingleAsync()).InvoiceAmount);
+        // The invoiced price is what reaches inventory, not the ordered price.
+        Assert.Equal(5100m, (await db.Set<InventSum>().SingleAsync()).PostedValue);
+    }
+
+    [Fact]
+    public async Task An_invoice_price_outside_the_configured_tolerance_is_refused_with_the_variance()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        var (invoices, po, line) = await ReceivedOrderForMatchingAsync(db, MatchingPolicy.ThreeWay, MatchingPolicy.None, 5m);
+
+        // 5400 against 5000 is 8%, outside 5%.
+        var result = await invoices.PostAsync(po.RecId,
+            new VendorInvoicePostDto("INV-1", new DateTime(2026, 10, 29), [new(line.RecId, 100, 54)]), default);
+        Assert.Equal(422, result.StatusCode);
+        Assert.Equal("Invoice price for item ITEM-001 differs from the purchase order by 8%, "
+            + "which exceeds the configured match tolerance of 5%.", result.Message);
+        Assert.Empty(await db.Set<VendInvoiceJour>().ToListAsync());
+    }
+
+    [Fact]
+    public async Task The_tolerance_is_measured_both_ways_so_a_cheaper_invoice_is_matched_the_same()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        var (invoices, po, line) = await ReceivedOrderForMatchingAsync(db, MatchingPolicy.ThreeWay, MatchingPolicy.None, 5m);
+
+        // Under-charging by 2% is a discrepancy of the same size and is accepted alike.
+        Assert.Equal(200, (await invoices.PostAsync(po.RecId,
+            new VendorInvoicePostDto("INV-1", new DateTime(2026, 10, 29), [new(line.RecId, 100, 49)]), default)).StatusCode);
+        Assert.Equal(4900m, (await db.Set<VendInvoiceJour>().SingleAsync()).InvoiceAmount);
+    }
+
+    [Fact]
+    public async Task The_vendor_matching_policy_is_honored_where_it_was_previously_stored_and_ignored()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        // Item None, vendor three-way: before this change only the item was read, so the price
+        // difference posted unmatched.
+        var (invoices, po, line) = await ReceivedOrderForMatchingAsync(db, MatchingPolicy.None, MatchingPolicy.ThreeWay, 1m);
+
+        var result = await invoices.PostAsync(po.RecId,
+            new VendorInvoicePostDto("INV-1", new DateTime(2026, 10, 29), [new(line.RecId, 100, 54)]), default);
+        Assert.Equal(422, result.StatusCode);
+        Assert.Contains("differs from the purchase order by 8%", result.Message);
+    }
+
+    [Fact]
+    public async Task With_no_matching_policy_on_either_side_the_invoice_price_is_taken_as_billed()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        var (invoices, po, line) = await ReceivedOrderForMatchingAsync(db, MatchingPolicy.None, MatchingPolicy.None, null);
+
+        Assert.Equal(200, (await invoices.PostAsync(po.RecId,
+            new VendorInvoicePostDto("INV-1", new DateTime(2026, 10, 29), [new(line.RecId, 100, 54)]), default)).StatusCode);
+        Assert.Equal(5400m, (await db.Set<VendInvoiceJour>().SingleAsync()).InvoiceAmount);
+    }
+
     // ---- Purchase trade agreements (D365: Procurement > Prices and discounts > purchase price) ----
 
     private static async Task<(PurchOrderService Orders, PurchTable Order)> OpenPurchaseOrderAsync(CycleContext db)
