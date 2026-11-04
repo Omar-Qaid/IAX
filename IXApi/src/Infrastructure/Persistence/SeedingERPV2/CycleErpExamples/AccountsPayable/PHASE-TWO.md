@@ -35,7 +35,11 @@ This is an explicit write operation intended for a disposable demo database. Doc
 
 ## Integrity and boundaries
 
-The runner verifies expected physical quantities/open balances; signed accounting and reporting voucher balance; vendor control, input-tax, bank and inventory reconciliation; fully matched receipt accruals and cleared advances. Reports carry bank movement in the vendor/bank transaction currency and tax in accounting currency SAR. USD scenario amounts must not be added to SAR bank movements without translation.
+After each scenario finishes posting, `AccountsPayableReconciliationSnapshot.LoadAsync` reads its posted state once and the ten checks in `Validation/` run over it, each owning the concern its filename states: expected open balances (`OpenTransactionsValidator`), the open-row/settled-remainder invariant (`VendorBalanceValidator`), vendor subledger to GL control account including realized exchange and utilized cash discount (`VendorToLedgerValidator`), signed accounting and reporting voucher balance (`LedgerBalanceValidator`), physical quantity (`InventoryQuantityValidator`), financial inventory value (`InventoryValueValidator`), receipt accrual reversal and cleared interim accounts (`UninvoicedReceiptValidator`), bank (`BankPostingValidator`), input tax (`TaxPostingValidator`), and cleared advances plus settlement references (`SettlementValidator`).
+
+Main account numbers come from `GeneralLedgerSeedExample.MainAccounts`, the same definition `MainAccountSeeder` inserts. `LedgerAmount` refuses a code absent from that chart rather than returning zero, because a zero would let a renumbered chart satisfy the checks that expect a cleared account.
+
+Reports carry bank movement in the vendor/bank transaction currency and tax in accounting currency SAR. USD scenario amounts must not be added to SAR bank movements without translation.
 
 PO, pending invoice, receipt and posted invoice source references are persisted with distributions, accounting events and subledger/GL links in the posting transaction. Distributions copy the actual GL entries without creating duplicate GL vouchers. Source-document native lifecycle enum states are not implemented; optional numeric lifecycle fields remain unset. Application polymorphic table identifiers are IXApp-compatible identifiers, not D365 AOT table IDs.
 

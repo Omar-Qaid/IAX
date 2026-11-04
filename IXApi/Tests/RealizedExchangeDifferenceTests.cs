@@ -249,12 +249,15 @@ public class RealizedExchangeDifferenceTests
     }
 
     /// <summary>
-    /// The existing vendor settlement reversal must round-trip a foreign-currency settlement, which
-    /// it can only do if the settlement row carried the accounting amount actually taken off the
-    /// transaction rather than the document amount.
+    /// Reversing a settlement that realized an exchange difference is refused, and the refusal is
+    /// atomic. <see cref="VendSettlementRestore"/> rebuilds SettleAmountCur/Mst and the open row but
+    /// restores neither <c>VendTrans.VendExchAdjustmentRealized</c> nor the ledger: the gain or loss
+    /// was posted with the payment voucher, so reopening the invoice here would leave it in GL with
+    /// no settlement behind it and the vendor control account would stop tying to the subledger.
+    /// Reversing the payment instead reverses the whole voucher, which is the supported path.
     /// </summary>
     [Fact]
-    public async Task The_existing_vendor_reversal_restores_a_foreign_currency_settlement_exactly()
+    public async Task Reversing_a_settlement_that_realized_an_exchange_difference_is_refused_atomically()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
@@ -262,19 +265,21 @@ public class RealizedExchangeDifferenceTests
         Assert.Equal(200, (await NewVendService(db).PostAsync(
             new VendPaymentPostDto("V-001", "BANK-1", InvoiceUsd, "req-1", PaymentDate), default)).StatusCode);
         db.ChangeTracker.Clear();
-        var voucher = (await db.Set<VendSettlement>().AsNoTracking().SingleAsync()).Voucher;
+        var settlement = await db.Set<VendSettlement>().AsNoTracking().SingleAsync();
+        Assert.NotEqual(0m, settlement.ExchAdjustment);
 
         var reversal = await new VendSettlementReversalService(new TestUnitOfWork(db), new TestCompany())
-            .ReverseAsync(voucher, PaymentDate.AddDays(1), default);
+            .ReverseAsync(settlement.Voucher, PaymentDate.AddDays(1), default);
 
-        Assert.Equal(200, reversal.StatusCode);
+        Assert.Equal(422, reversal.StatusCode);
+        Assert.Equal($"Settlement '{settlement.Voucher}' carries a realized exchange adjustment; "
+            + "this reversal path does not reverse its ledger voucher.", reversal.Message);
+        // Nothing moved: the invoice stays settled and keeps its realized adjustment.
+        db.ChangeTracker.Clear();
         var invoice = await db.Set<VendTrans>().AsNoTracking().SingleAsync(x => x.RecId == 20);
-        Assert.Equal(0m, invoice.SettleAmountCur);
-        Assert.Equal(0m, invoice.SettleAmountMst);
-        // The open row comes back at both the document and the accounting value it had.
-        var open = await db.Set<VendTransOpen>().AsNoTracking().SingleAsync(x => x.RefRecId == 20);
-        Assert.Equal(-InvoiceUsd, open.AmountCur);
-        Assert.Equal(-3750m, open.AmountMst);
+        Assert.Equal(-InvoiceUsd, invoice.SettleAmountCur);
+        Assert.Equal(-3750m, invoice.SettleAmountMst);
+        Assert.False(await db.Set<VendTransOpen>().AsNoTracking().AnyAsync(x => x.RefRecId == 20));
     }
 
     /// <summary>

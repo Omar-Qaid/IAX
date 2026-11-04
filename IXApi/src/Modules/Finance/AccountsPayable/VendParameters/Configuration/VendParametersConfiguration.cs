@@ -15,6 +15,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
             builder.HasIndex(x => new { x.DataAreaId, x.Key }).IsUnique();
 
             builder.Property(x => x.VendPostingProfile).HasMaxLength(FieldLengths.PostingProfile);
+            builder.Property(x => x.PriceTotalMatchToleranceInPercent).HasColumnType("decimal(32, 6)");
             builder.Property(x => x.DataAreaId).HasMaxLength(4).HasDefaultValue("dat").IsRequired();
         }
     }

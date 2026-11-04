@@ -18,6 +18,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using IAX.IXApi.Shared.Application.Identity;
 using IAX.IXApi.Infrastructure.Identity;
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsPayable.Validation;
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.GeneralLedger;
 
 namespace IXApi.Tests;
 
@@ -404,6 +406,73 @@ public sealed class AccountsPayablePhaseOneSeedTests
             await cleanup.Database.EnsureDeletedAsync();
         }
     }
+    [Fact]
+    public void Reconciliation_refuses_a_main_account_the_demo_chart_does_not_define()
+    {
+        var posted = new AccountsPayableReconciliationSnapshot
+        {
+            ScenarioId = "01", ExpectedPhysicalQuantity = 0m, ExpectedOpenDebit = 0m, ExpectedOpenCredit = 0m,
+            PurchaseOrders = [], VendorTransactions = [], Open = [], SettlementRows = [], Inventory = [],
+            Accruals = [], Tax = [], Bank = [], Entries = [], PostedVouchers = [], SourceDistributions = 0,
+            DimensionsByAccount = new Dictionary<string, long[]>
+            {
+                [GeneralLedgerSeedExample.Bank] = [7L],
+                // Seeded in the chart but with no dimension combination in this company.
+                [GeneralLedgerSeedExample.VendorControl] = []
+            }
+        };
+        Assert.Equal(0m, posted.LedgerAmount(GeneralLedgerSeedExample.Bank));
+        // A renumbered chart must fail the checks, not satisfy the ones that expect a cleared account.
+        var unknown = Assert.Throws<InvalidOperationException>(() => posted.LedgerAmount("999999"));
+        Assert.Contains("not in the seeded demo chart", unknown.Message);
+        var unmapped = Assert.Throws<InvalidOperationException>(() => posted.LedgerAmount(GeneralLedgerSeedExample.VendorControl));
+        Assert.Contains("has no ledger dimension", unmapped.Message);
+    }
+
+    [Fact]
+    public void Each_extracted_cycle_check_refuses_the_defect_it_owns()
+    {
+        // Balanced, consistent baseline: one SAR 100 invoice, half settled, with a balanced voucher.
+        var invoice = new VendTrans { RecId = 41L, Invoice = "APV2-I1", AmountCur = -100m, AmountMst = -100m, SettleAmountCur = -40m };
+        AccountsPayableReconciliationSnapshot Posted(decimal expectedCredit, decimal openAmount, decimal reportingAmount) =>
+            new()
+            {
+                ScenarioId = "01", ExpectedPhysicalQuantity = 0m, ExpectedOpenDebit = 0m, ExpectedOpenCredit = expectedCredit,
+                PurchaseOrders = [], VendorTransactions = [invoice],
+                Open = [new VendTransOpen { RefRecId = invoice.RecId, AmountCur = openAmount }],
+                SettlementRows = [], Inventory = [], Accruals = [], Tax = [], Bank = [],
+                Entries =
+                [
+                    new GeneralJournalAccountEntry { GeneralJournalEntry = 1L, AccountingCurrencyAmount = 60m, ReportingCurrencyAmount = 60m },
+                    new GeneralJournalAccountEntry { GeneralJournalEntry = 1L, AccountingCurrencyAmount = -60m, ReportingCurrencyAmount = reportingAmount }
+                ],
+                PostedVouchers = [1L], SourceDistributions = 0,
+                DimensionsByAccount = GeneralLedgerSeedExample.MainAccounts.ToDictionary(x => x.Code, _ => new[] { 7L })
+            };
+
+        // The invoice is SAR 60 open, which is what the baseline states everywhere.
+        new OpenTransactionsValidator().Verify(Posted(60m, -60m, -60m));
+        new VendorBalanceValidator().Verify(Posted(60m, -60m, -60m));
+        new LedgerBalanceValidator().Verify(Posted(60m, -60m, -60m));
+
+        Assert.Contains("open balances differ",
+            Assert.Throws<InvalidOperationException>(() => new OpenTransactionsValidator().Verify(Posted(75m, -60m, -60m))).Message);
+        Assert.Contains("unsettled remainder is -60",
+            Assert.Throws<InvalidOperationException>(() => new VendorBalanceValidator().Verify(Posted(55m, -55m, -60m))).Message);
+        Assert.Contains("voucher does not balance",
+            Assert.Throws<InvalidOperationException>(() => new LedgerBalanceValidator().Verify(Posted(60m, -60m, -59m))).Message);
+    }
+
+    [Fact]
+    public void Every_seeded_main_account_is_reachable_through_its_named_constant()
+    {
+        Assert.Equal(GeneralLedgerSeedExample.MainAccounts.Count,
+            GeneralLedgerSeedExample.MainAccounts.Select(x => x.Code).Distinct().Count());
+        Assert.Equal(10, AccountsPayableReconciliationSnapshot.Checks.Count);
+        Assert.Equal(AccountsPayableReconciliationSnapshot.Checks.Count,
+            AccountsPayableReconciliationSnapshot.Checks.Select(x => x.GetType()).Distinct().Count());
+    }
+
     private static ServiceProvider TransactionServices(ApplicationDbContext db)
     {
         var actor = new CycleIdentity();

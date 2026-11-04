@@ -167,6 +167,17 @@ public sealed class PurchOrderService : BaseService<PurchTable>, IPurchOrderServ
             if (siteError != null) return await Fail(422, siteError, ct);
 
             var priceUnit = input.PriceUnit.GetValueOrDefault() > 0 ? input.PriceUnit!.Value : 1m;
+            var purchPrice = input.PurchPrice;
+            if (input.UsePriceAgreement)
+            {
+                // Dimension-specific agreements cannot be selected yet; the supply service assigns
+                // InventDimId below, so a second pass follows it.
+                var agreement = await FindPurchasePriceAsync(order, item.ItemId, input.PurchQty, unit,
+                    purchModule?.PriceUnit > 0 ? purchModule.PriceUnit : 1m, null, ct);
+                purchPrice = agreement?.Amount ?? (string.Equals(unit, purchModule?.UnitId, StringComparison.OrdinalIgnoreCase)
+                    ? purchModule?.Price ?? 0m : 0m);
+                priceUnit = agreement?.PriceUnit ?? (purchModule?.PriceUnit > 0 ? purchModule.PriceUnit : 1m);
+            }
             var lineNumbers = await Db.Set<PurchLine>().Where(x => x.DataAreaId == area && x.PurchId == order.PurchId)
                 .Select(x => x.LineNumber).ToListAsync(ct);
             var lastLine = lineNumbers.Count == 0 ? 0m : lineNumbers.Max();
@@ -176,8 +187,8 @@ public sealed class PurchOrderService : BaseService<PurchTable>, IPurchOrderServ
                 Name = string.IsNullOrWhiteSpace(input.Name) ? item.NameAlias : input.Name.Trim(),
                 VendAccount = order.OrderAccount, CurrencyCode = order.CurrencyCode,
                 PurchQty = input.PurchQty, PurchUnit = unit, QtyOrdered = stocked ? inventQty.Value : 0m,
-                PurchPrice = input.PurchPrice, PriceUnit = priceUnit, TaxGroup = order.TaxGroup, TaxItemGroup = purchModule?.TaxItemGroupId ?? string.Empty,
-                LineAmount = input.PurchQty * input.PurchPrice / priceUnit,
+                PurchPrice = purchPrice, PriceUnit = priceUnit, TaxGroup = order.TaxGroup, TaxItemGroup = purchModule?.TaxItemGroupId ?? string.Empty,
+                LineAmount = input.PurchQty * purchPrice / priceUnit,
                 RemainPurchPhysical = input.PurchQty, RemainPurchFinancial = input.PurchQty,
                 RemainInventPhysical = stocked ? inventQty.Value : 0m, RemainInventFinancial = stocked ? inventQty.Value : 0m,
                 PurchStatus = PurchStatus.Backorder,
@@ -185,6 +196,18 @@ public sealed class PurchOrderService : BaseService<PurchTable>, IPurchOrderServ
             };
             if (stocked) await _supply.CreateAsync(order, line, site, warehouse, ct);
             else line.InventTransId = (await _numbers.NextAsync("InventTransId", area, ct)).Code;
+            // Now that InventDimId is assigned, a dimension-specific agreement can be selected.
+            if (input.UsePriceAgreement)
+            {
+                var dimensionPrice = await FindPurchasePriceAsync(order, item.ItemId, input.PurchQty, unit,
+                    line.PriceUnit, line.InventDimId, ct);
+                if (dimensionPrice != null)
+                {
+                    line.PurchPrice = dimensionPrice.Value.Amount;
+                    line.PriceUnit = dimensionPrice.Value.PriceUnit;
+                    line.LineAmount = line.PurchQty * line.PurchPrice / line.PriceUnit;
+                }
+            }
             order.SourceDocumentHeader ??= await new PurchaseSourceAccounting(Db).HeaderAsync(area, FinanceTableNumbers.PurchTable, ct);
             line.SourceDocumentLine = await new PurchaseSourceAccounting(Db).LineAsync(area, order.SourceDocumentHeader.Value,
                 FinanceTableNumbers.PurchLine, line.PurchQty, order.OrderDate, ct);
@@ -302,6 +325,60 @@ public sealed class PurchOrderService : BaseService<PurchTable>, IPurchOrderServ
         var lines = await Db.Set<PurchLine>().AsNoTracking()
             .Where(x => x.DataAreaId == area && x.PurchId == order.PurchId).ToListAsync(ct);
         return new(200, new { header = order, lines = lines.OrderBy(x => x.LineNumber).ToList() });
+    }
+
+    /// <summary>
+    /// Resolves the purchase trade agreement for a line, mirroring the sales resolution in
+    /// <c>SalesOrderLineService.FindSalesPriceAsync</c> over the same <see cref="PriceDiscTable"/>:
+    /// the purchase axis is <see cref="ModuleInventCustVend.Vend"/> with
+    /// <see cref="PriceType.PricePurch"/>, and the party axis is the vendor account, the vendor's
+    /// price group, or all vendors. The most specific rule wins.
+    /// </summary>
+    private async Task<(decimal Amount, decimal PriceUnit)?> FindPurchasePriceAsync(PurchTable order,
+        string itemId, decimal quantity, string unitId, decimal fallbackPriceUnit,
+        string? inventDimId, CancellationToken ct)
+    {
+        var priceGroup = await Db.Set<VendTable>().AsNoTracking()
+            .Where(x => x.DataAreaId == order.DataAreaId && x.AccountNum == order.OrderAccount)
+            .Select(x => x.PriceGroup).FirstOrDefaultAsync(ct) ?? string.Empty;
+
+        var pricingDate = order.OrderDate == default ? DateTime.UtcNow.Date : order.OrderDate.Date;
+        var agreements = await Db.Set<PriceDiscTable>().AsNoTracking()
+            .Where(row => row.DataAreaId == order.DataAreaId
+                && row.Module == ModuleInventCustVend.Vend
+                && row.Relation == PriceType.PricePurch
+                && (row.Currency == order.CurrencyCode || row.GenericCurrency != 0)
+                && (row.UnitId == unitId || row.UnitAppliesToAll != 0)
+                && (string.IsNullOrEmpty(row.PriceGroup)
+                    || (!string.IsNullOrEmpty(priceGroup) && row.PriceGroup == priceGroup))
+                && (string.IsNullOrEmpty(row.InventDimId) || row.InventDimId == inventDimId)
+                && (row.FromDate == default || row.FromDate <= pricingDate)
+                && (row.ToDate == default || row.ToDate >= pricingDate)
+                && (row.QuantityAmountFrom <= 0 || row.QuantityAmountFrom <= quantity)
+                && (row.QuantityAmountTo <= 0 || row.QuantityAmountTo >= quantity)
+                && ((row.ItemCode == PriceDiscProductCodeType.Table && row.ItemRelation == itemId)
+                    || row.ItemCode == PriceDiscProductCodeType.All)
+                && ((row.AccountCode == PriceDiscPartyCodeType.Table && row.AccountRelation == order.OrderAccount)
+                    || (row.AccountCode == PriceDiscPartyCodeType.GroupId
+                        && !string.IsNullOrEmpty(priceGroup)
+                        && row.AccountRelation == priceGroup)
+                    || row.AccountCode == PriceDiscPartyCodeType.All))
+            .ToListAsync(ct);
+
+        var agreement = agreements
+            .OrderByDescending(row => row.AccountCode == PriceDiscPartyCodeType.Table ? 3
+                : row.AccountCode == PriceDiscPartyCodeType.GroupId ? 2 : 1)
+            .ThenByDescending(row => row.ItemCode == PriceDiscProductCodeType.Table)
+            .ThenByDescending(row => !string.IsNullOrEmpty(row.PriceGroup))
+            .ThenByDescending(row => !string.IsNullOrEmpty(row.InventDimId))
+            .ThenByDescending(row => row.QuantityAmountFrom)
+            .ThenByDescending(row => row.FromDate)
+            .FirstOrDefault();
+        if (agreement == null) return null;
+
+        var agreementPriceUnit = agreement.PriceUnit > 0 ? agreement.PriceUnit
+            : fallbackPriceUnit > 0 ? fallbackPriceUnit : 1m;
+        return (agreement.Amount, agreementPriceUnit);
     }
 
     private async Task<string?> ValidateSiteWarehouseAsync(string area, string site, string warehouse, CancellationToken ct)

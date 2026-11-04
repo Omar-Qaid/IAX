@@ -1,3 +1,4 @@
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsPayable.Validation;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsPayable.Data;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsPayable.Reports;
@@ -212,50 +213,11 @@ public sealed class AccountsPayableTransactionFlow(ApplicationDbContext db, IPur
     private async Task<AccountsPayableScenarioReport> Reconcile(string key, string id, decimal expectedPhysical,
         decimal expectedDebit, decimal expectedCredit, CancellationToken ct)
     {
-        var purchaseOrders = await db.Set<PurchTable>().Where(x => x.DataAreaId == Area && (x.PurchName == key || x.ReturnItemNum == key + "-RET")).Select(x => x.PurchId).ToArrayAsync(ct);
-        var invoiceRows = await db.Set<VendInvoiceJour>().Where(x => x.DataAreaId == Area && x.InvoiceId.StartsWith(key + "-")).ToListAsync(ct);
-        var paymentLines = await db.Set<LedgerJournalTrans>().Where(x => x.DataAreaId == Area && x.PaymReference.StartsWith(key + "-")).ToListAsync(ct);
-        var journals = paymentLines.Select(x => x.JournalNum).ToArray();
-        var reversals = await db.Set<LedgerJournalTable>().Where(x => x.DataAreaId == Area && journals.Contains(x.OriginalJournalNum)).Select(x => x.JournalNum).ToArrayAsync(ct);
-        var reverseVouchers = await db.Set<LedgerJournalTrans>().Where(x => x.DataAreaId == Area && reversals.Contains(x.JournalNum)).Select(x => x.Voucher).ToArrayAsync(ct);
-        var vendorVouchers = invoiceRows.Select(x => x.LedgerVoucher).Concat(paymentLines.Select(x => x.Voucher)).Concat(reverseVouchers).ToArray();
-        var vendorTransactions = await db.Set<VendTrans>().Where(x => x.DataAreaId == Area && vendorVouchers.Contains(x.Voucher)).ToListAsync(ct);
-        var ids = vendorTransactions.Select(x => x.RecId).ToArray();
-        var open = await db.Set<VendTransOpen>().Where(x => x.DataAreaId == Area && ids.Contains(x.RefRecId)).ToListAsync(ct);
-        var debit = open.Where(x => x.AmountCur > 0).Sum(x => x.AmountCur);
-        var credit = -open.Where(x => x.AmountCur < 0).Sum(x => x.AmountCur);
-        Check(debit == expectedDebit && credit == expectedCredit, $"{id}: open balances differ ({debit}/{credit}).");
-        var origins = await db.Set<InventTransOrigin>().Where(x => x.DataAreaId == Area && purchaseOrders.Contains(x.ReferenceId) && x.ReferenceCategory == InventRefType.PurchaseOrder).Select(x => x.RecId).ToArrayAsync(ct);
-        var inventory = await db.Set<InventTrans>().Where(x => x.DataAreaId == Area && origins.Contains(x.InventTransOrigin)).ToListAsync(ct);
-        var physical = inventory.Where(x => x.StatusReceipt is StatusReceipt.Received or StatusReceipt.Purchased
-            || x.StatusIssue is StatusIssue.Deducted or StatusIssue.Sold).Sum(x => x.Qty);
-        Check(physical == expectedPhysical, $"{id}: physical quantity differs ({physical}).");
-        var receiptVouchers = await db.Set<VendPackingSlipJour>().Where(x => x.DataAreaId == Area && purchaseOrders.Contains(x.PurchId)).Select(x => x.LedgerVoucher).ToArrayAsync(ct);
-        var settlementRows = await db.Set<VendSettlement>().Where(x => x.DataAreaId == Area && ids.Contains(x.InvoiceTransRecId)).ToListAsync(ct);
-        var settlementVouchers = settlementRows.Select(x => x.Voucher).ToArray();
-        var allVouchers = vendorVouchers.Concat(receiptVouchers).Concat(settlementVouchers).Distinct().ToArray();
-        var posted = await db.Set<GeneralJournalEntry>().Where(x => x.DataAreaId == Area && allVouchers.Contains(x.SubledgerVoucher)).Select(x => x.RecId).ToArrayAsync(ct);
-        var entries = await db.Set<GeneralJournalAccountEntry>().Where(x => x.DataAreaId == Area && posted.Contains(x.GeneralJournalEntry)).ToListAsync(ct);
-        Check(entries.GroupBy(x => x.GeneralJournalEntry).All(g => g.Sum(x => x.AccountingCurrencyAmount) == 0m && g.Sum(x => x.ReportingCurrencyAmount) == 0m), "voucher does not balance.");
-        var vendorDimension = await db.Set<DimensionAttributeValueCombination>().SingleAsync(x => x.DataAreaId == Area && x.MainAccountValue == "281001", ct);
-        Check(entries.Where(x => x.LedgerDimension == vendorDimension.RecId).Sum(x => x.AccountingCurrencyAmount) == vendorTransactions.Sum(x => x.AmountMst + x.VendExchAdjustmentRealized)
-            + settlementRows.Sum(x => x.UtilizedCashDisc * (vendorTransactions.Single(t => t.RecId == x.PaymentTransRecId).AmountCur == 0 ? 1m :
-                vendorTransactions.Single(t => t.RecId == x.PaymentTransRecId).AmountMst / vendorTransactions.Single(t => t.RecId == x.PaymentTransRecId).AmountCur)), "vendor subledger does not match GL control account.");
-        var accruals = await (from accrual in db.Set<PurchReceiptAccrual>() join receipt in db.Set<VendPackingSlipTrans>() on accrual.PackingSlipTransRecId equals receipt.RecId
-            where accrual.DataAreaId == Area && receipt.DataAreaId == Area && purchaseOrders.Contains(receipt.OrigPurchId) select accrual).ToListAsync(ct);
-        Check(accruals.All(x => x.ReversedInventQuantity == x.InventQuantity && x.ReversedAmountMst == x.AmountMst), "fully invoiced receipt accrual remains open.");
-        var tax = await db.Set<TaxTrans>().Where(x => x.DataAreaId == Area && vendorVouchers.Contains(x.Voucher)).ToListAsync(ct);
-        var bank = await db.Set<BankAccountTrans>().Where(x => x.DataAreaId == Area && vendorVouchers.Contains(x.Voucher)).ToListAsync(ct);
-        var dimensions = await db.Set<DimensionAttributeValueCombination>().Where(x => x.DataAreaId == Area).ToListAsync(ct);
-        decimal LedgerAmount(string code) => entries.Where(x => dimensions.Any(d => d.RecId == x.LedgerDimension && d.MainAccountValue == code)).Sum(x => x.AccountingCurrencyAmount);
-        Check(LedgerAmount("181001") == bank.Sum(x => x.AmountMst), $"{id}: bank movements do not match GL.");
-        Check(LedgerAmount("181004") == tax.Sum(x => x.TaxAmount), $"{id}: input tax does not match GL.");
-        Check(LedgerAmount("181002") == inventory.Sum(x => x.CostAmountPosted + x.CostAmountAdjustment), $"{id}: financial inventory does not match GL.");
-        Check(LedgerAmount("181003") == 0m && LedgerAmount("281002") == 0m, $"{id}: receipt interim accounts remain open.");
-        Check(LedgerAmount("181005") == 0m, $"{id}: applied vendor advance remains in GL.");
-        var entryIds = entries.Select(e => e.RecId).ToArray();
-        var links = await db.Set<SubledgerJournalAccountEntry>().Where(x => x.GeneralJournalAccountEntry != null && entryIds.Contains(x.GeneralJournalAccountEntry.Value)).CountAsync(ct);
-        return new(id, Scenarios[id], steps.ToArray(), purchaseOrders, vendorTransactions.Where(x => x.Invoice.Length > 0).Select(x => x.Invoice).Distinct().ToArray(),
-            debit - credit, debit, credit, physical, bank.Sum(x => x.AmountCur), tax.Sum(x => x.TaxAmount), posted.Length, links);
+        var posted = await AccountsPayableReconciliationSnapshot.LoadAsync(db, key, id, expectedPhysical, expectedDebit, expectedCredit, ct);
+        foreach (var check in AccountsPayableReconciliationSnapshot.Checks) check.Verify(posted);
+        return new(id, Scenarios[id], steps.ToArray(), posted.PurchaseOrders,
+            posted.VendorTransactions.Where(x => x.Invoice.Length > 0).Select(x => x.Invoice).Distinct().ToArray(),
+            posted.OpenDebit - posted.OpenCredit, posted.OpenDebit, posted.OpenCredit, posted.PhysicalQuantity,
+            posted.Bank.Sum(x => x.AmountCur), posted.Tax.Sum(x => x.TaxAmount), posted.PostedVouchers.Count, posted.SourceDistributions);
     }
 }

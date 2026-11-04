@@ -133,9 +133,8 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
                     return await Fail(422, $"Invoice quantity for item {line.ItemId} exceeds the received, uninvoiced quantity {receivedNotInvoiced}.", ct);
                 var unitPrice = request.UnitPrice ?? line.PurchPrice;
                 if (unitPrice < 0) return await Fail(422, "The invoice price cannot be negative.", ct);
-                var itemPolicy = await Db.Set<InventTable>().AsNoTracking().SingleAsync(x => x.DataAreaId == area && x.ItemId == line.ItemId, ct);
-                if (itemPolicy.MatchingPolicy is MatchingPolicy.TwoWay or MatchingPolicy.ThreeWay && unitPrice != line.PurchPrice)
-                    return await Fail(422, "Invoice price differs from the purchase order under the configured matching policy; tolerance approval is not implemented.", ct);
+                var matchError = await ValidatePriceMatchAsync(area, order, line, request.Qty, unitPrice, ct);
+                if (matchError != null) return await Fail(422, matchError, ct);
                 var inventQty = request.Qty == line.RemainPurchFinancial
                     ? line.RemainInventFinancial
                     : decimal.Round(request.Qty * line.QtyOrdered / line.PurchQty, 6);
@@ -327,6 +326,48 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
             Db.ChangeTracker.Clear();
             throw;
         }
+    }
+
+    /// <summary>
+    /// Price totals matching: the invoiced net amount for a quantity is compared with the amount
+    /// that quantity was ordered at, and the difference may not exceed
+    /// <see cref="VendParameters.PriceTotalMatchToleranceInPercent"/>. Matching applies when the
+    /// item or the vendor carries a two-way or three-way policy; the quantity side of a three-way
+    /// policy is the received-and-uninvoiced check the caller already made.
+    /// </summary>
+    /// <returns>The refusal message, or null when the line matches.</returns>
+    private async Task<string?> ValidatePriceMatchAsync(string area, PurchTable order, PurchLine line,
+        decimal quantity, decimal unitPrice, CancellationToken ct)
+    {
+        var itemPolicy = await Db.Set<InventTable>().AsNoTracking()
+            .SingleAsync(x => x.DataAreaId == area && x.ItemId == line.ItemId, ct);
+        var vendorPolicy = await Db.Set<VendTable>().AsNoTracking()
+            .Where(x => x.DataAreaId == area && x.AccountNum == order.InvoiceAccount)
+            .Select(x => x.MatchingPolicy).FirstOrDefaultAsync(ct);
+        // Either side requiring a match is enough. D365 also supports per vendor-and-item policy
+        // rows, which are not modelled, so no precedence between the two is assumed here.
+        var matched = itemPolicy.MatchingPolicy is MatchingPolicy.TwoWay or MatchingPolicy.ThreeWay
+            || vendorPolicy is MatchingPolicy.TwoWay or MatchingPolicy.ThreeWay;
+        if (!matched || unitPrice == line.PurchPrice) return null;
+
+        var priceUnit = line.PriceUnit > 0 ? line.PriceUnit : 1m;
+        var ordered = decimal.Round(quantity * line.PurchPrice / priceUnit, 2, MidpointRounding.AwayFromZero);
+        var invoiced = decimal.Round(quantity * unitPrice / priceUnit, 2, MidpointRounding.AwayFromZero);
+        var tolerance = await Db.Set<VendParameters>().AsNoTracking()
+            .Where(x => x.DataAreaId == area)
+            .OrderBy(x => x.Key)
+            .Select(x => x.PriceTotalMatchToleranceInPercent).FirstOrDefaultAsync(ct);
+        if (tolerance > 0m && ordered != 0m)
+        {
+            var variance = Math.Abs(invoiced - ordered) * 100m / Math.Abs(ordered);
+            if (variance <= tolerance) return null;
+            return $"Invoice price for item {line.ItemId} differs from the purchase order by "
+                + $"{decimal.Round(variance, 2, MidpointRounding.AwayFromZero)}%, which exceeds the "
+                + $"configured match tolerance of {tolerance}%.";
+        }
+        // A zero tolerance, or an ordered amount of zero to measure against, requires an exact match.
+        return $"Invoice price for item {line.ItemId} is {unitPrice} against the ordered "
+            + $"{line.PurchPrice} under the configured matching policy, and no price match tolerance is configured.";
     }
 
     private async Task<PurchResult> Fail(int status, string message, CancellationToken ct)

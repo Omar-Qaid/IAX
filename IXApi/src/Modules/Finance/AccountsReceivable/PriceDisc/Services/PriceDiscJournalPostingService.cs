@@ -40,10 +40,11 @@ public sealed class PriceDiscJournalPostingService : IPriceDiscJournalPostingSer
                 if (errors.Count > 0)
                     return new PriceDiscJournalPostResult(PriceDiscJournalPostStatus.Invalid, errors);
 
-                var lines = await _db.Context.Set<PriceDiscAdmTrans>()
+                // LineNum is decimal, which SQLite cannot ORDER BY, so it is ordered client-side.
+                var lines = (await _db.Context.Set<PriceDiscAdmTrans>()
                     .Where(line => line.DataAreaId == header.DataAreaId && line.JournalNum == header.JournalNum)
-                    .OrderBy(line => line.LineNum)
-                    .ToListAsync(cancellationToken);
+                    .ToListAsync(cancellationToken))
+                    .OrderBy(line => line.LineNum).ToList();
                 foreach (var line in lines)
                 {
                     var relation = EffectiveRelation(header, line);
@@ -90,10 +91,10 @@ public sealed class PriceDiscJournalPostingService : IPriceDiscJournalPostingSer
         private async Task<List<string>> ValidateJournalAsync(PriceDiscAdmTable header, CancellationToken cancellationToken)
         {
             var errors = new List<string>();
-            var lines = await _db.Context.Set<PriceDiscAdmTrans>().AsNoTracking()
+            var lines = (await _db.Context.Set<PriceDiscAdmTrans>().AsNoTracking()
                 .Where(line => line.DataAreaId == header.DataAreaId && line.JournalNum == header.JournalNum)
-                .OrderBy(line => line.LineNum)
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken))
+                .OrderBy(line => line.LineNum).ToList();
             if (lines.Count == 0) errors.Add("The journal must contain at least one line.");
             if (!string.IsNullOrWhiteSpace(header.JournalName)
                 && !await _db.Context.Set<PriceDiscAdmName>().AnyAsync(name => name.DataAreaId == header.DataAreaId
@@ -103,29 +104,39 @@ public sealed class PriceDiscJournalPostingService : IPriceDiscJournalPostingSer
             foreach (var line in lines)
             {
                 var relation = EffectiveRelation(header, line);
-                if (relation is not (PriceType.PriceSales or PriceType.LineDiscSales
+                var purchase = relation is PriceType.PricePurch or PriceType.LineDiscPurch
+                    or PriceType.MultilineDiscPurch or PriceType.EndDiscPurch;
+                if (!purchase && relation is not (PriceType.PriceSales or PriceType.LineDiscSales
                     or PriceType.MultilineDiscSales or PriceType.EndDiscSales))
-                    errors.Add($"Line {line.LineNum}: only sales price and sales discount relations can be posted here.");
+                    errors.Add($"Line {line.LineNum}: only price and discount relations can be posted here.");
                 if (line.FromDate != default && line.ToDate != default && line.FromDate.Date > line.ToDate.Date)
                     errors.Add($"Line {line.LineNum}: the start date is after the end date.");
                 if (line.QuantityAmountFrom < 0 || line.QuantityAmountTo < 0
                     || (line.QuantityAmountTo > 0 && line.QuantityAmountFrom > line.QuantityAmountTo))
                     errors.Add($"Line {line.LineNum}: the quantity or amount range is invalid.");
-                if (line.Module != ModuleInventCustVend.Cust)
-                    errors.Add($"Line {line.LineNum}: sales agreements must use the customer module.");
-                if (relation == PriceType.PriceSales && line.Amount <= 0)
-                    errors.Add($"Line {line.LineNum}: a sales price must be greater than zero.");
-                if (relation != PriceType.PriceSales && (line.Amount < 0 || line.Percent1 < 0 || line.Percent1 > 100))
+                // The party axis follows the relation: a purchase agreement is a vendor agreement.
+                var party = purchase ? ModuleInventCustVend.Vend : ModuleInventCustVend.Cust;
+                if (line.Module != party)
+                    errors.Add($"Line {line.LineNum}: {(purchase ? "purchase agreements must use the vendor module."
+                        : "sales agreements must use the customer module.")}");
+                if (relation is PriceType.PriceSales or PriceType.PricePurch && line.Amount <= 0)
+                    errors.Add($"Line {line.LineNum}: a {(purchase ? "purchase" : "sales")} price must be greater than zero.");
+                if (relation is not (PriceType.PriceSales or PriceType.PricePurch)
+                    && (line.Amount < 0 || line.Percent1 < 0 || line.Percent1 > 100))
                     errors.Add($"Line {line.LineNum}: discount amount and percentage are invalid.");
-                if (line.AccountCode == PriceDiscPartyCodeType.Table
+                if (line.AccountCode == PriceDiscPartyCodeType.Table && purchase
+                    && !await _db.Context.Set<VendTable>().AnyAsync(vendor => vendor.DataAreaId == header.DataAreaId
+                        && vendor.AccountNum == line.AccountRelation, cancellationToken))
+                    errors.Add($"Line {line.LineNum}: vendor '{line.AccountRelation}' was not found.");
+                if (line.AccountCode == PriceDiscPartyCodeType.Table && !purchase
                     && !await _db.Context.Set<CustTable>().AnyAsync(customer => customer.DataAreaId == header.DataAreaId
                         && customer.AccountNum == line.AccountRelation, cancellationToken))
                     errors.Add($"Line {line.LineNum}: customer '{line.AccountRelation}' was not found.");
                 if (line.AccountCode == PriceDiscPartyCodeType.GroupId
                     && !await _db.Context.Set<PriceDiscGroup>().AnyAsync(group => group.DataAreaId == header.DataAreaId
-                        && group.Module == ModuleInventCustVend.Cust && group.GroupId == line.AccountRelation,
+                        && group.Module == party && group.GroupId == line.AccountRelation,
                         cancellationToken))
-                    errors.Add($"Line {line.LineNum}: customer discount group '{line.AccountRelation}' was not found.");
+                    errors.Add($"Line {line.LineNum}: {(purchase ? "vendor" : "customer")} discount group '{line.AccountRelation}' was not found.");
                 if (line.ItemCode == PriceDiscProductCodeType.Table
                     && !await _db.Context.Set<InventTable>().AnyAsync(item => item.DataAreaId == header.DataAreaId
                         && item.ItemId == line.ItemRelation, cancellationToken))

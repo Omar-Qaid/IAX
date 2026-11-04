@@ -11,6 +11,9 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
         [StringLength(FieldLengths.PostingProfile)]
         public string VendPostingProfile { get; set; } = string.Empty;
 
+        /// <summary>Zero requires an exact invoice price match, as before this field existed.</summary>
+        public decimal PriceTotalMatchToleranceInPercent { get; set; }
+
         public long Partition { get; set; }
     }
 }
