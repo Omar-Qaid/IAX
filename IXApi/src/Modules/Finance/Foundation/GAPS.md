@@ -31,7 +31,7 @@ cannot be verified goes under *Flagged uncertainties* rather than being guessed 
 | Delivery terms and delivery modes | Implemented |
 | Financial dimensions and account structures | Implemented |
 | HR reference data: workers, organization structure, showrooms, nationalities, occupations, genders | Implemented |
-| SQL Server behavior | **Unverified** — SQLite tests only |
+| SQL Server behavior | **Unverified for this module** — SQLite tests only. Only the AP cycle has been run on SQL Server (2026-11-04); `BatchDatabaseLock` mutual exclusion is verified there, but no AR/GL/Inventory flow is. |
 
 ## Open gaps
 

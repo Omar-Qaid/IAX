@@ -1,6 +1,6 @@
 ﻿# Inventory — gap analysis against basic D365 F&O
 
-**Last updated:** 2026-11-03
+**Last updated:** 2026-11-04
 **Scope:** basic (core) D365 F&O Inventory and Cost management only. Advanced warehouse (WHS),
 production, quality, and optional features are out of scope by request and are not listed as gaps.
 
@@ -30,7 +30,7 @@ alters behavior:
 | Inventory marking (`InventTrans.MarkingRefInventTransOrigin`) | Implemented |
 | Physical and financial inventory value, inventory value report | Implemented |
 | Ledger integration (`InventPosting` profiles, subledger vouchers) | Implemented |
-| SQL Server behavior (atomicity, concurrency, idempotency) | **Unverified** — SQLite tests only |
+| SQL Server behavior | **Unverified for this module** — SQLite tests only. Only the AP cycle has been run on SQL Server (2026-11-04); `BatchDatabaseLock` mutual exclusion is verified there, but no AR/GL/Inventory flow is. |
 
 ## Open gaps
 

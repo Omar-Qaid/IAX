@@ -1,6 +1,6 @@
 ﻿# General ledger — gap analysis against basic D365 F&O
 
-**Last updated:** 2026-11-03
+**Last updated:** 2026-11-04
 **Scope:** basic (core) D365 F&O General ledger only. Budgeting, budget control, allocations,
 consolidation, elimination, financial reporting designer, and intercompany accounting are out of
 scope by request and are not listed as gaps.
@@ -27,7 +27,7 @@ cannot be verified goes under *Flagged uncertainties* rather than being guessed 
 | Ledger settlement | Implemented |
 | Bank: groups, accounts, transactions, statements, transaction types | Implemented |
 | Ledger parameters | Implemented |
-| SQL Server behavior (atomicity, concurrency, idempotency) | **Unverified** — SQLite tests only |
+| SQL Server behavior | **Unverified for this module** — SQLite tests only. Only the AP cycle has been run on SQL Server (2026-11-04); `BatchDatabaseLock` mutual exclusion is verified there, but no AR/GL/Inventory flow is. |
 
 ## Open gaps
 

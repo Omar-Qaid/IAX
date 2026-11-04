@@ -32,7 +32,7 @@ cannot be verified goes under *Flagged uncertainties* rather than being guessed 
 | Trade agreements / price-discount journals (`PriceDisc*`) | Implemented — now publishes purchase rules too, and **tested** for the first time |
 | Customer transactions (`CustTrans`, `CustTransOpen`), sales pools | Implemented |
 | Inventory demand and reservation from sales lines | Implemented |
-| SQL Server behavior (atomicity, concurrency, idempotency) | **Unverified** — SQLite tests only |
+| SQL Server behavior | **Unverified for this module** — SQLite tests only. Only the AP cycle has been run on SQL Server (2026-11-04); `BatchDatabaseLock` mutual exclusion is verified there, but no AR/GL/Inventory flow is. |
 
 ## Open gaps
 
