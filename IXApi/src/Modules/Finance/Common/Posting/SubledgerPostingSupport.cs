@@ -278,12 +278,45 @@ internal sealed class SubledgerPostingSupport(DbContext db)
         var codes = groupCodes.Intersect(itemCodes).Distinct().OrderBy(x => x).ToList();
         var rates = await db.Set<TaxData>().AsNoTracking()
             .Where(x => x.DataAreaId == area && codes.Contains(x.TaxCode)).ToListAsync(ct);
-        return codes.Select(code => (Code: code, Row: rates.Where(x => x.TaxCode == code
+        var applicable = codes.Select(code => (Code: code, Row: rates.Where(x => x.TaxCode == code
                 && (x.TaxFromDate == default || x.TaxFromDate.Date <= date)
                 && (x.TaxToDate == default || x.TaxToDate.Date >= date))
             .OrderByDescending(x => x.TaxFromDate).FirstOrDefault()))
             .Where(x => x.Row != null)
             .Select(x => (x.Code, x.Row!.TaxValue)).ToList();
+        await RefuseUncalculatedTaxOriginAsync(area, applicable.Select(x => x.Code).ToList(), ct);
+        return applicable;
+    }
+
+    /// <summary>
+    /// Every caller applies a resolved rate as <c>net * rate / 100</c>, which is
+    /// <see cref="TaxBaseType.PctPerNet"/> calculated per line with no limits and no compounding.
+    /// A code configured any other way would post a <b>wrong amount</b> rather than be rejected, so
+    /// each unimplemented option is refused here by name. The implemented combination is the stored
+    /// default for all four fields, so no configuration that works today is affected.
+    /// </summary>
+    private async Task RefuseUncalculatedTaxOriginAsync(string area, List<string> codes, CancellationToken ct)
+    {
+        if (codes.Count == 0) return;
+        var configured = await db.Set<TaxTable>().AsNoTracking()
+            .Where(x => x.DataAreaId == area && codes.Contains(x.TaxCode))
+            .Select(x => new { x.TaxCode, x.TaxBase, x.TaxCalcMethod, x.TaxLimitBase, x.TaxOnTax })
+            .ToListAsync(ct);
+        foreach (var row in configured)
+        {
+            if (row.TaxBase != TaxBaseType.PctPerNet)
+                throw new SubledgerPostingException($"Tax code '{row.TaxCode}' has origin {row.TaxBase}, "
+                    + $"and only {TaxBaseType.PctPerNet} is calculated; posting it would apply the rate to the wrong base.");
+            if (row.TaxCalcMethod != TaxCalcMethod.Line)
+                throw new SubledgerPostingException($"Tax code '{row.TaxCode}' is calculated on the "
+                    + $"{row.TaxCalcMethod} amount, and only {TaxCalcMethod.Line} is calculated.");
+            if (row.TaxLimitBase != TaxLimitBase.None)
+                throw new SubledgerPostingException($"Tax code '{row.TaxCode}' has a {row.TaxLimitBase} "
+                    + "tax limit, and minimum/maximum tax limits are not calculated.");
+            if (!string.IsNullOrWhiteSpace(row.TaxOnTax))
+                throw new SubledgerPostingException($"Tax code '{row.TaxCode}' is compounded on tax code "
+                    + $"'{row.TaxOnTax}', and tax on tax is not calculated.");
+        }
     }
 
     /// <summary>

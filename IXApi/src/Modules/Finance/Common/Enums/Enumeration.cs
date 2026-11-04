@@ -1355,10 +1355,29 @@ namespace IAX.IXApi.Modules.Finance.Common
         Standard = 0,
         Special = 1
     }
-    public enum TaxBase
+    /// <summary>
+    /// D365 <c>TaxBaseType</c>, the origin a tax code's value is applied to. Member names and order
+    /// verified against D365 enum metadata on 2026-11-04. <see cref="PctPerNet"/> and
+    /// <see cref="PctPerGross"/> hold the ordinals of the Net/Gross enum this replaced, so stored
+    /// values keep their meaning.
+    /// </summary>
+    public enum TaxBaseType
     {
-        Net = 0,
-        Gross = 1
+        PctPerNet = 0,
+        PctPerGross = 1,
+        PctPerTax = 2,
+        AmountByUnit = 3,
+        PctGrossOnNet = 4,
+        PctPerMargin = 5
+    }
+    /// <summary>
+    /// D365 <c>PriceDateType</c>, which date a trade agreement is resolved as of. Member names and
+    /// order verified against D365 enum metadata on 2026-11-04.
+    /// </summary>
+    public enum PriceDateType
+    {
+        Today = 0,
+        DeliveryDate = 1
     }
     public enum TaxAccountType
     {

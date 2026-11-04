@@ -173,7 +173,8 @@ public sealed class PurchOrderService : BaseService<PurchTable>, IPurchOrderServ
                 // Dimension-specific agreements cannot be selected yet; the supply service assigns
                 // InventDimId below, so a second pass follows it.
                 var agreement = await FindPurchasePriceAsync(order, item.ItemId, input.PurchQty, unit,
-                    purchModule?.PriceUnit > 0 ? purchModule.PriceUnit : 1m, null, ct);
+                    purchModule?.PriceUnit > 0 ? purchModule.PriceUnit : 1m, null,
+                    (input.DeliveryDate ?? order.DeliveryDate), ct);
                 purchPrice = agreement?.Amount ?? (string.Equals(unit, purchModule?.UnitId, StringComparison.OrdinalIgnoreCase)
                     ? purchModule?.Price ?? 0m : 0m);
                 priceUnit = agreement?.PriceUnit ?? (purchModule?.PriceUnit > 0 ? purchModule.PriceUnit : 1m);
@@ -200,7 +201,7 @@ public sealed class PurchOrderService : BaseService<PurchTable>, IPurchOrderServ
             if (input.UsePriceAgreement)
             {
                 var dimensionPrice = await FindPurchasePriceAsync(order, item.ItemId, input.PurchQty, unit,
-                    line.PriceUnit, line.InventDimId, ct);
+                    line.PriceUnit, line.InventDimId, line.DeliveryDate, ct);
                 if (dimensionPrice != null)
                 {
                     line.PurchPrice = dimensionPrice.Value.Amount;
@@ -336,13 +337,21 @@ public sealed class PurchOrderService : BaseService<PurchTable>, IPurchOrderServ
     /// </summary>
     private async Task<(decimal Amount, decimal PriceUnit)?> FindPurchasePriceAsync(PurchTable order,
         string itemId, decimal quantity, string unitId, decimal fallbackPriceUnit,
-        string? inventDimId, CancellationToken ct)
+        string? inventDimId, DateTime deliveryDate, CancellationToken ct)
     {
         var priceGroup = await Db.Set<VendTable>().AsNoTracking()
             .Where(x => x.DataAreaId == order.DataAreaId && x.AccountNum == order.OrderAccount)
             .Select(x => x.PriceGroup).FirstOrDefaultAsync(ct) ?? string.Empty;
 
-        var pricingDate = order.OrderDate == default ? DateTime.UtcNow.Date : order.OrderDate.Date;
+        // D365 PurchParameters.PriceDateType decides the date an agreement is resolved as of.
+        // Neither option is the order date, which is what this resolution used before the field
+        // existed; Today is D365's own default and is what an absent parameters row means here.
+        var priceDateType = await Db.Set<PurchParameters>().AsNoTracking()
+            .Where(x => x.DataAreaId == order.DataAreaId)
+            .Select(x => (PriceDateType?)x.PriceDateType).FirstOrDefaultAsync(ct) ?? PriceDateType.Today;
+        var pricingDate = priceDateType == PriceDateType.DeliveryDate && deliveryDate != default
+            ? deliveryDate.Date
+            : DateTime.UtcNow.Date;
         var agreements = await Db.Set<PriceDiscTable>().AsNoTracking()
             .Where(row => row.DataAreaId == order.DataAreaId
                 && row.Module == ModuleInventCustVend.Vend

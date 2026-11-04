@@ -21,7 +21,7 @@ public sealed class TaxTableSeeder : IDataSeeder
         await c.EnsureAsync<TaxExemptCodeTable>(x => x.ExemptCode == "APV2-NONE",
             new() { ExemptCode = "APV2-NONE", Description = "No exemption - AP example" }, ct);
         await c.EnsureAsync<TaxTable>(x => x.TaxCode == "APV2-15", new() { TaxCode = "APV2-15", TaxName = "AP example 15 percent",
-            TaxCurrencyCode = "SAR", TaxAccountGroup = "APV2", TaxUnit = "EA", TaxBase = TaxBase.Net,
+            TaxCurrencyCode = "SAR", TaxAccountGroup = "APV2", TaxUnit = "EA", TaxBase = TaxBaseType.PctPerNet,
             TaxCalcMethod = TaxCalcMethod.Line, TaxRoundOff = 0.01m }, ct);
         var from = new DateTime(c.FiscalYear, 1, 1);
         await c.EnsureAsync<TaxData>(x => x.TaxCode == "APV2-15" && x.TaxFromDate == from,

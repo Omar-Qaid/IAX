@@ -12,7 +12,7 @@ counted as gaps.
 | Accounts payable | [AccountsPayable/GAPS.md](AccountsPayable/GAPS.md) | No purchase **discount** agreements (prices now resolve); payment proposal; net unit price / charges matching |
 | Accounts receivable | [AccountsReceivable/GAPS.md](AccountsReceivable/GAPS.md) | Return dispositions; settlement priority and cash discount on the settlement path |
 | Inventory | [Inventory/GAPS.md](Inventory/GAPS.md) | SQL Server verification; four unsupported inventory models |
-| Foundation | [Foundation/GAPS.md](Foundation/GAPS.md) | Tax calculation ignores every configured origin, silently; payment schedules make invoices unpostable |
+| Foundation | [Foundation/GAPS.md](Foundation/GAPS.md) | Tax origins other than percentage-of-net are refused, not calculated; payment schedules |
 | Common (shared posting) | [Common/GAPS.md](Common/GAPS.md) | Posting lock unproven under SQL Server; two overlapping posting exception types |
 
 ## The four findings that cut across every module

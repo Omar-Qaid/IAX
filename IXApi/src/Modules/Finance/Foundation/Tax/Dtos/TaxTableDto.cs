@@ -31,7 +31,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.Tax
 
         public string TaxUnit { get; set; } = string.Empty;
 
-        public TaxBase TaxBase { get; set; }
+        public TaxBaseType TaxBase { get; set; }
         public TaxCalcMethod TaxCalcMethod { get; set; }
         public TaxLimitBase TaxLimitBase { get; set; }
         public NoYes TaxIncludeInTax { get; set; }

@@ -41,7 +41,7 @@ namespace IAX.IXApi.Modules.Finance.Entities
         public string TaxUnit { get; set; } = string.Empty; // Operational unit mapping code for unit-driven models
 
         // Enum Properties
-        public TaxBase TaxBase { get; set; }             // Net, Gross, Marginal base, or Compounded values
+        public TaxBaseType TaxBase { get; set; }         // D365 TaxBaseType: the origin the tax value applies to
         public TaxCalcMethod TaxCalcMethod { get; set; } // Internal calculation distribution logic (Whole amount vs. Interval)
         public TaxLimitBase TaxLimitBase { get; set; }   // Basis parameter rules for evaluating maximum/minimum tax bands
         public NoYes TaxIncludeInTax { get; set; }
