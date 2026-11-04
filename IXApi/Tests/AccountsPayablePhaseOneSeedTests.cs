@@ -32,7 +32,7 @@ public sealed class AccountsPayablePhaseOneSeedTests
         using var provider = services.BuildServiceProvider();
         using var scope = provider.CreateScope();
         var ordered = new SeedDependencyResolver().Resolve(scope.ServiceProvider.GetServices<IDataSeeder>());
-        Assert.Equal(46, ordered.Count);
+        Assert.Equal(57, ordered.Count);
         Assert.Equal(2, scope.ServiceProvider.GetServices<ISeedValidator>().Count());
         Assert.DoesNotContain(ordered, x => x.Id.Contains("Cycle") || x.Id.Contains("PurchTable"));
         foreach (var seeder in ordered)
@@ -66,7 +66,7 @@ public sealed class AccountsPayablePhaseOneSeedTests
         using var scope = services.CreateScope();
         var runner = new SeedRunner(db, scope.ServiceProvider.GetServices<IDataSeeder>(), scope.ServiceProvider.GetServices<ISeedValidator>());
         var first = await runner.RunAsync(2026, "phase-one-test");
-        Assert.Equal(46, first.CompletedSeeders.Count);
+        Assert.Equal(57, first.CompletedSeeders.Count);
         await Assert.ThrowsAsync<InvalidOperationException>(() => new SeedContext(db, 2026, "phase-one-test")
             .RequireAsync<LogisticsLocation>(x => x.LocationId == "OTHER-LOCATION", default));
         Assert.Equal(2, await db.Set<VendTable>().CountAsync());
@@ -82,7 +82,7 @@ public sealed class AccountsPayablePhaseOneSeedTests
         await AssertBusinessExampleAsync(db);
         var counts = await CountsAsync(db);
         var tableCounts = counts.Split(';').Select(x => x.Split(':')).ToDictionary(x => x[0], x => long.Parse(x[1]));
-        var requiredTables = "VendParameters VendGroup VendLedgerAccounts PaymTerm VendPaymModeTable CashDisc LedgerJournalName TaxTable TaxGroupHeading TaxGroupData TaxItemGroupHeading TaxOnItem Ledger Currency ExchangeRateType ExchangeRateCurrencyPair ExchangeRate MainAccount DimensionAttributeValueCombination InventPosting InventModelGroup InventParameters VendTable DirPartyTable DirPartyLocation LogisticsLocation LogisticsPostalAddress LogisticsElectronicAddress VendBankAccount BankAccountTable EcoResProduct InventTable InventTableModule InventSite InventLocation InventDim EcoResCategory PriceDiscTable".Split(' ');
+        var requiredTables = "VendParameters VendGroup VendLedgerAccounts PaymTerm VendPaymModeTable CashDisc LedgerJournalName TaxTable TaxGroupHeading TaxGroupData TaxItemGroupHeading TaxOnItem Ledger Currency ExchangeRateType ExchangeRateCurrencyPair ExchangeRate MainAccount DimensionAttributeValueCombination InventPosting InventModelGroup InventParameters VendTable DirPartyTable DirPartyLocation LogisticsLocation LogisticsPostalAddress LogisticsElectronicAddress VendBankAccount BankAccountTable EcoResProduct InventTable InventTableModule InventSite InventLocation InventDim EcoResCategory PriceDiscTable CompanyInfo EcoResStorageDimensionGroup EcoResStorageDimensionGroupFldSetup EcoResStorageDimensionGroupItem EcoResTrackingDimensionGroup EcoResTrackingDimensionGroupFldSetup EcoResTrackingDimensionGroupItem InventItemPurchSetup InventItemInventSetup PurchParameters MarkupTable".Split(' ');
         foreach (var table in requiredTables)
             Assert.True(tableCounts.GetValueOrDefault(table) > 0, $"Phase-one table {table} was not populated.");
         foreach (var table in new[] { "PurchTable", "VendTrans", "InventTrans", "GeneralJournalEntry", "BankAccountTrans" })
@@ -113,6 +113,8 @@ public sealed class AccountsPayablePhaseOneSeedTests
     [Theory]
     [InlineData("price")]
     [InlineData("company")]
+    [InlineData("storage")]
+    [InlineData("charge")]
     public async Task Commit_validator_rejects_semantically_invalid_references_and_rolls_back(string corruption)
     {
         await using var connection = new SqliteConnection("Data Source=:memory:;Foreign Keys=True");
@@ -127,7 +129,7 @@ public sealed class AccountsPayablePhaseOneSeedTests
         var runner = new SeedRunner(db, seeders.Append(new CorruptExampleSeeder(seeders.Select(x => x.Id).ToArray(), corruption)),
             scope.ServiceProvider.GetServices<ISeedValidator>());
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => runner.RunAsync(2026, "integrity-test"));
-        Assert.Contains(corruption == "price" ? "vendor price currency/unit/amount" : "DimensionAttributeValueCombination reference in dat", exception.Message);
+        Assert.Contains(corruption switch { "price" => "vendor price currency/unit/amount", "storage" => "storage field policy", "charge" => "charge posting references", _ => "DimensionAttributeValueCombination reference in dat" }, exception.Message);
         Assert.Equal(before, await CountsAsync(db));
     }
 
@@ -168,7 +170,7 @@ public sealed class AccountsPayablePhaseOneSeedTests
             var prepared = await examples.PrepareAsync(new(2026, "sql-integrity-test"));
             Assert.False(prepared.TransactionsExecuted);
             Assert.Equal(ExampleIdentifiers.Scope, prepared.Scope);
-            Assert.Equal(46, prepared.CompletedSeeders.Count);
+            Assert.Equal(57, prepared.CompletedSeeders.Count);
             Assert.Equal(2, prepared.MasterData.Vendors.Count);
             Assert.Equal(2, prepared.MasterData.Products.Count);
             Assert.Equal(3, prepared.MasterData.PurchasePrices.Count);
@@ -180,6 +182,7 @@ public sealed class AccountsPayablePhaseOneSeedTests
             Assert.Equal(counts, await CountsAsync(db));
             Assert.Equal(vendorIds, await db.Set<VendTable>().OrderBy(x => x.AccountNum).Select(x => x.RecId).ToArrayAsync());
             Assert.Equal(prepared.MasterData.Vendors.Select(x => x.RecId), repeated.MasterData.Vendors.Select(x => x.RecId));
+            await AssertTransactionStorageAsync(db);
         }
         finally
         {
@@ -188,8 +191,10 @@ public sealed class AccountsPayablePhaseOneSeedTests
         }
     }
 
-    [Fact]
-    public async Task Cycle_examples_prepare_configuration_and_masters_only_and_return_persisted_references()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Cycle_examples_prepare_configuration_and_masters_only_and_return_persisted_references(bool existingCompany)
     {
         await using var connection = new SqliteConnection("Data Source=:memory:;Foreign Keys=True");
         await connection.OpenAsync();
@@ -200,18 +205,25 @@ public sealed class AccountsPayablePhaseOneSeedTests
         using var scope = provider.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         await db.Database.ExecuteSqlRawAsync(db.Database.GenerateCreateScript().Replace("N'", "'"));
-        await InitializeCompanyAsync(db);
+        if (existingCompany) await InitializeCompanyAsync(db);
         Assert.Empty(scope.ServiceProvider.GetServices<ISeedScenario>());
         Assert.Equal(3, scope.ServiceProvider.GetServices<ISeedValidator>().Count());
         var examples = scope.ServiceProvider.GetRequiredService<AccountsPayableCycleSeeder>();
         var result = await examples.PrepareAsync(new(2026, "master-example-test"));
+        Assert.NotNull(result.MasterData.AdditionalMasters);
+        Assert.Equal((await db.Set<CompanyInfo>().SingleAsync()).RecId, result.MasterData.AdditionalMasters.CompanyRecId);
+        Assert.Equal(existingCompany ? "Riyadh Business Services (Demo)" : "Office Supplies Demo Company", (await db.Set<CompanyInfo>().SingleAsync()).Name);
+        Assert.Equal((await db.Set<PurchParameters>().SingleAsync()).RecId, result.MasterData.AdditionalMasters.PurchaseParametersRecId);
+        Assert.True(result.MasterData.AdditionalMasters.StorageDimensionGroupRecId > 0);
+        Assert.True(result.MasterData.AdditionalMasters.TrackingDimensionGroupRecId > 0);
+        Assert.Equal((await db.Set<MarkupTable>().SingleAsync()).RecId, result.MasterData.AdditionalMasters.ChargeCodeRecId);
         Assert.Equal(ExampleIdentifiers.Scope, result.Scope);
         Assert.False(result.TransactionsExecuted);
         Assert.Equal("dat", result.Company);
         Assert.Equal(2026, result.FiscalYear);
         Assert.Equal(4, result.PreparationSteps.Count);
-        Assert.Equal(Enumerable.Range(1, 46), result.CompletedSeeders.Select(x => x.Order));
-        Assert.Equal(46, result.CompletedSeeders.Select(x => x.SeederId).Distinct().Count());
+        Assert.Equal(Enumerable.Range(1, 57), result.CompletedSeeders.Select(x => x.Order));
+        Assert.Equal(57, result.CompletedSeeders.Select(x => x.SeederId).Distinct().Count());
         Assert.All(result.MasterData.Vendors, x => Assert.True(x.RecId > 0 && x.PartyRecId > 0 && x.BankRecId > 0 && x.AddressRecId > 0));
         Assert.Equal(2, result.MasterData.Vendors.Count);
         Assert.Equal(2, result.MasterData.Products.Count);
@@ -226,15 +238,72 @@ public sealed class AccountsPayablePhaseOneSeedTests
         var counts = await CountsAsync(db);
         var tables = counts.Split(';').Select(x => x.Split(':')).ToDictionary(x => x[0], x => long.Parse(x[1]));
         foreach (var table in new[] { "PurchTable", "PurchLine", "VendPurchOrderJour", "VendPurchOrderTrans", "VendPackingSlipJour", "VendPackingSlipTrans",
-            "InventTransOrigin", "InventTrans", "VendInvoiceInfoTable", "VendInvoiceInfoLine", "VendInvoiceJour", "VendInvoiceTrans", "VendTrans", "VendTransOpen",
+            "AccountingDistribution", "SubledgerJournalEntry", "SubledgerJournalAccountEntry", "VendInvoiceInfoSubLine", "InventTransOrigin", "InventTrans", "VendInvoiceInfoTable", "VendInvoiceInfoLine", "VendInvoiceJour", "VendInvoiceTrans", "VendTrans", "VendTransOpen",
             "VendSettlement", "LedgerJournalTable", "LedgerJournalTrans", "BankAccountTrans", "TaxTrans", "MarkupTrans", "GeneralJournalEntry", "GeneralJournalAccountEntry", "SubledgerVoucherGeneralJournalEntry" })
             Assert.Equal(0, tables[table]);
         db.ChangeTracker.Clear();
         var repeated = await examples.PrepareAsync(new(2026, "master-example-test"));
         Assert.Equal(counts, await CountsAsync(db));
+        Assert.Equal(result.MasterData.AdditionalMasters, repeated.MasterData.AdditionalMasters);
         Assert.Equal(result.MasterData.Vendors.Select(x => x.RecId), repeated.MasterData.Vendors.Select(x => x.RecId));
         Assert.Equal(result.MasterData.Products.Select(x => x.RecId), repeated.MasterData.Products.Select(x => x.RecId));
         Assert.Equal(result.MasterData.PurchasePrices.Select(x => x.RecId), repeated.MasterData.PurchasePrices.Select(x => x.RecId));
+    }
+
+    [Fact]
+    public async Task Transaction_storage_round_trips_and_rejects_orphan_references()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:;Foreign Keys=True");
+        await connection.OpenAsync();
+        await using var db = new Fixture(new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlite(connection).Options);
+        await db.Database.ExecuteSqlRawAsync(db.Database.GenerateCreateScript().Replace("N'", "'"));
+        using var provider = new ServiceCollection().AddAccountsPayablePhaseOneSeeding().BuildServiceProvider();
+        using var scope = provider.CreateScope();
+        await new SeedRunner(db, scope.ServiceProvider.GetServices<IDataSeeder>(), scope.ServiceProvider.GetServices<ISeedValidator>())
+            .RunAsync(2026, "transaction-storage-test");
+        await AssertTransactionStorageAsync(db);
+    }
+
+    private static async Task AssertTransactionStorageAsync(ApplicationDbContext db)
+    {
+        var company = await db.Set<CompanyInfo>().SingleAsync();
+        var ledger = await db.Set<Ledger>().SingleAsync();
+        var period = await db.Set<FiscalCalendarPeriod>().FirstAsync();
+        var dimension = await db.Set<DimensionAttributeValueCombination>().SingleAsync(x => x.MainAccountValue == "681001");
+        var header = new VendInvoiceInfoTable { ParmId = "STORAGE-TEST", Num = "STORAGE-ONLY", CurrencyCode = "SAR" };
+        var line = new VendInvoiceInfoLine { ParmId = header.ParmId, OrigPurchId = "STORAGE-PO", InventTransId = "STORAGE-LINE", ReceiveNow = 1m };
+        db.AddRange(header, line);
+        await db.SaveChangesAsync();
+        var receiptLink = new VendInvoiceInfoSubLine { DocumentId = "STORAGE-RECEIPT", ParmId = header.ParmId, LineRefRecId = line.RecId,
+            ReceiveNow = 1.25m, InventNow = 1.25m }; // Polymorphic receipt reference intentionally not resolved by storage.
+        var distribution = new AccountingDistribution { AccountingLegalEntity = company.RecId, LedgerDimension = dimension.RecId,
+            AccountingDate = new DateTime(2026, 4, 15), Number = 1, AllocationFactor = 1m,
+            TransactionCurrency = "SAR", TransactionCurrencyAmount = 125.123456m };
+        var journal = new SubledgerJournalEntry { Ledger = ledger.RecId, FiscalCalendarPeriod = period.RecId,
+            JournalNumber = "STORAGE-JOURNAL", Voucher = "STORAGE-VOUCHER", VoucherDataAreaId = "dat" };
+        db.AddRange(receiptLink, distribution, journal);
+        await db.SaveChangesAsync();
+        var entry = new SubledgerJournalAccountEntry { SubledgerJournalEntry = journal.RecId, LedgerDimension = dimension.RecId,
+            TransactionCurrency = "SAR", PostingType = IAX.IXApi.Modules.Finance.Common.LedgerPostingType.PurchConsump,
+            TransactionCurrencyAmount = 125.123456m, AccountingCurrencyAmount = 125.123456m, ExchangeRate1 = 1m };
+        db.Add(entry);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        Assert.Equal(1.25m, (await db.Set<VendInvoiceInfoSubLine>().SingleAsync()).ReceiveNow);
+        Assert.Equal(line.RecId, (await db.Set<VendInvoiceInfoSubLine>().SingleAsync()).LineRefRecId);
+        Assert.Equal(125.123456m, (await db.Set<AccountingDistribution>().SingleAsync()).TransactionCurrencyAmount);
+        var persisted = await db.Set<SubledgerJournalAccountEntry>().SingleAsync();
+        Assert.Equal(journal.RecId, persisted.SubledgerJournalEntry);
+        Assert.Equal(125.123456m, persisted.AccountingCurrencyAmount);
+        Assert.Null(persisted.GeneralJournalAccountEntry);
+        Assert.Null((await db.Set<AccountingDistribution>().SingleAsync()).SourceDocumentLine);
+        db.ChangeTracker.Clear();
+        db.Add(new VendInvoiceInfoSubLine { DocumentId = "ORPHAN", LineRefRecId = long.MaxValue });
+        await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+        db.ChangeTracker.Clear();
+        db.Add(new SubledgerJournalAccountEntry { LedgerDimension = dimension.RecId, SubledgerJournalEntry = long.MaxValue });
+        await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+        db.ChangeTracker.Clear();
     }
 
     private static async Task InitializeCompanyAsync(ApplicationDbContext db)
@@ -277,6 +346,17 @@ public sealed class AccountsPayablePhaseOneSeedTests
             {
                 var price = await c.Rows<PriceDiscTable>().SingleAsync(x => x.AccountRelation == "APV2-dat-LOCAL" && x.ItemRelation == "APV2-STOCK", ct);
                 price.Currency = "USD"; // An existing currency; a foreign key alone cannot catch this mismatch.
+            }
+            else if (corruption == "storage")
+            {
+                var row = await c.Rows<IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities.EcoResStorageDimensionGroupFldSetup>()
+                    .SingleAsync(x => x.DimensionFieldId == IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities.InventDimensionFields.Site, ct);
+                row.IsFinancialInventoryEnabled = false;
+            }
+            else if (corruption == "charge")
+            {
+                var row = await c.Rows<MarkupTable>().SingleAsync(ct);
+                row.CustomerLedgerDimension = (await c.Rows<DimensionAttributeValueCombination>().SingleAsync(x => x.MainAccountValue == "181001", ct)).RecId;
             }
             else
             {

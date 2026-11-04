@@ -13,7 +13,7 @@ Register `AddAccountsPayablePhaseOneSeeding()` from `Core.Registration`. In a fr
 injection scope, resolve `Core.Execution.SeedRunner` and call
 `await runner.RunAsync(fiscalYear: 2026, actor: "your-audit-user-id", cancellationToken)`.
 The runner uses the `ApplicationDbContext` company execution context. No startup hook runs it
-automatically. Apply migrations and create the selected legal entity first.
+automatically. Apply migrations first. An existing selected legal entity is preserved; when absent, the explicit demo run creates it and its party.
 
 For an opt-in configuration/master-data preparation report, use
 `AddAccountsPayableConfigurationAndMasterDataExamples()` and
@@ -72,11 +72,11 @@ this phase. `VendPostingSeeder` deliberately targets the existing posting-profil
 Validation refreshed November 4, 2026:
 
 - API build: 0 errors; existing package warnings remain.
-- Full API suite: 798 passed, 2 skipped, including the enabled SQL Server integrity test.
+- Full API suite: 801 passed, 2 skipped, including the enabled SQL Server integrity test.
 - Inventory cycle suite: 97 passed.
-- Focused integrity/preparation suite: 8 passed.
+- Phase-one integrity/preparation cases: 11 passed within the full API suite.
 
-The focused tests populate the 38 requested mappings, rerun without changing table counts,
+The focused tests populate the 49 covered mappings, rerun without changing table counts,
 preserve sequence progress, validate the named supplier quotations and SAR 3,680 example,
 check company-scoped reads and reject excessive mapped string lengths. They demonstrate
 rollback both when next-year configuration has already been inserted and when a final seeder
@@ -101,3 +101,31 @@ The SQL Server case is explicitly skipped when this environment variable is abse
 generated database name, never an application connection string or application database. No
 application database has been migrated or seeded as part of this implementation. Cross-process
 concurrent seeding and phase-two transaction posting remain unverified by these checks.
+
+## Additional basic AP references
+
+The phase contains 57 registered seeders. Eleven additional table mappings extend the original
+38 concepts: CompanyInfo; EcoResStorageDimensionGroup, EcoResStorageDimensionGroupFldSetup,
+EcoResStorageDimensionGroupItem; EcoResTrackingDimensionGroup,
+EcoResTrackingDimensionGroupFldSetup, EcoResTrackingDimensionGroupItem;
+InventItemPurchSetup; InventItemInventSetup; PurchParameters; MarkupTable.
+
+The stocked paper item uses a company-named shared storage group with mandatory site and
+warehouse, no location, financial inventory at site, and a no-batch/no-serial tracking group.
+Disabled field-setup records are intentional configuration, not inactive item masters.
+Purchase and inventory default order settings select APV2-DIM, quantity 100 EA, minimum/multiple
+1 EA, and illustrative two-calendar-day lead time. The service item has no stocked-item groups.
+
+APV2-FRT is a purchase charge code: debit delivery expense account 681003, credit vendor,
+with the APV2 item tax group. No MarkupTrans or monetary charge is created. The original
+SAR 3,680 illustration is unchanged because charges have not been applied.
+
+PurchParameters is a new minimal mapped D365 configuration subset with PurchaseType=Purch
+and one row per company. Its migration must be applied before application use. This phase
+persists the default only; purchase-order initialization consuming it belongs to phase two.
+It does not claim implementation of all D365 procurement parameters.
+Field provenance: https://learn.microsoft.com/en-us/common-data-model/schema/core/operationscommon/tables/supplychain/procurementandsourcing/parameter/purchparameters
+
+The CycleErpExamples report includes AdditionalMasters with the persisted company, parameter,
+dimension-group, order-default and charge-code references. All additions remain inside the
+same atomic seed transaction and are validated before commit.

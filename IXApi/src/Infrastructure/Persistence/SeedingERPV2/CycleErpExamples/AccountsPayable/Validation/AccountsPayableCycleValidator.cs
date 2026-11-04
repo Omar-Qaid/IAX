@@ -7,6 +7,7 @@ using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using Microsoft.EntityFrameworkCore;
+using IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities;
 
 namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsPayable.Validation;
 
@@ -88,6 +89,16 @@ public sealed class AccountsPayableCycleValidator : ISeedValidator
         prepared = new(new(ledger.RecId, ledger.ChartOfAccounts, ledger.FiscalCalendar, ledger.AccountingCurrency,
             dim.InventSiteId, dim.InventLocationId, dim.InventDimId, bank.RecId, bank.AccountId,
             invoiceJournal.JournalName, paymentJournal.JournalName, "APV2", "APV2"),
-            vendorReferences.AsReadOnly(), productReferences.AsReadOnly(), priceReferences.AsReadOnly());
+            vendorReferences.AsReadOnly(), productReferences.AsReadOnly(), priceReferences.AsReadOnly())
+        {
+            AdditionalMasters = new(
+                (await c.RequireAsync<CompanyInfo>(x => x.DataArea == c.Company, ct)).RecId,
+                (await c.RequireAsync<PurchParameters>(x => x.DataAreaId == c.Company, ct)).RecId,
+                (await c.RequireAsync<EcoResStorageDimensionGroupItem>(x => x.ItemId == "APV2-STOCK" && x.ItemDataAreaId == c.Company, ct)).StorageDimensionGroup,
+                (await c.RequireAsync<EcoResTrackingDimensionGroupItem>(x => x.ItemId == "APV2-STOCK" && x.ItemDataAreaId == c.Company, ct)).TrackingDimensionGroup,
+                (await c.RequireAsync<InventItemPurchSetup>(x => x.ItemId == "APV2-STOCK" && x.ItemDataAreaId == c.Company && x.InventDimId == "", ct)).RecId,
+                (await c.RequireAsync<InventItemInventSetup>(x => x.ItemId == "APV2-STOCK" && x.ItemDataAreaId == c.Company && x.InventDimId == "", ct)).RecId,
+                (await c.RequireAsync<MarkupTable>(x => x.MarkupCode == "APV2-FRT", ct)).RecId)
+        };
     }
 }

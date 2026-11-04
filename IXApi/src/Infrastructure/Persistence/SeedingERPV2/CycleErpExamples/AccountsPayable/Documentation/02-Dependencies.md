@@ -10,7 +10,7 @@ Use the existing seed dependency resolver; do not impose a second module orderin
 - Released products reference the primary vendor and their item/model groups.
 - Supplier quotes follow both the vendor and released-product/module records.
 
-The actual 46 completed seeder IDs and their order are returned in `CompletedSeeders`.
+The actual 57 completed seeder IDs and their order are returned in `CompletedSeeders`.
 Inventory storage setup precedes vendors, while released products with a primary vendor follow
 vendor setup; the graph therefore interleaves some module-owned work deliberately.
 

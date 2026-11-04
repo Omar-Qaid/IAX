@@ -23,6 +23,7 @@ public sealed class AccountsPayablePhaseOneValidator : ISeedValidator
         {
             if (!valid) throw new InvalidOperationException("AP phase-one integrity: " + message);
         }
+        await AdditionalMasterDataIntegrity.ValidateAsync(c, ct);
         var date = new DateTime(c.FiscalYear, 4, 15);
         var ledger = await c.RequireAsync<Ledger>(x => x.Name == "APV2", ct);
         var company = await c.RequireAsync<CompanyInfo>(x => x.DataArea == c.Company, ct);

@@ -23,6 +23,26 @@ public sealed class SeedPostingModelTests
     }
 
     [Fact]
+    public void AP_transaction_storage_has_documented_nullability_precision_and_restrictive_relationships()
+    {
+        using var db = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseSqlServer("Server=localhost;Database=ModelOnly;Integrated Security=true;TrustServerCertificate=true").Options);
+        foreach (var type in new[] { typeof(AccountingDistribution), typeof(SubledgerJournalEntry), typeof(SubledgerJournalAccountEntry) })
+        {
+            Assert.False(typeof(IAX.IXApi.Shared.Domain.Entities.IMultiCompany).IsAssignableFrom(type));
+            Assert.All(db.Model.FindEntityType(type)!.GetForeignKeys(), fk => Assert.Equal(DeleteBehavior.Restrict, fk.DeleteBehavior));
+        }
+        var entry = db.Model.FindEntityType(typeof(SubledgerJournalAccountEntry))!;
+        Assert.False(entry.FindProperty(nameof(SubledgerJournalAccountEntry.LedgerDimension))!.IsNullable);
+        Assert.True(entry.FindProperty(nameof(SubledgerJournalAccountEntry.GeneralJournalAccountEntry))!.IsNullable);
+        Assert.Equal(28, entry.FindProperty(nameof(SubledgerJournalAccountEntry.TransactionCurrencyAmount))!.GetPrecision());
+        Assert.Equal(12, entry.FindProperty(nameof(SubledgerJournalAccountEntry.TransactionCurrencyAmount))!.GetScale());
+        var subline = db.Model.FindEntityType(typeof(IAX.IXApi.Modules.Finance.AccountsPayable.VendInvoiceInfoSubLine))!;
+        Assert.Contains(subline.GetForeignKeys(), fk => fk.Properties.Single().Name == "LineRefRecId");
+        Assert.DoesNotContain(subline.GetForeignKeys(), fk => fk.Properties.Any(p => p.Name == "JournalRefRecId"));
+    }
+
+    [Fact]
     public void Posting_links_and_multiple_request_variables_have_persistable_keys()
     {
         using var db = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>()

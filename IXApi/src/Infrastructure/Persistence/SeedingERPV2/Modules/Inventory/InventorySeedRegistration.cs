@@ -18,6 +18,14 @@ public static class InventorySeedRegistration
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, InventTableSeeder>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, InventTableModuleSeeder>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, EcoResCategorySeeder>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, EcoResStorageDimensionGroupSeeder>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, EcoResStorageDimensionGroupFldSetupSeeder>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, EcoResStorageDimensionGroupItemSeeder>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, EcoResTrackingDimensionGroupSeeder>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, EcoResTrackingDimensionGroupFldSetupSeeder>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, EcoResTrackingDimensionGroupItemSeeder>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, InventItemPurchSetupSeeder>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, InventItemInventSetupSeeder>());
         return services;
     }
 }

@@ -76,3 +76,12 @@ values will conflict with the new named example; use a fresh demo database or ex
 the existing demo configuration first. Application data is never automatically deleted for this.
 
 See [PHASE-ONE.md](PHASE-ONE.md) for invocation, table mappings and validation evidence.
+
+## Additional preparation references
+
+The stocked item is assigned storage group `APV2-dat-STORE` (site and warehouse) and tracking
+group `APV2-dat-NONE` (batch/serial disabled). Purchase/inventory defaults use `APV2-DIM`,
+100 EA standard quantity and two calendar days lead time. `APV2-FRT` prepares a supplier
+charge against delivery expense 681003 and the APV2 item-tax group; it is not applied to
+the SAR 3,680 baseline. PurchParameters stores the Purch order type for future initialization.
+An absent selected company gets a demo CompanyInfo/party; an existing legal entity is preserved.

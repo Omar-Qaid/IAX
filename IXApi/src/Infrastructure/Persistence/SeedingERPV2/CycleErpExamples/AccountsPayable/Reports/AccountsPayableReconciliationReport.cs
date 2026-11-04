@@ -5,7 +5,13 @@ public sealed record AccountsPayableReconciliationReport(
     ExampleSetupReference Configuration,
     IReadOnlyList<ExampleVendorReference> Vendors,
     IReadOnlyList<ExampleProductReference> Products,
-    IReadOnlyList<ExamplePurchasePriceReference> PurchasePrices);
+    IReadOnlyList<ExamplePurchasePriceReference> PurchasePrices)
+{
+    public ExampleAdditionalMasterReferences? AdditionalMasters { get; init; }
+}
+public sealed record ExampleAdditionalMasterReferences(long CompanyRecId, long PurchaseParametersRecId,
+    long StorageDimensionGroupRecId, long TrackingDimensionGroupRecId,
+    long PurchaseDefaultsRecId, long InventoryDefaultsRecId, long ChargeCodeRecId);
 
 public sealed record ExampleSetupReference(long LedgerRecId, long ChartOfAccountsRecId,
     long FiscalCalendarRecId, string AccountingCurrency, string SiteId, string WarehouseId,

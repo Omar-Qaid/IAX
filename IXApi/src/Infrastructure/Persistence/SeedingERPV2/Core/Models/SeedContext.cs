@@ -33,7 +33,7 @@ public sealed class SeedContext(ApplicationDbContext db, int fiscalYear, string 
         var existing = await Rows<T>().SingleOrDefaultAsync(key, ct);
         if (existing != null)
         {
-            if (existing.IsDeleted || !IsActive(existing))
+            if (existing.IsDeleted || IsActive(existing) != IsActive(proposed))
                 throw new InvalidOperationException($"{typeof(T).Name} seed key is deleted or inactive in {Company}.");
             if (fields.Length == 0)
                 fields = Db.Model.FindEntityType(typeof(T))!.GetProperties()

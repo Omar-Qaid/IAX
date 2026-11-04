@@ -8,12 +8,12 @@ bank movements or posted ledger entries. No transaction scenario is registered o
 ## Implemented preparation
 
 1. Validate the embedded example manifests and the existing company context.
-2. Run the current 46 GL, Tax, Inventory, Cash/Bank and AP seeders in their actual dependency order.
+2. Run the current 57 GL, Tax, Inventory, Cash/Bank and AP seeders in their actual dependency order.
 3. Validate the stored configuration and master relationships inside the seed transaction.
 4. Commit the masters/history atomically and return their references and completed seeder order.
 
 The module seeders own all writes; this folder does not duplicate their setup or insert business
-transactions. The existing legal entity must already exist. The existing APV2 conflict checks,
+transactions. An existing legal entity is preserved; an absent selected company is created as demo master data. The existing APV2 conflict checks,
 company scope, database seeder lock and safe rerun behavior apply.
 
 ## Invocation
@@ -65,12 +65,18 @@ procedures. Posted-balance validator placeholders are intentionally unused in th
 ## Verified results
 
 - Build: 0 errors.
-- Focused configuration/master tests: 8 passed, including disposable SQL Server preparation and rerun.
-- API suite: 798 passed, 2 skipped.
+- Configuration/master tests: 11 passed within the API suite, including disposable SQL Server preparation and rerun.
+- API suite: 801 passed, 2 skipped.
 - Inventory suite: 97 passed.
 
-The tests verify the four preparation steps, all 46 seeder IDs in execution order, persisted
+The tests verify the four preparation steps, all 57 seeder IDs in execution order, persisted
 vendor/product/price references, JSON report scope, stable IDs and row counts across reruns,
 and zero rows in the 23 checked purchase/inventory/vendor/payment/tax/posting tables in a fresh
 SQLite example database. SQL Server uses a generated disposable database and deletes it after
 the first-run/rerun checks. These results validate preparation, not purchase-to-settlement posting.
+
+The additional basic reference package seeds legal-entity fallback, storage/tracking groups and
+stocked-item assignments, purchase/inventory order defaults, purchase type and purchase charge
+code. Existing legal-entity data is preserved. See ../../PHASE-ONE.md for table names and scope.
+`MasterData.AdditionalMasters` returns these persisted references. PurchParameters currently
+stores the basic default; its transaction-phase consumption is not implemented here.

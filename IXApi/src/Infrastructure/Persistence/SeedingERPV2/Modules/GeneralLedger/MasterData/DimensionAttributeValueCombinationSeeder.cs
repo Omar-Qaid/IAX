@@ -23,7 +23,7 @@ public sealed class DimensionAttributeValueCombinationSeeder : IDataSeeder
         if (structure == null)
         {
             var (defined, error) = await builder.DefineAsync(c.Company, new AccountStructureCreateDto("APV2", "AP example main accounts",
-                [new AccountStructureSegmentDto(AccountStructureBuilder.MainAccountSegment, "181001..181005;281001..281002;481001..481002;681001..681002")]), ct);
+                [new AccountStructureSegmentDto(AccountStructureBuilder.MainAccountSegment, "181001..181005;281001..281002;481001..481002;681001..681003")]), ct);
             if (defined == null || error != null) throw new InvalidOperationException(error);
             var (activated, activationError) = await builder.ActivateAsync(c.Company, "APV2", ct);
             if (activated == null || activationError != null) throw new InvalidOperationException(activationError);
@@ -34,7 +34,7 @@ public sealed class DimensionAttributeValueCombinationSeeder : IDataSeeder
         var (assigned, assignmentError) = await builder.AssignToLedgerAsync(c.Company, structure.Name, ct);
         if (assignmentError != null) throw new InvalidOperationException(assignmentError);
         var chart = await c.RequireAsync<LedgerChartOfAccounts>(x => x.Name == "APV2", ct);
-        var codes = new[] { "181001", "181002", "181003", "181004", "181005", "281001", "281002", "481001", "481002", "681001", "681002" };
+        var codes = new[] { "181001", "181002", "181003", "181004", "181005", "281001", "281002", "481001", "481002", "681001", "681002", "681003" };
         foreach (var account in await c.Rows<MainAccount>().Where(x => x.LedgerChartOfAccounts == chart.RecId && codes.Contains(x.MainAccountId) && !x.IsDeleted).ToListAsync(ct))
         {
             var combination = await new LedgerDimensionResolver(c.Db).ResolveAsync(c.Company, account, [], structure.RecId, ct);
