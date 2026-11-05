@@ -34,3 +34,16 @@ contacts are demonstration data.
 Verification is in `FoundationSeedTests`: registration/dependency resolution,
 mapped master coverage, FK-enabled persistence, reruns and conflict rollback.
 Check current test output before claiming complete coverage or successful execution.
+
+
+## Package structure
+
+- `Data/`: embedded coverage, reference and scenario manifests, plus their typed catalog and execution options.
+- `Validation/`: definition validation and persisted master-reference capture before commit.
+- `Reports/`: Foundation preparation, master references and transaction/tax-journal results.
+- `Documentation/`: fourteen Foundation process and integrity guides, plus table ownership.
+- `Scenarios/`: six documented preparation, reference, tax/charge and failure workflows.
+- `Reference/AccountsPayable-File-Comparison.md`: disposition of every AP example-package source file.
+- `PHASE-TWO.md`: explicit service-generated transaction execution and its boundaries.
+
+`PrepareAsync` now validates embedded definitions before writes and returns `MasterData` with physical table counts, record IDs and resolved business-key references captured before commit. These references are not posted balances. JSON describes the owning seeders; it is not a separate insert mechanism.

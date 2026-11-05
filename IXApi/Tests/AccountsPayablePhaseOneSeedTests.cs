@@ -534,6 +534,273 @@ public sealed class AccountsPayablePhaseOneSeedTests
         }
     }
 
+    [Fact]
+    public async Task Detailed_AP_stages_SQLite()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:;Foreign Keys=True");
+        await connection.OpenAsync();
+        await using var db = new Fixture(new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlite(connection).Options);
+        await RunDetailedApStagesAsync(db, "SQLite", async () =>
+            await db.Database.ExecuteSqlRawAsync(db.Database.GenerateCreateScript().Replace("N'", "'")));
+    }
+
+    [SqlServerPhaseOneFact]
+    public async Task Detailed_AP_stages_SQLServer()
+    {
+        var connection = new SqlConnectionStringBuilder { DataSource = Environment.GetEnvironmentVariable("IXAPI_AP_PHASE_ONE_SQLSERVER")!,
+            InitialCatalog = "IXApi_APStage_" + Guid.NewGuid().ToString("N"), IntegratedSecurity = true, TrustServerCertificate = true };
+        await using var db = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlServer(connection.ConnectionString).Options);
+        var created = false;
+        var completed = false;
+        var runId = Guid.NewGuid().ToString("N");
+        try
+        {
+            await RunDetailedApStagesAsync(db, "SQL Server", async () => { created = await db.Database.EnsureCreatedAsync(); Assert.True(created); }, runId);
+            completed = true;
+        }
+        finally
+        {
+            if (created)
+            {
+                DetailedApRecord(runId,"SQL Server","cleanup","تنظيف قاعدة الاختبار المؤقتة","RUNNING",connection.InitialCatalog);
+                try
+                {
+                    // UnitOfWork owns/disposes its context; cleanup uses a fresh context.
+                    await using var cleanup = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlServer(connection.ConnectionString).Options);
+                    Assert.True(await cleanup.Database.EnsureDeletedAsync());
+                    DetailedApRecord(runId,"SQL Server","cleanup","تنظيف قاعدة الاختبار المؤقتة","PASSED",connection.InitialCatalog);
+                    if (completed) DetailedApRecord(runId,"SQL Server","run","اختبار دورة الحسابات الدائنة","PASSED");
+                }
+                catch (Exception error)
+                {
+                    DetailedApRecord(runId,"SQL Server","cleanup","تنظيف قاعدة الاختبار المؤقتة","FAILED",error.ToString());
+                    DetailedApRecord(runId,"SQL Server","run","اختبار دورة الحسابات الدائنة","FAILED",error.ToString());
+                    throw;
+                }
+            }
+        }
+    }
+
+    private static void DetailedApRecord(string runId, string providerName, string stage, string name, string status, string? detail = null)
+    {
+        var path = Environment.GetEnvironmentVariable("IXAPI_AP_STAGE_REPORT") ?? Path.Combine(AppContext.BaseDirectory, "ap-stage-results.jsonl");
+        Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
+        File.AppendAllText(path, JsonSerializer.Serialize(new { runId, provider = providerName, stage, name, status, detail, atUtc = DateTime.UtcNow }) + Environment.NewLine);
+    }
+    private static async Task RunDetailedApStagesAsync(ApplicationDbContext db, string providerName, Func<Task> initialize, string? reportRunId = null)
+    {
+        var runId = reportRunId ?? Guid.NewGuid().ToString("N");
+        void Record(string stage, string name, string status, string? detail = null) => DetailedApRecord(runId,providerName,stage,name,status,detail);
+        async Task Stage(string number, string name, Func<Task> action)
+        {
+            Record(number, name, "RUNNING");
+            try { await action(); db.ChangeTracker.Clear(); Record(number, name, "PASSED"); }
+            catch (Exception error) { Record(number, name, "FAILED", error.ToString()); Record("run","اختبار دورة الحسابات الدائنة","FAILED",error.Message); throw; }
+        }
+        static void Success(PurchResult result) => Assert.True(result.StatusCode == 200, $"HTTP {result.StatusCode}: {result.Message}");
+        Record("run", "اختبار دورة الحسابات الدائنة", "STARTED");
+        await Stage("0", "قاعدة الاختبار والنموذج والمفاتيح الخارجية", initialize);
+        using var provider = TransactionServices(db);
+        using var scope = provider.CreateScope();
+        var services = scope.ServiceProvider;
+        await Stage("1", "إعداد المورد والأصناف والضرائب وحسابات الترحيل", async () =>
+        {
+            await services.GetRequiredService<AccountsPayableCycleSeeder>().PrepareAsync(new(2026,"cycle-test"));
+            Assert.Equal(2, await db.Set<VendTable>().CountAsync());
+            Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
+        });
+        var orders = services.GetRequiredService<IPurchOrderService>();
+        PurchTable order = null!;
+        PurchLine line = null!;
+        VendInvoiceInfoTable held = null!;
+        var date = new DateTime(2026,4,15);
+        const string account = "APV2-dat-LOCAL";
+        await Stage("2", "إنشاء أمر الشراء وبنوده", async () =>
+        {
+            var result = await orders.CreateAsync(new(account,null,"SAR",date,"APV2-SITE","APV2-WH","AP-STAGE-MAIN",date.AddDays(-1)),default);
+            Success(result); order = (PurchTable)result.Data!;
+            Success(await orders.AddLineAsync(order.RecId,new("APV2-STOCK",100m,"EA",25m,1m,"APV2-SITE","APV2-WH",date,null),default));
+            line = await db.Set<PurchLine>().SingleAsync(x => x.DataAreaId == "dat" && x.PurchId == order.PurchId);
+            Assert.Equal(100m,line.PurchQty); Assert.Equal(2500m,line.LineAmount);
+            Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
+        });
+        await Stage("3", "تأكيد أمر الشراء وحفظ نسخة التأكيد", async () =>
+        {
+            Success(await services.GetRequiredService<IPurchConfirmationService>().ConfirmAsync(order.RecId,default,date));
+            var confirmation = await db.Set<VendPurchOrderJour>().SingleAsync(x => x.DataAreaId == "dat" && x.PurchId == order.PurchId);
+            Assert.Equal(100m,confirmation.Qty); Assert.Equal(2500m,confirmation.Amount);
+            Assert.Single(await db.Set<VendPurchOrderTrans>().Where(x => x.DataAreaId == "dat" && x.PurchId == order.PurchId).ToListAsync());
+            Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
+        });
+        await Stage("4", "استلام البضاعة والتحديث المادي للمخزون", async () =>
+        {
+            Success(await services.GetRequiredService<IProductReceiptService>().PostAsync(order.RecId,new("AP-STAGE-R1",date.AddDays(1),[new(line.RecId,100m)]),default));
+            Assert.Equal(100m,(await db.Set<VendPackingSlipJour>().SingleAsync(x => x.DataAreaId == "dat" && x.PurchId == order.PurchId)).Qty);
+            var received = await db.Set<PurchLine>().SingleAsync(x => x.RecId == line.RecId);
+            Assert.Equal(0m,received.RemainPurchPhysical); Assert.Equal(100m,received.RemainPurchFinancial);
+            Assert.Empty(await db.Set<VendInvoiceJour>().ToListAsync());
+            var stock = await db.Set<InventSum>().Where(x => x.DataAreaId == "dat" && x.ItemId == "APV2-STOCK").ToListAsync();
+            Assert.Equal(100m,stock.Sum(x => x.PhysicalInvent));
+            Assert.Equal(100m,stock.Sum(x => x.Received));
+            Assert.Equal(2500m,stock.Sum(x => x.PhysicalValue));
+            Assert.Equal(0m,stock.Sum(x => x.PostedValue));
+            var accrual = Assert.Single(await db.Set<PurchReceiptAccrual>().ToListAsync());
+            Assert.Equal(100m,accrual.InventQuantity); Assert.Equal(2500m,accrual.AmountMst);
+            Assert.Equal(0m,accrual.ReversedInventQuantity); Assert.Equal(0m,accrual.ReversedAmountMst);
+            var receiptEntries = await db.Set<GeneralJournalAccountEntry>().ToListAsync();
+            Assert.Equal(2500m,receiptEntries.Where(x => x.LedgerDimension == accrual.InventoryLedgerDimension).Sum(x => x.AccountingCurrencyAmount));
+            Assert.Equal(-2500m,receiptEntries.Where(x => x.LedgerDimension == accrual.AccrualLedgerDimension).Sum(x => x.AccountingCurrencyAmount));
+            Assert.Empty(await db.Set<VendTrans>().ToListAsync());
+            Assert.Empty(await db.Set<TaxTrans>().ToListAsync());
+            Assert.Empty(await db.Set<BankAccountTrans>().ToListAsync());
+        });
+        var pending = services.GetRequiredService<IVendInvoiceInfoService>();
+        await Stage("5", "إنشاء الفاتورة المعلقة وربطها بالاستلام", async () =>
+        {
+            var entryCount = await db.Set<GeneralJournalAccountEntry>().CountAsync();
+            Success(await pending.CreateFromOrderAsync(order.RecId,new("AP-STAGE-I1",date.AddDays(2),date.AddDays(2),Lines: [new(line.RecId,100m)]),default));
+            held = await db.Set<VendInvoiceInfoTable>().SingleAsync(x => x.DataAreaId == "dat" && x.Num == "AP-STAGE-I1");
+            var ids = await db.Set<VendInvoiceInfoLine>().Where(x => x.DataAreaId == "dat" && x.ParmId == held.ParmId).Select(x => x.RecId).ToArrayAsync();
+            Assert.True(await db.Set<VendInvoiceInfoSubLine>().AnyAsync(x => x.DataAreaId == "dat" && x.LineRefRecId != null && ids.Contains(x.LineRefRecId.Value)));
+            Assert.Empty(await db.Set<VendInvoiceJour>().ToListAsync());
+            Assert.Equal(entryCount,await db.Set<GeneralJournalAccountEntry>().CountAsync());
+            Assert.Empty(await db.Set<VendTrans>().ToListAsync());
+            Assert.Empty(await db.Set<TaxTrans>().ToListAsync());
+            Assert.Empty(await db.Set<BankAccountTrans>().ToListAsync());
+        });
+        await Stage("6", "ترحيل فاتورة المورد والضريبة", async () =>
+        {
+            Success(await pending.PostAsync(held.ParmId,default));
+            var invoice = await db.Set<VendInvoiceJour>().SingleAsync(x => x.DataAreaId == "dat" && x.InvoiceId == "AP-STAGE-I1");
+            Assert.Equal(2875m,invoice.InvoiceAmount); Assert.Equal(375m,invoice.SumTax);
+            Assert.Equal(0m,(await db.Set<PurchLine>().SingleAsync(x => x.RecId == line.RecId)).RemainPurchFinancial);
+            var stock = await db.Set<InventSum>().Where(x => x.DataAreaId == "dat" && x.ItemId == "APV2-STOCK").ToListAsync();
+            Assert.Equal(0m,stock.Sum(x => x.Received));
+            Assert.Equal(0m,stock.Sum(x => x.PhysicalValue));
+            Assert.Equal(100m,stock.Sum(x => x.PostedQty));
+            Assert.Equal(2500m,stock.Sum(x => x.PostedValue));
+            var accrual = Assert.Single(await db.Set<PurchReceiptAccrual>().ToListAsync());
+            Assert.Equal(100m,accrual.ReversedInventQuantity); Assert.Equal(2500m,accrual.ReversedAmountMst);
+        });
+        await Stage("7", "حركة المورد والرصيد المفتوح", async () =>
+        {
+            var open = await db.Set<VendTransOpen>().SingleAsync(x => x.DataAreaId == "dat" && x.AccountNum == account);
+            Assert.Equal(-2875m,open.AmountCur);
+            Assert.True(await db.Set<VendTrans>().AnyAsync(x => x.DataAreaId == "dat" && x.RecId == open.RefRecId && x.Invoice == "AP-STAGE-I1"));
+        });
+        await Stage("8", "دفع المورد وحركة البنك دون تسوية تلقائية", async () =>
+        {
+            Success(await services.GetRequiredService<IVendPaymentService>().PostAsync(new(account,"APV2-BANK",2875m,"AP-STAGE-PAY",date.AddDays(35),SettleAutomatically:false),default));
+            Assert.Equal(2,await db.Set<VendTransOpen>().CountAsync(x => x.DataAreaId == "dat" && x.AccountNum == account));
+            Assert.Equal(-2875m,(await db.Set<BankAccountTrans>().Where(x => x.DataAreaId == "dat").ToListAsync()).Sum(x => x.AmountCur));
+        });
+        await Stage("9", "تسوية الفاتورة مع الدفعة وإقفال الرصيد", async () =>
+        {
+            var ids = await db.Set<VendTransOpen>().Where(x => x.DataAreaId == "dat" && x.AccountNum == account).Select(x => x.RefRecId).ToArrayAsync();
+            Success(await services.GetRequiredService<IVendSettleOpenTransactionsService>().SettleAsync(new(account,date.AddDays(36),ids),default));
+            Assert.False(await db.Set<VendTransOpen>().AnyAsync(x => x.DataAreaId == "dat" && x.AccountNum == account));
+            Assert.True(await db.Set<VendSettlement>().AnyAsync(x => x.DataAreaId == "dat" && x.AccountNum == account));
+        });
+        await Stage("10", "مطابقة قيود الأستاذ والمخزون والقيمة", async () =>
+        {
+            var entries = await db.Set<GeneralJournalAccountEntry>().Where(x => x.DataAreaId == "dat").ToListAsync();
+            Assert.NotEmpty(entries);
+            Assert.All(entries.GroupBy(x => x.GeneralJournalEntry), voucher => Assert.Equal(0m,voucher.Sum(x => x.AccountingCurrencyAmount)));
+            var origins = await db.Set<InventTransOrigin>().Where(x => x.DataAreaId == "dat" && x.ReferenceId == order.PurchId).Select(x => x.RecId).ToArrayAsync();
+            var stock = await db.Set<InventTrans>().Where(x => x.DataAreaId == "dat" && origins.Contains(x.InventTransOrigin)).ToListAsync();
+            Assert.Equal(100m,stock.Sum(x => x.Qty)); Assert.Equal(2500m,stock.Sum(x => x.CostAmountPosted + x.CostAmountAdjustment));
+            var summaries = await db.Set<InventSum>().Where(x => x.DataAreaId == "dat" && x.ItemId == "APV2-STOCK").ToListAsync();
+            Assert.Equal(100m,summaries.Sum(x => x.PhysicalInvent));
+            Assert.Equal(100m,summaries.Sum(x => x.AvailPhysical));
+            Assert.Equal(2500m,summaries.Sum(x => x.PostedValue));
+            var company = await db.Set<CompanyInfo>().SingleAsync(x => x.DataArea == "dat");
+            Assert.True(await db.Set<AccountingDistribution>().AnyAsync(x => x.AccountingLegalEntity == company.RecId));
+            var postedEntryIds = entries.Select(x => x.RecId).ToArray();
+            Assert.True(await db.Set<SubledgerJournalAccountEntry>().AnyAsync(x => x.GeneralJournalAccountEntry != null && postedEntryIds.Contains(x.GeneralJournalAccountEntry.Value)));
+        });
+        var names = new Dictionary<string,string>
+        {
+            ["01"]="شراء مخزني وخدمي حتى الدفع", ["02"]="استلام وفوترة جزئية", ["03"]="شراء خدمة دون مخزون",
+            ["04"]="فاتورة مصروف مباشرة", ["05"]="فاتورة مقابل عدة استلامات", ["06"]="مطابقة السعر والكمية ورفض المخالفة",
+            ["07"]="مصاريف الشراء", ["08"]="دفعة جزئية", ["09"]="دفعة على الحساب ثم تسوية",
+            ["11"]="دفعة مقدمة من يومية الدفع وتطبيقها", ["12"]="الخصم النقدي", ["13"]="عملة أجنبية وفروق صرف محققة",
+            ["14"]="مرتجع شراء وإشعار دائن", ["15"]="إشعار دائن مالي دون مخزون", ["16"]="إلغاء الكمية المتبقية",
+            ["18"]="عكس التسوية", ["19"]="عكس الدفعة", ["20"]="رفض العمليات غير الصحيحة والتراجع عن آثارها"
+        };
+        var examples = services.GetRequiredService<AccountsPayableTransactionExamples>();
+        foreach (var id in AccountsPayableTransactionFlow.Scenarios.Keys.OrderBy(x => x,StringComparer.Ordinal))
+            await Stage("scenario-"+id,names[id],async () =>
+            {
+                var result = await examples.RunAsync(new(2026,"cycle-test",[id]));
+                var scenario = Assert.Single(result.Scenarios);
+                Assert.Equal(id,scenario.Id); Assert.True(scenario.PostedVouchers > 0);
+                await AssertIndependentScenarioAmountsAsync(db, id);
+            });
+        await Stage("11", "إعادة الدورة دون تكرار مستندات أو حركات", async () =>
+        {
+            var before = await CountsAsync(db);
+            await examples.RunAsync(new(2026,"cycle-test"));
+            Assert.Equal(before,await CountsAsync(db));
+        });
+        Record("scenario-10","فاتورة دفعة مقدمة مرتبطة بأمر الشراء","NOT_IMPLEMENTED","Not implemented by the current AP example/business-service path.");
+        Record("scenario-17","تصحيح استلام تاريخي","NOT_IMPLEMENTED","Not implemented by the current AP example/business-service path.");
+        Record("run","اختبار دورة الحسابات الدائنة","PASSED");
+    }
+
+    // Independent arithmetic oracle: fixed fixture inputs, never totals read back from the service.
+    // BankCur is SAR except scenario 13 (USD); all GL/tax/value amounts are SAR.
+    private static async Task AssertIndependentScenarioAmountsAsync(ApplicationDbContext db, string id)
+    {
+        (decimal Qty, decimal Value, decimal Tax, decimal BankCur, decimal BankMst, decimal Expense,
+            decimal Delivery, decimal Discount, decimal FxLoss, decimal Control, decimal Debit, decimal Credit) expected = id switch
+        {
+            "01" => (100m,2500m,480m,-3680m,-3680m,700m,0m,0m,0m,0m,0m,0m),
+            "03" => (0m,0m,105m,-805m,-805m,700m,0m,0m,0m,0m,0m,0m),
+            "04" => (0m,0m,52.50m,-402.50m,-402.50m,350m,0m,0m,0m,0m,0m,0m),
+            "07" => (100m,2500m,382.50m,-2932.50m,-2932.50m,0m,50m,0m,0m,0m,0m,0m),
+            "08" => (100m,2500m,375m,-1000m,-1000m,0m,0m,0m,0m,-1875m,0m,1875m),
+            "12" => (100m,2500m,375m,-2817.50m,-2817.50m,0m,0m,-57.50m,0m,0m,0m,0m),
+            // 700 USD net + 105 USD VAT at 3.75; payment 805 USD at 3.80.
+            "13" => (100m,2625m,393.75m,-805m,-3059m,0m,0m,0m,40.25m,0m,0m,0m),
+            "14" => (90m,2250m,337.50m,-2587.50m,-2587.50m,0m,0m,0m,0m,0m,0m,0m),
+            "15" => (0m,0m,37.50m,-287.50m,-287.50m,250m,0m,0m,0m,0m,0m,0m),
+            "16" or "20" => (60m,1500m,225m,-1725m,-1725m,0m,0m,0m,0m,0m,0m,0m),
+            "18" => (100m,2500m,375m,-2875m,-2875m,0m,0m,0m,0m,0m,2875m,2875m),
+            "19" => (100m,2500m,375m,0m,0m,0m,0m,0m,0m,-2875m,0m,2875m),
+            "02" or "05" or "06" or "09" or "11" => (100m,2500m,375m,-2875m,-2875m,0m,0m,0m,0m,0m,0m,0m),
+            _ => throw new InvalidOperationException($"Missing independent arithmetic expectations for AP scenario {id}.")
+        };
+        var actual = await AccountsPayableReconciliationSnapshot.LoadAsync(db, $"APV2-2026-{id}", id,
+            expected.Qty, expected.Debit, expected.Credit, default);
+        Assert.Equal(expected.Qty, actual.PhysicalQuantity);
+        Assert.Equal(expected.Value, actual.Inventory.Sum(x => x.CostAmountPosted + x.CostAmountAdjustment));
+        Assert.Equal(expected.Tax, actual.Tax.Sum(x => x.TaxAmount));
+        Assert.Equal(expected.BankCur, actual.Bank.Sum(x => x.AmountCur));
+        Assert.Equal(expected.BankMst, actual.Bank.Sum(x => x.AmountMst));
+        Assert.Equal(expected.Debit, actual.OpenDebit);
+        Assert.Equal(expected.Credit, actual.OpenCredit);
+        var accounts = new Dictionary<string, decimal>
+        {
+            [GeneralLedgerSeedExample.Bank] = expected.BankMst,
+            [GeneralLedgerSeedExample.Inventory] = expected.Value,
+            [GeneralLedgerSeedExample.RecoverablePurchaseTax] = expected.Tax,
+            [GeneralLedgerSeedExample.VendorControl] = expected.Control,
+            [GeneralLedgerSeedExample.MaintenanceExpense] = expected.Expense,
+            [GeneralLedgerSeedExample.DeliveryExpense] = expected.Delivery,
+            [GeneralLedgerSeedExample.PurchaseCashDiscount] = expected.Discount,
+            [GeneralLedgerSeedExample.RealizedExchangeLoss] = expected.FxLoss,
+            [GeneralLedgerSeedExample.RealizedExchangeGain] = 0m,
+            [GeneralLedgerSeedExample.VendorAdvance] = 0m,
+            [GeneralLedgerSeedExample.ReceivedNotInvoicedInterim] = 0m,
+            [GeneralLedgerSeedExample.ReceivedNotInvoiced] = 0m
+        };
+        foreach (var (account, amount) in accounts)
+            Assert.True(amount == actual.LedgerAmount(account),
+                $"Scenario {id}, account {account}: expected {amount}, actual {actual.LedgerAmount(account)} SAR.");
+        Assert.All(actual.Entries.GroupBy(x => x.GeneralJournalEntry),
+            voucher => Assert.Equal(0m, voucher.Sum(x => x.AccountingCurrencyAmount)));
+    }
+
     private static ServiceProvider TransactionServices(ApplicationDbContext db)
     {
         var actor = new CycleIdentity();

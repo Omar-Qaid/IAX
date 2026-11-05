@@ -19,7 +19,7 @@ public sealed class TaxReportPeriodSeeder : IDataSeeder
         for (var month = 1; month <= 12; month++) {
             var from = new DateTime(c.FiscalYear, month, 1);
             await c.EnsureAsync<TaxReportPeriod>(x => x.TaxPeriod == "Monthly" && x.FromDate == from,
-                new() { TaxPeriod = "Monthly", FromDate = from, ToDate = new(c.FiscalYear, month, DateTime.DaysInMonth(c.FiscalYear, month)), VersionNum = 1 }, ct);
+                new() { TaxPeriod = "Monthly", FromDate = from, ToDate = new(c.FiscalYear, month, DateTime.DaysInMonth(c.FiscalYear, month)), VersionNum = 0 }, ct);
         }
     }
 }

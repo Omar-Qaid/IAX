@@ -114,6 +114,8 @@ public sealed class FoundationSeedTests
         using var scope = provider.CreateScope();
         var examples = scope.ServiceProvider.GetRequiredService<IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Foundation.FoundationTransactionExamples>();
         var result = await examples.RunAsync(new(2026, "foundation-test"));
+        Assert.Equal("FoundationTransactions", result.Scope);
+        Assert.Single(result.TaxJournalDetails);
         Assert.Equal(2, result.Scenarios.Count);
         Assert.All(result.Scenarios, x => Assert.True(x.PostedVouchers > 0));
         var taxes = await db.Set<TaxTrans>().CountAsync();
@@ -147,6 +149,42 @@ public sealed class FoundationSeedTests
         public bool IsRequestedCompanyAuthorized() => true;
         public string GetCurrentUserId() => "foundation-test";
         public string GetOwnerAccountId() => "foundation-test";
+    }
+    [Fact]
+    public void Foundation_manifest_rejects_coverage_drift()
+    {
+        var catalog = new IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Foundation.Data.FoundationExampleCatalog();
+        catalog.Validate();
+        catalog.Tables.Masters[0] = "UnknownTable";
+        Assert.Throws<InvalidOperationException>(() => catalog.Validate());
+        var referenceCatalog = new IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Foundation.Data.FoundationExampleCatalog();
+        referenceCatalog.References[0] = referenceCatalog.References[0] with { Value = "WrongFixture" };
+        Assert.Throws<InvalidOperationException>(() => referenceCatalog.Validate());
+    }
+    [Fact]
+    public async Task Foundation_preparation_reports_persisted_references_and_preserves_them_on_rerun()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:;Foreign Keys=True");
+        await connection.OpenAsync();
+        await using var db = new Fixture(new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlite(connection).Options);
+        await db.Database.ExecuteSqlRawAsync(db.Database.GenerateCreateScript().Replace("N'", "'"));
+        using var provider = new ServiceCollection().AddSingleton<ApplicationDbContext>(db).AddFoundationConfigurationAndMasterDataExamples().BuildServiceProvider();
+        using var scope = provider.CreateScope();
+        var examples = scope.ServiceProvider.GetRequiredService<FoundationCycleSeeder>();
+        var first = await examples.PrepareAsync(new(2026,"foundation-test"));
+        Assert.False(first.TransactionsExecuted);
+        Assert.NotNull(first.MasterData);
+        Assert.All(await db.Set<TaxReportPeriod>().ToListAsync(), interval => Assert.Equal(0, interval.VersionNum));
+        Assert.Equal(4, first.PreparationSteps.Count);
+        Assert.Equal(68, first.MasterData.Tables.Count);
+        Assert.Equal(13, first.MasterData.References.Count);
+        Assert.All(first.MasterData.Tables, table => Assert.Equal(table.RowCount, table.RecordIds.Count));
+        var currency = first.MasterData.References.Single(x => x.Entity == "Currency");
+        Assert.Equal((await db.Set<Currency>().SingleAsync(x => x.CurrencyCode == "SAR")).RecId.ToString(), currency.RecordId);
+        Assert.Empty(await db.Set<TaxJournalTrans>().ToListAsync());
+        db.ChangeTracker.Clear();
+        var second = await examples.PrepareAsync(new(2026,"foundation-test"));
+        Assert.Equal(first.MasterData.References, second.MasterData!.References);
     }
     private sealed class Fixture(DbContextOptions<ApplicationDbContext> options) : ApplicationDbContext(options)
     {

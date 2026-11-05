@@ -1,3 +1,4 @@
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Foundation.Reports;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsPayable;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsPayable.Data;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsPayable.Reports;
@@ -8,12 +9,13 @@ namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Fou
 /// <summary>Exercise Foundation tax and charges through the existing AP business-service examples.</summary>
 public sealed class FoundationTransactionExamples(ApplicationDbContext db, FoundationCycleSeeder preparation, AccountsPayableTransactionExamples transactions)
 {
-    public async Task<AccountsPayableTransactionReport> RunAsync(FoundationExampleOptions options, CancellationToken ct = default)
+    public async Task<FoundationTransactionReport> RunAsync(FoundationExampleOptions options, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(options);
         await preparation.PrepareAsync(options, ct);
         db.ChangeTracker.Clear();
         var report = await transactions.RunAsync(new AccountsPayableTransactionOptions(options.FiscalYear, options.Actor, ["04", "07"]), ct);
+        var details = new List<FoundationTaxJournalReference>();
         var area = db.GetDataAreaId();
         var key = $"APV2-{options.FiscalYear}-04-DOC";
         var journal = await db.Set<LedgerJournalTable>().SingleAsync(x => x.DataAreaId == area && x.Name == key, ct);
@@ -31,8 +33,9 @@ public sealed class FoundationTransactionExamples(ApplicationDbContext db, Found
                     || detail.TaxBaseAmount != tax.TaxBaseAmount || detail.TaxAmount != tax.TaxAmount
                     || detail.OperationLedgerDimension != source.OffsetLedgerDimension)
                     throw new InvalidOperationException("Foundation TaxJournalTrans does not reconcile to its source journal and posted TaxTrans.");
+                details.Add(new(detail.RecId, detail.TransRecId, detail.TransTableId, detail.TaxCode, detail.SourceCurrencyCode, detail.SourceTaxAmountCur, detail.TaxAmount, detail.OperationLedgerDimension));
             }
         }
-        return report;
+        return new(report.Company, report.FiscalYear, report.Scenarios, details);
     }
 }

@@ -1,0 +1,160 @@
+# AccountsPayable package comparison
+
+Each source file was assigned a Foundation counterpart, shared implementation, or domain boundary. Purchasing-only scenario specifications remain owned by AP; copying them under Foundation would misstate the implemented behavior.
+
+- `AccountsPayableCycleRegistration.cs`: FoundationCycleRegistration.cs and FoundationTransactionRegistration.cs.
+- `AccountsPayableCycleSeeder.cs`: FoundationCycleSeeder.cs.
+- `AccountsPayableJournalExamples.cs`: Reused AP business-service implementation, invoked by FoundationTransactionExamples.cs; no second posting implementation.
+- `AccountsPayableTransactionExamples.cs`: FoundationTransactionExamples.cs.
+- `AccountsPayableTransactionFlow.cs`: Reused AP business-service implementation, invoked by FoundationTransactionExamples.cs; no second posting implementation.
+- `AccountsPayableTransactionRegistration.cs`: FoundationCycleRegistration.cs and FoundationTransactionRegistration.cs.
+- `Data/AccountsPayableExampleCatalog.cs`: Data/FoundationExampleCatalog.cs and tables.json, references.json, scenarios.json; Foundation uses its own manifests.
+- `Data/AccountsPayableExampleOptions.cs`: Data/FoundationExampleCatalog.cs and tables.json, references.json, scenarios.json; Foundation uses its own manifests.
+- `Data/AccountsPayableTransactionOptions.cs`: Data/FoundationExampleCatalog.cs and tables.json, references.json, scenarios.json; Foundation uses its own manifests.
+- `Data/ExampleIdentifiers.cs`: Data/FoundationExampleCatalog.cs and tables.json, references.json, scenarios.json; Foundation uses its own manifests.
+- `Data/products.json`: Data/FoundationExampleCatalog.cs and tables.json, references.json, scenarios.json; Foundation uses its own manifests.
+- `Data/purchase-prices.json`: Data/FoundationExampleCatalog.cs and tables.json, references.json, scenarios.json; Foundation uses its own manifests.
+- `Data/scenarios.json`: Data/FoundationExampleCatalog.cs and tables.json, references.json, scenarios.json; Foundation uses its own manifests.
+- `Data/vendors.json`: Data/FoundationExampleCatalog.cs and tables.json, references.json, scenarios.json; Foundation uses its own manifests.
+- `Documentation/01-Scope.md`: Documentation/01-Scope.md through 14-ImplementationContract.md, adapted to Foundation.
+- `Documentation/02-Dependencies.md`: Documentation/01-Scope.md through 14-ImplementationContract.md, adapted to Foundation.
+- `Documentation/03-Configuration.md`: Documentation/01-Scope.md through 14-ImplementationContract.md, adapted to Foundation.
+- `Documentation/04-MasterData.md`: Documentation/01-Scope.md through 14-ImplementationContract.md, adapted to Foundation.
+- `Documentation/05-PricesDiscountsAndTaxes.md`: Documentation/01-Scope.md through 14-ImplementationContract.md, adapted to Foundation.
+- `Documentation/06-TransactionFlow.md`: Documentation/01-Scope.md through 14-ImplementationContract.md, adapted to Foundation.
+- `Documentation/07-ImpactedTables.md`: Documentation/01-Scope.md through 14-ImplementationContract.md, adapted to Foundation.
+- `Documentation/08-PhysicalInventoryEffects.md`: Documentation/01-Scope.md through 14-ImplementationContract.md, adapted to Foundation.
+- `Documentation/09-FinancialPostingEffects.md`: Documentation/01-Scope.md through 14-ImplementationContract.md, adapted to Foundation.
+- `Documentation/10-SettlementAndOpenBalances.md`: Documentation/01-Scope.md through 14-ImplementationContract.md, adapted to Foundation.
+- `Documentation/11-CorrectionsAndReversals.md`: Documentation/01-Scope.md through 14-ImplementationContract.md, adapted to Foundation.
+- `Documentation/12-Reconciliation.md`: Documentation/01-Scope.md through 14-ImplementationContract.md, adapted to Foundation.
+- `Documentation/13-ExecutionAndRerun.md`: Documentation/01-Scope.md through 14-ImplementationContract.md, adapted to Foundation.
+- `Documentation/14-ImplementationPrompt.md`: Documentation/01-Scope.md through 14-ImplementationContract.md, adapted to Foundation.
+- `PHASE-TWO.md`: Foundation README.md and PHASE-TWO.md.
+- `README.md`: Foundation README.md and PHASE-TWO.md.
+- `Reference/Original-Requirements.md`: Reference/Original-Requirements.md preserves the Foundation request.
+- `Reports/AccountsPayableReconciliationReport.cs`: Reports/FoundationPreparationReport.cs, FoundationReconciliationReport.cs and FoundationTransactionReport.cs; posted AP scenario records are reused.
+- `Reports/AccountsPayableTransactionReport.cs`: Reports/FoundationPreparationReport.cs, FoundationReconciliationReport.cs and FoundationTransactionReport.cs; posted AP scenario records are reused.
+- `Reports/ScenarioExecutionReport.cs`: Reports/FoundationPreparationReport.cs, FoundationReconciliationReport.cs and FoundationTransactionReport.cs; posted AP scenario records are reused.
+- `Scenarios/01-PurchaseToPayment/accounting-entries.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/01-PurchaseToPayment/expected-results.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/01-PurchaseToPayment/impacted-tables.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/01-PurchaseToPayment/README.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/02-PartialReceiptsAndInvoices/accounting-entries.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/02-PartialReceiptsAndInvoices/expected-results.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/02-PartialReceiptsAndInvoices/impacted-tables.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/02-PartialReceiptsAndInvoices/README.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/03-ServicePurchaseOrder/accounting-entries.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/03-ServicePurchaseOrder/expected-results.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/03-ServicePurchaseOrder/impacted-tables.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/03-ServicePurchaseOrder/README.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/04-DirectExpenseInvoice/accounting-entries.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/04-DirectExpenseInvoice/expected-results.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/04-DirectExpenseInvoice/impacted-tables.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/04-DirectExpenseInvoice/README.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/05-InvoiceAcrossMultipleReceipts/accounting-entries.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/05-InvoiceAcrossMultipleReceipts/expected-results.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/05-InvoiceAcrossMultipleReceipts/impacted-tables.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/05-InvoiceAcrossMultipleReceipts/README.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/06-PriceAndQuantityMatching/accounting-entries.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/06-PriceAndQuantityMatching/expected-results.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/06-PriceAndQuantityMatching/impacted-tables.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/06-PriceAndQuantityMatching/README.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/07-DiscountsAndCharges/accounting-entries.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/07-DiscountsAndCharges/expected-results.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/07-DiscountsAndCharges/impacted-tables.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/07-DiscountsAndCharges/README.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/08-PartialPayment/accounting-entries.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/08-PartialPayment/expected-results.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/08-PartialPayment/impacted-tables.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/08-PartialPayment/README.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/09-UnsettledPayment/accounting-entries.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/09-UnsettledPayment/expected-results.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/09-UnsettledPayment/impacted-tables.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/09-UnsettledPayment/README.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/10-PurchaseOrderPrepayment/accounting-entries.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/10-PurchaseOrderPrepayment/expected-results.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/10-PurchaseOrderPrepayment/impacted-tables.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/10-PurchaseOrderPrepayment/README.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/11-PaymentJournalPrepayment/accounting-entries.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/11-PaymentJournalPrepayment/expected-results.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/11-PaymentJournalPrepayment/impacted-tables.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/11-PaymentJournalPrepayment/README.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/12-CashDiscount/accounting-entries.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/12-CashDiscount/expected-results.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/12-CashDiscount/impacted-tables.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/12-CashDiscount/README.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/13-ForeignCurrencySettlement/accounting-entries.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/13-ForeignCurrencySettlement/expected-results.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/13-ForeignCurrencySettlement/impacted-tables.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/13-ForeignCurrencySettlement/README.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/14-PurchaseReturn/accounting-entries.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/14-PurchaseReturn/expected-results.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/14-PurchaseReturn/impacted-tables.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/14-PurchaseReturn/README.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/15-FinancialCreditNote/accounting-entries.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/15-FinancialCreditNote/expected-results.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/15-FinancialCreditNote/impacted-tables.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/15-FinancialCreditNote/README.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/16-CancelRemainingQuantity/accounting-entries.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/16-CancelRemainingQuantity/expected-results.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/16-CancelRemainingQuantity/impacted-tables.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/16-CancelRemainingQuantity/README.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/17-ReceiptCorrection/accounting-entries.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/17-ReceiptCorrection/expected-results.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/17-ReceiptCorrection/impacted-tables.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/17-ReceiptCorrection/README.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/18-SettlementReversal/accounting-entries.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/18-SettlementReversal/expected-results.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/18-SettlementReversal/impacted-tables.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/18-SettlementReversal/README.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/19-PaymentReversal/accounting-entries.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/19-PaymentReversal/expected-results.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/19-PaymentReversal/impacted-tables.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/19-PaymentReversal/README.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/20-ValidationFailures/accounting-entries.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/20-ValidationFailures/expected-results.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/20-ValidationFailures/impacted-tables.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Scenarios/20-ValidationFailures/README.md`: Foundation Scenarios/01 through 06 cover preparation/reference integrity and the tax/charge examples. Purchase-specific lifecycles remain implemented and documented in AccountsPayable.
+- `Validation/AccountsPayableCycleValidator.cs`: Validation/FoundationCycleValidator.cs, Modules/Foundation/FoundationIntegrityValidator.cs; posted AP reconciliation checks are reused through the AP runner.
+- `Validation/AccountsPayableReconciliation.cs`: Validation/FoundationCycleValidator.cs, Modules/Foundation/FoundationIntegrityValidator.cs; posted AP reconciliation checks are reused through the AP runner.
+- `Validation/BankPostingValidator.cs`: Validation/FoundationCycleValidator.cs, Modules/Foundation/FoundationIntegrityValidator.cs; posted AP reconciliation checks are reused through the AP runner.
+- `Validation/InventoryQuantityValidator.cs`: Validation/FoundationCycleValidator.cs, Modules/Foundation/FoundationIntegrityValidator.cs; posted AP reconciliation checks are reused through the AP runner.
+- `Validation/InventoryValueValidator.cs`: Validation/FoundationCycleValidator.cs, Modules/Foundation/FoundationIntegrityValidator.cs; posted AP reconciliation checks are reused through the AP runner.
+- `Validation/LedgerBalanceValidator.cs`: Validation/FoundationCycleValidator.cs, Modules/Foundation/FoundationIntegrityValidator.cs; posted AP reconciliation checks are reused through the AP runner.
+- `Validation/OpenTransactionsValidator.cs`: Validation/FoundationCycleValidator.cs, Modules/Foundation/FoundationIntegrityValidator.cs; posted AP reconciliation checks are reused through the AP runner.
+- `Validation/SettlementValidator.cs`: Validation/FoundationCycleValidator.cs, Modules/Foundation/FoundationIntegrityValidator.cs; posted AP reconciliation checks are reused through the AP runner.
+- `Validation/TaxPostingValidator.cs`: Validation/FoundationCycleValidator.cs, Modules/Foundation/FoundationIntegrityValidator.cs; posted AP reconciliation checks are reused through the AP runner.
+- `Validation/UninvoicedReceiptValidator.cs`: Validation/FoundationCycleValidator.cs, Modules/Foundation/FoundationIntegrityValidator.cs; posted AP reconciliation checks are reused through the AP runner.
+- `Validation/VendorBalanceValidator.cs`: Validation/FoundationCycleValidator.cs, Modules/Foundation/FoundationIntegrityValidator.cs; posted AP reconciliation checks are reused through the AP runner.
+- `Validation/VendorToLedgerValidator.cs`: Validation/FoundationCycleValidator.cs, Modules/Foundation/FoundationIntegrityValidator.cs; posted AP reconciliation checks are reused through the AP runner.
+
+## Module seeders and integrity gates
+
+- `Modules/AccountsPayable/AccountsPayablePhaseOneValidator.cs`: Modules/Foundation/FoundationIntegrityValidator.cs and CycleErpExamples/Foundation/Validation/FoundationCycleValidator.cs; the AP integrity gates remain reused.
+- `Modules/AccountsPayable/AccountsPayableSeedRegistration.cs`: Modules/Foundation/FoundationSeedRegistration.cs, FoundationExtendedSeedRegistration.cs and Core/Registration.AddFoundationPhaseOneSeeding.
+- `Modules/AccountsPayable/AdditionalMasterDataIntegrity.cs`: Modules/Foundation/FoundationIntegrityValidator.cs and CycleErpExamples/Foundation/Validation/FoundationCycleValidator.cs; the AP integrity gates remain reused.
+- `Modules/AccountsPayable/Configuration/AccountsPayableNumberSequenceSeeder.cs`: Remains AP-owned and registered as a shared prerequisite. Foundation adds its own module-owned seeders; it does not copy vendor/purchase/posting/price rules.
+- `Modules/AccountsPayable/Configuration/InvoiceMatchingPolicySeeder.cs`: Remains AP-owned and registered as a shared prerequisite. Foundation adds its own module-owned seeders; it does not copy vendor/purchase/posting/price rules.
+- `Modules/AccountsPayable/Configuration/MarkupTableSeeder.cs`: Remains AP-owned and registered as a shared prerequisite. Foundation adds its own module-owned seeders; it does not copy vendor/purchase/posting/price rules.
+- `Modules/AccountsPayable/Configuration/PurchParametersSeeder.cs`: Remains AP-owned and registered as a shared prerequisite. Foundation adds its own module-owned seeders; it does not copy vendor/purchase/posting/price rules.
+- `Modules/AccountsPayable/Configuration/VendGroupSeeder.cs`: Remains AP-owned and registered as a shared prerequisite. Foundation adds its own module-owned seeders; it does not copy vendor/purchase/posting/price rules.
+- `Modules/AccountsPayable/Configuration/VendParametersSeeder.cs`: Remains AP-owned and registered as a shared prerequisite. Foundation adds its own module-owned seeders; it does not copy vendor/purchase/posting/price rules.
+- `Modules/AccountsPayable/Configuration/VendPaymModeTableSeeder.cs`: Remains AP-owned and registered as a shared prerequisite. Foundation adds its own module-owned seeders; it does not copy vendor/purchase/posting/price rules.
+- `Modules/AccountsPayable/Configuration/VendPostingSeeder.cs`: Remains AP-owned and registered as a shared prerequisite. Foundation adds its own module-owned seeders; it does not copy vendor/purchase/posting/price rules.
+- `Modules/AccountsPayable/MasterData/DirPartyLocationSeeder.cs`: Shared AP address/party fixtures are reused; Foundation adds worker/showroom parties, contacts and location roles without duplicate address seeders.
+- `Modules/AccountsPayable/MasterData/DirPartyTableSeeder.cs`: Shared AP address/party fixtures are reused; Foundation adds worker/showroom parties, contacts and location roles without duplicate address seeders.
+- `Modules/AccountsPayable/MasterData/LogisticsElectronicAddressSeeder.cs`: Shared AP address/party fixtures are reused; Foundation adds worker/showroom parties, contacts and location roles without duplicate address seeders.
+- `Modules/AccountsPayable/MasterData/LogisticsLocationSeeder.cs`: Shared AP address/party fixtures are reused; Foundation adds worker/showroom parties, contacts and location roles without duplicate address seeders.
+- `Modules/AccountsPayable/MasterData/LogisticsPostalAddressSeeder.cs`: Shared AP address/party fixtures are reused; Foundation adds worker/showroom parties, contacts and location roles without duplicate address seeders.
+- `Modules/AccountsPayable/MasterData/PriceDiscTableSeeder.cs`: Remains AP-owned and registered as a shared prerequisite. Foundation adds its own module-owned seeders; it does not copy vendor/purchase/posting/price rules.
+- `Modules/AccountsPayable/MasterData/VendBankAccountSeeder.cs`: Remains AP-owned and registered as a shared prerequisite. Foundation adds its own module-owned seeders; it does not copy vendor/purchase/posting/price rules.
+- `Modules/AccountsPayable/MasterData/VendorSeedExample.cs`: Modules/Foundation/MasterData/FoundationSeedExample.cs and Data/FoundationExampleCatalog.cs.
+- `Modules/AccountsPayable/MasterData/VendTableSeeder.cs`: Remains AP-owned and registered as a shared prerequisite. Foundation adds its own module-owned seeders; it does not copy vendor/purchase/posting/price rules.
+
+## Shared framework and top-level guides
+
+Both packages use Core/Contracts, Core/Models, SeedDependencyResolver, SeedRunner, seed history and storage-length validation unchanged. Core/Registration now exposes a Foundation phase-one entry point alongside AP. The top-level AP PHASE-ONE.md and REAL-EXAMPLE.md have their Foundation counterpart in the Foundation README, numbered documentation, scenario specifications and PHASE-TWO.md; their purchase-specific datasets remain AP-owned.
+
+- `PHASE-ONE.md`: Foundation README and Documentation/01-Scope.md, 02-Dependencies.md and 13-ExecutionAndRerun.md.
+- `REAL-EXAMPLE.md`: Foundation Scenarios/01 through 06 and PHASE-TWO.md; purchase quotations remain AP-owned.

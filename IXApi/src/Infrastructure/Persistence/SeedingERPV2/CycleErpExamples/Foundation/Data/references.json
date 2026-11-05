@@ -1,0 +1,67 @@
+[
+  {
+    "entity": "OrganizationUnit",
+    "field": "Code",
+    "value": "FNV2-FIN"
+  },
+  {
+    "entity": "OrganizationRole",
+    "field": "Code",
+    "value": "FNV2-BUYER"
+  },
+  {
+    "entity": "HcmPosition",
+    "field": "Code",
+    "value": "FNV2-BUYER"
+  },
+  {
+    "entity": "HcmWorker",
+    "field": "PersonnelNumber",
+    "value": "FNV2-BUYER"
+  },
+  {
+    "entity": "HcmShowroom",
+    "field": "PersonnelNumber",
+    "value": "FNV2-SHOWROOM"
+  },
+  {
+    "entity": "PaymSched",
+    "field": "Name",
+    "value": "FNV2"
+  },
+  {
+    "entity": "PaymTerm",
+    "field": "PaymTermId",
+    "value": "FNV2-60"
+  },
+  {
+    "entity": "DlvMode",
+    "field": "Code",
+    "value": "FNV2"
+  },
+  {
+    "entity": "DlvTerm",
+    "field": "Code",
+    "value": "FNV2"
+  },
+  {
+    "entity": "DimensionHierarchy",
+    "field": "Name",
+    "value": "FNV2"
+  },
+  {
+    "entity": "DimensionAttribute",
+    "field": "Name",
+    "value": "FNV2Department"
+  },
+  {
+    "entity": "TaxPeriodHead",
+    "field": "TaxPeriod",
+    "value": "Monthly"
+  },
+  {
+    "entity": "Currency",
+    "field": "CurrencyCode",
+    "value": "SAR"
+  }
+]
