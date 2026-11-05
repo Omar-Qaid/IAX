@@ -19,6 +19,11 @@ using IAX.IXApi.Modules.Finance.Foundation.HcmShowrooms;
 using IAX.IXApi.Modules.Finance.Foundation.Dimensions.AccountStructure;
 using IAX.IXApi.Modules.Finance.Foundation.Dimensions.LedgerDimension;
 using IAX.IXApi.Modules.Finance.GeneralLedger.LedgerAccount;
+using IAX.IXApi.Modules.Finance.Foundation.CashDiscount;
+using IAX.IXApi.Modules.Finance.Foundation.PaymentTerms;
+using IAX.IXApi.Modules.Finance.Foundation.Markup;
+using IAX.IXApi.Modules.Finance.AccountsPayable;
+using IAX.IXApi.Modules.Finance.Foundation.Structure;
 using IAX.IXApi.Shared.Application.Identity;
 using IAX.IXApi.Shared.Application.Contracts;
 using IAX.IXApi.Shared.Application.Querying;
@@ -113,7 +118,7 @@ public sealed class FoundationServiceStageTests
         await sp.GetRequiredService<FoundationCycleSeeder>().PrepareAsync(new(2026, "foundation-services-test"));
         // Additional setup for number-allocating operations; the master example inserts its own fixed keys.
         var numbers = new SysNumberSequenceService(sp.GetRequiredService<IUnitOfWork>(),actor);
-        foreach (var name in new[] { "DirPartyTable", "LogisticsLocation", "HcmWorker", "HcmShowroom" })
+        foreach (var name in new[] { "DirPartyTable", "LogisticsLocation", "HcmWorker", "HcmShowroom", "TaxSettlement" })
             await numbers.AddAsync(new SysNumberSequence { DataAreaId = "dat", NumberSequence = name, Txt = "Foundation service test", Format = "FT-######", AnnotatedFormat = "FT-{SEQ}", Lowest = 1, Highest = 999999, NextRec = 1, InUse = 1 });
         await Stage("Foundation CRUD inventory", () =>
         {
@@ -127,14 +132,71 @@ public sealed class FoundationServiceStageTests
                 await (Task)test.Invoke(null, [db, sp.GetRequiredService(type),sp])!;
             });
         await Stage("Currency pair bulk save and effective rate", () => CheckCurrencyAsync(db, sp));
+        await Stage("Payment due dates, schedules and cash discount arithmetic", async () =>
+        {
+            var discount = await db.Set<CashDisc>().SingleAsync();
+            var date = new DateTime(2026,4,15);
+            var terms = await CashDiscountResolver.ResolveAsync(db,"dat",discount.CashDiscCode,date,-2875m,default);
+            Assert.True(terms.Applies); Assert.Equal(-57.50m,terms.PossibleAmount);
+            Assert.Equal(new DateTime(2026,4,25),terms.DiscountDate);
+            Assert.True(CashDiscountCalculator.IsWithinPeriod(new(2026,4,25),terms.DiscountDate));
+            Assert.False(CashDiscountCalculator.IsWithinPeriod(new(2026,4,26),terms.DiscountDate));
+            Assert.False((await CashDiscountResolver.ResolveAsync(db,"oth",discount.CashDiscCode,date,-2875m,default)).Applies);
+            var schedule = (await db.Set<PaymSchedLine>().Where(x => x.Name == "FNV2").ToListAsync()).OrderBy(x => x.LineNum).ToList();
+            Assert.Equal(new[] { 50m,50m },schedule.Select(x => x.Value));
+            Assert.Equal(100m,schedule.Sum(x => x.Value));
+            var term = await db.Set<PaymTerm>().SingleAsync(x => x.PaymTermId == "APV2-N30");
+            Assert.Equal(new DateTime(2026,5,15),PaymentDueDateCalculator.Calculate(date,term));
+        });
         await Stage("Tax group commands, lines and queries", () => CheckTaxGroupsAsync(db, sp));
         await Stage("Tax item group commands, lines and queries", () => CheckTaxItemGroupsAsync(db, sp));
         await Stage("Tax period create, update, query and delete", () => CheckTaxPeriodsAsync(db, sp));
         await Stage("Party, location, postal and electronic addresses", () => CheckAddressBookAsync(db, sp));
         await Stage("Legal entity and address book transaction", () => CheckCompanyAsync(db, sp));
         await Stage("Worker, showroom and assignment services", () => CheckWorkersAsync(db, sp));
+        await Stage("Organization positions, transfer history and overlap rejection", async () =>
+        {
+            var organization = sp.GetRequiredService<IOrganizationStructureService>();
+            var start = new DateOnly(2026,1,1);
+            var transfer = new DateOnly(2026,7,1);
+            var worker = await db.Set<HcmWorker>().SingleAsync(x => x.PersonnelNumber == "FT-WORKER");
+            var unit = await organization.CreateUnitAsync(new("FT-UNIT","Service unit",8,start),default);
+            var role = await organization.CreateRoleAsync(new("FT-ROLE","Service role"),default);
+            var first = await organization.CreatePositionAsync(new("FT-POS1","First position",unit,role,start,null),default);
+            var second = await organization.CreatePositionAsync(new("FT-POS2","Second position",unit,role,start,null),default);
+            var assignment = await organization.AssignWorkerAsync(new(worker.RecId,first,start,null),default);
+            await Assert.ThrowsAsync<FluentValidation.ValidationException>(() => organization.AssignWorkerAsync(new(worker.RecId,second,start,null),default));
+            var changed = await organization.TransferAsync(assignment,new(second,transfer,null),default);
+            Assert.Equal(first,Assert.Single(await organization.GetWorkerAssignmentsAsync(worker.RecId,transfer.AddDays(-1))).PositionId);
+            Assert.Equal(changed,Assert.Single(await organization.GetWorkerAssignmentsAsync(worker.RecId,transfer)).AssignmentId);
+            Assert.Contains(await organization.GetUnitsAsync(start,default),x => x.Id == unit);
+            Assert.Contains(await organization.GetRolesAsync(default),x => x.Id == role);
+            Assert.Contains(await organization.GetPositionsAsync(start,default),x => x.Id == second);
+        });
         await Stage("Tax codes, rates and save transaction", () => CheckTaxCodesAsync(db, sp));
         await Stage("Account structure service and dimensions", () => CheckAccountStructureAsync(db, sp));
+        await Stage("Charge commands, calculation, update, deletion and validation", async () =>
+        {
+            var orderResult = await sp.GetRequiredService<IPurchOrderService>().CreateAsync(new("APV2-dat-LOCAL",null,"SAR",new(2026,4,15),"APV2-SITE","APV2-WH","FT-CHARGES",new(2026,4,15)),default);
+            Assert.Equal(200,orderResult.StatusCode);
+            var order = (PurchTable)orderResult.Data!;
+            var charges = sp.GetRequiredService<IMarkupTransService>();
+            Assert.Null((await charges.GetChargeCodesAsync("purchase")).Error);
+            var input = new MarkupTransDto { MarkupCode = "APV2-FRT", CurrencyCode = "SAR", Value = 50m, MarkupCategory = MarkupCategory.Fixed, TaxGroup = "APV2", TaxItemGroup = "APV2", TransDate = new(2026,4,15) };
+            var created = await charges.CreateAsync("purchase",order.RecId,input);
+            Assert.Null(created.Error); Assert.Equal(50m,created.Data!.CalculatedAmount);
+            input.Value = 80m;
+            var changed = await charges.UpdateAsync(created.Data.RecId,input);
+            Assert.Null(changed.Error); Assert.Equal(80m,changed.Data!.CalculatedAmount);
+            if (db.Database.IsSqlServer()) Assert.Single((await charges.GetDocumentChargesAsync("purchase",order.RecId)).Data!);
+            else Assert.Single(await db.Set<IAX.IXApi.Modules.Finance.AccountsReceivable.MarkupTrans>().Where(x => x.TransRecId == order.RecId && !x.IsDeleted).ToListAsync());
+            Assert.Null((await charges.DeleteAsync(created.Data.RecId)).Error);
+            if (db.Database.IsSqlServer()) Assert.Empty((await charges.GetDocumentChargesAsync("purchase",order.RecId)).Data!);
+            else Assert.Empty(await db.Set<IAX.IXApi.Modules.Finance.AccountsReceivable.MarkupTrans>().Where(x => x.TransRecId == order.RecId && !x.IsDeleted).ToListAsync());
+            Assert.NotNull((await charges.CreateAsync("invalid",order.RecId,input)).Error);
+            input.Value = -1m;
+            Assert.NotNull((await charges.CreateAsync("purchase",order.RecId,input)).Error);
+        });
         await Stage("Tax and charges financial effects, reporting and settlement", () => CheckTaxPostingAsync(db, sp));
         await Stage("Tracked primary keys respect company isolation", async () =>
         {
@@ -229,6 +291,14 @@ public sealed class FoundationServiceStageTests
         var lookup = new EffectiveExchangeRateLookup(db);
         Assert.Equal(3.75m,(await lookup.FindAsync("dat",rateType.RecId,"USD","SAR",new(2026,4,15),default)).Rate!.ExchangeRateValue);
         Assert.Equal(3.80m,(await lookup.FindAsync("dat",rateType.RecId,"USD","SAR",new(2026,5,20),default)).Rate!.ExchangeRateValue);
+        Assert.Equal(3.75m,(await sp.GetRequiredService<IExchangeRateService>().FindEffectiveAsync(rateType.RecId,"USD","SAR",new(2026,4,15))).Rate!.ExchangeRateValue);
+        var converter = new LedgerCurrencyConverter(db);
+        Assert.Equal(3018.75m,await converter.ConvertAsync("dat",805m,"USD","SAR",rateType.RecId,new(2026,4,15),default));
+        Assert.Equal(3059m,await converter.ConvertAsync("dat",805m,"USD","SAR",rateType.RecId,new(2026,5,20),default));
+        Assert.Equal(1.01m,await converter.ConvertAsync("dat",1.005m,"SAR","SAR",rateType.RecId,new(2026,4,15),default));
+        var ledger = await db.Set<Ledger>().SingleAsync();
+        var available = await new LedgerExchangeRateCheck(db).CheckAsync("dat",ledger,[new LedgerJournalTrans { CurrencyCode = "USD", TransDate = new(2026,4,15) }],default);
+        Assert.Empty(available.Errors);
         Assert.NotNull((await lookup.FindAsync("oth",rateType.RecId,"USD","SAR",new(2026,4,15),default)).Error);
         var rates = await db.Set<ExchangeRate>().Where(x => x.ExchangeRateCurrencyPair == input.RecId).OrderBy(x => x.ValidFrom).ToListAsync();
         Assert.Equal(2,rates.Count);
@@ -321,6 +391,17 @@ public sealed class FoundationServiceStageTests
         contact.Number = "0507654321";
         await addressBook.UpdatePartyContactAsync(party.RecId,contact);
         Assert.Equal("0507654321",Assert.Single(await query.GetPartyContactsAsync(party.RecId)).Number);
+        var otherParty = await parties.CreatePartyAsync("Other party","en-us");
+        Assert.False(await addressBook.DeletePartyAddressAsync(otherParty.RecId,address.Location));
+        Assert.False(await addressBook.DeletePartyContactAsync(otherParty.RecId,contact.Location));
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => addressBook.UpdatePartyAddressAsync(otherParty.RecId,address));
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => addressBook.UpdatePartyContactAsync(otherParty.RecId,contact));
+        Assert.Null(db.Database.CurrentTransaction);
+        var locationsBefore = await db.Set<LogisticsLocation>().CountAsync();
+        await Assert.ThrowsAsync<ArgumentException>(() => addressBook.CreatePartyAddressAsync(party.RecId,new() { CountryRegionId = "UNKNOWN" }));
+        db.ChangeTracker.Clear();
+        Assert.Equal(locationsBefore,await db.Set<LogisticsLocation>().CountAsync());
+        Assert.Null(db.Database.CurrentTransaction);
         Assert.True(await addressBook.DeletePartyContactAsync(party.RecId,contact.Location));
         Assert.Empty(await query.GetPartyContactsAsync(party.RecId));
         Assert.True(await addressBook.DeletePartyAddressAsync(party.RecId,address.Location));
@@ -349,7 +430,7 @@ public sealed class FoundationServiceStageTests
         var workers = sp.GetRequiredService<IHcmWorkerService>();
         var showrooms = sp.GetRequiredService<IHcmShowroomService>();
         var existing = await db.Set<HcmWorker>().SingleAsync(x => x.PersonnelNumber == "FNV2-BUYER");
-        var input = new HcmWorkerDto { DataAreaId = "dat", PersonnelNumber = "FT-WORKER", Name = "Service worker", NameAlias = "Worker",
+        var input = new HcmWorkerDto { DataAreaId = "dat", IsActive = true, PersonnelNumber = "FT-WORKER", Name = "Service worker", NameAlias = "Worker",
             GenderId = existing.GenderId, NationalityId = existing.NationalityId, HireDate = new(2026,1,1) };
         var worker = await workers.CreateFromDtoAsync(input);
         Assert.True(worker.Person > 0); Assert.NotEqual(existing.Person,worker.Person);
@@ -359,8 +440,10 @@ public sealed class FoundationServiceStageTests
         Assert.Equal("Updated worker",changed.Name);
         Assert.Contains(await workers.GetWorkerListAsync(), x => x.RecId == worker.RecId);
         Assert.Contains((await workers.GetWorkerLookupAsync(1,10,"FT-WORKER",worker.RecId)).Data,x => x.RecId == worker.RecId);
-        var showroom = await showrooms.CreateFromDtoAsync(new() { DataAreaId = "dat", PersonnelNumber = "FT-SHOW", Name = "Service showroom" });
+        var showroom = await showrooms.CreateFromDtoAsync(new() { DataAreaId = "dat", IsActive = true, PersonnelNumber = "FT-SHOW", Name = "Service showroom" });
         Assert.True(showroom.Party > 0);
+        var changedShowroom = await showrooms.UpdateFromDtoAsync(showroom.RecId.ToString(),new() { DataAreaId = "dat", IsActive = true, RecId = long.MaxValue, Party = long.MaxValue, PersonnelNumber = "FT-SHOW", Name = "Updated showroom" });
+        Assert.Equal(showroom.RecId,changedShowroom!.RecId); Assert.Equal(showroom.Party,changedShowroom.Party);
         await showrooms.SaveWorkerAssignmentAsync(showroom.RecId,null,new(worker.RecId,new(2026,1,1),null,true));
         Assert.Equal(worker.RecId,Assert.Single(await showrooms.GetWorkerAssignmentsAsync(showroom.RecId)).HcmWorkerId);
         Assert.Equal(showroom.RecId,Assert.Single(await workers.GetShowroomAssignmentsAsync(worker.RecId)).HcmShowroomId);
@@ -375,7 +458,7 @@ public sealed class FoundationServiceStageTests
     private static async Task CheckTaxCodesAsync(ApplicationDbContext db, IServiceProvider sp)
     {
         var service = sp.GetRequiredService<ITaxTableService>();
-        var input = new TaxTableDto { TaxCode = "FT-VAT", TaxName = "Test rate", TaxPeriod = "Monthly", TaxAccountGroup = "APV2", TaxCurrencyCode = "SAR", TaxValue = 10m };
+        var input = new TaxTableDto { TaxCode = "FT-VAT", TaxName = "Test rate", TaxPeriod = "Monthly", TaxAccountGroup = "APV2", TaxCurrencyCode = "SAR", TaxUnit = "EA", TaxValue = 10m };
         var created = await service.CreateFromDtoAsync(input);
         Assert.NotNull(created); Assert.Equal(10m,created.TaxValue);
         var rate = await db.Set<TaxData>().SingleAsync(x => x.TaxCode == "FT-VAT");
@@ -386,24 +469,27 @@ public sealed class FoundationServiceStageTests
         Assert.Equal(18m,(await service.GetDetailAsync("FT-VAT"))!.TaxValue);
         Assert.Equal(from,(await db.Set<TaxData>().SingleAsync(x => x.TaxCode == "FT-VAT")).TaxFromDate);
         Assert.Contains(await service.GetDetailsAsync(),x => x.TaxCode == "FT-VAT");
-        Assert.True(await service.DeleteByCodeAsync("FT-VAT"));
-        Assert.Null(await service.GetDetailAsync("FT-VAT"));
+        // A referenced master cannot be deleted while its rate rows still depend on it.
+        await Assert.ThrowsAsync<DbUpdateException>(() => service.DeleteByCodeAsync("FT-VAT"));
+        db.ChangeTracker.Clear();
+        Assert.NotNull(await service.GetDetailAsync("FT-VAT"));
     }
     private static async Task CheckAccountStructureAsync(ApplicationDbContext db, IServiceProvider sp)
     {
         var service = sp.GetRequiredService<IAccountStructureService>();
-        var created = await service.CreateAsync(new("FT-STRUCT","Service test",[new("MainAccount","*")]),default);
+        var created = await service.CreateAsync(new("FT-STRUCT","Service test",[new("MainAccount","281099")]),default);
         Assert.Null(created.Error); Assert.True(created.Result!.IsDraft);
         var activated = await service.ActivateAsync("FT-STRUCT",default);
         Assert.Null(activated.Error); Assert.False(activated.Result!.IsDraft);
         var assigned = await service.AssignToLedgerAsync("FT-STRUCT",default);
         Assert.Null(assigned.Error); Assert.True(assigned.Result!.IsAssignedToLedger);
         Assert.Contains((await service.ListAsync(default)).Items!,x => x.Name == "FT-STRUCT");
-        Assert.NotNull((await service.ActivateAsync("missing",default)).Error);
+        Assert.Null((await service.ActivateAsync("missing",default)).Result);
     }
     private static async Task CheckTaxPostingAsync(ApplicationDbContext db, IServiceProvider sp)
     {
         var examples = sp.GetRequiredService<FoundationTransactionExamples>();
+        db.ChangeTracker.Clear();
         await examples.RunAsync(new(2026,"foundation-services-test"));
         Assert.Equal(435m,(await db.Set<TaxTrans>().ToListAsync()).Sum(x => x.TaxAmount));
         Assert.Equal(52.50m,Assert.Single(await db.Set<TaxJournalTrans>().ToListAsync()).TaxAmount);
@@ -411,6 +497,7 @@ public sealed class FoundationServiceStageTests
         var stock = await db.Set<InventSum>().Where(x => x.ItemId == "APV2-STOCK").ToListAsync();
         Assert.Equal(100m,stock.Sum(x => x.PhysicalInvent)); Assert.Equal(2500m,stock.Sum(x => x.PostedValue));
         var counts = (await db.Set<GeneralJournalAccountEntry>().CountAsync(),await db.Set<TaxTrans>().CountAsync());
+        db.ChangeTracker.Clear();
         await examples.RunAsync(new(2026,"foundation-services-test"));
         Assert.Equal(counts,(await db.Set<GeneralJournalAccountEntry>().CountAsync(),await db.Set<TaxTrans>().CountAsync()));
         var reports = sp.GetRequiredService<ITaxReportService>();
@@ -421,7 +508,8 @@ public sealed class FoundationServiceStageTests
         Assert.NotNull((await settlement.PreviewAsync(input)).Error); // Missing settlement-account setup is refused.
         var ledger = await db.Set<Ledger>().SingleAsync();
         var account = await sp.GetRequiredService<IMainAccountService>().AddAsync(new MainAccount { MainAccountId = "281099", Name = "Sales tax settlement", Type = MainAccountType.Liability, LedgerChartOfAccounts = ledger.ChartOfAccounts, CurrencyCode = "SAR" });
-        var dimension = await new LedgerDimensionResolver(db).ResolveAsync("dat",account,[],0,default);
+        var structure = await db.Set<DimensionHierarchy>().SingleAsync(x => x.Name == "FT-STRUCT");
+        var dimension = await new LedgerDimensionResolver(db).ResolveAsync("dat",account,[],structure.RecId,default);
         var group = await db.Set<TaxLedgerAccountGroup>().SingleAsync(x => x.TaxAccountGroup == "APV2");
         group.TaxReportLedgerDimension = dimension.RecId;
         await sp.GetRequiredService<ITaxLedgerAccountGroupService>().UpdateAsync(group);
@@ -438,6 +526,10 @@ public sealed class FoundationServiceStageTests
         var entries = await db.Set<GeneralJournalAccountEntry>().ToListAsync();
         Assert.All(entries.GroupBy(x => x.GeneralJournalEntry),voucher => Assert.Equal(0m,voucher.Sum(x => x.AccountingCurrencyAmount)));
         Assert.Equal(435m,entries.Where(x => x.LedgerDimension == dimension.RecId).Sum(x => x.AccountingCurrencyAmount));
+        Assert.Equal(0m,entries.Where(x => x.LedgerDimension == group.TaxIncomingLedgerDimension).Sum(x => x.AccountingCurrencyAmount));
+        var afterSettlement = await db.Set<InventSum>().AsNoTracking().Where(x => x.ItemId == "APV2-STOCK").ToListAsync();
+        Assert.Equal(100m,afterSettlement.Sum(x => x.PhysicalInvent));
+        Assert.Equal(2500m,afterSettlement.Sum(x => x.PostedValue));
     }
 
     private sealed class Identity : ICompanyExecutionContext, ICurrentUserService

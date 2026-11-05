@@ -207,6 +207,8 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
 
         public async Task<AddressInfoDto> UpdatePartyAddressAsync(long partyId, AddressInfoDto dto, CancellationToken cancellationToken = default)
         {
+            if (!await HasPartyLocationAsync(partyId, dto.Location, true, cancellationToken))
+                throw new KeyNotFoundException("Postal address is not linked to this party.");
             var strategy = _unitOfWork.Context.Database.CreateExecutionStrategy();
             return await strategy.ExecuteAsync(async () =>
             {
@@ -231,6 +233,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
 
         public async Task<bool> DeletePartyAddressAsync(long partyId, long locationId, CancellationToken cancellationToken = default)
         {
+            if (!await HasPartyLocationAsync(partyId, locationId, true, cancellationToken)) return false;
             var strategy = _unitOfWork.Context.Database.CreateExecutionStrategy();
             return await strategy.ExecuteAsync(async () =>
             {
@@ -239,7 +242,11 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
                 try
                 {
                     var postalLoc = await _unitOfWork.Context.Set<LogisticsPostalAddress>().FirstOrDefaultAsync(x => x.Location == locationId, cancellationToken);
-                    if (postalLoc == null) return false;
+                    if (postalLoc == null)
+                    {
+                        if (ownsTransaction) await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                        return false;
+                    }
 
                     await _postalAddressService.DeletePostalAddressAsync(postalLoc.RecId, cancellationToken);
                     await _partyLocationService.UnlinkLocationAsync(partyId, locationId, cancellationToken);
@@ -285,6 +292,8 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
 
         public async Task<ContactInfoDto> UpdatePartyContactAsync(long partyId, ContactInfoDto dto, CancellationToken cancellationToken = default)
         {
+            if (!await HasPartyLocationAsync(partyId, dto.Location, false, cancellationToken))
+                throw new KeyNotFoundException("Electronic address is not linked to this party.");
             var strategy = _unitOfWork.Context.Database.CreateExecutionStrategy();
             return await strategy.ExecuteAsync(async () =>
             {
@@ -309,6 +318,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
 
         public async Task<bool> DeletePartyContactAsync(long partyId, long locationId, CancellationToken cancellationToken = default)
         {
+            if (!await HasPartyLocationAsync(partyId, locationId, false, cancellationToken)) return false;
             var strategy = _unitOfWork.Context.Database.CreateExecutionStrategy();
             return await strategy.ExecuteAsync(async () =>
             {
@@ -317,7 +327,11 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
                 try
                 {
                     var contactLoc = await _unitOfWork.Context.Set<LogisticsElectronicAddress>().FirstOrDefaultAsync(x => x.Location == locationId, cancellationToken);
-                    if (contactLoc == null) return false;
+                    if (contactLoc == null)
+                    {
+                        if (ownsTransaction) await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                        return false;
+                    }
 
                     await _electronicAddressService.DeleteElectronicAddressAsync(contactLoc.RecId, cancellationToken);
                     await _partyLocationService.UnlinkLocationAsync(partyId, locationId, cancellationToken);
@@ -333,6 +347,9 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
                 }
             });
         }
+        private Task<bool> HasPartyLocationAsync(long partyId, long locationId, bool postal, CancellationToken ct) =>
+            _unitOfWork.Context.Set<DirPartyLocation>().AnyAsync(x => x.Party == partyId && x.Location == locationId
+                && x.IsPostalAddress == (postal ? IAX.IXApi.Modules.Finance.Common.NoYes.Yes : IAX.IXApi.Modules.Finance.Common.NoYes.No), ct);
     }
 }
 

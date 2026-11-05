@@ -31,6 +31,7 @@ public sealed class HcmShowroomMapping : IRegister
             .Map(destination => destination.NameAlias, source => source.PartyTable.NameAlias);
 
         config.NewConfig<HcmShowroomDto, HcmShowroom>()
+            .Ignore(destination => destination.RecId)
             .Ignore(destination => destination.Party)
             .Ignore(destination => destination.PartyTable);
     }

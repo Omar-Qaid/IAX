@@ -38,6 +38,7 @@ public sealed class HcmWorkerMapping : IRegister
             .Map(destination => destination.NationalityName, source => source.Nationality.Name);
 
         config.NewConfig<HcmWorkerDto, HcmWorker>()
+            .Ignore(destination => destination.RecId)
             .Ignore(destination => destination.Person)
             .Ignore(destination => destination.Party)
             .Ignore(destination => destination.Gender)
