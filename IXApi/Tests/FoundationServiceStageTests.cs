@@ -413,7 +413,8 @@ public sealed class FoundationServiceStageTests
     {
         var service = sp.GetRequiredService<ICompanyInfoService>();
         var input = new CompanyInfoDto { DataArea = "ft1", Name = "Test legal entity", CurrencyCode = "SAR", LanguageId = "en-us",
-            Addresses = [new() { Street = "Company street", CountryRegionId = "SAU", Primary = true }] };
+            Addresses = [new() { Street = "Company street", CountryRegionId = "SAU", Primary = true }],
+            Contacts = [new() { Type = "Phone", Number = "0501112222", Primary = true }] };
         var company = await service.CreateCompanyWithAddressBookAsync(input,default);
         Assert.True(company.Party > 0);
         var party = company.Party;
@@ -424,6 +425,11 @@ public sealed class FoundationServiceStageTests
         var dto = new CompanyInfoDto { RecId = company.RecId, Party = party };
         await service.PopulateGlobalAddressBookAsync([dto],default);
         Assert.Single(dto.Addresses);
+        Assert.Equal("0501112222",Assert.Single(dto.Contacts).Number);
+        var query = sp.GetRequiredService<IAddressBookQueryService>();
+        var contact = Assert.Single(await query.GetPartyContactsAsync(party));
+        Assert.True(await sp.GetRequiredService<IGlobalAddressBookService>().DeletePartyContactAsync(party,contact.Location));
+        Assert.Single(await query.GetPartyAddressesAsync(party));
     }
     private static async Task CheckWorkersAsync(ApplicationDbContext db, IServiceProvider sp)
     {

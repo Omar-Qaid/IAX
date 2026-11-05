@@ -334,8 +334,13 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
                     }
 
                     await _electronicAddressService.DeleteElectronicAddressAsync(contactLoc.RecId, cancellationToken);
-                    await _partyLocationService.UnlinkLocationAsync(partyId, locationId, cancellationToken);
-                    await _partyLocationService.DeleteOrphanedLocationAsync(locationId, cancellationToken);
+                    var hasPostalAddress = await _unitOfWork.Context.Set<LogisticsPostalAddress>().AnyAsync(x => x.Location == locationId, cancellationToken);
+                    var hasOtherContacts = await _unitOfWork.Context.Set<LogisticsElectronicAddress>().AnyAsync(x => x.Location == locationId, cancellationToken);
+                    if (!hasPostalAddress && !hasOtherContacts)
+                    {
+                        await _partyLocationService.UnlinkLocationAsync(partyId, locationId, cancellationToken);
+                        await _partyLocationService.DeleteOrphanedLocationAsync(locationId, cancellationToken);
+                    }
 
                     if (ownsTransaction) await _unitOfWork.CommitTransactionAsync(cancellationToken);
                     return true;
@@ -349,7 +354,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
         }
         private Task<bool> HasPartyLocationAsync(long partyId, long locationId, bool postal, CancellationToken ct) =>
             _unitOfWork.Context.Set<DirPartyLocation>().AnyAsync(x => x.Party == partyId && x.Location == locationId
-                && x.IsPostalAddress == (postal ? IAX.IXApi.Modules.Finance.Common.NoYes.Yes : IAX.IXApi.Modules.Finance.Common.NoYes.No), ct);
+                && (!postal || x.IsPostalAddress == IAX.IXApi.Modules.Finance.Common.NoYes.Yes), ct);
     }
 }
 

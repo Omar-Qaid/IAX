@@ -15,12 +15,12 @@ public sealed class AddressBookQueryService(IUnitOfWork unitOfWork, IPartyLocati
     public async Task<List<ContactInfoDto>> GetPartyContactsAsync(long partyId)
     {
             var partyLocations = await _partyLocationService.GetPartyLocationsAsync(partyId);
-            var electronicOnly = partyLocations.Where(x => x.IsPostalAddress == IAX.IXApi.Modules.Finance.Common.NoYes.No).ToList();
-            var locationIds = electronicOnly.Select(x => x.Location).ToList();
+            // Bulk address-book saves may attach contacts to the party's postal location.
+            var locationIds = partyLocations.Select(x => x.Location).Distinct().ToList();
             var electronicAddresses = await _electronicAddressService.GetContactsByLocationsAsync(locationIds);
 
             var dtos = electronicAddresses.Select(e => {
-                var pLoc = electronicOnly.FirstOrDefault(l => l.Location == e.Location);
+                var pLoc = partyLocations.FirstOrDefault(l => l.Location == e.Location);
                 return new ElectronicAddressReadSource(e, pLoc).Adapt<ContactInfoDto>();
             }).ToList();
             return dtos;
