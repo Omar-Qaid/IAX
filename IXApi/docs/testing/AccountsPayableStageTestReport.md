@@ -100,6 +100,18 @@ dotnet test IXApi/Tests/IXApi.Tests.csproj "/p:BaseOutputPath=$PWD/IXApi/.ap-sta
 
 ## أدلة التشغيل
 
+### تحديث اختبار الخدمات المباشر — 6 نوفمبر 2026
+
+- نجح الاختباران المرحليان بعد إضافة المقارنات الحسابية المستقلة لكل السيناريوهات الـ18: SQLite وSQL Server، صفر Failed.
+- نجحت 30 نقطة تحقق فعلية لكل محرك، بالإضافة إلى نجاح حذف قاعدة SQL Server المؤقتة. سجلات RUNNING وPASSED المكررة لختام التشغيل ليست حالات اختبار إضافية.
+- SQLite RunId: `b24e5e50816f4e91b6e8bd8a1c9ec9c5`.
+- SQL Server RunId: `64bed92e71f94775a0203888ec9a03b9`.
+- سجل المراحل الجديد: `.validation/latest-services/ap-stage-results.jsonl`؛ نتيجة الاختبارين: `ap-independent-amounts.trx`.
+- اختبارات المخزون: 128 Passed، صفر Failed؛ النتيجة `inventory-services-latest.trx`.
+- تم إيقاف التشغيل العام الأول يدويًا لتخفيف ضغط الذاكرة عند توازي المجموعات؛ سجل قبل الإيقاف 844 Passed و2 Skipped وصفر Failed، لكنه Aborted وليس تشغيلًا مكتملًا. استُكملت الاختبارات التسعة المتبقية: اختبارا المراحل الموسعة و7 اختبارات للتبعيات والأطوال والتهيئة والدورة وإعادتها والتزامن، وجميعها Passed. النتيجة المجمعة عبر التشغيلات: **853 Passed، صفر Failed، و2 Skipped**؛ لا تمثل هذه الأرقام تشغيلًا عامًا واحدًا مكتملًا. الأدلة: `ap-services-latest.trx` و`ap-independent-amounts.trx` و`ap-regression-completion.trx` داخل `.validation/latest-services/`، والملخص `summary.json`.
+- نجح بناء اختبارات المصدر النهائية بصفر أخطاء. عولج خطأ تعريف أسماء tuple في إضافة الاختبار قبل التشغيل الناجح؛ لم يكن خطأ في خدمة الترحيل. بقيت تحذيرات سابقة عن nullability وحزمة ImageSharp.
+- لم تُعدّل خدمات AP أثناء هذا الفحص، ولم تُستخدم قاعدة التطبيق أو تُشغّل migrations عليها.
+
 - SQLite: RunId `088ab8bd23664449a4f2d688c5cc4c06`؛ جميع الفحوص الـ30 Passed.
 - SQL Server: RunId `6a7fdbf6bf6543ae977b1ddefb1ec8fe`؛ جميع الفحوص الـ30 Passed؛ تنظيف قاعدة الاختبار Passed.
 

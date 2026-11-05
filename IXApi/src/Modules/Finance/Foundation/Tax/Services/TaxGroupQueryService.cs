@@ -40,7 +40,7 @@ public sealed class TaxGroupQueryService : ITaxGroupQueryService
         TaxGroupHeading? heading = null;
         if (long.TryParse(searchCode, out long recId))
         {
-            heading = await _db.Set<TaxGroupHeading>().FindAsync(new object[] { recId }, cancellationToken);
+            heading = await _db.Set<TaxGroupHeading>().FirstOrDefaultAsync(x => x.RecId == recId, cancellationToken);
         }
         if (heading == null)
         {

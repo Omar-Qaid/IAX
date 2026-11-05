@@ -18,7 +18,7 @@ public sealed class TaxGroupLineService : ITaxGroupLineService
         TaxGroupHeading? heading = null;
         if (long.TryParse(searchCode, out long recId))
         {
-            heading = await _db.Set<TaxGroupHeading>().FindAsync(recId);
+            heading = await _db.Set<TaxGroupHeading>().FirstOrDefaultAsync(x => x.RecId == recId);
         }
         if (heading == null)
         {
@@ -45,7 +45,7 @@ public sealed class TaxGroupLineService : ITaxGroupLineService
 
     public async Task<bool> DeleteLineAsync(long lineId)
     {
-        var line = await _db.Set<TaxGroupData>().FindAsync(lineId);
+        var line = await _db.Set<TaxGroupData>().FirstOrDefaultAsync(x => x.RecId == lineId);
         if (line == null) return false;
 
         _db.Set<TaxGroupData>().Remove(line);

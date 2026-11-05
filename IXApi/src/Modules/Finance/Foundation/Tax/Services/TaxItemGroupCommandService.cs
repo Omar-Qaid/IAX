@@ -63,7 +63,7 @@ public sealed class TaxItemGroupCommandService : ITaxItemGroupCommandService
         TaxItemGroupHeading? existingEntity = null;
         if (long.TryParse(searchCode, out long recId))
         {
-            existingEntity = await _db.Set<TaxItemGroupHeading>().FindAsync(new object[] { recId }, cancellationToken);
+            existingEntity = await _db.Set<TaxItemGroupHeading>().FirstOrDefaultAsync(x => x.RecId == recId, cancellationToken);
         }
         if (existingEntity == null)
         {

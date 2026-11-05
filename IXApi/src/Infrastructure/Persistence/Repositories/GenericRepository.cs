@@ -63,7 +63,10 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
             return await query.FirstOrDefaultAsync(e => EF.Property<object>(e, keyName).Equals(id), cancellationToken);
         }
 
-        return await dbSet.FindAsync(new object[] { id }, cancellationToken);
+        // FindAsync returns tracked rows without evaluating company/soft-delete filters.
+        // Always query the scoped set, including when this key is already tracked.
+        var primaryKeyName = keyProperty?.Name ?? "Id";
+        return await dbSet.FirstOrDefaultAsync(e => EF.Property<object>(e, primaryKeyName).Equals(id), cancellationToken);
     }
 
     public async Task<T?> GetByIdAsync(object id, Func<IQueryable<T>, Microsoft.EntityFrameworkCore.Query.IIncludableQueryable<T, object>> include, CancellationToken cancellationToken = default)
@@ -104,7 +107,22 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
 
     public async Task<T?> GetByCompositeKeyAsync(object?[]? keyFields, CancellationToken cancellationToken = default)
     {
-        return await dbSet.FindAsync(keyFields, cancellationToken);
+        var key = _context.Model.FindEntityType(typeof(T))?.FindPrimaryKey()
+            ?? throw new InvalidOperationException($"{typeof(T).Name} has no primary key.");
+        if (keyFields == null || keyFields.Length != key.Properties.Count)
+            throw new ArgumentException("The number of supplied values must match the primary key.", nameof(keyFields));
+        var row = Expression.Parameter(typeof(T), "row");
+        Expression condition = Expression.Constant(true);
+        for (var index = 0; index < key.Properties.Count; index++)
+        {
+            var property = key.Properties[index];
+            var value = keyFields[index];
+            if (value != null && !property.ClrType.IsInstanceOfType(value))
+                value = Convert.ChangeType(value, property.ClrType);
+            var column = Expression.Call(typeof(EF), nameof(EF.Property), [property.ClrType], row, Expression.Constant(property.Name));
+            condition = Expression.AndAlso(condition, Expression.Equal(column, Expression.Constant(value, property.ClrType)));
+        }
+        return await dbSet.FirstOrDefaultAsync(Expression.Lambda<Func<T, bool>>(condition, row), cancellationToken);
     }
 
     public async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default)
