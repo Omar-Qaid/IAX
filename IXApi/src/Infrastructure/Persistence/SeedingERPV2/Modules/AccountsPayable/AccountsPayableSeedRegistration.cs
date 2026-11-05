@@ -1,3 +1,4 @@
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Foundation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
@@ -7,8 +8,6 @@ public static class AccountsPayableSeedRegistration
     public static IServiceCollection AddAccountsPayableSeeders(this IServiceCollection services)
     {
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, AccountsPayableNumberSequenceSeeder>());
-        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, PaymTermSeeder>());
-        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, CashDiscSeeder>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, VendGroupSeeder>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, VendPostingSeeder>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, VendParametersSeeder>());
@@ -24,6 +23,6 @@ public static class AccountsPayableSeedRegistration
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, VendBankAccountSeeder>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, PurchParametersSeeder>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, MarkupTableSeeder>());
-        return services;
+        return services.AddFoundationSeeders();
     }
 }

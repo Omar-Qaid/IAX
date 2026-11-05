@@ -12726,6 +12726,134 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("DimensionAttributeLevelValue", (string)null);
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DimensionAttributeSet", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<int>("BaseEnumType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("BaseEnumTypeName")
+                        .IsRequired()
+                        .HasMaxLength(81)
+                        .HasColumnType("nvarchar(81)");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<byte[]>("Hash")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<int>("HashVersion")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("RecId");
+
+                    b.ToTable("DimensionAttributeSet", (string)null);
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DimensionAttributeSetItem", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<long>("DimensionAttribute")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("DimensionAttributeSet")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("EnumerationValue")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("DimensionAttribute");
+
+                    b.HasIndex("DimensionAttributeSet");
+
+                    b.HasIndex("DataAreaId", "DimensionAttributeSet", "DimensionAttribute")
+                        .IsUnique();
+
+                    b.ToTable("DimensionAttributeSetItem", (string)null);
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DimensionAttributeValue", b =>
                 {
                     b.Property<long>("RecId")
@@ -13338,6 +13466,386 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.HasIndex("DataAreaId", "DimensionAttributeValueCombination");
 
                     b.ToTable("DimensionAttributeValueGroupCombination", (string)null);
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DimensionAttributeValueSet", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<long>("Account")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("AccountValue")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<long>("Agreement")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("AgreementValue")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<long>("BankAccount")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("BusinessUnit")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("BusinessUnitValue")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<long>("Campaign")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("Cargo")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("CashFlow_CnValue")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<long>("Center")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("Condition")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("Contract")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("CostCenter")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("CostCenterValue")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("CostCenter_CnValue")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("Customer")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<long>("Department")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("DepartmentValue")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("Department_CnValue")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<long>("Division")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("DivisionValue")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<long>("ExpenseAndIncomeCode")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ExpenseAndIncomeCodeValue")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<long>("Filial")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("FilialValue")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<long>("FiscalEstablishment")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("FiscalEstablishmentValue")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<long>("Fund")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("FundValue")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<long>("Groups")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("GroupsValue")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<byte[]>("Hash")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<int>("HashVersion")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<long>("ItemGroup")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ItemGroupValue")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<long>("JobSkills")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("LaborType")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("LegalEntity")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("Location")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("MainAccount")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("MainAccountValue")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<long>("ObjectClass")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ObjectClassValue")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("Primary_")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ProductGroup")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ProductGroupValue")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<long>("Program")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ProgramValue")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<long>("Project")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ProjectValue")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<long>("Purpose")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<long>("ServiceLine")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ServiceLineValue")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<long>("Store")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("SystemGeneratedAttributeBankAccount")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("SystemGeneratedAttributeCustomer")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("SystemGeneratedAttributeEmployee")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("SystemGeneratedAttributeFixedAsset")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("SystemGeneratedAttributeItem")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("SystemGeneratedAttributeProject")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("SystemGeneratedAttributeRCash")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("SystemGeneratedAttributeRDeferrals")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("SystemGeneratedAttributeVendor")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("TaxBranch")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("TaxBranchValue")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<long>("Terminal")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("TerminalValue")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<long>("Vehicle")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("Worker")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("WorkerValue")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("RecId");
+
+                    b.ToTable("DimensionAttributeValueSet", (string)null);
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DimensionAttributeValueSetItem", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<long>("DimensionAttributeValue")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("DimensionAttributeValueSet")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("DisplayValue")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("ModifiedTransactionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("DimensionAttributeValue");
+
+                    b.HasIndex("DimensionAttributeValueSet");
+
+                    b.HasIndex("DataAreaId", "DimensionAttributeValueSet", "DimensionAttributeValue")
+                        .IsUnique();
+
+                    b.ToTable("DimensionAttributeValueSetItem", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DimensionConstraintNode", b =>
@@ -32488,6 +32996,21 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DimensionAttributeSetItem", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.DimensionAttribute", null)
+                        .WithMany()
+                        .HasForeignKey("DimensionAttribute")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.DimensionAttributeSet", null)
+                        .WithMany()
+                        .HasForeignKey("DimensionAttributeSet")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DimensionAttributeValue", b =>
                 {
                     b.HasOne("IAX.IXApi.Modules.Finance.Entities.DimensionAttribute", null)
@@ -32517,6 +33040,21 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.HasOne("IAX.IXApi.Modules.Finance.Entities.DimensionAttributeValueGroup", null)
                         .WithMany()
                         .HasForeignKey("DimensionAttributeValueGroup")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DimensionAttributeValueSetItem", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.DimensionAttributeValue", null)
+                        .WithMany()
+                        .HasForeignKey("DimensionAttributeValue")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.DimensionAttributeValueSet", null)
+                        .WithMany()
+                        .HasForeignKey("DimensionAttributeValueSet")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

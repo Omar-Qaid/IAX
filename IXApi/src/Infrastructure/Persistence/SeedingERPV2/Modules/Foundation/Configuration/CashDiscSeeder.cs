@@ -10,14 +10,16 @@ using IAX.IXApi.Modules.Finance.Inventory.ProductCategories.Entities;
 using IAX.IXApi.Modules.Finance.Foundation.Dimensions.LedgerDimension;
 using IAX.IXApi.Modules.Finance.Foundation.Dimensions.AccountStructure;
 using Microsoft.EntityFrameworkCore;
-namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.GeneralLedger;
-public sealed class ExchangeRateTypeSeeder : IDataSeeder
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.AccountsPayable;
+namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Foundation;
+public sealed class CashDiscSeeder : IDataSeeder
 {
-    public string Id => "ERPV2.ExchangeRateTypeSeeder";
-    public IReadOnlyCollection<string> Dependencies => ["ERPV2.CurrencySeeder"];
+    public string Id => "ERPV2.CashDiscSeeder";
+    public IReadOnlyCollection<string> Dependencies => ["ERPV2.DimensionAttributeValueCombinationSeeder"];
     public async Task SeedAsync(SeedContext c, CancellationToken ct)
     {
 
-        await c.EnsureAsync<ExchangeRateType>(x => x.Name == "APV2", new() { Name = "APV2", Description = "AP example rates" }, ct);
+        var dimension = await c.RequireAsync<DimensionAttributeValueCombination>(x => x.MainAccountValue == "481001", ct);
+        await c.EnsureAsync<CashDisc>(x => x.CashDiscCode == "APV2-2", new() { CashDiscCode = "APV2-2", Description = "AP example 2 percent in 10 days", NumOfDays = 10, DiscPct = 2m, CashDiscLedgerDimension = dimension.RecId }, ct);
     }
 }

@@ -10,7 +10,8 @@ using IAX.IXApi.Modules.Finance.Inventory.ProductCategories.Entities;
 using IAX.IXApi.Modules.Finance.Foundation.Dimensions.LedgerDimension;
 using IAX.IXApi.Modules.Finance.Foundation.Dimensions.AccountStructure;
 using Microsoft.EntityFrameworkCore;
-namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.GeneralLedger;
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.GeneralLedger;
+namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Foundation;
 public sealed class CurrencySeeder : IDataSeeder
 {
     public string Id => "ERPV2.CurrencySeeder";

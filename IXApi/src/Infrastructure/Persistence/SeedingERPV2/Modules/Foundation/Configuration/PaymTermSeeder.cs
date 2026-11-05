@@ -10,15 +10,15 @@ using IAX.IXApi.Modules.Finance.Inventory.ProductCategories.Entities;
 using IAX.IXApi.Modules.Finance.Foundation.Dimensions.LedgerDimension;
 using IAX.IXApi.Modules.Finance.Foundation.Dimensions.AccountStructure;
 using Microsoft.EntityFrameworkCore;
-namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.AccountsPayable;
-public sealed class CashDiscSeeder : IDataSeeder
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.AccountsPayable;
+namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Foundation;
+public sealed class PaymTermSeeder : IDataSeeder
 {
-    public string Id => "ERPV2.CashDiscSeeder";
-    public IReadOnlyCollection<string> Dependencies => ["ERPV2.DimensionAttributeValueCombinationSeeder"];
+    public string Id => "ERPV2.PaymTermSeeder";
+    public IReadOnlyCollection<string> Dependencies => [];
     public async Task SeedAsync(SeedContext c, CancellationToken ct)
     {
 
-        var dimension = await c.RequireAsync<DimensionAttributeValueCombination>(x => x.MainAccountValue == "481001", ct);
-        await c.EnsureAsync<CashDisc>(x => x.CashDiscCode == "APV2-2", new() { CashDiscCode = "APV2-2", Description = "AP example 2 percent in 10 days", NumOfDays = 10, DiscPct = 2m, CashDiscLedgerDimension = dimension.RecId }, ct);
+        await c.EnsureAsync<PaymTerm>(x => x.PaymTermId == "APV2-N30", new() { PaymTermId = "APV2-N30", Description = "AP example net 30", NumOfDays = 30, PaymMethod = PaymMethod.Net }, ct);
     }
 }

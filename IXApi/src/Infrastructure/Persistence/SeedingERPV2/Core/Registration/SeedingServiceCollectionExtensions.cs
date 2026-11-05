@@ -1,3 +1,4 @@
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Foundation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution;
@@ -10,6 +11,14 @@ using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Tax;
 namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Registration;
 public static class SeedingServiceCollectionExtensions
 {
+    public static IServiceCollection AddFoundationPhaseOneSeeding(this IServiceCollection services)
+    {
+        services.AddAccountsPayablePhaseOneSeeding();
+        services.AddFoundationExtendedSeeders();
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<ISeedValidator, FoundationIntegrityValidator>());
+        return services;
+    }
+
     public static IServiceCollection AddAccountsPayablePhaseOneSeeding(this IServiceCollection services)
     {
         services.TryAddScoped<SeedRunner>();
