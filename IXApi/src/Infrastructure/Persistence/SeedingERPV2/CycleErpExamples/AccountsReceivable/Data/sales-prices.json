@@ -1,0 +1,5 @@
+[
+  { "customerSuffix": "LOCAL", "itemId": "APV2-STOCK", "currency": "SAR", "amount": 40, "priceUnit": 1, "unit": "EA", "inventDimId": "APV2-DIM" },
+  { "customerSuffix": "LOCAL", "itemId": "APV2-SVC", "currency": "SAR", "amount": 500, "priceUnit": 1, "unit": "EA", "inventDimId": "APV2-DIM" },
+  { "customerSuffix": "USD", "itemId": "APV2-STOCK", "currency": "USD", "amount": 11, "priceUnit": 1, "unit": "EA", "inventDimId": "APV2-DIM" }
+]

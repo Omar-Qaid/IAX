@@ -1,0 +1,20 @@
+[
+  {
+    "suffix": "LOCAL",
+    "name": "Al Noor Trading Company (Demo)",
+    "currency": "SAR",
+    "paymentTerms": "APV2-N30",
+    "paymentMethod": "ARV2",
+    "taxGroup": "ARV2",
+    "customerGroup": "ARV2"
+  },
+  {
+    "suffix": "USD",
+    "name": "Gulf Paper Distribution (Demo)",
+    "currency": "USD",
+    "paymentTerms": "APV2-N30",
+    "paymentMethod": "ARV2",
+    "taxGroup": "ARV2",
+    "customerGroup": "ARV2"
+  }
+]

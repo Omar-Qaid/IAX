@@ -1,0 +1,12 @@
+{
+  "scope": "ConfigurationAndMasterData",
+  "transactionScenariosEnabled": false,
+  "steps": [
+    { "order": 1, "id": "AR-01", "description": "Sales account structure, its ledger dimensions and the output tax posting group" },
+    { "order": 2, "id": "AR-02", "description": "Customer number sequences, sales document sequences and the AR journal names" },
+    { "order": 3, "id": "AR-03", "description": "Customer group, posting profile, AR and sales parameters" },
+    { "order": 4, "id": "AR-04", "description": "Collection method, sales cash discount and sales inventory posting" },
+    { "order": 5, "id": "AR-05", "description": "Customer parties, premises, contacts and customer records" },
+    { "order": 6, "id": "AR-06", "description": "Sales trade agreements for the shared demo items" }
+  ]
+}

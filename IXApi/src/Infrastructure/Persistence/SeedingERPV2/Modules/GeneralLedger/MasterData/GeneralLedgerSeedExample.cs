@@ -18,6 +18,17 @@ public static class GeneralLedgerSeedExample
     public const string RealizedExchangeLoss = "681002";
     public const string DeliveryExpense = "681003";
 
+    // Accounts receivable side of the same demo chart. Kept in disjoint code ranges from the
+    // payable accounts so the sales account structure never overlaps the purchase one.
+    public const string CustomerControl = "181006";
+    public const string DeliveredNotInvoicedInterim = "181007";
+    public const string CustomerAdvance = "281003";
+    public const string PayableSalesTax = "281004";
+    public const string DeliveredNotInvoiced = "281005";
+    public const string SalesRevenue = "481003";
+    public const string CostOfGoodsSold = "681004";
+    public const string SalesCashDiscount = "681005";
+
     public static IReadOnlyList<(string Code, string Name, MainAccountType Type)> MainAccounts { get; } =
     [
         (Bank, "Treasury bank (demo)", MainAccountType.Asset),
@@ -31,6 +42,19 @@ public static class GeneralLedgerSeedExample
         (RealizedExchangeGain, "Realized exchange gains (demo)", MainAccountType.Revenue),
         (MaintenanceExpense, "Printer maintenance expense (demo)", MainAccountType.Expense),
         (RealizedExchangeLoss, "Realized exchange losses (demo)", MainAccountType.Expense),
-        (DeliveryExpense, "Supplier delivery expense (demo)", MainAccountType.Expense)
+        (DeliveryExpense, "Supplier delivery expense (demo)", MainAccountType.Expense),
+        (CustomerControl, "Trade accounts receivable (demo)", MainAccountType.Asset),
+        (DeliveredNotInvoicedInterim, "Cost of office paper delivered - interim (demo)", MainAccountType.Asset),
+        (CustomerAdvance, "Customer prepayments (demo)", MainAccountType.Liability),
+        (PayableSalesTax, "Payable sales tax (demo)", MainAccountType.Liability),
+        (DeliveredNotInvoiced, "Office paper delivered not invoiced (demo)", MainAccountType.Liability),
+        (SalesRevenue, "Office paper sales revenue (demo)", MainAccountType.Revenue),
+        (CostOfGoodsSold, "Cost of office paper sold (demo)", MainAccountType.Expense),
+        (SalesCashDiscount, "Sales cash discounts (demo)", MainAccountType.Expense)
     ];
+
+    /// <summary>The receivable codes, in the order the sales account structure allows them.</summary>
+    public static IReadOnlyList<string> AccountsReceivableAccounts { get; } =
+        [CustomerControl, DeliveredNotInvoicedInterim, CustomerAdvance, PayableSalesTax,
+         DeliveredNotInvoiced, SalesRevenue, CostOfGoodsSold, SalesCashDiscount];
 }

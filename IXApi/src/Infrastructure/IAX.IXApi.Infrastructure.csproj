@@ -40,5 +40,7 @@
     <EmbeddedResource Include="Persistence\SeedingERPV2\CycleErpExamples\Foundation\Data\*.json" LogicalName="SeedingERPV2.Foundation.%(Filename)%(Extension)" />
     <EmbeddedResource Include="Persistence\SeedingERPV2\CycleErpExamples\AccountsPayable\Data\*.json"
                       LogicalName="SeedingERPV2.AccountsPayable.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Persistence\SeedingERPV2\CycleErpExamples\AccountsReceivable\Data\*.json"
+                      LogicalName="SeedingERPV2.AccountsReceivable.%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>
