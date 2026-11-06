@@ -21,7 +21,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.AccountsRece
 public sealed class SalesTaxSeeder : IDataSeeder
 {
     public string Id => "ERPV2.SalesTaxSeeder";
-    public IReadOnlyCollection<string> Dependencies => ["ERPV2.SalesAccountStructureSeeder", "ERPV2.TaxItemGroupHeadingSeeder", "ERPV2.CurrencySeeder", "ERPV2.UnitOfMeasureSeeder"];
+    public IReadOnlyCollection<string> Dependencies => ["ERPV2.SalesAccountStructureSeeder", "ERPV2.TaxItemGroupHeadingSeeder", "ERPV2.TaxTableSeeder", "ERPV2.CurrencySeeder", "ERPV2.UnitOfMeasureSeeder"];
     public async Task SeedAsync(SeedContext c, CancellationToken ct)
     {
         var output = await c.RequireAsync<DimensionAttributeValueCombination>(x => x.MainAccountValue == GeneralLedgerSeedExample.PayableSalesTax, ct);
@@ -35,10 +35,13 @@ public sealed class SalesTaxSeeder : IDataSeeder
             new() { TaxCode = "ARV2-15", TaxValue = 15m, TaxFromDate = from, TaxToDate = new(c.FiscalYear, 12, 31) }, ct);
         await c.EnsureAsync<TaxGroupHeading>(x => x.TaxGroup == "ARV2",
             new() { TaxGroup = "ARV2", TaxGroupName = "AR example customer tax group" }, ct);
+        // The group and item intersections both carry an exemption code; the no-exemption row is
+        // owned by the purchase tax seeder and reused here rather than seeded a second time.
+        var exempt = await c.RequireAsync<TaxExemptCodeTable>(x => x.ExemptCode == "APV2-NONE", ct);
         await c.EnsureAsync<TaxGroupData>(x => x.TaxGroup == "ARV2" && x.TaxCode == "ARV2-15",
-            new() { TaxGroup = "ARV2", TaxCode = "ARV2-15", ExemptTax = NoYes.No }, ct);
+            new() { TaxGroup = "ARV2", TaxCode = "ARV2-15", TaxExemptCode = exempt.ExemptCode, ExemptTax = NoYes.No }, ct);
         await c.RequireAsync<TaxItemGroupHeading>(x => x.TaxItemGroup == "APV2", ct);
         await c.EnsureAsync<TaxOnItem>(x => x.TaxItemGroup == "APV2" && x.TaxCode == "ARV2-15",
-            new() { TaxItemGroup = "APV2", TaxCode = "ARV2-15" }, ct);
+            new() { TaxItemGroup = "APV2", TaxCode = "ARV2-15", TaxExemptCode = exempt.ExemptCode }, ct);
     }
 }
