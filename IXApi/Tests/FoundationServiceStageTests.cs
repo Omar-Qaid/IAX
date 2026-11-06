@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text.Json;
 using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence;
@@ -225,7 +225,12 @@ public sealed class FoundationServiceStageTests
         Assert.True(failures.Count == 0, string.Join(Environment.NewLine, failures));
     }
 
-    private static async Task CheckCrudAsync<T>(ApplicationDbContext db, IBaseService<T> service, IServiceProvider sp) where T : class, new()
+    /// <summary>
+    /// One service's read/create/update/delete contract, driven entirely from EF metadata so every
+    /// <see cref="BaseService{T}"/> in any module can be checked the same way. Shared with the
+    /// Accounts payable service sweep; the whole check runs inside a transaction that is rolled back.
+    /// </summary>
+    internal static async Task CheckCrudAsync<T>(ApplicationDbContext db, IBaseService<T> service, IServiceProvider sp) where T : class, new()
     {
         await using var transaction = await db.Database.BeginTransactionAsync();
         try
@@ -244,11 +249,35 @@ public sealed class FoundationServiceStageTests
             var clone = new T();
             foreach (var property in metadata.GetProperties().Where(p => !p.IsPrimaryKey() && p.ValueGenerated == ValueGenerated.Never && p.PropertyInfo?.CanWrite == true))
                 property.PropertyInfo!.SetValue(clone, property.PropertyInfo.GetValue(sample));
-            foreach (var unique in metadata.GetIndexes().Where(i => i.IsUnique).Select(i => i.Properties)
-                .Concat(metadata.GetKeys().Where(k => !k.IsPrimaryKey()).Select(k => k.Properties)))
+            var uniqueSets = metadata.GetIndexes().Where(i => i.IsUnique).Select(i => i.Properties)
+                .Concat(metadata.GetKeys().Where(k => !k.IsPrimaryKey()).Select(k => k.Properties))
+                .Where(set => !set.Any(p => p.IsPrimaryKey())).ToList();
+            var varied = false;
+            foreach (var unique in uniqueSets)
             {
                 var code = unique.FirstOrDefault(p => p.ClrType == typeof(string) && p.Name != "DataAreaId" && !p.IsForeignKey());
-                if (code != null) code.PropertyInfo!.SetValue(clone, "T" + Guid.NewGuid().ToString("N")[..Math.Min(7, (code.GetMaxLength() ?? 8) - 1)]);
+                if (code == null) continue;
+                code.PropertyInfo!.SetValue(clone, "T" + Guid.NewGuid().ToString("N")[..Math.Min(7, (code.GetMaxLength() ?? 8) - 1)]);
+                varied = true;
+            }
+            // A parameters table is one row per company: its unique index is the company plus a fixed
+            // discriminator, so no second row can be inserted. Recognised by holding exactly one row
+            // with nothing in its unique index that may be varied. Verify the update path and stop,
+            // rather than reporting the constraint that correctly prevents a duplicate.
+            if (uniqueSets.Count > 0 && !varied && all.Length == 1)
+            {
+                var only = all[0];
+                var configText = metadata.GetProperties().FirstOrDefault(p => p.ClrType == typeof(string)
+                    && !p.IsForeignKey() && !p.IsKey() && p.PropertyInfo?.CanWrite == true
+                    && p.Name is "Name" or "Description" or "Txt");
+                if (configText != null)
+                {
+                    configText.PropertyInfo!.SetValue(only, "Verified");
+                    await service.UpdateAsync(only);
+                    db.ChangeTracker.Clear();
+                    Assert.Equal("Verified", configText.PropertyInfo.GetValue(await service.GetByIdAsync(id)));
+                }
+                return;
             }
             if (clone is ExchangeRateCurrencyPair pair)
                 pair.ExchangeRateType = (await sp.GetRequiredService<IExchangeRateTypeService>().AddAsync(new ExchangeRateType { Name = "FT-CLONE", Description = "CRUD fixture" })).RecId;

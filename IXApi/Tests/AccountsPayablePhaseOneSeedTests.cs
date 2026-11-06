@@ -1,3 +1,6 @@
+﻿using IAX.IXApi.Shared.Application.Contracts;
+using IAX.IXApi.Infrastructure.Persistence.Services;
+using System.Reflection;
 using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution;
@@ -534,6 +537,108 @@ public sealed class AccountsPayablePhaseOneSeedTests
         }
     }
 
+    /// <summary>
+    /// Accounts payable service by service: every <see cref="BaseService{T}"/> in the module gets its
+    /// read/create/update/delete contract checked, so the setup and master-data services that the
+    /// cycle stages never touch are verified too. Each service is one recorded stage.
+    /// </summary>
+    [Fact]
+    public async Task AP_services_one_by_one_SQLite()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:;Foreign Keys=True");
+        await connection.OpenAsync();
+        await using var db = new Fixture(new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlite(connection).Options);
+        await db.Database.ExecuteSqlRawAsync(db.Database.GenerateCreateScript().Replace("N'", "'"));
+
+        var runId = Guid.NewGuid().ToString("N");
+        var failures = new List<string>();
+        void Record(string stage, string name, string status, string? detail = null) =>
+            DetailedApRecord(runId, "SQLite", stage, name, status, detail);
+        Record("run", "فحص خدمات الحسابات الدائنة خدمة بخدمة", "STARTED");
+
+        async Task Stage(string stage, string name, Func<Task> action)
+        {
+            Record(stage, name, "RUNNING");
+            try { await action(); Record(stage, name, "PASSED"); }
+            catch (Exception ex)
+            {
+                var error = ex is TargetInvocationException { InnerException: not null } t ? t.InnerException! : ex;
+                failures.Add(stage + ": " + error.Message); Record(stage, name, "FAILED", error.ToString());
+            }
+            finally { db.ChangeTracker.Clear(); }
+        }
+
+        var crudServices = typeof(IAX.IXApi.Modules.Finance.FinanceModule).Assembly.GetTypes()
+            .Where(t => !t.IsAbstract && t.Namespace?.StartsWith("IAX.IXApi.Modules.Finance.AccountsPayable") == true
+                && t.BaseType is { IsGenericType: true } b && b.GetGenericTypeDefinition() == typeof(BaseService<>))
+            .OrderBy(t => t.Name, StringComparer.Ordinal).ToArray();
+        Assert.NotEmpty(crudServices);
+
+        var actor = new CycleIdentity();
+        var services = new ServiceCollection().AddLogging().AddSingleton<ApplicationDbContext>(db).AddSingleton(db)
+            .AddSingleton<ICompanyExecutionContext>(actor).AddSingleton<ICurrentUserService>(actor)
+            .AddAccountsPayableTransactionExamples();
+        foreach (var type in crudServices)
+        {
+            services.AddScoped(type);
+            services.AddScoped(typeof(IBaseService<>).MakeGenericType(type.BaseType!.GetGenericArguments()[0]),
+                p => p.GetRequiredService(type));
+        }
+        using var provider = services.BuildServiceProvider();
+        using var scope = provider.CreateScope();
+        var sp = scope.ServiceProvider;
+
+        // The cycle seeder supplies the vendors, groups, payment methods, parameters and posting
+        // profiles the read paths need; running one scenario adds the vendor transactions.
+        await sp.GetRequiredService<AccountsPayableCycleSeeder>().PrepareAsync(new(2026, "ap-service-test"));
+        await sp.GetRequiredService<AccountsPayableTransactionExamples>().RunAsync(new(2026, "ap-service-test", ["01"]));
+        db.ChangeTracker.Clear();
+
+        // Posting a pending invoice consumes its VendInvoiceInfoTable row, so the cycle leaves none
+        // behind. Hold one through the pending-invoice service itself and leave it unposted, so the
+        // read paths of that service have a row to work with.
+        await Stage("fixture", "فاتورة معلقة غير مرحلة لفحص خدمة الفواتير المعلقة", async () =>
+        {
+            var date = new DateTime(2026, 4, 15);
+            var account = $"APV2-{db.GetDataAreaId()}-LOCAL";
+            var created = await sp.GetRequiredService<IPurchOrderService>().CreateAsync(
+                new(account, null, "SAR", date, "APV2-SITE", "APV2-WH", "AP-SERVICE-PENDING", date.AddDays(-1)), default);
+            Assert.True(created.StatusCode == 200, created.Message);
+            var order = (PurchTable)created.Data!;
+            Assert.True((await sp.GetRequiredService<IPurchOrderService>().AddLineAsync(order.RecId,
+                new("APV2-STOCK", 10m, "EA", 25m, 1m, "APV2-SITE", "APV2-WH", date, null), default)).StatusCode == 200);
+            var line = await db.Set<PurchLine>().SingleAsync(x => x.DataAreaId == "dat" && x.PurchId == order.PurchId);
+            Assert.True((await sp.GetRequiredService<IPurchConfirmationService>().ConfirmAsync(order.RecId, default, date)).StatusCode == 200);
+            Assert.True((await sp.GetRequiredService<IProductReceiptService>().PostAsync(order.RecId,
+                new("AP-SERVICE-R1", date.AddDays(1), [new(line.RecId, 10m)]), default)).StatusCode == 200);
+            Assert.True((await sp.GetRequiredService<IVendInvoiceInfoService>().CreateFromOrderAsync(order.RecId,
+                new("AP-SERVICE-I1", date.AddDays(2), date.AddDays(2), Lines: [new(line.RecId, 10m)]), default)).StatusCode == 200);
+            Assert.NotEmpty(await db.Set<VendInvoiceInfoTable>().Where(x => x.DataAreaId == "dat").ToListAsync());
+        });
+
+        foreach (var type in crudServices)
+        {
+            var entity = type.BaseType!.GetGenericArguments()[0];
+            Record(type.Name, entity.Name + ": read/create/update/delete", "RUNNING");
+            try
+            {
+                var check = typeof(FoundationServiceStageTests).GetMethod(nameof(FoundationServiceStageTests.CheckCrudAsync),
+                    BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)!.MakeGenericMethod(entity);
+                await (Task)check.Invoke(null, [db, sp.GetRequiredService(typeof(IBaseService<>).MakeGenericType(entity)), sp])!;
+                Record(type.Name, entity.Name + ": read/create/update/delete", "PASSED");
+            }
+            catch (Exception ex)
+            {
+                var error = ex is TargetInvocationException { InnerException: not null } t ? t.InnerException! : ex;
+                failures.Add(type.Name + ": " + error.Message);
+                Record(type.Name, entity.Name + ": read/create/update/delete", "FAILED", error.ToString());
+            }
+            finally { actor.ResetArea(); db.ChangeTracker.Clear(); }
+        }
+        Record("run", "فحص خدمات الحسابات الدائنة خدمة بخدمة", failures.Count == 0 ? "PASSED" : "FAILED");
+        Assert.True(failures.Count == 0, string.Join(Environment.NewLine, failures));
+    }
+
     [Fact]
     public async Task Detailed_AP_stages_SQLite()
     {
@@ -809,6 +914,7 @@ public sealed class AccountsPayablePhaseOneSeedTests
     }
     private sealed class CycleIdentity : ICompanyExecutionContext, ICurrentUserService
     {
+        public void ResetArea() { }
         public string GetDataAreaId() => "dat";
         public bool IsRequestedCompanyAuthorized() => true;
         public string GetCurrentUserId() => "cycle-test";
