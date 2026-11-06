@@ -23819,6 +23819,64 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("PurchParameters");
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.SalesParameters", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PriceDateType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("SalesType")
+                        .HasColumnType("int");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("DataAreaId")
+                        .IsUnique();
+
+                    b.ToTable("SalesParameters");
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.SourceDocumentHeader", b =>
                 {
                     b.Property<long>("RecId")

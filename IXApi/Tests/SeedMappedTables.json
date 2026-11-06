@@ -190,6 +190,7 @@
   "ReturnDispositionCode",
   "ReturnReasonCode",
   "SalesLine",
+  "SalesParameters",
   "SalesPool",
   "SalesQuotationLine",
   "SalesQuotationTable",
