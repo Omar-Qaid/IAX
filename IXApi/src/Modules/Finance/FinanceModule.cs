@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace IAX.IXApi.Modules.Finance
@@ -131,6 +131,10 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<FluentValidation.IValidator<AccountsPayable.VendPaymModeDto>, AccountsPayable.VendPaymModeDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsPayable.VendParametersDto>, AccountsPayable.VendParametersDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsPayable.VendLedgerAccountsDto>, AccountsPayable.VendLedgerAccountsDtoValidator>();
+            services.AddScoped<AccountsPayable.IVendBankAccountService, AccountsPayable.VendBankAccountService>();
+            services.AddScoped<FluentValidation.IValidator<AccountsPayable.VendBankAccountDto>, AccountsPayable.VendBankAccountDtoValidator>();
+            services.AddScoped<AccountsPayable.IPurchParametersService, AccountsPayable.PurchParametersService>();
+            services.AddScoped<FluentValidation.IValidator<AccountsPayable.PurchParametersDto>, AccountsPayable.PurchParametersDtoValidator>();
             services.AddScoped<AccountsPayable.IVendTransService, AccountsPayable.VendTransService>();
             services.AddScoped<AccountsPayable.IVendTransReadService, AccountsPayable.VendTransService>();
             services.AddScoped<FluentValidation.IValidator<AccountsPayable.VendTransDto>, AccountsPayable.VendTransDtoValidator>();
@@ -149,6 +153,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<FluentValidation.IValidator<AccountsPayable.PurchReturnShipDto>, AccountsPayable.PurchReturnShipDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsPayable.VendCreditNoteDto>, AccountsPayable.VendCreditNoteDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsPayable.PurchReturnDto>, AccountsPayable.PurchReturnDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<AccountsPayable.VendPaymentPostDto>, AccountsPayable.VendPaymentPostDtoValidator>();
             services.AddScoped<AccountsReceivable.Customer.ICustomerQuickService, AccountsReceivable.Customer.CustomerQuickService>();
             services.AddScoped<AccountsReceivable.SalesOrder.Interfaces.IInventDimensionResolver, AccountsReceivable.SalesOrder.Services.InventDimensionResolver>();
             services.AddScoped<AccountsReceivable.SalesOrder.Interfaces.ISalesInventoryNumberService, AccountsReceivable.SalesOrder.Services.SalesInventoryNumberService>();
@@ -181,6 +186,8 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<FluentValidation.IValidator<AccountsReceivable.PriceDisc.PriceDiscAdmNameDto>, AccountsReceivable.PriceDisc.PriceDiscAdmNameDtoValidator>();
             services.AddScoped<AccountsReceivable.ICustParametersService, AccountsReceivable.CustParametersService>();
             services.AddScoped<FluentValidation.IValidator<AccountsReceivable.CustParametersDto>, AccountsReceivable.CustParametersDtoValidator>();
+            services.AddScoped<AccountsReceivable.ISalesParametersService, AccountsReceivable.SalesParametersService>();
+            services.AddScoped<FluentValidation.IValidator<AccountsReceivable.SalesParametersDto>, AccountsReceivable.SalesParametersDtoValidator>();
 
             services.AddScoped<Foundation.Markup.IMarkupChargeCalculator, Foundation.Markup.MarkupChargeCalculator>();
             services.AddScoped<Foundation.Markup.IMarkupTransCommandService, Foundation.Markup.MarkupTransCommandService>();

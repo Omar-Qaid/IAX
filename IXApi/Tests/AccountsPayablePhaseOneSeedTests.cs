@@ -616,6 +616,38 @@ public sealed class AccountsPayablePhaseOneSeedTests
             Assert.NotEmpty(await db.Set<VendInvoiceInfoTable>().Where(x => x.DataAreaId == "dat").ToListAsync());
         });
 
+        // PurchInventorySupplyService is a process service, not CRUD: a stocked purchase order line
+        // must create its inventory origin, the purchase-line relation, and an Ordered receipt
+        // transaction, and raise InventSum.Ordered as expected supply. The cycle runs it on every
+        // stocked line but never checked what it produced.
+        await Stage("PurchInventorySupplyService", "طلب الشراء ينشئ عرضاً مخزنياً مطلوباً", async () =>
+        {
+            var date = new DateTime(2026, 4, 15);
+            var account = $"APV2-{db.GetDataAreaId()}-LOCAL";
+            var created = await sp.GetRequiredService<IPurchOrderService>().CreateAsync(
+                new(account, null, "SAR", date, "APV2-SITE", "APV2-WH", "AP-SERVICE-SUPPLY", date.AddDays(-1)), default);
+            Assert.True(created.StatusCode == 200, created.Message);
+            var order = (PurchTable)created.Data!;
+            var before = (await db.Set<InventSum>().Where(x => x.DataAreaId == "dat" && x.ItemId == "APV2-STOCK")
+                .ToListAsync()).Sum(x => x.Ordered);
+            Assert.True((await sp.GetRequiredService<IPurchOrderService>().AddLineAsync(order.RecId,
+                new("APV2-STOCK", 40m, "EA", 25m, 1m, "APV2-SITE", "APV2-WH", date, null), default)).StatusCode == 200);
+            db.ChangeTracker.Clear();
+
+            var line = await db.Set<PurchLine>().SingleAsync(x => x.DataAreaId == "dat" && x.PurchId == order.PurchId);
+            Assert.False(string.IsNullOrWhiteSpace(line.InventTransId));
+            var origin = await db.Set<InventTransOrigin>().SingleAsync(x => x.DataAreaId == "dat" && x.InventTransId == line.InventTransId);
+            Assert.True(await db.Set<InventTransOriginPurchLine>().AnyAsync(x => x.InventTransOrigin == origin.RecId
+                && x.PurchLineInventTransId == line.InventTransId));
+            var ordered = await db.Set<InventTrans>().SingleAsync(x => x.DataAreaId == "dat" && x.InventTransOrigin == origin.RecId);
+            Assert.Equal(40m, ordered.Qty);
+            Assert.Equal(IAX.IXApi.Modules.Finance.Common.StatusReceipt.Ordered, ordered.StatusReceipt);
+            Assert.Equal(IAX.IXApi.Modules.Finance.Common.StatusIssue.None, ordered.StatusIssue);
+            var after = (await db.Set<InventSum>().Where(x => x.DataAreaId == "dat" && x.ItemId == "APV2-STOCK")
+                .ToListAsync()).Sum(x => x.Ordered);
+            Assert.Equal(before + 40m, after);
+        });
+
         foreach (var type in crudServices)
         {
             var entity = type.BaseType!.GetGenericArguments()[0];

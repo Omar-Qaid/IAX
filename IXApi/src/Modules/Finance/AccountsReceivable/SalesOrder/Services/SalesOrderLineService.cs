@@ -1,4 +1,4 @@
-using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
+﻿using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
@@ -505,7 +505,20 @@ public sealed class SalesOrderLineService : ISalesOrderLineService
         if (custParameters?.PriceDiscSearchPrice == NoYes.No)
             return null;
 
-        var pricingDate = order.OrderDate == default ? DateTime.UtcNow.Date : order.OrderDate.Date;
+        // D365 SalesParameters.PriceDateType decides the date an agreement is resolved as of - the
+        // sales counterpart of PurchParameters.PriceDateType. Neither option is the order date,
+        // which is what this resolution used before the field existed, so a company with no
+        // parameters row keeps that behavior instead of being silently repriced.
+        var priceDateType = await _dbContext.Context.Set<SalesParameters>().AsNoTracking()
+            .Where(row => row.DataAreaId == order.DataAreaId)
+            .Select(row => (PriceDateType?)row.PriceDateType)
+            .FirstOrDefaultAsync(cancellationToken);
+        var pricingDate = priceDateType switch
+        {
+            PriceDateType.Today => DateTime.UtcNow.Date,
+            PriceDateType.DeliveryDate when order.DeliveryDate != default => order.DeliveryDate.Date,
+            _ => order.OrderDate == default ? DateTime.UtcNow.Date : order.OrderDate.Date
+        };
         var agreements = await _dbContext.Context.Set<PriceDiscTable>().AsNoTracking()
             .Where(row => row.DataAreaId == order.DataAreaId
                 && row.Module == ModuleInventCustVend.Cust
