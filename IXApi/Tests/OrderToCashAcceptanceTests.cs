@@ -231,6 +231,16 @@ public sealed partial class AccountsReceivableCycleStageTests
                 Assert.Equal(slip.Qty, version.Qty);
                 Assert.Equal(slip.ParmId, version.ParmId);
                 Assert.Equal(Date, version.AccountingDate);
+                var slipLine = await db.Set<CustPackingSlipTrans>().AsNoTracking()
+                    .SingleAsync(x => x.DataAreaId == Company && x.ParentRecId == slip.RecId);
+                var history = await db.Set<CustPackingSlipTransHistory>().AsNoTracking()
+                    .SingleAsync(x => x.DataAreaId == Company && x.CustPackingSlipTrans == slipLine.RecId);
+                Assert.Equal(6m, history.Qty);
+                Assert.Equal(6m, history.InventQty);
+                Assert.Equal(4m, history.Remain);
+                Assert.Equal(slipLine.ValueMst, history.ValueMst);
+                Assert.Equal(version.VersionDateTime, history.ValidFrom);
+                Assert.Equal(new DateTime(2154, 12, 31, 23, 59, 59), history.ValidTo);
                 Assert.False(string.IsNullOrWhiteSpace(slip.LedgerVoucher));
                 Assert.True(await db.Set<SubledgerVoucherGeneralJournalEntry>().AnyAsync(x =>
                     x.VoucherDataAreaId == Company && x.Voucher == slip.LedgerVoucher && x.AccountingDate == Date));

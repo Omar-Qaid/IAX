@@ -6204,6 +6204,40 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("CustPackingSlipTrans");
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CustPackingSlipTransHistory", b =>
+                {
+                    b.Property<long>("RecId").ValueGeneratedOnAdd().HasColumnType("bigint").HasColumnName("RECID");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+                    b.Property<DateTime?>("CreatedAt").HasColumnType("datetime2");
+                    b.Property<string>("CreatedBy").HasColumnType("nvarchar(max)");
+                    b.Property<long>("CustPackingSlipTrans").HasColumnType("bigint");
+                    b.Property<string>("DataAreaId").IsRequired().HasMaxLength(4).HasColumnType("nvarchar(4)");
+                    b.Property<decimal>("InventQty").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
+                    b.Property<bool>("IsActive").HasColumnType("bit");
+                    b.Property<bool>("IsDeleted").HasColumnType("bit");
+                    b.Property<DateTime?>("LastModifiedAt").HasColumnType("datetime2");
+                    b.Property<string>("LastModifiedBy").HasColumnType("nvarchar(max)");
+                    b.Property<string>("OwnerAccountId").HasColumnType("nvarchar(max)");
+                    b.Property<decimal>("PdsCwQty").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
+                    b.Property<decimal>("PdsCwRemain").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
+                    b.Property<decimal>("Qty").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
+                    b.Property<int>("RecVersion").HasColumnType("int");
+                    b.Property<decimal>("Remain").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
+                    b.Property<decimal>("RemainInvent").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
+                    b.Property<byte[]>("RowVersion").IsConcurrencyToken().IsRequired().ValueGeneratedOnAddOrUpdate().HasColumnType("rowversion");
+                    b.Property<decimal>("StatValueMst").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
+                    b.Property<DateTime>("ValidFrom").HasColumnType("datetime2");
+                    b.Property<DateTime>("ValidTo").HasColumnType("datetime2");
+                    b.Property<decimal>("ValueMst").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
+                    b.Property<decimal>("Weight").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
+                    b.HasKey("RecId");
+                    b.HasIndex("CustPackingSlipTrans", "ValidFrom").IsUnique();
+                    b.ToTable("CustPackingSlipTransHistory");
+                    b.HasOne("IAX.IXApi.Modules.Finance.AccountsReceivable.CustPackingSlipTrans", "PackingSlipLine")
+                        .WithMany().HasForeignKey("CustPackingSlipTrans").OnDelete(DeleteBehavior.Restrict).IsRequired();
+                    b.Navigation("PackingSlipLine");
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CustPackingSlipVersion", b =>
                 {
                     b.Property<long>("RecId").ValueGeneratedOnAdd().HasColumnType("bigint").HasColumnName("RECID");

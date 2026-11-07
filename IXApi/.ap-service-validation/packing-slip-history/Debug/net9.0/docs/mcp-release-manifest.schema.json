@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "IAX MCP release compatibility manifest v1",
+  "description": "Production contract proposal. The offline export's discovery manifest is intentionally not a production manifest.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["formatVersion", "apiReleaseId", "schemaSha256", "policyVersion", "minimumAdapterVersion", "toolContracts"],
+  "properties": {
+    "formatVersion": { "const": 1 },
+    "apiReleaseId": { "type": "string", "minLength": 1 },
+    "schemaSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "policyVersion": { "type": "string", "minLength": 1 },
+    "minimumAdapterVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "toolContracts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["toolName", "contractVersion", "method", "path"],
+        "properties": {
+          "toolName": { "type": "string", "pattern": "^[A-Za-z0-9_.-]{1,128}$" },
+          "contractVersion": { "type": "integer", "minimum": 1 },
+          "method": { "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"] },
+          "path": { "type": "string", "pattern": "^/api/" }
+        }
+      }
+    }
+  }
+}
