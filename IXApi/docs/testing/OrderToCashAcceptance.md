@@ -2,7 +2,7 @@
 
 المرجع المعتمد لدورة التحصيل هو ملف [Logic_Readonly.md](../../src/Infrastructure/Persistence/SeedingERPV2/CycleErpExamples/AccountsReceivable/Logic_Readonly.md)، بأقسامه الثلاثين و77 معرّف اختبار في القسم 28. حُفظت المتطلبات والنتائج المتوقعة في `OrderToCashAcceptancePlan.json`. تبدأ الحالات بحالة `Not run` وتتغير بعد تحقق شروط القبول.
 
-الحصيلة الحالية **67 Passed و10 Not implemented**. سجل الحالات المفتوحة في `OrderToCashOpenGaps.json`.
+الحصيلة الحالية **68 Passed و9 Not implemented**. سجل الحالات المفتوحة في `OrderToCashOpenGaps.json`.
 
 نجحت الاختبارات الثمانية المركزة في `otc-latest-focused.trx`. اكتمل التشغيل العام من داخل مجلد المشروع بنتيجة **873 Passed وصفر Failed و3 Skipped** في `otc-rooted-regression.trx`.
 
@@ -58,6 +58,12 @@
 
 ## نتائج تطبيق المرجع
 
+### رد الرصيد الدائن (PAY-09)
+
+أضيف `POST /api/v1/customer-payments/refund` لرد كامل الرصيد المفتوح لحركة دائنة واحدة عبر يومية دفع عميل مهيأة. ينشئ الترحيل قيدًا مدينًا للعميل ودائنًا للبنك، ويسوّي الرد مع الحركة الأصلية داخل معاملة واحدة. يدعم النطاق الحالي تطابق عملات الدفتر والبنك والرصيد ويشترط تطابق حساب الذمم والأبعاد مع القيد الأصلي. [مرجع رد مدفوعات العملاء](https://learn.microsoft.com/en-us/dynamics365/finance/accounts-receivable/refund-customers)
+
+نجح مسار SQL Server في `refund-final.trx`. سجّل الرد 165 دائنًا للبنك وأغلق الرصيد الدائن. رفض حساب البنك غير الموجود، وأعادت محاولة الطلب نفسه السند الأصلي دون أثر مكرر. أدلة المراحل في `refund-attempts.jsonl`. صححت محاولتا الاختبار السابقتان اختيار الحركة الدائنة وتاريخ التحصيل التجريبي.
+
 ### تقريب الدفعة الأخيرة (SYS-07)
 
 أثبت `settlement-rounding-before.trx` أن ثلاث دفعات بقيمة 333.33 و333.33 و333.34 دولار سوّت 3750.01 بعملة المحاسبة مقابل أصل فاتورة 3750. تستخدم التسوية التلقائية الآن المتبقي المسجّل بعملتي المحاسبة والتقارير عند إغلاق الفاتورة. أكدت الإعادة تخصيص 1249.99 و1249.99 و1250.02 وتطابق إجمالي التسوية مع قيود الذمم بقيمة 3750. نجح 22 اختبارًا في `settlement-rounding-verified.trx`.
@@ -65,6 +71,8 @@
 اكتمل التشغيل العام للتسوية التلقائية بنتيجة **879 Passed وصفر Failed و3 Skipped** في `settlement-rounding-regression.trx`.
 
 أثبت `manual-rounding-before.trx` أن التسوية اليدوية تعيد تقريب المتبقي وتقبل فرقًا مقداره سنت دون قيد. تستخدم التسوية اليدوية الآن الرصيد المسجّل عند إغلاق الحركة. ينجح الإغلاق عندما تتساوى القيم المتقابلة، ويُرفض دون كتابة عند وجود فرق يحتاج سندًا. نجح 28 اختبارًا، منها دورة التحصيل على SQL Server، في `manual-rounding-verified.trx`.
+
+اكتمل التشغيل العام للتسوية اليدوية بنتيجة **881 Passed وصفر Failed و3 Skipped** في `manual-rounding-regression.trx`.
 
 ### تاريخ عكس التحصيل (PAY-08)
 
@@ -188,6 +196,6 @@ $otcBuildOutput = Join-Path $PWD 'IXApi/.ap-service-validation/bin/'
 dotnet test IXApi/Tests/IXApi.Tests.csproj --no-build --no-restore "/p:BaseOutputPath=$otcBuildOutput" --filter FullyQualifiedName~Order_to_cash_attachment
 $env:IXAPI_OTC_REPORT = Join-Path $PWD '.validation/otc/customer-attempts.jsonl'
 dotnet test IXApi/Tests/IXApi.Tests.csproj --no-build --no-restore "/p:BaseOutputPath=$otcBuildOutput" --filter FullyQualifiedName~Order_to_cash_customer_creation --logger 'trx;LogFileName=customer-verified.trx' --results-directory .validation/otc
-$attempts = @('discount-attempts.jsonl','customer-attempts.jsonl','cfg06-attempts.jsonl','sys05-attempts.jsonl','sys08-attempts.jsonl','statement-attempts.jsonl','aging-attempts.jsonl') | ForEach-Object { Join-Path '.validation/otc' $_ }
-./IXApi/scripts/testing/Export-OrderToCashAcceptance.ps1 -AttemptsPath .validation/otc/attempts.jsonl -AdditionalAttemptsPaths $attempts -OutputPath .validation/otc/coverage.json -RegressionTrxPaths @('.validation/otc/otc-rooted-regression.trx')
+$attempts = @('discount-attempts.jsonl','customer-attempts.jsonl','cfg06-attempts.jsonl','sys05-attempts.jsonl','sys08-attempts.jsonl','statement-attempts.jsonl','aging-attempts.jsonl','refund-attempts.jsonl') | ForEach-Object { Join-Path '.validation/otc' $_ }
+./IXApi/scripts/testing/Export-OrderToCashAcceptance.ps1 -AttemptsPath .validation/otc/attempts.jsonl -AdditionalAttemptsPaths $attempts -OutputPath .validation/otc/coverage.json -RegressionTrxPaths @('.validation/otc/manual-rounding-regression.trx')
 ```
