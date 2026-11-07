@@ -119,6 +119,17 @@ public sealed partial class CustPaymentService
             await new LedgerJournalPosting(Db, _currentUser.GetCurrentUserId()).PostAsync(area, header, ct);
             await unitOfWork.CompleteAsync(ct);
 
+            var creditAccounts = await (from link in Db.Set<SubledgerVoucherGeneralJournalEntry>().AsNoTracking()
+                                        join entry in Db.Set<GeneralJournalAccountEntry>().AsNoTracking()
+                                            on link.GeneralJournalEntry equals entry.GeneralJournalEntry
+                                        where link.VoucherDataAreaId == area && link.Voucher == credit.Trans.Voucher
+                                            && link.AccountingDate == credit.Trans.TransDate.Date
+                                            && entry.DataAreaId == area && entry.PostingType == LedgerPostingType.CustBalance
+                                            && entry.AccountingCurrencyAmount < 0m
+                                        select entry.LedgerDimension).Distinct().ToListAsync(ct);
+            if (creditAccounts.Count != 1 || creditAccounts[0] != debit.LedgerDimension)
+                return await Fail(422, "The refund must use the same receivables account and dimensions as the credit.", ct);
+
             var refund = await Db.Set<CustTrans>().SingleAsync(
                 x => x.DataAreaId == area && x.DocumentNum == journalNum && x.AccountNum == account, ct);
             var refundOpen = await Db.Set<CustTransOpen>().SingleAsync(
