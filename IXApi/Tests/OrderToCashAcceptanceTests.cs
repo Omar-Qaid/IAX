@@ -219,10 +219,18 @@ public sealed partial class AccountsReceivableCycleStageTests
                 await db.Set<InventSum>().Where(x => x.RecId == stock.RecId)
                     .ExecuteUpdateAsync(rows => rows.SetProperty(x => x.Picked, 6m));
                 await Deliver(6,"OTC-PS1");
+                await Deliver(6,"OTC-PS1");
                 var slip = await db.Set<CustPackingSlipJour>().AsNoTracking()
                     .SingleAsync(x => x.DataAreaId == Company && x.ParmId == "OTC-PS1");
                 Assert.Equal(slip.PackingSlipId + ".1", slip.InternalPackingSlipId);
                 Assert.Equal(6m, slip.Qty);
+                var version = await db.Set<CustPackingSlipVersion>().AsNoTracking()
+                    .SingleAsync(x => x.CustPackingSlipJour == slip.RecId);
+                Assert.Equal(slip.InternalPackingSlipId, version.InternalPackingSlipId);
+                Assert.Equal(slip.LedgerVoucher, version.LedgerVoucher);
+                Assert.Equal(slip.Qty, version.Qty);
+                Assert.Equal(slip.ParmId, version.ParmId);
+                Assert.Equal(Date, version.AccountingDate);
                 Assert.False(string.IsNullOrWhiteSpace(slip.LedgerVoucher));
                 Assert.True(await db.Set<SubledgerVoucherGeneralJournalEntry>().AnyAsync(x =>
                     x.VoucherDataAreaId == Company && x.Voucher == slip.LedgerVoucher && x.AccountingDate == Date));

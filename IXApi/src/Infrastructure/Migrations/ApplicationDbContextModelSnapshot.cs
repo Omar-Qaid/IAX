@@ -6204,6 +6204,35 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("CustPackingSlipTrans");
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CustPackingSlipVersion", b =>
+                {
+                    b.Property<long>("RecId").ValueGeneratedOnAdd().HasColumnType("bigint").HasColumnName("RECID");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+                    b.Property<DateTime>("AccountingDate").HasColumnType("datetime2");
+                    b.Property<DateTime?>("CreatedAt").HasColumnType("datetime2");
+                    b.Property<string>("CreatedBy").HasColumnType("nvarchar(max)");
+                    b.Property<long>("CustPackingSlipJour").HasColumnType("bigint");
+                    b.Property<string>("InternalPackingSlipId").IsRequired().HasMaxLength(100).HasColumnType("nvarchar(100)");
+                    b.Property<bool>("IsActive").HasColumnType("bit");
+                    b.Property<bool>("IsDeleted").HasColumnType("bit");
+                    b.Property<DateTime?>("LastModifiedAt").HasColumnType("datetime2");
+                    b.Property<string>("LastModifiedBy").HasColumnType("nvarchar(max)");
+                    b.Property<string>("LedgerVoucher").IsRequired().HasMaxLength(100).HasColumnType("nvarchar(100)");
+                    b.Property<string>("OwnerAccountId").HasColumnType("nvarchar(max)");
+                    b.Property<string>("ParmId").IsRequired().HasMaxLength(100).HasColumnType("nvarchar(100)");
+                    b.Property<decimal>("Qty").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
+                    b.Property<int>("RecVersion").HasColumnType("int");
+                    b.Property<byte[]>("RowVersion").IsConcurrencyToken().IsRequired().ValueGeneratedOnAddOrUpdate().HasColumnType("rowversion");
+                    b.Property<DateTime>("VersionDateTime").HasColumnType("datetime2");
+                    b.Property<decimal>("Volume").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
+                    b.Property<decimal>("Weight").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
+                    b.HasKey("RecId");
+                    b.HasIndex("CustPackingSlipJour", "InternalPackingSlipId").IsUnique();
+                    b.ToTable("CustPackingSlipVersion");
+                    b.HasOne("IAX.IXApi.Modules.Finance.AccountsReceivable.CustPackingSlipJour", null)
+                        .WithMany().HasForeignKey("CustPackingSlipJour").OnDelete(DeleteBehavior.Restrict).IsRequired();
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CustParameters", b =>
                 {
                     b.Property<long>("RecId")

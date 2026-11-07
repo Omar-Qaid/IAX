@@ -458,6 +458,18 @@ public sealed class PackingSlipJournalService : BaseService<CustPackingSlipJour>
             if (!otherOpenLinesRemain && lines.All(line => line.RemainSalesPhysical <= 0))
                 order.SalesStatus = SalesStatus.Delivered;
             order.DocumentStatus = DocumentStatus.PackingSlip;
+            Db.Set<CustPackingSlipVersion>().Add(new CustPackingSlipVersion
+            {
+                CustPackingSlipJour = journal.RecId,
+                InternalPackingSlipId = journal.InternalPackingSlipId,
+                LedgerVoucher = journal.LedgerVoucher,
+                ParmId = journal.ParmId,
+                AccountingDate = deliveryDate,
+                VersionDateTime = DateTime.UtcNow,
+                Qty = journal.Qty,
+                Volume = journal.Volume,
+                Weight = journal.Weight
+            });
             await _unitOfWork.CompleteAsync(ct);
             await transaction.CommitAsync(ct);
             hasWritten = false;

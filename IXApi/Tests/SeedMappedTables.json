@@ -37,6 +37,7 @@
   "CustLedgerAccounts",
   "CustPackingSlipJour",
   "CustPackingSlipTrans",
+  "CustPackingSlipVersion",
   "CustParameters",
   "CustPaymModeTable",
   "CustQuotationJour",
