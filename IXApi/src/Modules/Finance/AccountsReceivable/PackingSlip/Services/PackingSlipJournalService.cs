@@ -21,6 +21,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable.PackingSlip;
 
 public sealed class PackingSlipJournalService : BaseService<CustPackingSlipJour>, IPackingSlipJournalService
 {
+    private static readonly DateTime OpenHistoryEnd = new(2154, 12, 31, 23, 59, 59, DateTimeKind.Utc);
     private readonly ICompanyExecutionContext _company;
     private readonly ISysNumberSequenceService _numberSequences;
 
@@ -275,6 +276,7 @@ public sealed class PackingSlipJournalService : BaseService<CustPackingSlipJour>
                 return new PackingSlipJournalResult(422, null, "The packing slip number is too long for its version identifier.");
 
             var deliveryDate = request.DeliveryDate?.Date ?? DateTime.UtcNow.Date;
+            var versionDateTime = DateTime.UtcNow;
             var journal = new CustPackingSlipJour
             {
                 PackingSlipId = packingSlipId,
@@ -408,7 +410,7 @@ public sealed class PackingSlipJournalService : BaseService<CustPackingSlipJour>
                     journal.LedgerVoucher = packingSlipId;
 
                 var lineAmount = line.PriceUnit > 0 ? salesQuantity * line.SalesPrice / line.PriceUnit : 0m;
-                Db.Set<CustPackingSlipTrans>().Add(new CustPackingSlipTrans
+                var slipLine = new CustPackingSlipTrans
                 {
                     PackingSlipId = packingSlipId,
                     DeliveryDate = deliveryDate,
@@ -441,6 +443,22 @@ public sealed class PackingSlipJournalService : BaseService<CustPackingSlipJour>
                     FullyMatched = NoYes.No,
                     Scrap = line.Scrap != 0 ? NoYes.Yes : NoYes.No,
                     DataAreaId = order.DataAreaId,
+                };
+                Db.Set<CustPackingSlipTransHistory>().Add(new CustPackingSlipTransHistory
+                {
+                    PackingSlipLine = slipLine,
+                    DataAreaId = order.DataAreaId,
+                    InventQty = slipLine.InventQty,
+                    PdsCwQty = slipLine.PdsCwQty,
+                    PdsCwRemain = slipLine.PdsCwRemain,
+                    Qty = slipLine.Qty,
+                    Remain = slipLine.Remain,
+                    RemainInvent = slipLine.RemainInvent,
+                    StatValueMst = slipLine.StatValueMst,
+                    ValidFrom = versionDateTime,
+                    ValidTo = OpenHistoryEnd,
+                    ValueMst = slipLine.ValueMst,
+                    Weight = slipLine.Weight
                 });
                 line.RemainSalesPhysical = Math.Max(0m, line.RemainSalesPhysical - salesQuantity);
                 line.RemainInventPhysical = Math.Max(0m, line.RemainInventPhysical - inventQuantity);
@@ -465,7 +483,7 @@ public sealed class PackingSlipJournalService : BaseService<CustPackingSlipJour>
                 LedgerVoucher = journal.LedgerVoucher,
                 ParmId = journal.ParmId,
                 AccountingDate = deliveryDate,
-                VersionDateTime = DateTime.UtcNow,
+                VersionDateTime = versionDateTime,
                 Qty = journal.Qty,
                 Volume = journal.Volume,
                 Weight = journal.Weight
