@@ -6,6 +6,7 @@ using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses;
 using Microsoft.EntityFrameworkCore;
 using Mapster;
+using IAX.IXApi.Modules.Finance.Common;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Customer;
 
@@ -67,7 +68,9 @@ public sealed class CustomerQuickService : ICustomerQuickService
                         };
                         var location = await _locations.CreateLocationAsync(address.Description, true, cancellationToken);
                         await _postalAddresses.CreatePostalAddressAsync(location.RecId, address, cancellationToken);
-                        await _partyLocations.LinkLocationToPartyAsync(party.RecId, location.RecId, true, true, cancellationToken);
+                        var link = await _partyLocations.LinkLocationToPartyAsync(party.RecId, location.RecId, true, true, cancellationToken);
+                        link.IsLocationOwner = NoYes.Yes;
+                        await _unitOfWork.CompleteAsync(cancellationToken);
                     }
 
                     await _unitOfWork.CommitTransactionAsync(cancellationToken);
@@ -75,7 +78,8 @@ public sealed class CustomerQuickService : ICustomerQuickService
                 }
                 catch
                 {
-                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                    await _unitOfWork.RollbackTransactionAsync(CancellationToken.None);
+                    _unitOfWork.Context.ChangeTracker.Clear();
                     throw;
                 }
             });
@@ -88,21 +92,70 @@ public sealed class CustomerQuickService : ICustomerQuickService
             CustomerQuickCreateDto input,
             CancellationToken cancellationToken = default)
         {
-            var customer = await _service.GetByIdAsync(candidate => candidate.RecId == id, includes: Array.Empty<string>(), cancellationToken: cancellationToken);
-            if (customer == null)
-                return new(CustomerQuickUpdateStatus.CustomerNotFound);
+            var strategy = _unitOfWork.Context.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                await _unitOfWork.BeginTransactionAsync(cancellationToken);
+                try
+                {
+                    var customer = await _service.GetByIdAsync(candidate => candidate.RecId == id,
+                        includes: Array.Empty<string>(), asNoTracking: false, cancellationToken: cancellationToken);
+                    var party = customer == null ? null : await _unitOfWork.Context.Set<DirPartyTable>()
+                        .FirstOrDefaultAsync(candidate => candidate.RecId == customer.Party, cancellationToken);
+                    if (customer == null || party == null)
+                    {
+                        await _unitOfWork.CommitTransactionAsync(cancellationToken);
+                        return new CustomerQuickUpdateResult(customer == null
+                            ? CustomerQuickUpdateStatus.CustomerNotFound : CustomerQuickUpdateStatus.PartyNotFound);
+                    }
 
-            var party = await _unitOfWork.Context.Set<DirPartyTable>()
-                .FirstOrDefaultAsync(candidate => candidate.RecId == customer.Party, cancellationToken);
-            if (party == null)
-                return new(CustomerQuickUpdateStatus.PartyNotFound);
+                    party.Name = input.Name.Trim();
+                    party.NameAlias = string.IsNullOrWhiteSpace(input.NameAlias) ? input.Name.Trim() : input.NameAlias.Trim();
+                    new CustomerQuickUpdateSource(input, customer).Adapt(customer);
+                    if (!string.IsNullOrWhiteSpace(input.Street))
+                        await UpdatePrimaryAddressAsync(party.RecId, input, cancellationToken);
 
-            party.Name = input.Name.Trim();
-            party.NameAlias = string.IsNullOrWhiteSpace(input.NameAlias) ? input.Name.Trim() : input.NameAlias.Trim();
-            new CustomerQuickUpdateSource(input, customer).Adapt(customer);
+                    await _service.UpdateAsync(customer, cancellationToken);
+                    await _unitOfWork.CommitTransactionAsync(cancellationToken);
+                    return new CustomerQuickUpdateResult(CustomerQuickUpdateStatus.Updated, customer, party);
+                }
+                catch
+                {
+                    await _unitOfWork.RollbackTransactionAsync(CancellationToken.None);
+                    _unitOfWork.Context.ChangeTracker.Clear();
+                    throw;
+                }
+            });
+        }
 
-            await _service.UpdateAsync(customer, cancellationToken);
-            return new(CustomerQuickUpdateStatus.Updated, customer, party);
+        private async Task UpdatePrimaryAddressAsync(long partyId, CustomerQuickCreateDto input, CancellationToken cancellationToken)
+        {
+            var link = await _unitOfWork.Context.Set<DirPartyLocation>().SingleOrDefaultAsync(x =>
+                x.Party == partyId && x.IsPostalAddress == NoYes.Yes && x.IsPrimary == NoYes.Yes, cancellationToken);
+            if (link == null)
+            {
+                var address = new AddressInfoDto { Description = "Primary address", Primary = true,
+                    Street = input.Street!.Trim(), CountryRegionId = input.CountryRegionId?.Trim() ?? string.Empty };
+                var location = await _locations.CreateLocationAsync(address.Description, true, cancellationToken);
+                await _postalAddresses.CreatePostalAddressAsync(location.RecId, address, cancellationToken);
+                link = await _partyLocations.LinkLocationToPartyAsync(partyId, location.RecId, true, true, cancellationToken);
+                link.IsLocationOwner = NoYes.Yes;
+                return;
+            }
+            if (link.IsLocationOwner != NoYes.Yes)
+                throw new ArgumentException($"Party {partyId} is not the location owner of primary address {link.Location}.");
+
+            var now = DateTime.UtcNow;
+            var postal = await _unitOfWork.Context.Set<LogisticsPostalAddress>().SingleOrDefaultAsync(x =>
+                x.Location == link.Location && x.ValidFrom <= now && x.ValidTo >= now, cancellationToken)
+                ?? throw new ArgumentException($"Primary location {link.Location} has no current postal address; maintain its effective dates in the address book.");
+            await _postalAddresses.UpdatePostalAddressAsync(link.Location, new AddressInfoDto
+            {
+                Id = postal.RecId.ToString(), Location = link.Location, Primary = true, Street = input.Street!.Trim(),
+                CountryRegionId = input.CountryRegionId?.Trim() ?? postal.CountryRegionId,
+                State = postal.State, County = postal.County, City = postal.City, ZipCode = postal.ZipCode,
+                DistrictName = postal.DistrictName, ValidFrom = postal.ValidFrom, ValidTo = postal.ValidTo
+            }, cancellationToken);
         }
 
 }

@@ -136,6 +136,18 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
             var translation = await SubledgerCurrencyTranslation.LoadAsync(Db, area, ledger.Ledger,
                 order.CurrencyCode, date, ct);
             var customerAccount = await support.ResolveCustomerSummaryAsync(area, order.PostingProfile, customer, ct);
+            if (order.DiscPercent is < 0m or > 100m)
+                return await Fail(422, "The total discount percentage must be between 0 and 100.", ct);
+            var endDiscountItems = new HashSet<string>();
+            if (order.DiscPercent != 0m)
+            {
+                var itemIds = selection.Select(x => x.Line.ItemId).Distinct().ToList();
+                var modules = await Db.Set<InventTableModule>().AsNoTracking().Where(x => x.DataAreaId == area
+                    && x.ModuleType == ModuleInventPurchSales.Sales && itemIds.Contains(x.ItemId)).ToListAsync(ct);
+                if (itemIds.Any(item => !modules.Any(x => x.ItemId == item)))
+                    return await Fail(422, "Sales item setup is required to determine total-discount eligibility.", ct);
+                endDiscountItems = modules.Where(x => x.EndDisc == NoYes.Yes).Select(x => x.ItemId).ToHashSet();
+            }
             var invoiceId = (await _numbers.NextAsync("CustInvoiceJour", area, ct)).Code;
             var entry = support.NewEntry(area, invoiceId, invoiceId, date, ledger);
             Db.Add(entry);
@@ -143,6 +155,7 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
             var currency = ledger.Ledger.AccountingCurrency;
 
             decimal totalRevenue = 0, totalTax = 0, totalQty = 0;
+            decimal totalLineDiscount = 0, totalEndDiscount = 0;
             var taxByCode = new Dictionary<string, (decimal Base, decimal Tax, decimal Rate, string Group, string ItemGroup)>();
             foreach (var (line, qty) in selection)
             {
@@ -152,7 +165,14 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
                     ? line.RemainInventFinancial
                     : decimal.Round(qty * line.QtyOrdered / (line.SalesQty == 0 ? 1 : line.SalesQty), 6);
                 var ratio = line.SalesQty == 0 ? 0m : qty / line.SalesQty;
-                var net = decimal.Round((line.LineAmount - line.LineDisc - line.MultiLnDisc) * ratio, 2, MidpointRounding.AwayFromZero);
+                var lineDiscount = decimal.Round(line.LineDisc * ratio, 2, MidpointRounding.AwayFromZero);
+                var multiLineDiscount = decimal.Round(line.MultiLnDisc * ratio, 2, MidpointRounding.AwayFromZero);
+                var beforeEndDiscount = decimal.Round((line.LineAmount - line.LineDisc - line.MultiLnDisc) * ratio, 2, MidpointRounding.AwayFromZero);
+                var endDiscount = endDiscountItems.Contains(line.ItemId)
+                    ? decimal.Round(beforeEndDiscount * order.DiscPercent / 100m, 2, MidpointRounding.AwayFromZero) : 0m;
+                var net = beforeEndDiscount - endDiscount;
+                totalLineDiscount += lineDiscount + multiLineDiscount;
+                totalEndDiscount += endDiscount;
 
                 var codes = await support.ApplicableTaxCodesAsync(area, line.TaxGroup, line.TaxItemGroup, date, ct);
                 var rate = codes.Sum(x => x.Rate);
@@ -202,6 +222,8 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
                     InventTransId = line.InventTransId, Qty = qty, QtyPhysical = qty, InventQty = inventQty,
                     SalesPrice = line.SalesPrice, PriceUnit = line.PriceUnit, SalesUnit = line.SalesUnit,
                     LineAmount = revenue, LineAmountMst = translation.ToAccounting(revenue), TaxAmount = lineTax,
+                    LineDisc = lineDiscount, LinePercent = line.LinePercent, MultiLnDisc = multiLineDiscount, MultiLnPercent = line.MultiLnPercent,
+                    SumLineDisc = lineDiscount + multiLineDiscount, SumLineDiscMst = translation.ToAccounting(lineDiscount + multiLineDiscount),
                     TaxGroup = line.TaxGroup, TaxItemGroup = line.TaxItemGroup, CurrencyCode = order.CurrencyCode
                 });
 
@@ -272,6 +294,8 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
                 Qty = totalQty, SalesBalance = totalRevenue, SumTax = totalTax, InvoiceAmount = total,
                 SalesBalanceMst = translation.ToAccounting(totalRevenue), SumTaxMst = translation.ToAccounting(totalTax),
                 InvoiceAmountMst = totalAccounting,
+                SumLineDisc = totalLineDiscount, SumLineDiscMst = translation.ToAccounting(totalLineDiscount),
+                EndDisc = totalEndDiscount, EndDiscMst = translation.ToAccounting(totalEndDiscount),
                 SumMarkup = charges.BilledToCustomer, SumMarkupMst = translation.ToAccounting(charges.BilledToCustomer),
                 Payment = order.PaymTerm, PostingProfile = order.PostingProfile, DueDate = dueDate
             };

@@ -1,0 +1,8 @@
+<Project>
+  <Import Project="../Directory.Build.props" />
+  <PropertyGroup>
+    <!-- Set before SDK props/NuGet consume it: each colocated project owns its assets. -->
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)obj/$(MSBuildProjectName)/</BaseIntermediateOutputPath>
+    <DefaultItemExcludes>$(DefaultItemExcludes);$(MSBuildThisFileDirectory)obj/**;$(MSBuildThisFileDirectory)bin/**</DefaultItemExcludes>
+  </PropertyGroup>
+</Project>

@@ -1,7 +1,8 @@
 param(
     [Parameter(Mandatory = $true)][string]$AttemptsPath,
     [Parameter(Mandatory = $true)][string]$OutputPath,
-    [string[]]$RegressionTrxPaths = @()
+    [string[]]$RegressionTrxPaths = @(),
+    [string[]]$AdditionalAttemptsPaths = @()
 )
 $ErrorActionPreference = 'Stop'
 $otcRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
@@ -14,7 +15,9 @@ $otcRegressions = foreach ($otcTrxPath in $RegressionTrxPaths) {
         [pscustomobject]@{ testName = $otcResult.testName; outcome = $otcResult.outcome; source = $otcTrxPath }
     }
 }
-$otcEvents = @(Get-Content -LiteralPath $AttemptsPath | ForEach-Object { $_ | ConvertFrom-Json })
+$otcInputs = @(@($AttemptsPath) + $AdditionalAttemptsPaths | ForEach-Object { [IO.Path]::GetFullPath($_) } | Select-Object -Unique)
+$otcEvents = @(foreach ($otcInput in $otcInputs) { Get-Content -LiteralPath $otcInput | ForEach-Object { $_ | ConvertFrom-Json } })
+$otcEvents = @($otcEvents | Sort-Object { [DateTime]$_.atUtc })
 $otcKnown = @($otcPlan.id)
 foreach ($otcEvent in $otcEvents) {
     if ($otcEvent.id -notin $otcKnown -and $otcEvent.id -notin @('RUN', 'PREPARATION')) {
@@ -52,6 +55,7 @@ $otcSummary = [ordered]@{}
 foreach ($otcGroup in ($otcCases | Group-Object { $_.status })) { $otcSummary[$otcGroup.Name] = $otcGroup.Count }
 [ordered]@{
     generatedAtUtc = [DateTime]::UtcNow
+    attemptSources = $otcInputs
     planned = $otcPlan.Count
     summary = $otcSummary
     completeAcceptancePassed = @($otcCases | Where-Object { $_.status -ne 'Passed' }).Count -eq 0

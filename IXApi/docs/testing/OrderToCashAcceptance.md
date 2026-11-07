@@ -52,6 +52,37 @@
 
 ## نتائج تطبيق المرجع
 
+### متابعة صيانة العميل (MD-01)
+
+- **Failed:** `customer-before.trx` أثبت أن `QuickUpdateAsync` يرجع Updated بينما بقي الشارع `First street` بدل `Second street`.
+- **Fixed:** صار التعديل يحفظ العميل والطرف والعنوان في معاملة واحدة عبر خدمات العناوين في Foundation. يُعدّل العنوان الأساسي الساري الذي يملكه الطرف مع حفظ الجغرافيا وتواريخ السريان، أو يُنشئ عنوانًا أساسيًا إذا لم يوجد رابط أساسي. عدم إرسال الشارع يبقي العنوان الحالي. تُرفض محاولة تعديل موقع غير مملوك للطرف وفق [مرجع ملكية العناوين في D365](https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/organization-administration/global-address-book-location-owner).
+- **Passed:** `customer-verified.trx` يثبت إنشاء العميل وتعديل الاسم والعنوان وإعدادات المجموعة والدفع، وقراءة العنوان المحدث كقيمة افتراضية لأمر البيع، ورفض الكتابة من شركة أخرى أو دون ملكية الموقع. الدولة غير المعروفة تترك العميل والطرف والعنوان والعدادات كما كانت؛ لا تنشأ حركات ذمم أو مخزون أو قيود. تستخدم الحالة إعدادات AR وAP وFoundation وتسلسلات إنشاء تفاعلية في قاعدة الاختبار المؤقتة فقط.
+
+احتُفظ بسجل المحاولات في `customer-attempts.jsonl`. في الإعادة الأولى، تجاوز رمز الدولة التجريبي طول العمود فرفضه SQL Server قبل فحص مرجع الدولة؛ استُبدل برمز `ZZZ` غير موجود وضمن طول العمود، ثم نجح فحص التراجع. نجح بناء Finance وAPI والاختبارات دون أخطاء، ونجحت اختبارات المخزون **128/128** في `customer-inventory.trx`.
+
+حصيلة القبول الحالية: **62 Passed، و12 Not implemented، و3 Not run**. الحالات المتبقية دون اختبار قبول هي CFG-06 للأبعاد المطلوبة والقيم الافتراضية، وSYS-05 لصلاحيات API، وSYS-08 لمسار التدقيق. مراجعة الكود لـCFG-06 وجدت أن `LedgerJournalPosting` يستدعي `LoadDimensionAsync` لفحص تركيبة الحساب قبل `LedgerJournalDimensionDefaulting.ApplyAsync`؛ يلزم اختبار ترحيل مستقل لإثبات أثر ذلك على البُعد الإلزامي والقيمة المثبتة عند الترحيل. [مرجع القيم الافتراضية والأبعاد المثبتة](https://learn.microsoft.com/en-us/dynamics365/finance/general-ledger/dimensions-default-values).
+
+### متابعة الخصومات والمصاريف
+
+اختبار `Order_to_cash_line_total_discounts_and_taxed_charges_reach_partial_invoices_SQLServer` أثبت قبل الإصلاح أن التأكيد يحسب الخصم الكلي لكن الفاتورة تتجاهله: صافي أول فاتورة كان90 بدل81. الدليل `discounts-before.trx` وسجل `discount-attempts.jsonl` الذي يحتفظ بـFailed ثم Fixed — awaiting retest ثم Passed.
+
+الفاتورة تطبّق الآن خصم الرأس بعد خصم السطر والمتعدد، على الأصناف التي تتيح `InventTableModule.EndDisc` في وحدة البيع، وقبل حساب الضريبة. تحفظ الفاتورة قيم الخصومات بعملتي المعاملة والمحاسبة. يُستخدم نمط خفض صافي الإيراد الحالي؛ حساب الخصم المنفصل اختياري في [مرجع ترحيل المبيعات الرسمي](https://learn.microsoft.com/en-us/dynamics365/finance/general-ledger/sales-order-posting).
+
+الفحص المركّز نجح بعد الإصلاح، ويغطي:
+
+- 3 وحدات بسعر100، خصم سطر10% وخصم كلي10%: صافي243 وضريبة36.45 وإجمالي279.45، مفوترة على دفعتين1 ثم2.
+- الأسعار شاملة الضريبة: 3 وحدات بسعر115 مع الخصمين نفسيهما، للوصول إلى صافي243 وضريبة36.45، مع تطابق التأكيد والفاتورتين.
+- الصنف غير المؤهل للخصم الكلي: صافي270 وضريبة40.50؛ لا يطبق خصم الرأس عليه.
+- مصروف شحن ثابت50 على أمر خدمة400: الفاتورة الأولى287.50 والثانية230؛ يُرحّل المصروف مرة واحدة، وتكرار الطلب لا يكرره.
+
+أُغلقت SO-03 وSO-04 بأدلة دورة الفاتورة الفعلية؛ تصبح حصيلة المرجع **61 Passed، و12 Not implemented، و4 Not run**. المتبقي دون فحص قبول كامل: CFG-06 وMD-01 وSYS-05 وSYS-08. الأدلة القديمة أدناه محفوظة كتاريخ تشغيل.
+
+أُصلح كذلك تضارب ملفات حزم مشاريع الاختبارات: كان `Tests/obj/project.assets.json` يخص CustomerMapping.Tests عند بناء IXApi.Tests. يحدد `Tests/Directory.Build.props` مسار obj مستقلًا لكل مشروع قبل تحميل خصائص SDK/NuGet، مع استبعاد جميع المخرجات المولدة من التجميع. حُذفت إعدادات المسار المتأخرة من المشاريع المتخصصة. يثبت `isolated-assets-after-builds.json` بقاء مالك كل ملف حزم صحيحًا بعد بناء المشاريع الأربعة.
+
+التشغيل الكامل الجديد بعد إصلاح الخصم وعزل ملفات الحزم: **866 Passed، صفر Failed، و3 Skipped** من869 اختبارًا، في `discounts-regression.trx`. نجحت كذلك اختبارات المخزون **128/128**، وربط العملاء **2/2**، وتأكيد أوامر البيع **23/23** بالنسخة المعدلة. تتضمن المجموعة العامة فحوص تكامل AR الثلاثين ومراحل دورة AR الثماني والثلاثين. التفاصيل في `discount-summary.json`؛ و`discount-database-cleanup.txt` يثبت عدم بقاء قواعد اختبار مؤقتة. تقرير القبول الحالي `coverage.json` يحتوي61 حالة Passed من77، وتبقى `completeAcceptancePassed=false`.
+
+### سجل التشغيل السابق
+
 - الاختبارات المركّزة الأربعة: **4 Passed، صفر Failed**، في `otc-verified.trx`؛ تشمل مساري المثال، وعدادات الإقفال، ومنع ترحيل المقدمة كذمم عادية.
 - بعد تشغيل المجموعة العامة وإرفاق أدلة الخدمات القائمة، تقرير الـ77 حالة يحتوي **59 Passed، و12 Not implemented، و6 Not run**. ملف `coverage.json` يضع `completeAcceptancePassed=false`؛ لا يُعلن قبول الدورة كلها.
 - الحالات الست المتبقية: CFG-06 لترحيل الأبعاد المطلوبة/الافتراضية، MD-01 لصيانة العميل عبر خدمته، SO-03 لخصومات داخل دورة فاتورة كاملة، SO-04 لمصاريف داخل دورة فاتورة كاملة، SYS-05 لصلاحيات API، وSYS-08 لتدقيق المستخدم والوقت والتصحيح عبر مسار التدقيق الفعلي. توجد أدلة مكوّنات لبعضها، ولا تُمنح Passed تلقائيًا.
@@ -69,5 +100,7 @@ $env:IXAPI_AP_PHASE_ONE_SQLSERVER = '(localdb)\MSSQLLocalDB'
 $env:IXAPI_OTC_REPORT = Join-Path $PWD '.validation/otc/attempts.jsonl'
 $otcBuildOutput = Join-Path $PWD 'IXApi/.ap-service-validation/bin/'
 dotnet test IXApi/Tests/IXApi.Tests.csproj --no-build --no-restore "/p:BaseOutputPath=$otcBuildOutput" --filter FullyQualifiedName~Order_to_cash_attachment
-./IXApi/scripts/testing/Export-OrderToCashAcceptance.ps1 -AttemptsPath .validation/otc/attempts.jsonl -OutputPath .validation/otc/coverage.json -RegressionTrxPaths @('.validation/otc/otc-regression.trx','.validation/otc/otc-ap-repaired.trx')
+$env:IXAPI_OTC_REPORT = Join-Path $PWD '.validation/otc/customer-attempts.jsonl'
+dotnet test IXApi/Tests/IXApi.Tests.csproj --no-build --no-restore "/p:BaseOutputPath=$otcBuildOutput" --filter FullyQualifiedName~Order_to_cash_customer_creation --logger 'trx;LogFileName=customer-verified.trx' --results-directory .validation/otc
+./IXApi/scripts/testing/Export-OrderToCashAcceptance.ps1 -AttemptsPath .validation/otc/attempts.jsonl -AdditionalAttemptsPaths @('.validation/otc/discount-attempts.jsonl','.validation/otc/customer-attempts.jsonl') -OutputPath .validation/otc/coverage.json -RegressionTrxPaths @('.validation/otc/discounts-regression.trx')
 ```

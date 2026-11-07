@@ -550,6 +550,7 @@ public sealed partial class AccountsReceivableCycleStageTests
 
     private sealed class OtcAudit
     {
+        public Func<object?>? FailureEvidence { get; set; }
         private readonly Dictionary<string,int> attempts = new();
         private readonly string runId = Guid.NewGuid().ToString("N");
         private readonly string path = Environment.GetEnvironmentVariable("IXAPI_OTC_REPORT") ?? Path.Combine(AppContext.BaseDirectory,"otc-acceptance.jsonl");
@@ -586,7 +587,7 @@ public sealed partial class AccountsReceivableCycleStageTests
             }
             catch(Exception error)
             {
-                foreach(var id in ids) Write(id,"Failed",new {name,error=error.ToString()});
+                foreach(var id in ids) Write(id,"Failed",new {name,error=error.ToString(),actual=FailureEvidence?.Invoke()});
                 throw;
             }
         }

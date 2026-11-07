@@ -5,7 +5,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <IsTestProject>true</IsTestProject>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-    <BaseIntermediateOutputPath>obj/SalesOrderConfirmation.Tests/</BaseIntermediateOutputPath>
     <OutputPath>bin/SalesOrderConfirmation.Tests/</OutputPath>
   </PropertyGroup>
   <ItemGroup>

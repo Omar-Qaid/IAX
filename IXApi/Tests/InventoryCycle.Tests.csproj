@@ -5,7 +5,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <IsTestProject>true</IsTestProject>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-    <BaseIntermediateOutputPath>obj/InventoryCycle.Tests/</BaseIntermediateOutputPath>
     <OutputPath>bin/InventoryCycle.Tests/</OutputPath>
   </PropertyGroup>
   <ItemGroup>
