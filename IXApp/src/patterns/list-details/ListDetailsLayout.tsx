@@ -570,6 +570,7 @@ export function ListDetailsLayout({
                                       }
                                       multiline={field.multiline}
                                       rows={field.multiline ? (field.rows ?? 4) : undefined}
+                                      slotProps={{ htmlInput: { 'aria-label': fieldLabel } }}
                                       value={value ?? ''}
                                       onChange={(event) =>
                                         onChange(

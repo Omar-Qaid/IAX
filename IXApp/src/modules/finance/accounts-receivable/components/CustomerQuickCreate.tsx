@@ -3,13 +3,12 @@ import { Box, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { FastTabsDrawer } from '@patterns/drawer-fast-tabs';
 import type { FastTabSection, FastTabValue } from '@patterns/dialog-fast-tabs/FastTabsDialog';
-import type { Customer } from '@mocks/data/customers';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
-import { customerQuickCreateApi } from '../api/customerQuickCreateApi';
+import { customerQuickCreateApi, type CustomerRecord } from '../api/customerQuickCreateApi';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
 import { FOUNDATION_ROUTE_PATHS } from '@modules/finance/foundation/routes/foundationRoutePaths';
 
-interface CustomerQuickCreateProps { open: boolean; nextAccount: string; onClose: () => void; onSave: (customer: Customer, openAfterSave: boolean) => void | Promise<void> }
+interface CustomerQuickCreateProps { open: boolean; nextAccount: string; onClose: () => void; onSave: (customer: CustomerRecord, openAfterSave: boolean) => void | Promise<void> }
 const initialValues = (accountNumber: string): Record<string, FastTabValue> => ({ accountNumber, name: '', nameAr: '', customerGroupId: '', currencyCode: 'SAR', termsOfPayment: '', paymentMethod: '', deliveryMode: '', salesTaxGroup: '', customerCategory: '', vatNumber: '', notes: '', country: '', street: '' });
 
 export function CustomerQuickCreate({ open, nextAccount, onClose, onSave }: CustomerQuickCreateProps): React.ReactElement {

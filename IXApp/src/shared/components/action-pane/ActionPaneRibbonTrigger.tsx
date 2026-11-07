@@ -21,6 +21,7 @@ export function ActionPaneRibbonTrigger({
   controlsId = `${id}-action-ribbon`,
 }: ActionPaneRibbonTriggerProps): React.ReactElement {
   const pane = useActionPaneRibbon();
+  const updateRibbon = pane?.updateRibbon;
   const restored = useRef(false);
   const descriptor = useMemo<ActionPaneRibbonDescriptor>(
     () => ({
@@ -39,6 +40,10 @@ export function ActionPaneRibbonTrigger({
     }),
     [controlsId, groups, id, persistenceKey]
   );
+
+  useEffect(() => {
+    updateRibbon?.(descriptor);
+  }, [descriptor, updateRibbon]);
 
   useEffect(() => {
     if (!pane || !persistenceKey || restored.current) return;

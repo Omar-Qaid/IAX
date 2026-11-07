@@ -740,6 +740,7 @@
     "loadingRecords": "Loading records…",
     "loadingDetails": "Loading details…",
     "selectRecord": "Select a record",
+    "customerNotFound": "Customer not found.",
     "selectRecordHelp": "Choose an item from the list to inspect its details.",
     "unsavedChanges": "You have unsaved changes. Are you sure you want to leave?",
     "saving": "Saving…",
@@ -781,6 +782,8 @@
     "confirmDeleteMessage": "Delete {{count}} selected record(s)?"
   },
   "grid": {
+    "show_sidebar": "Show grid sidebar",
+    "hide_sidebar": "Hide grid sidebar",
     "rows_count_zero": "{{count}} rows",
     "rows_count_one": "{{count}} row",
     "rows_count_two": "{{count}} rows",

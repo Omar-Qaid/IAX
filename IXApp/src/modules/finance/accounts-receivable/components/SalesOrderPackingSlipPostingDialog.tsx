@@ -92,13 +92,9 @@ export function SalesOrderPackingSlipPostingDialog({
     setPostingEnabled(true);
     setError('');
     setRequestId(undefined);
+    setQuantityMode('all');
+    setQuantities({});
   }, [open, orderId]);
-
-  useEffect(() => {
-    const next: Record<string, string> = {};
-    for (const line of previewQuery.data?.lines ?? []) next[line.id] = String(line.quantity);
-    setQuantities(next);
-  }, [previewQuery.data]);
 
   const preview = previewQuery.data;
   const overviewRows = useMemo<OverviewRow[]>(() => preview ? [{
@@ -127,7 +123,7 @@ export function SalesOrderPackingSlipPostingDialog({
         <TextField
           size="small"
           type="number"
-          value={quantities[row.id] ?? '0'}
+          value={quantities[row.id] ?? String(row.quantity)}
           disabled={!postingEnabled || posting}
           onChange={(event) => setQuantities((current) => ({ ...current, [row.id]: event.target.value }))}
           slotProps={{ htmlInput: { min: 0, max: row.quantity, step: 'any', 'aria-label': `Update quantity for ${row.itemId}` } }}
@@ -194,6 +190,7 @@ export function SalesOrderPackingSlipPostingDialog({
       busy={posting}
       actions={
         <>
+          {error && <Alert severity="error" sx={{ flex: 1, minWidth: 0 }}>{error}</Alert>}
           <Button onClick={onClose} disabled={posting}>Cancel</Button>
           <Button variant="outlined" disabled>Batch</Button>
           <Button
@@ -214,10 +211,9 @@ export function SalesOrderPackingSlipPostingDialog({
           <Button size="small" disabled>Select</Button>
           <Button size="small" disabled endIcon={<ExpandMoreIcon />}>Printer setup</Button>
         </Stack>
-        {error && <Alert severity="error">{error}</Alert>}
         {previewQuery.error instanceof Error && <Alert severity="error">{previewQuery.error.message}</Alert>}
         <Alert severity="info">
-          Posting records physical delivery and updates inventory. This flow does not create a customer invoice or calculate/post a general ledger voucher.
+          Posting records the delivery and updates inventory. Ledger posting follows the item's model group settings.
         </Alert>
 
         <Accordion disableGutters>
@@ -231,7 +227,10 @@ export function SalesOrderPackingSlipPostingDialog({
                   label="Quantity"
                   value={quantityMode}
                   disabled={posting}
-                  onChange={(event) => setQuantityMode(event.target.value as PackingSlipQuantityMode)}
+                  onChange={(event) => {
+                    setQuantityMode(event.target.value as PackingSlipQuantityMode);
+                    setQuantities({});
+                  }}
                 >
                   <MenuItem value="all">All</MenuItem>
                   <MenuItem value="deliverNow">Deliver now</MenuItem>

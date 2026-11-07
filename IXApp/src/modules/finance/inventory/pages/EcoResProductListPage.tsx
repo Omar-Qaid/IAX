@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
 import { queryClient } from '@core/api/queryClient';
@@ -30,24 +29,7 @@ export function EcoResProductListPage(): React.ReactElement {
         headerName: 'releasedProduct.fields.itemNumber',
         width: 135,
         pinned: 'left',
-        renderCell: ({ row }) => (
-          <Typography
-            component="button"
-            type="button"
-            onClick={() => navigate(INVENTORY_ROUTE_PATHS.releasedProductDetails(row.id))}
-            sx={{
-              border: 0,
-              padding: 0,
-              background: 'transparent',
-              color: 'primary.main',
-              font: 'inherit',
-              cursor: 'pointer',
-              '&:hover': { textDecoration: 'underline' },
-            }}
-          >
-            {row.itemNumber}
-          </Typography>
-        ),
+        getDetailHref: (row) => INVENTORY_ROUTE_PATHS.releasedProductDetails(row.id),
       },
       {
         field: 'name',

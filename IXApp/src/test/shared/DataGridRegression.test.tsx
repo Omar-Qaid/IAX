@@ -1,5 +1,6 @@
 import React from 'react';
-import { act, render, renderHook, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { expect, it, vi } from 'vitest';
 import { DataGrid } from '@shared/components/data-grid/DataGrid';
 import { useGridDataProcessing } from '@shared/components/data-grid/hooks/useGridDataProcessing';
@@ -13,6 +14,33 @@ const columns: ColumnDef<Row>[] = [
   { field: 'amount', headerName: 'Amount', type: 'number' },
   { field: 'active', headerName: 'Active', type: 'boolean' },
 ];
+
+it('opens the linked record from its key cell without triggering the row action', async () => {
+  const onRowClick = vi.fn();
+  const linkedColumns: ColumnDef<Row>[] = [
+    { field: 'id', headerName: 'Product number',
+      getDetailHref: (row) => row.active ? `/products/${row.id}` : undefined },
+    columns[1],
+  ];
+  render(
+    <MemoryRouter initialEntries={['/products']}>
+      <Routes>
+        <Route path="/products" element={<DataGrid columns={linkedColumns} rows={[
+          { id: 'ITEM-001', amount: 1, active: true },
+          { id: 'ITEM-002', amount: 2, active: false },
+        ]} onRowClick={onRowClick} />} />
+        <Route path="/products/ITEM-001" element={<h1>Edit ITEM-001</h1>} />
+      </Routes>
+    </MemoryRouter>
+  );
+  expect(await screen.findByText('ITEM-002')).toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: 'ITEM-002' })).toBeNull();
+  const link = screen.getByRole('link', { name: 'ITEM-001' });
+  expect(link).toHaveAttribute('href', '/products/ITEM-001');
+  fireEvent.click(link);
+  expect(await screen.findByRole('heading', { name: 'Edit ITEM-001' })).toBeInTheDocument();
+  expect(onRowClick).not.toHaveBeenCalled();
+});
 
 it('preserves reordered columns and reads storage only once as editor callbacks change', () => {
   const getItem = vi.spyOn(Storage.prototype, 'getItem');

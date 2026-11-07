@@ -21,7 +21,8 @@ export function SalesOrderListPage(): React.ReactElement {
   const orders = orderQuery.data ?? [];
   const columns = useMemo<ColumnDef<SalesOrderListRecord>[]>(
     () => [
-      { field: 'salesId', headerName: 'fields.salesOrderNumber', width: 145, pinned: 'left' },
+      { field: 'salesId', headerName: 'fields.salesOrderNumber', width: 145, pinned: 'left',
+        getDetailHref: (row) => ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrder(row.id) },
       { field: 'customerAccount', headerName: 'fields.customerAccount', width: 150 },
       { field: 'customerName', headerName: 'fields.customerName', minWidth: 220, flex: 1 },
       { field: 'invoiceAccount', headerName: 'fields.invoiceAccount', width: 150 },

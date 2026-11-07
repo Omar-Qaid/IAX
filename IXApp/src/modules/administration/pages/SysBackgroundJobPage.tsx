@@ -1,3 +1,4 @@
+import { useGridFilterRow } from '@shared/components/data-grid/hooks/useGridFilterRow';
 import React, { useMemo } from 'react';
 import { useBatchJobCommands } from '../components/useBatchJobCommands';
 import { BatchJobTasks } from '../components/BatchJobTasks';
@@ -126,7 +127,7 @@ export function SysBackgroundJobPage(): React.ReactElement {
   const [commandError, setCommandError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [taskLocked, setTaskLocked] = React.useState(false);
-  const [taskFilterVisible, setTaskFilterVisible] = React.useState(false);
+  const [taskFilterVisible, setTaskFilterVisible] = useGridFilterRow('administration.background-job.tasks');
   const canRun = usePermission('System.BackgroundJobs.Run').hasPermission;
   const execute = async (action: () => Promise<void>) => {
     setBusy(true);

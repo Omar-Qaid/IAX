@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { Paper, Box, ClickAwayListener } from '@mui/material';
 import { d365 } from '@shared/constants/enterpriseUiTokens';
 
@@ -21,6 +21,7 @@ interface ActionPaneRibbonContextValue {
   pinned: boolean;
   toggleRibbon: (descriptor: ActionPaneRibbonDescriptor) => void;
   restoreRibbon: (descriptor: ActionPaneRibbonDescriptor) => void;
+  updateRibbon: (descriptor: ActionPaneRibbonDescriptor) => void;
 }
 
 const ActionPaneRibbonContext = createContext<ActionPaneRibbonContextValue | null>(null);
@@ -37,6 +38,9 @@ export const ActionPane: React.FC<ActionPaneProps> = ({
 }) => {
   const [ribbon, setRibbon] = useState<ActionPaneRibbonDescriptor | null>(null);
   const [ribbonPinned, setRibbonPinned] = useState(false);
+  const updateRibbon = useCallback((descriptor: ActionPaneRibbonDescriptor) => {
+    setRibbon((current) => (current?.id === descriptor.id ? descriptor : current));
+  }, []);
 
   const changeRibbonPinned = (pinned: boolean) => {
     setRibbonPinned(pinned);
@@ -54,6 +58,7 @@ export const ActionPane: React.FC<ActionPaneProps> = ({
     () => ({
       activeId: ribbon?.id ?? null,
       pinned: ribbonPinned,
+      updateRibbon,
       toggleRibbon: (descriptor) => {
         if (ribbon?.id === descriptor.id && !ribbonPinned) {
           setRibbon(null);
@@ -76,7 +81,7 @@ export const ActionPane: React.FC<ActionPaneProps> = ({
         setRibbonPinned(true);
       },
     }),
-    [ribbon, ribbonPinned]
+    [ribbon, ribbonPinned, updateRibbon]
   );
 
   const internalExpandedContent = ribbon?.render(ribbonPinned, changeRibbonPinned);

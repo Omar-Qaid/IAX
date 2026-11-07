@@ -1,3 +1,4 @@
+import { useGridFilterRow } from '@shared/components/data-grid/hooks/useGridFilterRow';
 import React, { useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Box, MenuItem, TextField, Typography } from '@mui/material';
@@ -53,7 +54,7 @@ const emptyPerformer = (): PerformerRecord => ({
 
 export function WfPerformersPage(): React.ReactElement {
   const { t, isRtl } = useAppTranslation();
-  const [filterRowsVisible, setFilterRowsVisible] = useState(false);
+  const [filterRowsVisible, setFilterRowsVisible] = useGridFilterRow('workflow.performers');
   const [performerTypeFilter, setPerformerTypeFilter] = useState(0);
   const usersPanelRef = useRef<WfPerformerUsersPanelHandle>(null);
   const performerTypes = useQuery({

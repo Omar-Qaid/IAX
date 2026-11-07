@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="8624ad01-7947-403f-ac5d-d97acfbab6d6" name="Omar Almojahid@DESKTOP-3Q67JPL 2026-11-07 16:20:43" runUser="DESKTOP-3Q67JPL\Omar Almojahid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-07T16:20:43.9296228+03:00" queuing="2026-11-07T16:20:43.9296232+03:00" start="2026-11-07T16:20:31.7596150+03:00" finish="2026-11-07T16:23:28.4587287+03:00" />
+  <TestSettings name="default" id="576a21a5-5285-4c29-b4fe-1986a4d492d7">
+    <Deployment runDeploymentRoot="Omar_Almojahid_DESKTOP-3Q67JPL_2026-11-07_16_20_43" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="aa19ba20-206f-4090-b385-42a401f36cd0" testId="d602f569-851f-78af-77b3-d3b7e9abdd73" testName="IAX.IXApi.Tests.PackingSlipPhysicalPostingTests.Reversal_does_nothing_when_the_delivery_posted_nothing" computerName="DESKTOP-3Q67JPL" duration="00:00:00.1443555" startTime="2026-11-07T16:20:44.1190228+03:00" endTime="2026-11-07T16:20:44.2627459+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="aa19ba20-206f-4090-b385-42a401f36cd0" />
+    <UnitTestResult executionId="d10795c4-f805-401c-ac4b-683d067b2ba9" testId="744bdfdc-ffcc-a06a-c671-a0dd9a8852e0" testName="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer" computerName="DESKTOP-3Q67JPL" duration="00:01:02.0691457" startTime="2026-11-07T16:22:26.1543840+03:00" endTime="2026-11-07T16:23:28.2261543+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d10795c4-f805-401c-ac4b-683d067b2ba9" />
+    <UnitTestResult executionId="cf29f2b8-2e16-4954-9134-9dc41ff6018e" testId="3b18f8be-d61a-e68c-0db1-4cc1fa123473" testName="IXApi.Tests.SeedPostingModelTests.AP_transaction_storage_has_documented_nullability_precision_and_restrictive_relationships" computerName="DESKTOP-3Q67JPL" duration="00:00:00.1036624" startTime="2026-11-07T16:20:51.1689818+03:00" endTime="2026-11-07T16:20:51.2720862+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cf29f2b8-2e16-4954-9134-9dc41ff6018e" />
+    <UnitTestResult executionId="aefc2de4-ab5c-4257-ba44-e4e4b25a787d" testId="3394b523-b871-dcf4-d325-3601be80f722" testName="IXApi.Tests.SeedPostingModelTests.Every_mapped_table_is_in_the_seed_coverage_review" computerName="DESKTOP-3Q67JPL" duration="00:00:10.8749257" startTime="2026-11-07T16:20:37.0352849+03:00" endTime="2026-11-07T16:20:47.8396411+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="aefc2de4-ab5c-4257-ba44-e4e4b25a787d" />
+    <UnitTestResult executionId="285026e1-2bfd-49b6-a7e1-66ef148dbb2e" testId="5f0fbeb6-b40b-c1cd-8094-d346669c9d50" testName="IAX.IXApi.Tests.PackingSlipPhysicalPostingTests.Posts_the_delivered_cost_only_when_the_model_group_opts_in" computerName="DESKTOP-3Q67JPL" duration="00:00:06.8459014" startTime="2026-11-07T16:20:37.0431313+03:00" endTime="2026-11-07T16:20:43.8153209+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="285026e1-2bfd-49b6-a7e1-66ef148dbb2e" />
+    <UnitTestResult executionId="6d13c18c-324e-4add-baff-32b44ef41a83" testId="bc868e73-7387-5363-8068-5cf88325aa3a" testName="IXApi.Tests.SeedPostingModelTests.Posting_links_and_multiple_request_variables_have_persistable_keys" computerName="DESKTOP-3Q67JPL" duration="00:00:03.3285482" startTime="2026-11-07T16:20:47.8402828+03:00" endTime="2026-11-07T16:20:51.1683486+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6d13c18c-324e-4add-baff-32b44ef41a83" />
+    <UnitTestResult executionId="84043caf-d6ab-4f26-910a-61b0584cab24" testId="a6ba5531-7b3f-fa34-c013-1a907178866d" testName="IAX.IXApi.Tests.PackingSlipPhysicalPostingTests.Invoice_reverses_the_delivery_posting_once_using_its_original_accounts" computerName="DESKTOP-3Q67JPL" duration="00:00:00.3034283" startTime="2026-11-07T16:20:43.9055702+03:00" endTime="2026-11-07T16:20:44.1183649+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="84043caf-d6ab-4f26-910a-61b0584cab24" />
+    <UnitTestResult executionId="a28a24c6-5159-4229-97e0-bd1dd006defc" testId="2d4c8a76-3076-6297-9f0c-75fc09f3e649" testName="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_returns_credit_only_and_corrections_SQLServer" computerName="DESKTOP-3Q67JPL" duration="00:01:34.8633348" startTime="2026-11-07T16:20:51.2729182+03:00" endTime="2026-11-07T16:22:26.1466671+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a28a24c6-5159-4229-97e0-bd1dd006defc" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IAX.IXApi.Tests.PackingSlipPhysicalPostingTests.Posts_the_delivered_cost_only_when_the_model_group_opts_in" storage="c:\users\omar almojahid\desktop\iax\ixapi\.ap-service-validation\packing-slip-history\debug\net9.0\ixapi.tests.dll" id="5f0fbeb6-b40b-c1cd-8094-d346669c9d50">
+      <Execution id="285026e1-2bfd-49b6-a7e1-66ef148dbb2e" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\.ap-service-validation\packing-slip-history\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.PackingSlipPhysicalPostingTests" name="Posts_the_delivered_cost_only_when_the_model_group_opts_in" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.PackingSlipPhysicalPostingTests.Reversal_does_nothing_when_the_delivery_posted_nothing" storage="c:\users\omar almojahid\desktop\iax\ixapi\.ap-service-validation\packing-slip-history\debug\net9.0\ixapi.tests.dll" id="d602f569-851f-78af-77b3-d3b7e9abdd73">
+      <Execution id="aa19ba20-206f-4090-b385-42a401f36cd0" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\.ap-service-validation\packing-slip-history\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.PackingSlipPhysicalPostingTests" name="Reversal_does_nothing_when_the_delivery_posted_nothing" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.SeedPostingModelTests.Posting_links_and_multiple_request_variables_have_persistable_keys" storage="c:\users\omar almojahid\desktop\iax\ixapi\.ap-service-validation\packing-slip-history\debug\net9.0\ixapi.tests.dll" id="bc868e73-7387-5363-8068-5cf88325aa3a">
+      <Execution id="6d13c18c-324e-4add-baff-32b44ef41a83" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\.ap-service-validation\packing-slip-history\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.SeedPostingModelTests" name="Posting_links_and_multiple_request_variables_have_persistable_keys" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.SeedPostingModelTests.AP_transaction_storage_has_documented_nullability_precision_and_restrictive_relationships" storage="c:\users\omar almojahid\desktop\iax\ixapi\.ap-service-validation\packing-slip-history\debug\net9.0\ixapi.tests.dll" id="3b18f8be-d61a-e68c-0db1-4cc1fa123473">
+      <Execution id="cf29f2b8-2e16-4954-9134-9dc41ff6018e" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\.ap-service-validation\packing-slip-history\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.SeedPostingModelTests" name="AP_transaction_storage_has_documented_nullability_precision_and_restrictive_relationships" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.SeedPostingModelTests.Every_mapped_table_is_in_the_seed_coverage_review" storage="c:\users\omar almojahid\desktop\iax\ixapi\.ap-service-validation\packing-slip-history\debug\net9.0\ixapi.tests.dll" id="3394b523-b871-dcf4-d325-3601be80f722">
+      <Execution id="aefc2de4-ab5c-4257-ba44-e4e4b25a787d" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\.ap-service-validation\packing-slip-history\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.SeedPostingModelTests" name="Every_mapped_table_is_in_the_seed_coverage_review" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.PackingSlipPhysicalPostingTests.Invoice_reverses_the_delivery_posting_once_using_its_original_accounts" storage="c:\users\omar almojahid\desktop\iax\ixapi\.ap-service-validation\packing-slip-history\debug\net9.0\ixapi.tests.dll" id="a6ba5531-7b3f-fa34-c013-1a907178866d">
+      <Execution id="84043caf-d6ab-4f26-910a-61b0584cab24" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\.ap-service-validation\packing-slip-history\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.PackingSlipPhysicalPostingTests" name="Invoice_reverses_the_delivery_posting_once_using_its_original_accounts" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_returns_credit_only_and_corrections_SQLServer" storage="c:\users\omar almojahid\desktop\iax\ixapi\.ap-service-validation\packing-slip-history\debug\net9.0\ixapi.tests.dll" id="2d4c8a76-3076-6297-9f0c-75fc09f3e649">
+      <Execution id="a28a24c6-5159-4229-97e0-bd1dd006defc" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\.ap-service-validation\packing-slip-history\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableCycleStageTests" name="Order_to_cash_attachment_returns_credit_only_and_corrections_SQLServer" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer" storage="c:\users\omar almojahid\desktop\iax\ixapi\.ap-service-validation\packing-slip-history\debug\net9.0\ixapi.tests.dll" id="744bdfdc-ffcc-a06a-c671-a0dd9a8852e0">
+      <Execution id="d10795c4-f805-401c-ac4b-683d067b2ba9" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\.ap-service-validation\packing-slip-history\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableCycleStageTests" name="Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="d602f569-851f-78af-77b3-d3b7e9abdd73" executionId="aa19ba20-206f-4090-b385-42a401f36cd0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="744bdfdc-ffcc-a06a-c671-a0dd9a8852e0" executionId="d10795c4-f805-401c-ac4b-683d067b2ba9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3b18f8be-d61a-e68c-0db1-4cc1fa123473" executionId="cf29f2b8-2e16-4954-9134-9dc41ff6018e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3394b523-b871-dcf4-d325-3601be80f722" executionId="aefc2de4-ab5c-4257-ba44-e4e4b25a787d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5f0fbeb6-b40b-c1cd-8094-d346669c9d50" executionId="285026e1-2bfd-49b6-a7e1-66ef148dbb2e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bc868e73-7387-5363-8068-5cf88325aa3a" executionId="6d13c18c-324e-4add-baff-32b44ef41a83" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a6ba5531-7b3f-fa34-c013-1a907178866d" executionId="84043caf-d6ab-4f26-910a-61b0584cab24" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2d4c8a76-3076-6297-9f0c-75fc09f3e649" executionId="a28a24c6-5159-4229-97e0-bd1dd006defc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="8" executed="8" passed="8" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.02] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:01.12]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:01.58]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:01.70]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:02:53.10]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

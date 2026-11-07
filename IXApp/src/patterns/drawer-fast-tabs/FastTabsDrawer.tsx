@@ -28,6 +28,7 @@ export function FastTabsDrawer<TValues extends Record<string, FastTabValue>>(
       ModalProps={{ keepMounted: false }}
       slotProps={{
         paper: {
+          'aria-label': props.title,
           sx: {
             width: { xs: '100vw', sm: 600, md: 826 },
             maxWidth: '100vw',

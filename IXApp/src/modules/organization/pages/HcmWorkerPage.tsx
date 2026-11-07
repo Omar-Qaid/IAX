@@ -1,3 +1,4 @@
+import { useGridFilterRow } from '@shared/components/data-grid/hooks/useGridFilterRow';
 import React, { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
@@ -50,7 +51,7 @@ export function HcmWorkerPage(): React.ReactElement {
 function HcmWorkerContent({ company }: { company: string }): React.ReactElement {
   const { t, isRtl } = useAppTranslation();
   const queryClient = useQueryClient();
-  const [assignmentFiltersVisible, setAssignmentFiltersVisible] = useState(false);
+  const [assignmentFiltersVisible, setAssignmentFiltersVisible] = useGridFilterRow('organization.worker.assignments');
   const lookups = {
     occupations: useQuery({
       queryKey: ['hcm-workers', company, 'occupations'],

@@ -79,10 +79,9 @@ export const DataGridToolbar = memo(function DataGridToolbar({
             sx={{
               width: { sm: 220, md: 270 },
               maxWidth: '100%',
-              mt: '4px',
               '& .MuiOutlinedInput-root': {
                 boxSizing: 'border-box',
-                height: uiDensity.toolbarHeight,
+                height: 26,
                 borderRadius: 1,
                 bgcolor: 'background.paper',
                 fontSize: '0.8125rem',
@@ -98,6 +97,7 @@ export const DataGridToolbar = memo(function DataGridToolbar({
                   borderWidth: 1,
                   borderColor: 'primary.main',
                 },
+                '& .MuiInputBase-input': { py: 0 },
                 '& .MuiInputBase-input::placeholder': {
                   color: 'text.secondary',
                   opacity: 1,
@@ -184,6 +184,10 @@ export const DataGridToolbar = memo(function DataGridToolbar({
             placeholder={`${t('common.search')}...`}
             value={globalSearch}
             onChange={(val) => setGlobalSearch(String(val ?? ''))}
+            sx={{
+              '& .MuiOutlinedInput-root': { height: 26 },
+              '& .MuiInputBase-input': { py: 0 },
+            }}
             slotProps={{
               input: {
                 autoFocus: true,

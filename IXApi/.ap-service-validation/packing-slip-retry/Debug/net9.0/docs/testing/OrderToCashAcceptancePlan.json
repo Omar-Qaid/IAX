@@ -1,0 +1,541 @@
+[
+  {
+    "id": "CFG-01",
+    "service": "إعداد الفترة المالية",
+    "scenario": "ترحيل في فترة مفتوحة ثم مغلقة",
+    "expected": "السماح بالأولى ورفض الثانية",
+    "status": "Not run"
+  },
+  {
+    "id": "CFG-02",
+    "service": "Customer posting profile",
+    "scenario": "فحص تعيين الحساب للعميل والمجموعة وAll",
+    "expected": "استخدام القاعدة الصحيحة",
+    "status": "Not run"
+  },
+  {
+    "id": "CFG-03",
+    "service": "Inventory posting",
+    "scenario": "فحص حسابات التسليم والفاتورة",
+    "expected": "حساب صحيح لكل Posting type",
+    "status": "Not run"
+  },
+  {
+    "id": "CFG-04",
+    "service": "Tax calculation",
+    "scenario": "عميل + بضاعة + خدمة",
+    "expected": "ناتج الضريبة المتوقع",
+    "status": "Not run"
+  },
+  {
+    "id": "CFG-05",
+    "service": "Number sequences",
+    "scenario": "إنشاء وترحيل مستندات متتابعة",
+    "expected": "عدم تكرار المعرّفات",
+    "status": "Not run"
+  },
+  {
+    "id": "CFG-06",
+    "service": "Financial dimensions",
+    "scenario": "ترحيل مع BU ثم بدونه",
+    "expected": "احترام الإلزام والقيم الافتراضية",
+    "status": "Not run"
+  },
+  {
+    "id": "CFG-07",
+    "service": "Payment setup",
+    "scenario": "طريقة دفع وبنك ويومية",
+    "expected": "القيم والحسابات صحيحة",
+    "status": "Not run"
+  },
+  {
+    "id": "MD-01",
+    "service": "Customer maintenance",
+    "scenario": "إنشاء العميل وتعديل بياناته",
+    "expected": "حفظ وربط الاسم والعنوان والإعداد",
+    "status": "Not run"
+  },
+  {
+    "id": "MD-02",
+    "service": "Invoice account",
+    "scenario": "عميل طلب مختلف عن عميل الفاتورة",
+    "expected": "المديونية على Invoice account",
+    "status": "Not run"
+  },
+  {
+    "id": "MD-03",
+    "service": "Credit validation",
+    "scenario": "أمر داخل الحد وآخر يتجاوزه",
+    "expected": "تطبيق سياسة الائتمان المفعلة",
+    "status": "Not run"
+  },
+  {
+    "id": "MD-04",
+    "service": "Customer blocking",
+    "scenario": "عميل محظور",
+    "expected": "منع العمليات المحددة بالحظر",
+    "status": "Not run"
+  },
+  {
+    "id": "MD-05",
+    "service": "Stocked product",
+    "scenario": "إعداد ITEM-100",
+    "expected": "حركات مخزون وتكلفة صحيحة",
+    "status": "Not run"
+  },
+  {
+    "id": "MD-06",
+    "service": "Non-stocked service",
+    "scenario": "إعداد SERV-100",
+    "expected": "عدم إنشاء حركات مخزون",
+    "status": "Not run"
+  },
+  {
+    "id": "MD-07",
+    "service": "Unit conversion",
+    "scenario": "بيع بوحدة تختلف عن المخزون",
+    "expected": "تحويل الكميات والأسعار صحيح",
+    "status": "Not run"
+  },
+  {
+    "id": "SO-01",
+    "service": "Sales order creation",
+    "scenario": "حفظ رأس وسطرين",
+    "expected": "القيم الافتراضية والإجمالي صحيحان",
+    "status": "Not run"
+  },
+  {
+    "id": "SO-02",
+    "service": "Pricing",
+    "scenario": "سعر يدوي/Trade agreement",
+    "expected": "تطبيق السعر وPrice unit الصحيحين",
+    "status": "Not run"
+  },
+  {
+    "id": "SO-03",
+    "service": "Discounts",
+    "scenario": "خصم سطر وخصم كلي",
+    "expected": "الصافي والضريبة صحيحان",
+    "status": "Not run"
+  },
+  {
+    "id": "SO-04",
+    "service": "Charges",
+    "scenario": "إضافة مصروف شحن",
+    "expected": "الحساب والضريبة والإجمالي صحيحة",
+    "status": "Not run"
+  },
+  {
+    "id": "SO-05",
+    "service": "Confirmation",
+    "scenario": "تأكيد الأمر",
+    "expected": "مستند تأكيد دون أثر مالي",
+    "status": "Not run"
+  },
+  {
+    "id": "SO-06",
+    "service": "Order amendment",
+    "scenario": "تعديل قبل الترحيل",
+    "expected": "انعكاس التعديل وفق السياسة",
+    "status": "Not run"
+  },
+  {
+    "id": "INV-01",
+    "service": "Reservation",
+    "scenario": "حجز 10",
+    "expected": "المتاح ينخفض دون نقص الفعلي",
+    "status": "Not run"
+  },
+  {
+    "id": "INV-02",
+    "service": "Unreservation",
+    "scenario": "فك الحجز",
+    "expected": "عودة المتاح",
+    "status": "Not run"
+  },
+  {
+    "id": "INV-03",
+    "service": "Picking",
+    "scenario": "التقاط 6",
+    "expected": "حالة Picked دون فاتورة",
+    "status": "Not run"
+  },
+  {
+    "id": "INV-04",
+    "service": "Packing slip",
+    "scenario": "تسليم 6",
+    "expected": "On-hand = 94 وDeducted",
+    "status": "Not run"
+  },
+  {
+    "id": "INV-05",
+    "service": "Partial delivery",
+    "scenario": "تسليم 4 لاحقًا",
+    "expected": "عدم تكرار التسليم والمتبقي صفر",
+    "status": "Not run"
+  },
+  {
+    "id": "INV-06",
+    "service": "Delivery validation",
+    "scenario": "محاولة تجاوز المتاح/السماح",
+    "expected": "تطبيق السياسة الصحيحة",
+    "status": "Not run"
+  },
+  {
+    "id": "INV-07",
+    "service": "Packing slip correction",
+    "scenario": "تصحيح تسليم بالطريقة المدعومة",
+    "expected": "استرجاع الكمية والأثر المحاسبي الصحيح",
+    "status": "Not run"
+  },
+  {
+    "id": "BILL-01",
+    "service": "Partial invoicing",
+    "scenario": "فوترة أول 6",
+    "expected": "فاتورة 690، وتكلفة أولية 360",
+    "status": "Not run"
+  },
+  {
+    "id": "BILL-02",
+    "service": "Remaining invoicing",
+    "scenario": "فوترة 4 + خدمة",
+    "expected": "فاتورة 690 والمتبقي صفر",
+    "status": "Not run"
+  },
+  {
+    "id": "BILL-03",
+    "service": "Full stock sale",
+    "scenario": "أمر مخزني كامل مستقل",
+    "expected": "كمية وإيراد وضريبة وتكلفة صحيحة",
+    "status": "Not run"
+  },
+  {
+    "id": "BILL-04",
+    "service": "Service sales order",
+    "scenario": "أمر خدمة فقط",
+    "expected": "إيراد وذمم دون مخزون",
+    "status": "Not run"
+  },
+  {
+    "id": "BILL-05",
+    "service": "Mixed sales order",
+    "scenario": "بضاعة وخدمة",
+    "expected": "تكلفة للبضاعة فقط",
+    "status": "Not run"
+  },
+  {
+    "id": "BILL-06",
+    "service": "Invoice validation",
+    "scenario": "محاولة فوترة كمية غير مؤهلة",
+    "expected": "تطبيق متطلبات المسار المعتمد",
+    "status": "Not run"
+  },
+  {
+    "id": "BILL-07",
+    "service": "Invoice grouping",
+    "scenario": "عدة Packing slips لفاتورة",
+    "expected": "لا فقد أو تكرار كميات",
+    "status": "Not run"
+  },
+  {
+    "id": "BILL-08",
+    "service": "Free text invoice",
+    "scenario": "خدمة 300 + 45",
+    "expected": "مديونية 345 دون مخزون",
+    "status": "Not run"
+  },
+  {
+    "id": "BILL-09",
+    "service": "Free text correction",
+    "scenario": "تصحيح فاتورة",
+    "expected": "أثر عكسي وروابط صحيحة",
+    "status": "Not run"
+  },
+  {
+    "id": "PAY-01",
+    "service": "Payment journal creation",
+    "scenario": "حفظ تحصيل دون ترحيل",
+    "expected": "لا أثر مرحل على البنك أو العميل",
+    "status": "Not run"
+  },
+  {
+    "id": "PAY-02",
+    "service": "Payment posting",
+    "scenario": "ترحيل 700",
+    "expected": "بنك مدين وعميل دائن",
+    "status": "Not run"
+  },
+  {
+    "id": "PAY-03",
+    "service": "Unallocated payment",
+    "scenario": "تحصيل دون تسوية",
+    "expected": "حركة دفع مفتوحة",
+    "status": "Not run"
+  },
+  {
+    "id": "SET-01",
+    "service": "Partial settlement",
+    "scenario": "تخصيص 700",
+    "expected": "الأولى مغلقة والثانية 680",
+    "status": "Not run"
+  },
+  {
+    "id": "SET-02",
+    "service": "Final settlement",
+    "scenario": "تخصيص 680",
+    "expected": "جميع أرصدة المثال مغلقة",
+    "status": "Not run"
+  },
+  {
+    "id": "SET-03",
+    "service": "One payment / many invoices",
+    "scenario": "تحصيل لعدة فواتير",
+    "expected": "تخصيص المبالغ صحيح",
+    "status": "Not run"
+  },
+  {
+    "id": "SET-04",
+    "service": "Many payments / one invoice",
+    "scenario": "سداد على دفعات",
+    "expected": "الرصيد يتناقص دون تكرار",
+    "status": "Not run"
+  },
+  {
+    "id": "SET-05",
+    "service": "Settlement validation",
+    "scenario": "محاولة تخصيص غير مسموح",
+    "expected": "رفض أو تقييد العملية وفق القاعدة",
+    "status": "Not run"
+  },
+  {
+    "id": "SET-06",
+    "service": "Automatic settlement",
+    "scenario": "تفعيله في سيناريو مستقل",
+    "expected": "اتباع قواعد وأولوية التسوية",
+    "status": "Not run"
+  },
+  {
+    "id": "PAY-04",
+    "service": "Customer prepayment",
+    "scenario": "مقدمة ثم تطبيقها",
+    "expected": "التزام ثم تحريره مقابل الفاتورة",
+    "status": "Not run"
+  },
+  {
+    "id": "PAY-05",
+    "service": "Cash discount",
+    "scenario": "دفع ضمن المدة وخارجها",
+    "expected": "تطبيق الخصم فقط عند الاستحقاق",
+    "status": "Not run"
+  },
+  {
+    "id": "PAY-06",
+    "service": "Overpayment",
+    "scenario": "تحصيل زائد",
+    "expected": "رصيد دائن صحيح",
+    "status": "Not run"
+  },
+  {
+    "id": "PAY-07",
+    "service": "Underpayment",
+    "scenario": "تحصيل ناقص",
+    "expected": "بقاء الفرق أو معالجته المعتمدة",
+    "status": "Not run"
+  },
+  {
+    "id": "SET-07",
+    "service": "Undo settlement",
+    "scenario": "فك التسوية",
+    "expected": "الأرصدة تعود دون عكس البنك تلقائيًا",
+    "status": "Not run"
+  },
+  {
+    "id": "PAY-08",
+    "service": "Payment reversal",
+    "scenario": "عكس التحصيل",
+    "expected": "معالجة البنك والعميل والتسوية",
+    "status": "Not run"
+  },
+  {
+    "id": "PAY-09",
+    "service": "Customer refund",
+    "scenario": "رد رصيد دائن",
+    "expected": "خروج البنك وإغلاق الرصيد",
+    "status": "Not run"
+  },
+  {
+    "id": "RET-01",
+    "service": "Physical return",
+    "scenario": "إرجاع قطعتين",
+    "expected": "زيادة المخزون 2 وإشعار 230",
+    "status": "Not run"
+  },
+  {
+    "id": "RET-02",
+    "service": "Return costing",
+    "scenario": "ربط بالفاتورة الأصلية",
+    "expected": "تكلفة المرجع صحيحة",
+    "status": "Not run"
+  },
+  {
+    "id": "RET-03",
+    "service": "Credit only",
+    "scenario": "تخفيض 115",
+    "expected": "لا زيادة في On-hand",
+    "status": "Not run"
+  },
+  {
+    "id": "RET-04",
+    "service": "Credit settlement",
+    "scenario": "تسوية إشعار مع فاتورة",
+    "expected": "تخفيض الرصيد المفتوح",
+    "status": "Not run"
+  },
+  {
+    "id": "FX-01",
+    "service": "Foreign-currency invoice",
+    "scenario": "فاتورة USD",
+    "expected": "AmountCur وAmountMST صحيحان",
+    "status": "Not run"
+  },
+  {
+    "id": "FX-02",
+    "service": "Revaluation",
+    "scenario": "تقييم فاتورة مفتوحة",
+    "expected": "فرق غير محقق صحيح",
+    "status": "Not run"
+  },
+  {
+    "id": "FX-03",
+    "service": "Foreign-currency settlement",
+    "scenario": "تحصيل بسعر مختلف",
+    "expected": "فرق محقق وإغلاق بعملة المعاملة",
+    "status": "Not run"
+  },
+  {
+    "id": "COL-01",
+    "service": "Aging",
+    "scenario": "تقرير حسب Due date",
+    "expected": "الشرائح والتاريخ صحيحان",
+    "status": "Not run"
+  },
+  {
+    "id": "COL-02",
+    "service": "Customer statement",
+    "scenario": "كشف حساب قبل وبعد التسوية",
+    "expected": "الحركات والرصيد صحيحان",
+    "status": "Not run"
+  },
+  {
+    "id": "COL-03",
+    "service": "Collection letter",
+    "scenario": "مطالبة لفاتورة متأخرة",
+    "expected": "شمول المستحقات الصحيحة",
+    "status": "Not run"
+  },
+  {
+    "id": "COL-04",
+    "service": "Interest / fees",
+    "scenario": "عند استخدامها",
+    "expected": "القاعدة والمبلغ والقيد صحيحة",
+    "status": "Not run"
+  },
+  {
+    "id": "COL-05",
+    "service": "Write-off",
+    "scenario": "شطب رصيد معتمد",
+    "expected": "حساب المصروف وإغلاق الذمم",
+    "status": "Not run"
+  },
+  {
+    "id": "REC-01",
+    "service": "AR to GL reconciliation",
+    "scenario": "مطابقة العملاء",
+    "expected": "لا فرق غير مفسر",
+    "status": "Not run"
+  },
+  {
+    "id": "REC-02",
+    "service": "Bank reconciliation",
+    "scenario": "مطابقة التحصيل بالكشف",
+    "expected": "لا تحصيل مكرر أو مفقود",
+    "status": "Not run"
+  },
+  {
+    "id": "REC-03",
+    "service": "Inventory reconciliation",
+    "scenario": "مطابقة قيمة المخزون بـGL",
+    "expected": "تطابق حسب نطاق التقرير",
+    "status": "Not run"
+  },
+  {
+    "id": "CLOSE-01",
+    "service": "Weighted average close",
+    "scenario": "مثال التكلفة 60 ثم 80",
+    "expected": "تعديل التكلفة 100 في السيناريو المحدد",
+    "status": "Not run"
+  },
+  {
+    "id": "CLOSE-02",
+    "service": "Period close",
+    "scenario": "محاولة ترحيل بعد الإقفال",
+    "expected": "رفض الترحيل غير المسموح",
+    "status": "Not run"
+  },
+  {
+    "id": "SYS-01",
+    "service": "إرسال طلب الترحيل مرتين",
+    "scenario": "إرسال طلب الترحيل مرتين",
+    "expected": "لا فاتورة أو قيد مكرر لنفس الطلب",
+    "status": "Not run"
+  },
+  {
+    "id": "SYS-02",
+    "service": "فشل أثناء الترحيل",
+    "scenario": "فشل أثناء الترحيل",
+    "expected": "لا مستند نصف مرحل أو حركة يتيمة",
+    "status": "Not run"
+  },
+  {
+    "id": "SYS-03",
+    "service": "مستخدمان يفوتران الكمية نفسها",
+    "scenario": "مستخدمان يفوتران الكمية نفسها",
+    "expected": "منع الفوترة المزدوجة",
+    "status": "Not run"
+  },
+  {
+    "id": "SYS-04",
+    "service": "مستخدمان يسويان التحصيل نفسه",
+    "scenario": "مستخدمان يسويان التحصيل نفسه",
+    "expected": "منع استخدام المبلغ مرتين",
+    "status": "Not run"
+  },
+  {
+    "id": "SYS-05",
+    "service": "صلاحيات الإنشاء والترحيل والعكس",
+    "scenario": "صلاحيات الإنشاء والترحيل والعكس",
+    "expected": "كل مستخدم ينفذ المسموح فقط",
+    "status": "Not run"
+  },
+  {
+    "id": "SYS-06",
+    "service": "عزل الشركات",
+    "scenario": "عزل الشركات",
+    "expected": "عدم قراءة أو ترحيل أرصدة شركة أخرى",
+    "status": "Not run"
+  },
+  {
+    "id": "SYS-07",
+    "service": "التقريب",
+    "scenario": "التقريب",
+    "expected": "تطابق السطور والرأس والضريبة والذمم",
+    "status": "Not run"
+  },
+  {
+    "id": "SYS-08",
+    "service": "Audit trail",
+    "scenario": "Audit trail",
+    "expected": "معرفة المستخدم والوقت والمصدر والتصحيح",
+    "status": "Not run"
+  }
+]

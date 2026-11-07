@@ -1,3 +1,4 @@
+import { uiDensity } from '@shared/constants/uiDensity';
 import React, { useMemo, useCallback, memo } from 'react';
 import {
   Box,
@@ -116,6 +117,7 @@ export function DataGridMobileBodyInternal<T>({
             width: '100%',
             color: hasLookupValue(val) ? 'primary.main' : 'text.primary',
             fontWeight: 500,
+            fontSize: uiDensity.gridFontSize,
             wordBreak: 'break-word',
             textAlign: 'center',
           }}
@@ -143,6 +145,7 @@ export function DataGridMobileBodyInternal<T>({
           width: '100%',
           color: 'text.primary',
           fontWeight: 500,
+          fontSize: uiDensity.gridFontSize,
           wordBreak: 'break-word',
           textAlign: 'center',
         }}
@@ -302,7 +305,7 @@ export function DataGridMobileBodyInternal<T>({
                     {titleCol && (
                       <>
                         <Typography
-                          sx={{ fontWeight: 700, color: 'primary.main', fontSize: '0.95rem' }}
+                          sx={{ fontWeight: 700, color: 'primary.main', fontSize: uiDensity.gridFontSize }}
                         >
                           {t(titleCol.headerName)}:
                         </Typography>
@@ -314,7 +317,7 @@ export function DataGridMobileBodyInternal<T>({
                             '& .MuiTypography-root': {
                               fontWeight: 600,
                               color: 'text.primary',
-                              fontSize: '0.95rem',
+                              fontSize: uiDensity.gridFontSize,
                               margin: 0,
                             },
                           }}

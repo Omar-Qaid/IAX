@@ -1,3 +1,4 @@
+import { uiDensity } from '@shared/constants/uiDensity';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, Typography, IconButton, useTheme } from '@mui/material';
@@ -133,7 +134,7 @@ export function SortableHeader<T>({
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
             fontFamily: APP_FONT_FAMILY,
-            fontSize: 12,
+            fontSize: uiDensity.gridFontSize,
             letterSpacing: 0,
             textAlign: column.headerAlign ?? 'start',
           }}

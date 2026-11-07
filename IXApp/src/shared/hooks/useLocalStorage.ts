@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 type StoredValue<T> = T | ((current: T) => T);
 
@@ -30,6 +30,7 @@ export const useLocalStorage = <T>(
   }, [deserialize, key, resolveInitialValue]);
 
   const [value, setValue] = useState<T>(readValue);
+  const previousKey = useRef(key);
 
   const updateValue = useCallback((next: StoredValue<T>) => {
     setValue((current) => {
@@ -45,6 +46,10 @@ export const useLocalStorage = <T>(
   }, [key, resolveInitialValue]);
 
   useEffect(() => {
+    if (previousKey.current !== key) {
+      previousKey.current = key;
+      setValue(readValue());
+    }
     const handleStorage = (event: StorageEvent) => {
       if (event.key === key) setValue(readValue());
     };

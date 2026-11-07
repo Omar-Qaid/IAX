@@ -4054,6 +4054,7 @@ public sealed class InventoryCycleTests
             typeof(PaymTerm), typeof(VendTrans), typeof(VendTransOpen), typeof(VendSettlement), typeof(PurchReceiptAccrual), typeof(VendLedgerAccounts), typeof(InventTransOriginPurchLine), typeof(VendTable), typeof(VendParameters), typeof(VendPaymModeTable),
             typeof(InventSite), typeof(InventLocation), typeof(InventTable), typeof(InventTableModule), typeof(UnitOfMeasure), typeof(UnitOfMeasureConversion),
             typeof(SalesTable), typeof(SalesLine), typeof(CustTable), typeof(CustParameters), typeof(CustPackingSlipJour), typeof(CustPackingSlipTrans),
+            typeof(CustPackingSlipVersion), typeof(CustPackingSlipTransHistory),
             typeof(CustInvoiceTable), typeof(CustInvoiceLine), typeof(CustInvoiceJour), typeof(CustInvoiceTrans), typeof(CustTrans), typeof(CustTransOpen), typeof(CustSettlement), typeof(CustLedgerAccounts),
             typeof(Currency), typeof(ExchangeRate), typeof(ExchangeRateType), typeof(ExchangeRateCurrencyPair),
             typeof(DirPartyTable), typeof(CustPaymModeTable), typeof(TaxGroupHeading), typeof(TaxItemGroupHeading),
@@ -4081,6 +4082,9 @@ public sealed class InventoryCycleTests
                 .Where(t => t.IsClass && !t.IsAbstract && typeof(Entity<long>).IsAssignableFrom(t) && !included.Contains(t)))
                 builder.Ignore(type);
             foreach (var type in Included) Configure(builder, type);
+            builder.Entity<CustPackingSlipVersion>().Ignore(x => x.DataAreaId);
+            builder.Entity<CustPackingSlipTransHistory>().HasOne(x => x.PackingSlipLine)
+                .WithMany().HasForeignKey(x => x.CustPackingSlipTrans).OnDelete(DeleteBehavior.Restrict);
         }
 
         private static void Configure(ModelBuilder builder, Type entity)

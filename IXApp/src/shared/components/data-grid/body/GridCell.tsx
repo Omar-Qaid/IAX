@@ -1,3 +1,4 @@
+import { uiDensity } from '@shared/constants/uiDensity';
 import React, { memo } from 'react';
 import { Box, alpha, useTheme } from '@mui/material';
 import type { ColumnDef } from '../types';
@@ -44,6 +45,7 @@ const GridCellInternal = <T,>({
         flex: 'none',
         flexShrink: 0,
         flexGrow: 0,
+        fontSize: uiDensity.gridFontSize,
         overflow: 'hidden',
         bgcolor: 'inherit',
         justifyContent: col.field === '_selection' || col.align === 'center'

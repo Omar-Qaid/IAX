@@ -742,6 +742,7 @@
     "loadingRecords": "جارٍ تحميل السجلات…",
     "loadingDetails": "جارٍ تحميل التفاصيل…",
     "selectRecord": "اختر سجلاً",
+    "customerNotFound": "لم يتم العثور على العميل.",
     "selectRecordHelp": "اختر عنصراً من القائمة لعرض تفاصيله.",
     "unsavedChanges": "لديك تغييرات غير محفوظة. هل أنت متأكد من رغبتك في المغادرة؟",
     "saving": "جارٍ الحفظ…",
@@ -783,6 +784,8 @@
     "confirmDeleteMessage": "هل تريد حذف {{count}} من السجلات المحددة؟"
   },
   "grid": {
+    "show_sidebar": "إظهار الشريط الجانبي للجدول",
+    "hide_sidebar": "إخفاء الشريط الجانبي للجدول",
     "rows_count_zero": "لا توجد صفوف",
     "rows_count_one": "صف واحد",
     "rows_count_two": "صفان",

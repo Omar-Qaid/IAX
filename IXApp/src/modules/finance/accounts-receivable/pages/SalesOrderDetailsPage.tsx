@@ -1,3 +1,4 @@
+import { useGridFilterRow } from '@shared/components/data-grid/hooks/useGridFilterRow';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
@@ -122,9 +123,11 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   );
   const [savingHeader, setSavingHeader] = useState(false);
   const headerSaveLock = useRef(false);
+  const cancelOrderLock = useRef(false);
+  const [cancelingOrder, setCancelingOrder] = useState(false);
   const [headerError, setHeaderError] = useState('');
   useUnsavedChanges(Boolean(headerDraft));
-  const [lineFilterVisible, setLineFilterVisible] = useState(false);
+  const [lineFilterVisible, setLineFilterVisible] = useGridFilterRow('accounts-receivable.sales-order-lines');
   const { hasPermission: canEditLines } = usePermission(PERMISSIONS.SALES_ORDER_UPDATE);
   const [lineTab, setLineTab] = useState('General');
   const [tab, setTab] = useState('lines');
@@ -184,9 +187,13 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       actions: [{
         id: 'cancel',
         label: 'Cancel',
-        disabled: order?.salesStatus.toLowerCase() !== 'backorder',
+        disabled: !canEditHeader || Boolean(activeHeader) || cancelingOrder,
         onClick: async () => {
-          if (!order || !window.confirm(`Cancel the remaining quantity for ${order.salesId}?`)) return;
+          if (!order || !canEditHeader || activeHeader || cancelOrderLock.current) return;
+          if (!window.confirm(`Cancel the remaining quantity for ${order.salesId}?`)) return;
+          cancelOrderLock.current = true;
+          setCancelingOrder(true);
+          setHeaderError('');
           try {
             await salesOrderListApi.cancel(order.id);
             await Promise.all([
@@ -196,6 +203,9 @@ export function SalesOrderDetailsPage(): React.ReactElement {
             ]);
           } catch (error) {
             setHeaderError(error instanceof Error ? error.message : t('errors.generic'));
+          } finally {
+            cancelOrderLock.current = false;
+            setCancelingOrder(false);
           }
         },
       }],

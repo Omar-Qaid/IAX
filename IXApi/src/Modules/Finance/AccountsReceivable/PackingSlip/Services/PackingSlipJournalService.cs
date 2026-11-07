@@ -19,7 +19,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable.PackingSlip;
 
-public sealed class PackingSlipJournalService : BaseService<CustPackingSlipJour>, IPackingSlipJournalService
+public sealed partial class PackingSlipJournalService : BaseService<CustPackingSlipJour>, IPackingSlipJournalService
 {
     private static readonly DateTime OpenHistoryEnd = new(2154, 12, 31, 23, 59, 59, DateTimeKind.Utc);
     private readonly ICompanyExecutionContext _company;
@@ -191,7 +191,27 @@ public sealed class PackingSlipJournalService : BaseService<CustPackingSlipJour>
             var previous = await Db.Set<CustPackingSlipJour>().AsNoTracking().SingleOrDefaultAsync(
                 row => row.DataAreaId == order.DataAreaId && row.SalesId == order.SalesId && row.ParmId == request.RequestId, ct);
             if (previous is not null)
+            {
+                if (previous.PostedState == NoYes.No && previous.Qty == 0
+                    && previous.InternalPackingSlipId == previous.PackingSlipId + ".2")
+                    return new PackingSlipJournalResult(409, null, "The original delivery was canceled. Use a new request ID to post again.");
+                var postedLines = await Db.Set<CustPackingSlipTrans>().AsNoTracking()
+                    .Where(row => row.DataAreaId == order.DataAreaId && row.ParentRecId == previous.RecId)
+                    .ToListAsync(ct);
+                var requestedIds = request.Lines.Select(line => long.Parse(line.SalesLineId, CultureInfo.InvariantCulture)).ToList();
+                var requestedLines = await Db.Set<SalesLine>().AsNoTracking()
+                    .Where(line => line.DataAreaId == order.DataAreaId && line.SalesId == order.SalesId
+                        && requestedIds.Contains(line.RecId)).ToListAsync(ct);
+                if (requestedIds.Distinct().Count() != requestedIds.Count
+                    || postedLines.Count != request.Lines.Count || requestedLines.Count != request.Lines.Count
+                    || request.DeliveryDate.HasValue && request.DeliveryDate.Value.Date != previous.DeliveryDate.Date
+                    || request.Lines.Any(entry => !postedLines.Any(posted =>
+                        posted.InventTransId == requestedLines.Single(line =>
+                            line.RecId == long.Parse(entry.SalesLineId, CultureInfo.InvariantCulture)).InventTransId
+                        && posted.Qty == entry.Quantity)))
+                    return new PackingSlipJournalResult(409, null, "The request ID was already used for a different delivery.");
                 return new PackingSlipJournalResult(200, ToSummary(previous), "Packing slip posted.");
+            }
             if (order.SalesStatus != SalesStatus.Backorder)
                 return new PackingSlipJournalResult(422, null, "Only an open sales order can be shipped.");
 
@@ -407,7 +427,11 @@ public sealed class PackingSlipJournalService : BaseService<CustPackingSlipJour>
                     packingSlipId, deliveryDate, physicalCost, ct,
                     order.InvoiceAccount.Length > 0 ? order.InvoiceAccount : order.CustAccount);
                 if (postedToLedger)
+                {
                     journal.LedgerVoucher = packingSlipId;
+                    foreach (var source in sourceTransactions.Where(row => row.StatusIssue == StatusIssue.Deducted))
+                        source.VoucherPhysical = journal.LedgerVoucher;
+                }
 
                 var lineAmount = line.PriceUnit > 0 ? salesQuantity * line.SalesPrice / line.PriceUnit : 0m;
                 var slipLine = new CustPackingSlipTrans
@@ -420,6 +444,7 @@ public sealed class PackingSlipJournalService : BaseService<CustPackingSlipJour>
                     Name = line.Name,
                     ItemId = line.ItemId,
                     SalesUnit = line.SalesUnit,
+                    PriceUnit = line.PriceUnit,
                     StockedProduct = line.StockedProduct,
                     InventDimId = line.InventDimId,
                     InventTransId = line.InventTransId,

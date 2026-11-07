@@ -52,6 +52,12 @@ public sealed class PackingSlipJournalController : BaseController<CustPackingSli
     public async Task<IActionResult> Post(long salesOrderRecId, [FromBody] PostPackingSlipRequest? request,
         CancellationToken ct) => Present(await _journalService.PostAsync(salesOrderRecId, request, ct));
 
+    [HttpPost("{packingSlipRecId:long}/cancel")]
+    [DomainPermission("AccountsReceivable", "SalesOrders", "Edit")]
+    public async Task<IActionResult> Cancel(long salesOrderRecId, long packingSlipRecId,
+        [FromQuery] DateTime? accountingDate, CancellationToken ct) =>
+        Present(await _journalService.CancelAsync(salesOrderRecId, packingSlipRecId, accountingDate, ct));
+
     [NonAction]
     public override Task<ActionResult<APIResponse<CustPackingSlipJourDto>>> Create(CustPackingSlipJourDto dto, CancellationToken cancellationToken = default) =>
         base.Create(dto, cancellationToken);

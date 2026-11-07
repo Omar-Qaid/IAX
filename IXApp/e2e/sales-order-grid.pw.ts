@@ -1,5 +1,41 @@
 import { expect, test } from '@playwright/test';
 
+test('packing slip displays the stock rejection returned by the API', async ({ page }) => {
+  const message =
+    'Available physical stock excluding other reservations is insufficient for item ITEM-001.';
+  await page.addInitScript(() => localStorage.setItem('i18nextLng', 'en'));
+  await page.route('http://localhost:33319/api/**', (route) =>
+    route.fulfill({ json: { success: true, data: [] } })
+  );
+  await page.route('http://localhost:33319/api/v1/SalesTable/**', async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path.endsWith('/packing-slips') && route.request().method() === 'POST') {
+      await route.fulfill({ status: 422, json: { success: false, message, data: null, errors: null } });
+      return;
+    }
+    let data: unknown = [];
+    if (path.endsWith('/list')) {
+      data = [{ recId: 1, salesId: 'SO-PACK-001', customerName: 'Test customer',
+        currencyCode: 'SAR', salesStatus: 'Backorder', documentStatus: 'None' }];
+    } else if (path.endsWith('/posting-preview')) {
+      data = {
+        header: { id: '1', salesId: 'SO-PACK-001', customerName: 'Test customer', currencyCode: 'SAR', siteId: 'MAIN' },
+        lines: [{ id: '10', lineNumber: 1, itemId: 'ITEM-001', name: 'Test item', quantity: 6, netAmount: 60 }],
+      };
+    }
+    await route.fulfill({ json: { success: true, data } });
+  });
+  await page.goto('/accounts-receivable/sales-orders/1');
+  await page.getByRole('button', { name: 'Sell', exact: true }).click();
+  await page.getByRole('button', { name: 'Packing slip', exact: true }).click();
+  const drawer = page.getByRole('dialog', { name: 'Packing slip posting' });
+  await drawer.getByRole('spinbutton', { name: 'Update quantity for ITEM-001' }).fill('2');
+  await drawer.getByRole('button', { name: 'OK' }).click();
+  await expect(drawer.getByRole('alert').filter({ hasText: message })).toBeVisible();
+  await expect(drawer.getByRole('spinbutton', { name: 'Update quantity for ITEM-001' })).toHaveValue('2');
+  await expect(drawer.getByRole('button', { name: 'OK' })).toBeEnabled();
+});
+
 for (const language of ['en', 'ar']) {
   test(`sales grid entry, validation, layout, and virtualization (${language})`, async ({
     page,

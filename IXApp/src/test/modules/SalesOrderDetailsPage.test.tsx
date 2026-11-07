@@ -1,16 +1,18 @@
 import React from 'react';
 import { beforeEach, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { queryClient } from '@core/api/queryClient';
 import { AppProviders } from '@app/providers/AppProviders';
 import { salesOrderListApi } from '@modules/finance/accounts-receivable/api/salesOrderListApi';
 import { salesOrderLinesApi } from '@modules/finance/accounts-receivable/api/salesOrderLinesApi';
 import { salesOrderConfirmationApi } from '@modules/finance/accounts-receivable/api/salesOrderConfirmationApi';
+import { salesOrderPackingSlipApi } from '@modules/finance/accounts-receivable/api/salesOrderPackingSlipApi';
 import { SalesOrderDetailsPage } from '@modules/finance/accounts-receivable/pages/SalesOrderDetailsPage';
 
 vi.mock('@modules/finance/accounts-receivable/api/salesOrderListApi', () => ({
   salesOrderListApi: {
+    cancel: vi.fn().mockResolvedValue(undefined),
     updateHeader: vi.fn().mockResolvedValue(undefined),
     list: vi.fn().mockResolvedValue([
       {
@@ -66,6 +68,16 @@ vi.mock('@modules/finance/accounts-receivable/api/salesOrderConfirmationApi', ()
   },
 }));
 
+vi.mock('@modules/finance/accounts-receivable/api/salesOrderPackingSlipApi', () => ({
+  salesOrderPackingSlipApi: {
+    postingPreview: vi.fn().mockImplementation(async () => ({
+      header: { id: '1', salesId: 'SO-LIVE-001', customerName: 'Live customer', currencyCode: 'SAR', siteId: 'MAIN' },
+      lines: [{ id: '10', lineNumber: 1, itemId: 'ITEM-1', name: 'Test item', quantity: 6, netAmount: 60 }],
+    })),
+    post: vi.fn().mockResolvedValue({ id: '100' }),
+  },
+}));
+
 beforeEach(() => {
   vi.clearAllMocks();
   globalThis.localStorage.setItem('ixapp.sales-order.list-visible', 'true');
@@ -107,15 +119,64 @@ it('opens CustConfirmJour from Sell > Sales order confirmations', async () => {
   expect(await screen.findByText('CustConfirmJour page')).toBeInTheDocument();
 });
 
+it('guards order cancellation while header edits are unsaved or cancellation is in flight', async () => {
+  const confirmation = vi.spyOn(window, 'confirm').mockReturnValue(true);
+  let rejectCancellation!: (reason: Error) => void;
+  vi.mocked(salesOrderListApi.cancel).mockImplementationOnce(
+    () => new Promise((_, reject) => { rejectCancellation = reject; })
+  );
+  try {
+    openOrder('1');
+    await screen.findByText('SO-LIVE-001 : Live customer');
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    expect(screen.getByRole('button', { name: '' })).toBeDisabled();
+    expect(salesOrderListApi.cancel).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: '' }));
+    fireEvent.click(screen.getByRole('button', { name: '' }));
+    fireEvent.click(screen.getByRole('button', { name: '' }));
+    expect(salesOrderListApi.cancel).toHaveBeenCalledExactlyOnceWith('1');
+    expect(screen.getByRole('button', { name: '' })).toBeDisabled();
+    rejectCancellation(new Error('Order cancellation failed'));
+    expect(await screen.findByText('Order cancellation failed')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '' })).toBeEnabled();
+  } finally {
+    confirmation.mockRestore();
+  }
+});
+
 it('previews pro forma without posting', async () => {
   openOrder('1');
   await screen.findByText('SO-LIVE-001 : Live customer');
   fireEvent.click(screen.getByRole('button', { name: 'Sell' }));
   fireEvent.click(screen.getByRole('button', { name: 'Pro forma confirmation' }));
   expect(await screen.findByRole('dialog', { name: /Pro forma confirmation/ })).toBeInTheDocument();
-  expect(await screen.findByRole('table', { name: 'Confirmation overview' })).toBeInTheDocument();
+  expect((await within(screen.getByRole('dialog')).findAllByRole('grid')).length).toBeGreaterThan(0);
   expect(salesOrderConfirmationApi.post).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Close preview' }));
+});
+
+it('keeps the entered packing slip quantity when the preview refetches', async () => {
+  const message = 'Available physical stock excluding other reservations is insufficient for item ITEM-001.';
+  vi.mocked(salesOrderPackingSlipApi.post).mockRejectedValueOnce(new Error(message));
+  openOrder('1');
+  await screen.findByText('SO-LIVE-001 : Live customer');
+  fireEvent.click(screen.getByRole('button', { name: 'Sell' }));
+  fireEvent.click(screen.getByRole('button', { name: '' }));
+  const dialog = await screen.findByRole('dialog', { name: 'Packing slip posting' });
+  const quantity = await within(dialog).findByRole('spinbutton', { name: 'Update quantity for ITEM-1' });
+  expect(quantity).toHaveValue(6);
+  fireEvent.change(quantity, { target: { value: '2' } });
+  await act(async () => {
+    await queryClient.invalidateQueries({ queryKey: ['sales-order-packing-slip-posting-preview', '1'] });
+  });
+  expect(salesOrderPackingSlipApi.postingPreview).toHaveBeenCalledTimes(2);
+  expect(quantity).toHaveValue(2);
+  fireEvent.click(within(dialog).getByRole('button', { name: 'OK' }));
+  await waitFor(() => expect(salesOrderPackingSlipApi.post).toHaveBeenCalledWith('1',
+    expect.objectContaining({ lines: [{ salesLineId: '10', quantity: 2 }] })));
+  expect((await within(dialog).findByText(message)).closest('[role="alert"]')).toBeInTheDocument();
+  expect(quantity).toHaveValue(2);
+  expect(within(dialog).getByRole('button', { name: 'OK' })).toBeEnabled();
 });
 
 it('confirms immediately without opening a dialog', async () => {
@@ -134,16 +195,20 @@ it('reviews the confirmation and only posts when Posting is enabled', async () =
   await screen.findByText('SO-LIVE-001 : Live customer');
   fireEvent.click(screen.getByRole('button', { name: 'Sell' }));
   fireEvent.click(screen.getByRole('button', { name: 'Confirmation' }));
-  expect(await screen.findByRole('table', { name: 'Confirmation overview' })).toBeInTheDocument();
+  expect((await within(screen.getByRole('dialog')).findAllByRole('grid')).length).toBeGreaterThan(0);
   fireEvent.click(screen.getByRole('button', { name: 'Lines' }));
-  expect(screen.getByRole('table', { name: 'Confirmation lines' })).toBeInTheDocument();
-  fireEvent.click(screen.getByRole('switch', { name: 'Posting' }));
+  expect(await within(screen.getByRole('dialog')).findByText('ITEM-1')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Parameters' }));
+  fireEvent.click(screen.getByLabelText('Posting'));
   fireEvent.click(screen.getByRole('button', { name: 'Close preview' }));
   expect(salesOrderConfirmationApi.post).not.toHaveBeenCalled();
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-  fireEvent.click(screen.getByRole('button', { name: 'Sell' }));
+  if (!screen.queryByRole('button', { name: '' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Sell' }));
   fireEvent.click(screen.getByRole('button', { name: 'Confirmation' }));
-  fireEvent.click(await screen.findByRole('button', { name: 'OK' }));
+  const submit = await screen.findByRole('button', { name: 'OK' });
+  await waitFor(() => expect(submit).toBeEnabled());
+  fireEvent.click(submit);
   await waitFor(() => expect(salesOrderConfirmationApi.post).toHaveBeenCalledWith(
     '1', expect.any(String), expect.any(String)
   ));

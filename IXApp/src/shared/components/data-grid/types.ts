@@ -33,6 +33,8 @@ export interface ColumnDef<T> {
   hidden?: boolean;
   pinned?: 'left' | 'right' | null;
   renderCell?: (params: { row: T; value: unknown; rowIndex: number }) => React.ReactNode;
+  /** Makes a key cell link to the record's detail form. Return undefined for rows without a route. */
+  getDetailHref?: (row: T) => string | undefined;
   valueGetter?: (params: { row: T }) => unknown;
   align?: 'left' | 'center' | 'right';
   headerAlign?: 'left' | 'center' | 'right';

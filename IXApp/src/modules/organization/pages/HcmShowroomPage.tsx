@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useGridFilterRow } from '@shared/components/data-grid/hooks/useGridFilterRow';
+import React from 'react';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { useCompanyStore } from '@core/company/useCompanyStore';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
@@ -31,7 +32,7 @@ export function HcmShowroomPage(): React.ReactElement {
 
 function HcmShowroomContent({ company }: { company: string }): React.ReactElement {
   const { t, isRtl } = useAppTranslation();
-  const [filtersVisible, setFiltersVisible] = useState(false);
+  const [filtersVisible, setFiltersVisible] = useGridFilterRow('organization.showroom.grids');
   const config: EnterpriseListDetailsConfig<HcmShowroomRecord> = {
     recordTableName: 'HcmShowroom',
     onSearch: () => setFiltersVisible((visible) => !visible),

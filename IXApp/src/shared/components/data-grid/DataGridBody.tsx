@@ -1,3 +1,4 @@
+import { uiDensity } from '@shared/constants/uiDensity';
 import React, { useRef, useState, useMemo, useCallback, memo } from 'react';
 import { Box, Typography } from '@mui/material';
 import { NEW_ROW_ID } from './hooks';
@@ -348,7 +349,7 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>(
                 whiteSpace: 'nowrap',
                 textAlign: col.align ?? 'start',
                 fontFamily: APP_FONT_FAMILY,
-                fontSize: 15,
+                fontSize: uiDensity.gridFontSize,
                 color: '#323130',
               }}
             >
@@ -384,7 +385,7 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>(
               whiteSpace: 'nowrap',
               textAlign: col.align ?? 'start',
               fontFamily: APP_FONT_FAMILY,
-              fontSize: 15,
+              fontSize: uiDensity.gridFontSize,
               color: hasLookupValue(val) ? 'primary.main' : '#323130',
             }}
           >
@@ -416,7 +417,7 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>(
             whiteSpace: 'nowrap',
             textAlign: col.align ?? 'start',
             fontFamily: APP_FONT_FAMILY,
-            fontSize: 15,
+            fontSize: uiDensity.gridFontSize,
             color: '#323130',
           }}
         >

@@ -8,7 +8,7 @@ import { PERMISSIONS } from '@core/permissions/permissions';
 import { customerQuickCreateApi, type CustomerRecord } from '../api/customerQuickCreateApi';
 import { useParams } from 'react-router-dom';
 import { PartyPostalAddressPanel, PartyElectronicAddressPanel } from '@shared/components/logistics/PartyLogisticsPanels';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { CustomerLookupOption } from '../api/customerQuickCreateApi';
 import { salesOrderLinesApi } from '../api/salesOrderLinesApi';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
@@ -74,6 +74,7 @@ const createCustomer = (record: CustomerRecord) => customerQuickCreateApi.create
 export function CustTablePage(): React.ReactElement {
   const { t, isRtl } = useAppTranslation();
   const { customerId } = useParams<{ customerId: string }>();
+  const queryClient = useQueryClient();
   const lookupsQuery = useQuery({
     queryKey: ['accounts-receivable', 'customer-quick-create', 'lookups'],
     queryFn: ({ signal }) => customerQuickCreateApi.lookups(signal),
@@ -179,14 +180,20 @@ export function CustTablePage(): React.ReactElement {
     recordTableName: 'CustTable',
     dataSource: {
       type: 'remote',
-      key: 'accounts-receivable-customer-details',
+      key: `accounts-receivable-customer-details:${customerId ?? ''}`,
       load: async (signal) => {
         const records = await customerQuickCreateApi.list(signal);
         if (!customerId) return records;
+        if (!records.some((record) => record.id === customerId))
+          throw new Error(t('messages.customerNotFound', 'Customer not found.'));
         return [...records].sort((left, right) => Number(right.id === customerId) - Number(left.id === customerId));
       },
       create: createCustomer,
-      update: customerQuickCreateApi.update,
+      update: async (record) => {
+        const updated = await customerQuickCreateApi.update(record);
+        await queryClient.invalidateQueries({ queryKey: ['accounts-receivable', 'customers'] });
+        return updated;
+      },
       delete: customerQuickCreateApi.remove,
     },
     createRecord: emptyCustomer,
@@ -273,7 +280,7 @@ export function CustTablePage(): React.ReactElement {
     presentation: { mode: 'list', listWidth: 232, listMinWidth: 200, listMaxWidth: 360, listResizable: true, compactRecordHeader: true, recordHeaderMinHeight: 42 },
   };
 
-  return <ListDetailsPage variant="enterprise" title={t('pages.customers.title')} config={config} />;
+  return <ListDetailsPage key={customerId} variant="enterprise" title={t('pages.customers.title')} config={config} />;
 }
 
 function RelatedValue({ value, empty }: { value?: string | null; empty: string }): React.ReactElement {

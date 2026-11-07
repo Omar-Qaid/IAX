@@ -1,3 +1,4 @@
+import { uiDensity } from '@shared/constants/uiDensity';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, Typography, IconButton } from '@mui/material';
@@ -98,7 +99,7 @@ export function PinnedHeaderCell<T>({
             flexGrow: 1,
             fontWeight: 600,
             fontFamily: APP_FONT_FAMILY,
-            fontSize: 12,
+            fontSize: uiDensity.gridFontSize,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',

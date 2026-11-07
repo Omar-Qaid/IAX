@@ -1,6 +1,6 @@
 import { localizedName } from '@shared/utilities/localizedName';
-import React, { useMemo, useState } from 'react';
-import { Link, Typography } from '@mui/material';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Typography } from '@mui/material';
 import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
 import { StatusBadge } from '@shared/components/status/StatusBadge';
 import type { ColumnDef } from '@shared/components/data-grid/types';
@@ -23,6 +23,12 @@ export function CustomerListPage(): React.ReactElement {
   });
   const customers = customerQuery.data ?? [];
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
+  const [customerToOpen, setCustomerToOpen] = useState<string>();
+  useEffect(() => {
+    if (!customerToOpen || quickCreateOpen) return;
+    setCustomerToOpen(undefined);
+    navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customer(customerToOpen));
+  }, [customerToOpen, navigate, quickCreateOpen]);
   const columns = useMemo<ColumnDef<CustomerRecord>[]>(
     () => [
       {
@@ -30,15 +36,7 @@ export function CustomerListPage(): React.ReactElement {
         headerName: 'fields.account',
         width: 150,
         pinned: 'left',
-        renderCell: ({ row }) => (
-          <Link
-            component="button"
-            underline="none"
-            sx={{ fontSize: '0.75rem', color: 'primary.main' }}
-          >
-            {row.accountNumber}
-          </Link>
-        ),
+        getDetailHref: (row) => ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customer(row.id),
       },
       { field: 'name', valueGetter: ({ row }) => localizedName({ name: row.name, nameAlias: row.nameAr }, isRtl), headerName: 'fields.customerName', width: 205 },
       {
@@ -183,17 +181,18 @@ export function CustomerListPage(): React.ReactElement {
       error={customerQuery.error instanceof Error ? customerQuery.error.message : null}
       onRetry={() => customerQuery.refetch()}
       dataGridProps={{ storageKey: 'accounts-receivable.customers.reference-view' }}
-      dialogs={
+      dialogs={quickCreateOpen && (
         <CustomerQuickCreate
           open={quickCreateOpen}
           nextAccount="—"
           onClose={() => setQuickCreateOpen(false)}
-          onSave={async () => {
+          onSave={async (customer, openAfterSave) => {
             await queryClient.invalidateQueries({ queryKey: ['accounts-receivable', 'customers'] });
             setQuickCreateOpen(false);
+            if (openAfterSave) setCustomerToOpen(customer.id);
           }}
         />
-      }
+      )}
     />
   );
 }

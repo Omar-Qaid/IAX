@@ -8,8 +8,10 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Box, Paper, Typography, useTheme, useMediaQuery } from '@mui/material';
-import type { DataGridProps, DataGridHandle, GridCellAddress } from './types';
+import { Box, IconButton, Link, Paper, Tooltip, Typography, useTheme, useMediaQuery } from '@mui/material';
+import ViewSidebarOutlinedIcon from '@mui/icons-material/ViewSidebarOutlined';
+import { Link as RouterLink } from 'react-router-dom';
+import type { ColumnDef, DataGridProps, DataGridHandle, GridCellAddress } from './types';
 import { DataGridToolbar } from './DataGridToolbar';
 import { DataGridHeader } from './DataGridHeader';
 import { DataGridBody, type GridBodyHandle } from './DataGridBody';
@@ -92,7 +94,35 @@ function DataGridInternal<T>(
   const pendingScrollTopRef = useRef<number | null>(null);
   const saveInFlightRef = useRef<Promise<boolean> | null>(null);
   const focusedCellRef = useRef({ r: 0, c: 0 });
-  const initialColumns = rawInitialColumns;
+  const initialColumns = useMemo(
+    () => rawInitialColumns.map<ColumnDef<T>>((column) => {
+      if (!column.getDetailHref) return column;
+      return {
+        ...column,
+        renderCell: (params) => {
+          const href = column.getDetailHref?.(params.row);
+          const label = column.renderCell
+            ? column.renderCell(params)
+            : String((column.valueGetter ? column.valueGetter({ row: params.row }) : params.value) ?? '');
+          if (!href || label == null || label === '') return label;
+          return (
+            <Link
+              component={RouterLink}
+              to={href}
+              underline="hover"
+              onClick={(event) => event.stopPropagation()}
+              onDoubleClick={(event) => event.stopPropagation()}
+              onKeyDown={(event) => event.stopPropagation()}
+              sx={{ font: 'inherit', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+            >
+              {label}
+            </Link>
+          );
+        },
+      };
+    }),
+    [rawInitialColumns]
+  );
   const [focusedRowId, setFocusedRowId] = useState<string | null>(null);
   const focusRequestRef = useRef(0);
   const resolveCellRef = useRef<
@@ -1049,7 +1079,7 @@ function DataGridInternal<T>(
 
         {!isMobile && !hideSidebar && (
           <GridSidebar
-            hideTabs={hideSidebarTabs}
+            hideTabs={hideSidebarTabs || (!hideFooter && !isSidebarOpen)}
             open={isSidebarOpen}
             onOpen={() => setIsSidebarOpen(true)}
             onClose={() => setIsSidebarOpen(false)}
@@ -1109,6 +1139,19 @@ function DataGridInternal<T>(
             >
               {t('grid.selectedRows', { count: selectedIds.length })}
             </Typography>
+          )}
+          {!isMobile && !hideSidebar && (
+            <Tooltip title={t(isSidebarOpen ? 'grid.hide_sidebar' : 'grid.show_sidebar')}>
+              <IconButton
+                size="small"
+                aria-label={t(isSidebarOpen ? 'grid.hide_sidebar' : 'grid.show_sidebar')}
+                aria-expanded={isSidebarOpen}
+                onClick={() => setIsSidebarOpen((open) => !open)}
+                sx={{ marginInlineStart: 'auto', marginInlineEnd: -1, p: 0.5 }}
+              >
+                <ViewSidebarOutlinedIcon sx={{ fontSize: 16 }} />
+              </IconButton>
+            </Tooltip>
           )}
         </Box>
       )}

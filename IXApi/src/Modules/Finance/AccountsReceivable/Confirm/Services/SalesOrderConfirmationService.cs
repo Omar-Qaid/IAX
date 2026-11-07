@@ -155,11 +155,13 @@ public sealed class SalesOrderConfirmationService : BaseService<CustConfirmJour>
                 return new ConfirmationResult(422, null, "The invoice customer is blocked for sales order confirmation.");
             var parameters = await db.Set<CustParameters>().AsNoTracking()
                 .Where(x => x.DataAreaId == order.DataAreaId).OrderBy(x => x.Key).FirstOrDefaultAsync(ct);
-            if (parameters?.CreditLimitCheck > 0)
+            const int balanceCreditLimitMode = 2;
+            var creditLimitMode = parameters?.CreditLimitCheck ?? 0;
+            if (creditLimitMode != 0 && creditLimitMode != balanceCreditLimitMode)
                 return new ConfirmationResult(422, null,
                     "The configured company credit-limit mode is not supported for confirmation.");
             foreach (var account in new[] { customer, invoiceCustomer }.DistinctBy(x => x.RecId)
-                .Where(x => x.MandatoryCreditLimit == NoYes.Yes))
+                .Where(x => creditLimitMode == balanceCreditLimitMode || x.MandatoryCreditLimit == NoYes.Yes))
             {
                 if (account.CreditMax <= 0m)
                     return new ConfirmationResult(422, null, $"Customer '{account.AccountNum}' requires a positive credit limit.");

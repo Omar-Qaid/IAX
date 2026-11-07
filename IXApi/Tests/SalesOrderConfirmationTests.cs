@@ -445,13 +445,17 @@ public sealed class SalesOrderConfirmationTests
     }
 
     [Theory]
-    [InlineData(1000, true)]
-    [InlineData(999, false)]
-    public async Task Mandatory_credit_check_compares_the_open_accounting_balance(int limit, bool allowed)
+    [InlineData(1000, true, false)]
+    [InlineData(999, false, false)]
+    [InlineData(1000, true, true)]
+    [InlineData(999, false, true)]
+    public async Task Mandatory_credit_check_compares_the_open_accounting_balance(int limit, bool allowed, bool companyBalanceMode)
     {
         await using var fixture = await Fixture.CreateAsync();
         var customer = await fixture.Db.Set<CustTable>().SingleAsync();
-        customer.MandatoryCreditLimit = NoYes.Yes;
+        customer.MandatoryCreditLimit = companyBalanceMode ? NoYes.No : NoYes.Yes;
+        if (companyBalanceMode)
+            fixture.Db.Add(new CustParameters { DataAreaId = "dat", CreditLimitCheck = 2 });
         customer.CreditMax = limit;
         fixture.Db.AddRange(
             new CustTransOpen { DataAreaId = "dat", AccountNum = "C1", AmountCur = 400, AmountMst = 1500 },

@@ -27,7 +27,9 @@ import type { ColumnDef, DataGridHandle, DataGridProps } from '@shared/component
 import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { ErrorState } from '@shared/components/feedback/ErrorState';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useGridFilterRow } from '@shared/components/data-grid/hooks/useGridFilterRow';
+import { uiDensity } from '@shared/constants/uiDensity';
 import { ActionPaneBackButton } from '@shared/components/action-pane/ActionPaneBackButton';
 import type { SimpleListDataSource } from './types';
 import { useSimpleListDataSource } from './useSimpleListDataSource';
@@ -201,6 +203,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
     };
   }, [suppliedConfig, props.columns, props.recordTableName, title, t]);
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const gridRef = useRef<DataGridHandle>(null);
   const sourceState = useSimpleListDataSource(props.dataSource);
   const rows = sourceState.rows;
@@ -222,7 +225,8 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
       );
     }
   }, [dataGridProps.selectedIds, rows, getRowId]);
-  const [gridFilterVisible, setGridFilterVisible] = useState(
+  const [gridFilterVisible, setGridFilterVisible] = useGridFilterRow(
+    dataGridProps.storageKey ?? pathname,
     enterpriseConfig?.showFilterOnLoad ?? false
   );
   const [filterPanelOpen, setFilterPanelOpen] = useState(
@@ -301,7 +305,6 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
           config?.advancedFilter?.fields?.[0]?.field ?? config?.searchFields[0]?.field
         ),
       ]);
-      setGridFilterVisible(config?.showFilterOnLoad ?? false);
       setFilterPanelOpen(config?.advancedFilterOpenOnLoad ?? false);
       setInformationPanelOpen(config?.informationOpenOnLoad ?? false);
       setSelectedRow(firstRow);
@@ -333,7 +336,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
             dataGridProps.onEditingChange?.(editing);
           },
           rowHeight: dataGridProps.rowHeight ?? 31,
-          headerHeight: dataGridProps.headerHeight ?? 36,
+          headerHeight: dataGridProps.headerHeight ?? uiDensity.listGridHeaderHeight,
           hideAddRowButton: dataGridProps.hideAddRowButton ?? true,
           hideToolbar: dataGridProps.hideToolbar ?? false,
           hideFilterRow: dataGridProps.hideFilterRow === true || !gridFilterVisible,
@@ -408,7 +411,8 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
             <ActionPaneButton
               label={t('common.search', 'Search')}
               icon={<SearchIcon />}
-              disabled={isEditing}
+              disabled={isEditing || dataGridProps.hideFilterRow === true}
+              selected={gridFilterVisible && dataGridProps.hideFilterRow !== true}
               onClick={() => setGridFilterVisible((visible) => !visible)}
             />
             <OptionsMenu

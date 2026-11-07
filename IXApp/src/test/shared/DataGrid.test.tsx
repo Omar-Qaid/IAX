@@ -24,6 +24,24 @@ const testRows: TestRow[] = [
 ];
 
 describe('AppDataGrid', () => {
+  it('starts with the sidebar hidden and toggles it from the footer', () => {
+    render(
+      <AppProviders>
+        <AppDataGrid<TestRow> columns={testColumns} rows={testRows} />
+      </AppProviders>
+    );
+
+    const toggle = screen.getByRole('button', { name: i18n.t('grid.show_sidebar') });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('button', { name: i18n.t('grid.choose_columns') })).toBeNull();
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('button', { name: i18n.t('grid.choose_columns') })).toBeVisible();
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('button', { name: i18n.t('grid.choose_columns') })).toBeNull();
+  });
+
   it('renders data grid columns and rows', () => {
     render(
       <AppProviders>

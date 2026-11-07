@@ -220,6 +220,12 @@ public sealed partial class AccountsReceivableCycleStageTests
                     .ExecuteUpdateAsync(rows => rows.SetProperty(x => x.Picked, 6m));
                 await Deliver(6,"OTC-PS1");
                 await Deliver(6,"OTC-PS1");
+                var conflictingRetry = await services.GetRequiredService<IPackingSlipJournalService>().PostAsync(orderId,
+                    new(Date,"all",true,"OTC-PS1",[new(stockLineId.ToString(System.Globalization.CultureInfo.InvariantCulture),5m)]),default);
+                Assert.Equal(409, conflictingRetry.StatusCode);
+                var conflictingDate = await services.GetRequiredService<IPackingSlipJournalService>().PostAsync(orderId,
+                    new(Date.AddDays(1),"all",true,"OTC-PS1",[new(stockLineId.ToString(System.Globalization.CultureInfo.InvariantCulture),6m)]),default);
+                Assert.Equal(409, conflictingDate.StatusCode);
                 var slip = await db.Set<CustPackingSlipJour>().AsNoTracking()
                     .SingleAsync(x => x.DataAreaId == Company && x.ParmId == "OTC-PS1");
                 Assert.Equal(slip.PackingSlipId + ".1", slip.InternalPackingSlipId);
@@ -235,6 +241,8 @@ public sealed partial class AccountsReceivableCycleStageTests
                     .SingleAsync(x => x.DataAreaId == Company && x.ParentRecId == slip.RecId);
                 var history = await db.Set<CustPackingSlipTransHistory>().AsNoTracking()
                     .SingleAsync(x => x.DataAreaId == Company && x.CustPackingSlipTrans == slipLine.RecId);
+                Assert.Equal(await db.Set<SalesLine>().Where(x => x.RecId == stockLineId)
+                    .Select(x => x.PriceUnit).SingleAsync(), slipLine.PriceUnit);
                 Assert.Equal(6m, history.Qty);
                 Assert.Equal(6m, history.InventQty);
                 Assert.Equal(4m, history.Remain);
@@ -251,7 +259,38 @@ public sealed partial class AccountsReceivableCycleStageTests
                 Assert.Equal(360m,await LedgerAsync(db,GeneralLedgerSeedExample.DeliveredNotInvoiced));
                 Assert.Empty(await db.Set<CustTrans>().ToListAsync());
                 var origin = await db.Set<InventTransOrigin>().SingleAsync(x => x.InventTransId == inventId && x.DataAreaId == Company);
-                Assert.Equal(-6m,await db.Set<InventTrans>().Where(x => x.InventTransOrigin == origin.RecId && x.StatusIssue == StatusIssue.Deducted).SumAsync(x => x.Qty));
+                var delivered = await db.Set<InventTrans>().AsNoTracking()
+                    .Where(x => x.DataAreaId == Company && x.InventTransOrigin == origin.RecId && x.StatusIssue == StatusIssue.Deducted)
+                    .ToListAsync();
+                Assert.Equal(-6m, delivered.Sum(x => x.Qty));
+                Assert.All(delivered, x => Assert.Equal(slip.LedgerVoucher, x.VoucherPhysical));
+            });
+            await Stage(["INV-07"],"Cancel an uninvoiced delivery, reverse its cost, and deliver again",async () =>
+            {
+                var journal = services.GetRequiredService<IPackingSlipJournalService>();
+                var slip = await db.Set<CustPackingSlipJour>().AsNoTracking()
+                    .SingleAsync(x => x.DataAreaId == Company && x.ParmId == "OTC-PS1");
+                Assert.Equal(200, (await journal.CancelAsync(orderId, slip.RecId, Date, default)).StatusCode);
+                Assert.Equal(200, (await journal.CancelAsync(orderId, slip.RecId, Date, default)).StatusCode);
+                var canceledRetry = await journal.PostAsync(orderId,
+                    new(Date, "all", true, "OTC-PS1", [new(stockLineId.ToString(System.Globalization.CultureInfo.InvariantCulture), 6m)]), default);
+                Assert.Equal(409, canceledRetry.StatusCode);
+                Assert.Equal(100m, (await OnHandAsync(db)).PhysicalInvent);
+                Assert.Equal(0m, await LedgerAsync(db, GeneralLedgerSeedExample.DeliveredNotInvoicedInterim));
+                Assert.Equal(0m, await LedgerAsync(db, GeneralLedgerSeedExample.DeliveredNotInvoiced));
+                Assert.Equal(10m, await db.Set<SalesLine>().Where(x => x.RecId == stockLineId)
+                    .Select(x => x.RemainSalesPhysical).SingleAsync());
+                var versions = await db.Set<CustPackingSlipVersion>().AsNoTracking()
+                    .Where(x => x.CustPackingSlipJour == slip.RecId).OrderBy(x => x.RecId).ToListAsync();
+                Assert.Equal(new[] { 6m, 0m }, versions.Select(x => x.Qty));
+                var lineId = await db.Set<CustPackingSlipTrans>().Where(x => x.ParentRecId == slip.RecId)
+                    .Select(x => x.RecId).SingleAsync();
+                Assert.Equal(versions[1].VersionDateTime, await db.Set<CustPackingSlipTransHistory>()
+                    .Where(x => x.CustPackingSlipTrans == lineId).Select(x => x.ValidTo).SingleAsync());
+                Assert.Null((await reservation.ReserveAsync(inventId, 10, false, default)).Error);
+                Assert.Null((await reservation.SetPickedAsync(inventId, 6, default)).Error);
+                await Deliver(6, "OTC-PS1-REPOST");
+                Assert.Equal(94m, (await OnHandAsync(db)).PhysicalInvent);
             });
             await Stage(["BILL-06"],"Reject a repeated sales line in one invoice request",async () =>
             {

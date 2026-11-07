@@ -16,6 +16,7 @@ import { CustPaymTerm } from '@modules/finance/accounts-receivable/pages/CustPay
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { render as renderWithoutProviders } from '@testing-library/react';
 import { AppProviders } from '@app/providers/AppProviders';
+import { SimpleListPage } from '@patterns/simple-list/SimpleListPage';
 
 vi.mock('@modules/finance/foundation/api/currencyApi', () => ({
   currencyApi: {
@@ -80,6 +81,32 @@ vi.mock('@modules/finance/foundation/api/exchangeRateTypeApi', () => ({
 }));
 
 describe('representative enterprise pages', () => {
+  it('remembers the filter row independently for each grid', async () => {
+    const openGrid = (storageKey: string) => render(<SimpleListPage
+      title="Customers"
+      columns={[{ field: 'id', headerName: 'Account' }]}
+      dataSource={{ type: 'controlled', rows: [{ id: 'C-001' }] }}
+      dataGridProps={{ storageKey, hideToolbar: true }}
+    />);
+    const first = openGrid('test.filter-customers');
+    expect(screen.queryByPlaceholderText('Filter value')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    expect((await screen.findAllByPlaceholderText('Filter value')).length).toBeGreaterThan(0);
+    first.unmount();
+
+    const other = openGrid('test.filter-orders');
+    expect(screen.queryByPlaceholderText('Filter value')).toBeNull();
+    other.unmount();
+    const second = openGrid('test.filter-customers');
+    expect((await screen.findAllByPlaceholderText('Filter value')).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    expect(screen.queryByPlaceholderText('Filter value')).toBeNull();
+    second.unmount();
+
+    openGrid('test.filter-customers');
+    expect(screen.queryByPlaceholderText('Filter value')).toBeNull();
+  });
+
   it('renders the workspace dashboard indicators', () => {
     render(<DashboardPage />);
     expect(screen.getByText('Business overview')).toBeDefined();
