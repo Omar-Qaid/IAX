@@ -85,9 +85,13 @@ public sealed class AccountsReceivableReconciliationSnapshot
         decimal expectedPhysical, decimal expectedDebit, decimal expectedCredit, CancellationToken ct)
     {
         var area = db.GetDataAreaId();
-        var salesOrders = await db.Set<SalesTable>().Where(x => x.DataAreaId == area && (x.SalesName == key || x.ReturnItemNum == key + "-RET"))
+        var originalOrders = await db.Set<SalesTable>().Where(x => x.DataAreaId == area && x.SalesName == key).Select(x => x.SalesId).ToArrayAsync(ct);
+        var originalTrans = await db.Set<SalesLine>().Where(x => x.DataAreaId == area && originalOrders.Contains(x.SalesId) && x.InventTransId != "").Select(x => x.InventTransId).ToArrayAsync(ct);
+        var returnOrders = await db.Set<SalesLine>().Where(x => x.DataAreaId == area && originalTrans.Contains(x.InventTransIdReturn)).Select(x => x.SalesId).ToArrayAsync(ct);
+        var salesOrders = await db.Set<SalesTable>().Where(x => x.DataAreaId == area && (originalOrders.Contains(x.SalesId) || returnOrders.Contains(x.SalesId)))
             .Select(x => x.SalesId).ToArrayAsync(ct);
-        var invoiceRows = await db.Set<CustInvoiceJour>().Where(x => x.DataAreaId == area && x.InvoiceId.StartsWith(key + "-")).ToListAsync(ct);
+        var directIds = await db.Set<CustInvoiceTable>().Where(x => x.DataAreaId == area && x.Name == key + "-DIRECT" && x.Posted == NoYes.Yes).Select(x => x.InvoiceId).ToArrayAsync(ct);
+        var invoiceRows = await db.Set<CustInvoiceJour>().Where(x => x.DataAreaId == area && (x.ParmId.StartsWith(key + "-") || directIds.Contains(x.InvoiceId))).ToListAsync(ct);
         var paymentLines = await db.Set<LedgerJournalTrans>().Where(x => x.DataAreaId == area && x.PaymReference.StartsWith(key + "-")).ToListAsync(ct);
         var journals = paymentLines.Select(x => x.JournalNum).ToArray();
         var reversals = await db.Set<LedgerJournalTable>().Where(x => x.DataAreaId == area && journals.Contains(x.OriginalJournalNum)).Select(x => x.JournalNum).ToArrayAsync(ct);

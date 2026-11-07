@@ -12,6 +12,7 @@ using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using FluentValidation;
 
 namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsReceivable;
 
@@ -29,7 +30,11 @@ public static class AccountsReceivableTransactionRegistration
         services.TryAddScoped<IUnitOfWork, UnitOfWork>();
         services.TryAddScoped<ISysNumberSequenceService, SysNumberSequenceService>();
         services.TryAddScoped<ISalesOrderQuickCreateService, SalesOrderQuickCreateService>();
+        services.TryAddScoped<SalesOrderValidationService>();
+        services.TryAddScoped<ISalesInventoryDemandService, SalesInventoryDemandService>();
+        services.TryAddScoped<IValidator<PostConfirmationRequest>, SalesOrderConfirmationValidator>();
         services.TryAddScoped<ISalesOrderLineService, SalesOrderLineService>();
+        services.TryAddScoped<ISalesOrderHeaderService, SalesOrderHeaderService>();
         services.TryAddScoped<ISalesOrderConfirmationService, SalesOrderConfirmationService>();
         services.TryAddScoped<IPackingSlipJournalService, PackingSlipJournalService>();
         services.TryAddScoped<ISalesInvoiceService, SalesInvoiceService>();

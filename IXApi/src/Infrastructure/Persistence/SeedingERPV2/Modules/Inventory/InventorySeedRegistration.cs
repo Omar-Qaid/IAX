@@ -6,6 +6,7 @@ public static class InventorySeedRegistration
 {
     public static IServiceCollection AddInventorySeeders(this IServiceCollection services)
     {
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, InventoryNumberSequenceSeeder>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, UnitOfMeasureSeeder>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, InventModelGroupSeeder>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, ItemGroupSeeder>());

@@ -39,7 +39,8 @@ public sealed class AccountsPayablePhaseOneSeedTests
         using var provider = services.BuildServiceProvider();
         using var scope = provider.CreateScope();
         var ordered = new SeedDependencyResolver().Resolve(scope.ServiceProvider.GetServices<IDataSeeder>());
-        Assert.Equal(58, ordered.Count);
+        Assert.Equal(59, ordered.Count);
+        Assert.Single(ordered.Where(x => x.Id == "ERPV2.InventoryNumberSequenceSeeder"));
         Assert.Equal(2, scope.ServiceProvider.GetServices<ISeedValidator>().Count());
         Assert.DoesNotContain(ordered, x => x.Id.Contains("Cycle") || x.Id.Contains("PurchTable"));
         foreach (var seeder in ordered)
@@ -73,7 +74,8 @@ public sealed class AccountsPayablePhaseOneSeedTests
         using var scope = services.CreateScope();
         var runner = new SeedRunner(db, scope.ServiceProvider.GetServices<IDataSeeder>(), scope.ServiceProvider.GetServices<ISeedValidator>());
         var first = await runner.RunAsync(2026, "phase-one-test");
-        Assert.Equal(58, first.CompletedSeeders.Count);
+        Assert.Equal(scope.ServiceProvider.GetServices<IDataSeeder>().Select(x => x.Id).OrderBy(x => x),
+            first.CompletedSeeders.OrderBy(x => x));
         await Assert.ThrowsAsync<InvalidOperationException>(() => new SeedContext(db, 2026, "phase-one-test")
             .RequireAsync<LogisticsLocation>(x => x.LocationId == "OTHER-LOCATION", default));
         Assert.Equal(2, await db.Set<VendTable>().CountAsync());
@@ -177,7 +179,8 @@ public sealed class AccountsPayablePhaseOneSeedTests
             var prepared = await examples.PrepareAsync(new(2026, "sql-integrity-test"));
             Assert.False(prepared.TransactionsExecuted);
             Assert.Equal(ExampleIdentifiers.Scope, prepared.Scope);
-            Assert.Equal(58, prepared.CompletedSeeders.Count);
+            Assert.Equal(scope.ServiceProvider.GetServices<IDataSeeder>().Select(x => x.Id).OrderBy(x => x),
+                prepared.CompletedSeeders.Select(x => x.SeederId).OrderBy(x => x));
             Assert.Equal(2, prepared.MasterData.Vendors.Count);
             Assert.Equal(2, prepared.MasterData.Products.Count);
             Assert.Equal(3, prepared.MasterData.PurchasePrices.Count);
@@ -229,8 +232,9 @@ public sealed class AccountsPayablePhaseOneSeedTests
         Assert.Equal("dat", result.Company);
         Assert.Equal(2026, result.FiscalYear);
         Assert.Equal(4, result.PreparationSteps.Count);
-        Assert.Equal(Enumerable.Range(1, 58), result.CompletedSeeders.Select(x => x.Order));
-        Assert.Equal(58, result.CompletedSeeders.Select(x => x.SeederId).Distinct().Count());
+        Assert.Equal(Enumerable.Range(1, result.CompletedSeeders.Count), result.CompletedSeeders.Select(x => x.Order));
+        Assert.Equal(scope.ServiceProvider.GetServices<IDataSeeder>().Select(x => x.Id).OrderBy(x => x),
+            result.CompletedSeeders.Select(x => x.SeederId).OrderBy(x => x));
         Assert.All(result.MasterData.Vendors, x => Assert.True(x.RecId > 0 && x.PartyRecId > 0 && x.BankRecId > 0 && x.AddressRecId > 0));
         Assert.Equal(2, result.MasterData.Vendors.Count);
         Assert.Equal(2, result.MasterData.Products.Count);

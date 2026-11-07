@@ -104,17 +104,20 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
             var selection = new List<(SalesLine Line, decimal Qty)>();
             if (input.Lines == null || input.Lines.Count == 0)
             {
-                selection.AddRange(lines.Where(x => x.RemainSalesFinancial - x.RemainSalesPhysical > 0)
-                    .Select(x => (x, x.RemainSalesFinancial - x.RemainSalesPhysical)));
+                selection.AddRange(lines.Where(x => x.RemainSalesFinancial - (x.StockedProduct == NoYes.Yes ? x.RemainSalesPhysical : 0m) > 0)
+                    .Select(x => (x, x.RemainSalesFinancial - (x.StockedProduct == NoYes.Yes ? x.RemainSalesPhysical : 0m))));
             }
             else
             {
+                var selectedLineIds = new HashSet<long>();
                 foreach (var request in input.Lines)
                 {
+                    if (!selectedLineIds.Add(request.SalesLineRecId))
+                        return await Fail(422, $"Sales line {request.SalesLineRecId} appears more than once in this invoice request.", ct);
                     var line = lines.FirstOrDefault(x => x.RecId == request.SalesLineRecId);
                     if (line == null) return await Fail(404, $"Sales line {request.SalesLineRecId} was not found on this order.", ct);
                     if (request.Qty <= 0) return await Fail(422, "The invoice quantity must be greater than zero.", ct);
-                    var deliveredNotInvoiced = line.RemainSalesFinancial - line.RemainSalesPhysical;
+                    var deliveredNotInvoiced = line.RemainSalesFinancial - (line.StockedProduct == NoYes.Yes ? line.RemainSalesPhysical : 0m);
                     if (request.Qty > deliveredNotInvoiced)
                         return await Fail(422, $"Invoice quantity for item {line.ItemId} exceeds the delivered, uninvoiced quantity {deliveredNotInvoiced}.", ct);
                     selection.Add((line, request.Qty));
@@ -203,6 +206,7 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
                 });
 
                 line.RemainSalesFinancial -= qty;
+                if (line.StockedProduct != NoYes.Yes) line.RemainSalesPhysical = line.RemainSalesFinancial;
                 line.RemainInventFinancial = Math.Max(0m, line.RemainInventFinancial - inventQty);
                 if (line.RemainSalesFinancial <= 0 && line.RemainSalesPhysical <= 0) line.SalesStatus = SalesStatus.Invoiced;
                 totalRevenue += revenue;
@@ -296,6 +300,14 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
     private async Task<(decimal Cogs, List<(string PackingSlipId, decimal Cost, bool FullyInvoiced)> PhysicalReversals, long InventTransOrigin)> IssueInventoryAsync(
         string area, SalesTable order, SalesLine line, decimal inventQty, string invoiceId, DateTime date, CancellationToken ct)
     {
+        if (line.StockedProduct != NoYes.Yes)
+        {
+            var policy = await new SubledgerPostingSupport(Db).ResolveItemModelPolicyAsync(area, line.ItemId, ct);
+            if (policy == null) throw new SubledgerPostingException($"Item model group is missing for {line.ItemId}.");
+            if (policy.StockedProduct == NoYes.Yes)
+                throw new SubledgerPostingException($"Stocked product policy conflicts with sales line {line.RecId}.");
+            return (0m, [], 0L);
+        }
         var origin = await Db.Set<InventTransOrigin>().FirstOrDefaultAsync(x => x.DataAreaId == area
             && x.InventTransId == line.InventTransId && x.ReferenceId == order.SalesId
             && x.ReferenceCategory == InventRefType.SalesTable, ct)

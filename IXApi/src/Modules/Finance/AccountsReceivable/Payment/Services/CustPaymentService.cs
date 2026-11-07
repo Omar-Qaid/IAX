@@ -141,7 +141,8 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
                                           && open.AmountCur > 0
                                           && trans.CurrencyCode == currency
                                       select new { Open = open, Trans = trans }).ToListAsync(ct);
-            if (!string.IsNullOrWhiteSpace(input.SettleInvoiceId))
+            if (!input.SettleAutomatically) openInvoices.Clear();
+            else if (!string.IsNullOrWhiteSpace(input.SettleInvoiceId))
             {
                 openInvoices = openInvoices.Where(x => x.Trans.Invoice == input.SettleInvoiceId).ToList();
                 if (openInvoices.Count == 0)
@@ -287,7 +288,7 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
                 DataAreaId = area, AccountId = bank.AccountId, TransDate = date, Voucher = voucher,
                 Txt = $"Customer payment {customer.AccountNum}", LedgerTransType = LedgerTransType.Payment,
                 CurrencyCode = currency, BankTransCurrencyCode = currency, AmountCur = input.Amount,
-                AmountMst = input.Amount, AmountReportingCurrency = input.Amount, BankTransAmountCur = input.Amount,
+                AmountMst = translation.ToAccounting(input.Amount), AmountReportingCurrency = translation.ToReporting(input.Amount), BankTransAmountCur = input.Amount,
                 LedgerDimension = bank.LedgerDimension, SourceTableId = FinanceTableNumbers.LedgerJournalTrans,
                 SourceRecId = paymentLine.RecId, PaymentMode = input.PaymMode ?? string.Empty, PaymReference = input.RequestId ?? string.Empty
             });

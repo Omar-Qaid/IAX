@@ -18,8 +18,8 @@ public sealed class ReturnDispositionSeeder : IDataSeeder
     {
         await c.EnsureAsync<ReturnReasonCode>(x => x.ReasonCodeId == "ARV2-WRONG",
             new() { ReasonCodeId = "ARV2-WRONG", Description = "Wrong item delivered (demo)" }, ct);
-        await c.EnsureAsync<ReturnDispositionCode>(x => x.DispositionCodeId == "ARV2-RETURN",
-            new() { DispositionCodeId = "ARV2-RETURN", Description = "Credit the customer and return to inventory (demo)",
+        await c.EnsureAsync<ReturnDispositionCode>(x => x.DispositionCodeId == "ARV2-RET",
+            new() { DispositionCodeId = "ARV2-RET", Description = "Credit the customer and return to inventory (demo)",
                 DispositionAction = DispositionAction.Credit }, ct);
     }
 }

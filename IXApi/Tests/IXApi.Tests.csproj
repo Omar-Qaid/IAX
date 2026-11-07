@@ -21,6 +21,7 @@
     <EmbeddedResource Include="PersistedEnumValues.txt" />
     <EmbeddedResource Include="SeedExecutionContracts.json" LogicalName="IXApi.Tests.SeedExecutionContracts.json" />
     <EmbeddedResource Include="SeedMappedTables.json" LogicalName="IXApi.Tests.SeedMappedTables.json" />
+    <EmbeddedResource Include="../docs/testing/OrderToCashAcceptancePlan.json" LogicalName="IXApi.Tests.OrderToCashAcceptancePlan.json" />
     <!-- Read as text, to assert every enum member carries its value explicitly. -->
     <EmbeddedResource Include="..\src\Modules\Finance\Common\Enums\Enumeration.cs" LogicalName="IXApi.Tests.Enumeration.cs" />
   </ItemGroup>

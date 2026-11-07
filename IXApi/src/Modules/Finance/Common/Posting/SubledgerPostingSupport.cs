@@ -115,6 +115,8 @@ internal sealed class SubledgerPostingSupport(DbContext db)
             profile = await db.Set<CustParameters>().AsNoTracking().Where(x => x.DataAreaId == area)
                 .Select(x => x.CustPostingProfile).FirstOrDefaultAsync(ct) ?? string.Empty;
         var rules = await db.Set<CustLedgerAccounts>().AsNoTracking().Where(x => x.DataAreaId == area).ToListAsync(ct);
+        if (!string.IsNullOrWhiteSpace(postingProfile) && !rules.Any(x => x.PostingProfile == postingProfile))
+            throw new SubledgerPostingException($"Customer posting profile '{postingProfile}' was not found in this company.");
         if (!string.IsNullOrWhiteSpace(profile) && rules.Any(x => x.PostingProfile == profile))
             rules = rules.Where(x => x.PostingProfile == profile).ToList();
         var rule = rules.Where(x => x.AccountCode == AccountCode.Table && x.Num == customer.AccountNum).OrderBy(x => x.RecId).FirstOrDefault()

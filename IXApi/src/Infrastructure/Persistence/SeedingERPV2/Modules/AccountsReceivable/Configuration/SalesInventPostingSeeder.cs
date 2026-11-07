@@ -21,7 +21,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.AccountsRece
 public sealed class SalesInventPostingSeeder : IDataSeeder
 {
     public string Id => "ERPV2.SalesInventPostingSeeder";
-    public IReadOnlyCollection<string> Dependencies => ["ERPV2.SalesAccountStructureSeeder", "ERPV2.ItemGroupSeeder"];
+    public IReadOnlyCollection<string> Dependencies => ["ERPV2.SalesAccountStructureSeeder", "ERPV2.DimensionAttributeValueCombinationSeeder", "ERPV2.ItemGroupSeeder"];
     public async Task SeedAsync(SeedContext c, CancellationToken ct)
     {
         foreach (var (type, code) in new[] {

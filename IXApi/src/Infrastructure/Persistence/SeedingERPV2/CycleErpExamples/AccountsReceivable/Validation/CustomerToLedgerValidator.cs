@@ -9,7 +9,7 @@ public sealed class CustomerToLedgerValidator : IAccountsReceivableCycleCheck
 {
     public void Verify(AccountsReceivableReconciliationSnapshot posted)
     {
-        var subledger = posted.CustomerTransactions.Sum(x => x.AmountMst + x.CustExchAdjustmentRealized)
+        var subledger = posted.CustomerTransactions.Sum(x => x.AmountMst) - posted.SettlementRows.Sum(x => x.ExchAdjustment)
             - posted.SettlementRows.Sum(x => x.UtilizedCashDisc * posted.AccountingRate(x.TransRecId));
         AccountsReceivableReconciliationSnapshot.Check(posted.LedgerAmount(GeneralLedgerSeedExample.CustomerControl) == subledger,
             $"{posted.ScenarioId}: customer subledger does not match GL control account.");

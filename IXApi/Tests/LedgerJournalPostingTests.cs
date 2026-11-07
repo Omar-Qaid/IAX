@@ -18,6 +18,29 @@ namespace IAX.IXApi.Tests;
 
 public class LedgerJournalPostingTests
 {
+    [Fact]
+    public async Task A_customer_prepayment_is_not_silently_posted_as_an_ordinary_receivable()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        SeedSubledgers(db);
+        db.Add(new LedgerJournalTrans
+        {
+            RecId=1,DataAreaId="dat",JournalNum="J1",Voucher="V1",LineNum=1,
+            TransDate=new DateTime(2026,1,15),CurrencyCode="SAR",AccountType=LedgerJournalACType.Cust,
+            LedgerDimensionName="C-001",OffsetAccountType=LedgerJournalACType.Ledger,OffsetLedgerDimension=2,
+            AmountCurCredit=300m,Prepayment=NoYes.Yes,Txt="Customer advance"
+        });
+        await db.SaveChangesAsync();
+        var header=await db.Set<LedgerJournalTable>().SingleAsync();
+        var error=await Assert.ThrowsAsync<SubledgerPostingException>(()=>new LedgerJournalPosting(db).PostAsync("dat",header,default));
+        Assert.Contains("Customer prepayment",error.Message);
+        Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
+        Assert.Empty(await db.Set<CustTrans>().ToListAsync());
+    }
+
     // Case A of the core general ledger cycle: owner funding, two explicit lines under one voucher.
     [Fact]
     public async Task Posts_two_line_voucher_to_general_journal_entry_and_account_entries()

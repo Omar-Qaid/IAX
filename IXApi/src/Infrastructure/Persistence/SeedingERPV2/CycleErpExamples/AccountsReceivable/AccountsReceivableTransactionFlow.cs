@@ -24,6 +24,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Acc
 /// </summary>
 public sealed class AccountsReceivableTransactionFlow(ApplicationDbContext db,
     ISalesOrderQuickCreateService orders, ISalesOrderLineService lines,
+    ISalesOrderHeaderService headers,
     ISalesOrderConfirmationService confirmations, IPackingSlipJournalService deliveries,
     ISalesInvoiceService invoices, IFreeTextInvoiceService freeText, ICustPaymentService payments,
     ICustSettleOpenTransactionsService settlements, ICustReturnService returns,
@@ -52,7 +53,7 @@ public sealed class AccountsReceivableTransactionFlow(ApplicationDbContext db,
 
     private static void Success(int statusCode, string? message, string stage)
     {
-        if (statusCode != 200) throw new InvalidOperationException($"AR {stage} failed ({statusCode}): {message}");
+        if (statusCode is not (200 or 201)) throw new InvalidOperationException($"AR {stage} failed ({statusCode}): {message}");
     }
 
     public async Task<AccountsReceivableScenarioReport> ExecuteAsync(AccountsReceivableTransactionOptions options, string id, CancellationToken ct)
@@ -65,12 +66,11 @@ public sealed class AccountsReceivableTransactionFlow(ApplicationDbContext db,
 
         if (id == "04")
         {
-            await FreeTextAsync(key, account, date, ct);
+            var freeTextId = await FreeTextAsync(key, account, date, ct);
             var invoiced = await db.Set<CustInvoiceJour>()
-                .Where(x => x.DataAreaId == Area && x.InvoiceAccount == account && x.InvoiceId.StartsWith(key + "-I"))
-                .SumAsync(x => x.InvoiceAmount, ct);
-            var freeTextCollection = await payments.PostAsync(new(account, "APV2-BANK", invoiced,
-                date.AddDays(35), "ARV2", key + "-I1", key + "-PAY"), ct);
+                .SingleAsync(x => x.DataAreaId == Area && x.InvoiceAccount == account && x.InvoiceId == freeTextId, ct);
+            var freeTextCollection = await payments.PostAsync(new(account, "APV2-BANK", invoiced.InvoiceAmount,
+                date.AddDays(35), "ARV2", freeTextId, key + "-PAY"), ct);
             Success(freeTextCollection.StatusCode, freeTextCollection.Message, "free text collection");
             return await Reconcile(key, id, 0m, 0m, 0m, ct);
         }
@@ -90,6 +90,16 @@ public sealed class AccountsReceivableTransactionFlow(ApplicationDbContext db,
             order = await db.Set<SalesTable>().SingleAsync(x => x.DataAreaId == Area && x.RecId == created.Order!.RecId, ct);
         }
         Check(order.CustAccount == account && order.CurrencyCode == currency, "existing example order differs.");
+        if (id == "12" && order.CashDisc != "ARV2-2")
+        {
+            var updated = await headers.UpdateAsync(order.RecId, new UpdateSalesHeaderInputDto
+            {
+                InvoiceAccount = account, CurrencyCode = currency, TaxGroupId = "ARV2", PaymentTerms = "APV2-N30",
+                PaymentMethod = "ARV2", InventSiteId = "APV2-SITE", InventLocationId = "APV2-WH",
+                CashDiscountCode = "ARV2-2", PaymentTermsBaseDate = date, OrderDate = date.AddDays(-14)
+            }, ct);
+            Check(updated.Status == SalesHeaderUpdateStatus.Saved,updated.Error ?? "cash discount header setup failed.");
+        }
 
         await EnsureLine(order, serviceOnly ? ExampleIdentifiers.ServiceItem : ExampleIdentifiers.StockItem,
             serviceOnly ? 2m : 100m, serviceOnly ? 500m : id == "13" ? 11m : 40m, date, ct);
@@ -142,7 +152,7 @@ public sealed class AccountsReceivableTransactionFlow(ApplicationDbContext db,
         }
 
         var posted = await db.Set<CustInvoiceJour>().Where(x => x.DataAreaId == Area && x.InvoiceAccount == account
-            && x.InvoiceId.StartsWith(key + "-I")).ToListAsync(ct);
+            && x.ParmId.StartsWith(key + "-I")).ToListAsync(ct);
         var total = posted.Sum(x => x.InvoiceAmount);
         decimal expectedPhysical = serviceOnly ? 0m : id is "16" or "20" ? -60m : -100m;
         decimal expectedOpenCredit = 0m, expectedOpenDebit = 0m;
@@ -151,14 +161,23 @@ public sealed class AccountsReceivableTransactionFlow(ApplicationDbContext db,
         if (id == "12") collected = decimal.Round(total * 0.98m, 2, MidpointRounding.AwayFromZero);
         if (id == "14")
         {
+            var originalInvoiceId = posted.Single(x => x.ParmId == key + "-I1").InvoiceId;
             var sold = await db.Set<CustInvoiceTrans>().SingleAsync(x => x.DataAreaId == Area
-                && x.InvoiceId == key + "-I1" && x.ItemId == ExampleIdentifiers.StockItem, ct);
-            var returnOrder = await db.Set<SalesTable>().SingleOrDefaultAsync(x => x.DataAreaId == Area && x.ReturnItemNum == key + "-RET", ct);
+                && x.InvoiceId == originalInvoiceId && x.ItemId == ExampleIdentifiers.StockItem, ct);
+            var returnOrder = await (from header in db.Set<SalesTable>()
+                join detail in db.Set<SalesLine>() on header.SalesId equals detail.SalesId
+                where header.DataAreaId == Area && detail.DataAreaId == Area && header.SalesType == SalesType.ReturnItem
+                    && detail.InventTransIdReturn == sold.InventTransId
+                select header).SingleOrDefaultAsync(ct);
             if (returnOrder == null)
             {
-                var opened = await returns.CreateAsync(new(key + "-I1", null, [new(sold.RecId, 10m, "ARV2-RETURN")]), ct);
+                var opened = await returns.CreateAsync(new(originalInvoiceId, null, [new(sold.RecId, 10m, "ARV2-RET")]), ct);
                 Success(opened.StatusCode, opened.Message, "create return");
-                returnOrder = await db.Set<SalesTable>().SingleAsync(x => x.DataAreaId == Area && x.ReturnItemNum == key + "-RET", ct);
+                returnOrder = await (from header in db.Set<SalesTable>()
+                    join detail in db.Set<SalesLine>() on header.SalesId equals detail.SalesId
+                    where header.DataAreaId == Area && detail.DataAreaId == Area && header.SalesType == SalesType.ReturnItem
+                        && detail.InventTransIdReturn == sold.InventTransId
+                    select header).SingleAsync(ct);
             }
             var returnLine = await db.Set<SalesLine>().SingleAsync(x => x.DataAreaId == Area && x.SalesId == returnOrder.SalesId, ct);
             if (!await db.Set<CustPackingSlipJour>().AnyAsync(x => x.DataAreaId == Area && x.SalesId == returnOrder.SalesId, ct))
@@ -172,7 +191,7 @@ public sealed class AccountsReceivableTransactionFlow(ApplicationDbContext db,
                 Success(credited.StatusCode, credited.Message, "customer credit note");
             }
             var credit = await db.Set<CustInvoiceJour>().SingleAsync(x => x.DataAreaId == Area
-                && x.InvoiceAccount == account && x.InvoiceId == key + "-CR", ct);
+                && x.InvoiceAccount == account && x.ParmId == key + "-CR", ct);
             collected += credit.InvoiceAmount;
             await SettleMarked(key, account, date.AddDays(3), ct);
             expectedPhysical += 10m;
@@ -182,7 +201,8 @@ public sealed class AccountsReceivableTransactionFlow(ApplicationDbContext db,
         var requestId = key + "-PAY";
         var collection = await payments.PostAsync(new(account, id == "13" ? "APV2-USD" : "APV2-BANK",
             id == "08" ? 1000m : collected, id == "12" ? date.AddDays(5) : date.AddDays(35), "ARV2",
-            id == "09" || posted.Count != 1 ? null : posted[0].InvoiceId, requestId), ct);
+            id == "09" || posted.Count != 1 ? null : posted[0].InvoiceId, requestId,
+            SettleAutomatically: id != "09" && posted.Count == 1), ct);
         Success(collection.StatusCode, collection.Message, "customer collection");
         steps.Add(new("Collection", requestId, id == "09" ? "Posted on account before separate settlement" : "Posted with settlement"));
         if (id == "08") expectedOpenDebit = total - 1000m;
@@ -219,19 +239,24 @@ public sealed class AccountsReceivableTransactionFlow(ApplicationDbContext db,
     }
 
     /// <summary>A direct invoice with no sales order and no inventory movement.</summary>
-    private async Task FreeTextAsync(string key, string account, DateTime date, CancellationToken ct)
+    private async Task<string> FreeTextAsync(string key, string account, DateTime date, CancellationToken ct)
     {
-        if (await HasInvoice(key + "-I1", account, ct)) { steps.Add(new("Free text invoice", key + "-I1", "Posted/verified")); return; }
         var revenue = await db.Set<DimensionAttributeValueCombination>()
             .SingleAsync(x => x.DataAreaId == Area && x.MainAccountValue == "481003", ct);
-        var draft = await db.Set<CustInvoiceTable>().SingleOrDefaultAsync(x => x.DataAreaId == Area && x.InvoiceId == key + "-I1", ct);
+        var draft = await db.Set<CustInvoiceTable>().SingleOrDefaultAsync(x => x.DataAreaId == Area
+            && x.InvoiceAccount == account && x.Name == key + "-DIRECT", ct);
+        if (draft?.Posted == NoYes.Yes)
+        {
+            steps.Add(new("Free text invoice", draft.InvoiceId, "Posted/verified"));
+            return draft.InvoiceId;
+        }
         long recId;
         if (draft == null)
         {
             var created = await freeText.CreateAsync(new FreeTextInvoiceSaveDto
             {
                 CustomerAccount = account, InvoiceDate = date, CurrencyCode = "SAR", TaxGroup = "ARV2",
-                Description = "ARV2 direct service invoice example",
+                Description = key + "-DIRECT",
                 Lines = [new FreeTextInvoiceLineInputDto { Description = "Advisory services (demo)", Quantity = 1m,
                     UnitPrice = 350m, LedgerDimension = revenue.RecId, TaxGroup = "ARV2", TaxItemGroup = "APV2" }]
             }, ct);
@@ -241,7 +266,8 @@ public sealed class AccountsReceivableTransactionFlow(ApplicationDbContext db,
         else recId = draft.RecId;
         var postedResult = await freeText.PostAsync(recId, ct);
         Success(postedResult.StatusCode, postedResult.Message, "post free text invoice");
-        steps.Add(new("Free text invoice", key + "-I1", "Posted through its own service; no inventory movement"));
+        steps.Add(new("Free text invoice", postedResult.Invoice!.InvoiceId, "Posted through its own service; no inventory movement"));
+        return postedResult.Invoice.InvoiceId;
     }
 
     private async Task EnsureLine(SalesTable order, string item, decimal qty, decimal price, DateTime date, CancellationToken ct)
@@ -260,8 +286,13 @@ public sealed class AccountsReceivableTransactionFlow(ApplicationDbContext db,
 
     private async Task Deliver(SalesTable order, string number, DateTime date, List<(long RecId, decimal Qty)> quantities, CancellationToken ct)
     {
+        var requestedIds = quantities.Select(x => x.RecId).ToArray();
+        var stockedIds = await db.Set<SalesLine>().Where(x => x.DataAreaId == Area && requestedIds.Contains(x.RecId)
+            && x.StockedProduct == NoYes.Yes).Select(x => x.RecId).ToArrayAsync(ct);
+        quantities = quantities.Where(x => stockedIds.Contains(x.RecId)).ToList();
+        if (quantities.Count == 0) return; // Non-stocked services invoice directly, without physical shipment.
         if (!await db.Set<CustPackingSlipJour>().AnyAsync(x => x.DataAreaId == Area
-            && x.SalesId == order.SalesId && x.PackingSlipId == number, ct))
+            && x.SalesId == order.SalesId && x.ParmId == number, ct))
         {
             var result = await deliveries.PostAsync(order.RecId, new(date, "all", true, number,
                 quantities.Select(x => new PackingSlipPostingLineRequest(
@@ -272,7 +303,7 @@ public sealed class AccountsReceivableTransactionFlow(ApplicationDbContext db,
     }
 
     private Task<bool> HasInvoice(string number, string account, CancellationToken ct) =>
-        db.Set<CustInvoiceJour>().AnyAsync(x => x.DataAreaId == Area && x.InvoiceAccount == account && x.InvoiceId == number, ct);
+        db.Set<CustInvoiceJour>().AnyAsync(x => x.DataAreaId == Area && x.InvoiceAccount == account && x.ParmId == number, ct);
 
     private async Task Invoice(SalesTable order, string number, DateTime date, List<(long RecId, decimal Qty)> quantities, CancellationToken ct)
     {
@@ -287,8 +318,9 @@ public sealed class AccountsReceivableTransactionFlow(ApplicationDbContext db,
 
     private async Task SettleMarked(string key, string account, DateTime date, CancellationToken ct)
     {
+        var postedInvoiceIds = await db.Set<CustInvoiceJour>().Where(x => x.DataAreaId == Area && x.ParmId.StartsWith(key + "-")).Select(x => x.InvoiceId).ToArrayAsync(ct);
         var invoiceIds = await db.Set<CustTrans>().Where(x => x.DataAreaId == Area && x.AccountNum == account
-            && x.Invoice.StartsWith(key + "-")).Select(x => x.RecId).ToArrayAsync(ct);
+            && postedInvoiceIds.Contains(x.Invoice)).Select(x => x.RecId).ToArrayAsync(ct);
         var requestLines = await db.Set<LedgerJournalTrans>().Where(x => x.DataAreaId == Area
             && x.PaymReference.StartsWith(key + "-")).Select(x => x.Voucher).ToArrayAsync(ct);
         var paymentIds = await db.Set<CustTrans>().Where(x => x.DataAreaId == Area && requestLines.Contains(x.Voucher))

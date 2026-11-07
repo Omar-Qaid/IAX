@@ -47,6 +47,8 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
         var lines = await db.Set<LedgerJournalTrans>()
             .Where(x => x.DataAreaId == area && x.JournalNum == header.JournalNum).ToListAsync(ct);
         lines = lines.OrderBy(x => x.LineNum).ThenBy(x => x.RecId).ToList();
+        if (lines.Any(x => x.AccountType == LedgerJournalACType.Cust && x.Prepayment == NoYes.Yes))
+            throw new SubledgerPostingException("Customer prepayment journals require advance-liability posting and application, which are not implemented.");
 
         var journalName = await db.Set<LedgerJournalName>().AsNoTracking()
             .SingleAsync(x => x.DataAreaId == area && x.JournalName == header.JournalName, ct);
