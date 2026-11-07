@@ -201,7 +201,31 @@ public sealed partial class AccountsReceivableCycleStageTests
             }
             await Stage(["INV-04"],"Deliver 6: on hand 94 and physical cost 360",async () =>
             {
+                var stock = await OnHandAsync(db);
+                Assert.Equal(6m, stock.Picked);
+                db.ChangeTracker.Clear();
+                await db.Set<InventSum>().Where(x => x.RecId == stock.RecId)
+                    .ExecuteUpdateAsync(rows => rows.SetProperty(x => x.Picked, 0m));
+
+                var rejected = await services.GetRequiredService<IPackingSlipJournalService>().PostAsync(orderId,
+                    new(Date,"all",true,"OTC-PS1",[new(stockLineId.ToString(System.Globalization.CultureInfo.InvariantCulture),6m)]),default);
+                Assert.Equal(422, rejected.StatusCode);
+                Assert.Contains("Inventory summary does not match open demand", rejected.Message);
+                Assert.Empty(db.ChangeTracker.Entries<CustPackingSlipJour>());
+                Assert.False(await db.Set<CustPackingSlipJour>().AnyAsync(x => x.DataAreaId == Company && x.ParmId == "OTC-PS1"));
+
+                stock = await OnHandAsync(db);
+                Assert.Equal(100m, stock.PhysicalInvent);
+                await db.Set<InventSum>().Where(x => x.RecId == stock.RecId)
+                    .ExecuteUpdateAsync(rows => rows.SetProperty(x => x.Picked, 6m));
                 await Deliver(6,"OTC-PS1");
+                var slip = await db.Set<CustPackingSlipJour>().AsNoTracking()
+                    .SingleAsync(x => x.DataAreaId == Company && x.ParmId == "OTC-PS1");
+                Assert.Equal(slip.PackingSlipId + ".1", slip.InternalPackingSlipId);
+                Assert.Equal(6m, slip.Qty);
+                Assert.False(string.IsNullOrWhiteSpace(slip.LedgerVoucher));
+                Assert.True(await db.Set<SubledgerVoucherGeneralJournalEntry>().AnyAsync(x =>
+                    x.VoucherDataAreaId == Company && x.Voucher == slip.LedgerVoucher && x.AccountingDate == Date));
                 Assert.Equal(94m,(await OnHandAsync(db)).PhysicalInvent);
                 var line = await db.Set<SalesLine>().SingleAsync(x => x.RecId == stockLineId);
                 Assert.Equal(4m,line.RemainSalesPhysical); Assert.Equal(10m,line.RemainSalesFinancial);
@@ -446,6 +470,50 @@ public sealed partial class AccountsReceivableCycleStageTests
                 }
                 Assert.Equal(-180m,await db.Set<TaxTrans>().Where(x => x.TaxCode == "ARV2-15").SumAsync(x => x.TaxAmount));
             });
+            if (!corrections)
+            {
+                await audit.Stage(["REC-02"],"Reconcile both customer receipts to the bank statement exactly once",async () =>
+                {
+                    var retryOptions = new DbContextOptionsBuilder<ApplicationDbContext>()
+                        .UseSqlServer(connection.ConnectionString, sql => sql.EnableRetryOnFailure()).Options;
+                    await using var reconciliationDb = new ApplicationDbContext(retryOptions);
+                    using var reconciliationWork = new IAX.IXApi.Infrastructure.Persistence.Repositories.UnitOfWork(reconciliationDb);
+                    var service = new IAX.IXApi.Modules.Finance.GeneralLedger.Bank.BankAccountStatementService(
+                        reconciliationWork, new ArCycleIdentity());
+                    var movements = await db.Set<BankAccountTrans>().AsNoTracking()
+                        .Where(x => x.DataAreaId == Company && x.AccountId == Bank
+                            && (x.PaymReference == "OTC-P1" || x.PaymReference == "OTC-P2"))
+                        .OrderBy(x => x.TransDate).ToListAsync();
+                    Assert.Equal(new[] { 700m, 680m }, movements.Select(x => x.BankTransAmountCur).ToArray());
+                    var ids = movements.Select(x => x.RecId).ToArray();
+                    var ledgerCount = await db.Set<GeneralJournalEntry>().CountAsync();
+                    var date = Date.AddDays(3);
+
+                    var missing = await service.ReconcileAsync(Bank, "OTC-STMT", date, 1380m, [ids[0]], default);
+                    Assert.Null(missing.Statement);
+                    Assert.Contains("differs", missing.Error);
+                    var duplicated = await service.ReconcileAsync(Bank, "OTC-STMT", date, 1380m, [ids[0], ids[0]], default);
+                    Assert.Null(duplicated.Statement);
+                    Assert.Contains("distinct", duplicated.Error);
+                    Assert.False(await db.Set<BankAccountStatement>().AnyAsync(x => x.AccountStatementNum == "OTC-STMT"));
+                    Assert.False(await db.Set<BankAccountTrans>().AnyAsync(x => ids.Contains(x.RecId) && x.Reconciled == NoYes.Yes));
+
+                    var matched = await service.ReconcileAsync(Bank, "OTC-STMT", date, 1380m, ids, default);
+                    Assert.True(matched.Statement != null, matched.Error);
+                    var detail = await service.GetReconciliationAsync(matched.Statement!.RecId, default);
+                    Assert.NotNull(detail);
+                    Assert.Equal(ids, detail.Movements.Select(x => x.RecId).ToArray());
+                    Assert.Equal(1380m, detail.Movements.Sum(x => x.Amount));
+                    var repeat = await service.ReconcileAsync(Bank, "OTC-STMT", date, 1380m, ids, default);
+                    Assert.Null(repeat.Statement);
+                    var reuse = await service.ReconcileAsync(Bank, "OTC-STMT-2", date.AddDays(1), 2760m, ids, default);
+                    Assert.Null(reuse.Statement);
+                    Assert.Contains("already reconciled", reuse.Error);
+                    Assert.Equal(ledgerCount, await db.Set<GeneralJournalEntry>().CountAsync());
+                    Assert.Equal(1380m, await LedgerAsync(db, GeneralLedgerSeedExample.Bank));
+                    return detail;
+                });
+            }
             if(corrections)
             {
                 await audit.Stage(["PAY-09"],"Refund an unallocated 165 credit and settle the bank disbursement",async () =>

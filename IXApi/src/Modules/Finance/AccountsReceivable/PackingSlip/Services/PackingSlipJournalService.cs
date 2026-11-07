@@ -163,9 +163,24 @@ public sealed class PackingSlipJournalService : BaseService<CustPackingSlipJour>
             || !long.TryParse(line.SalesLineId, NumberStyles.None, CultureInfo.InvariantCulture, out _)))
             return new(422, null, "Enter a positive delivery quantity for at least one sales line.");
 
+        var hasWritten = false;
         return await Db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
             await using var transaction = await Db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+            hasWritten = false;
+            try
+            {
+                return await PostInTransactionAsync(transaction);
+            }
+            finally
+            {
+                if (hasWritten)
+                    Db.ChangeTracker.Clear();
+            }
+        });
+
+        async Task<PackingSlipJournalResult> PostInTransactionAsync(IDbContextTransaction transaction)
+        {
             await LockPostingKeyAsync($"PackingSlip:{_company.GetDataAreaId()}:{salesOrderRecId}", ct);
             var order = await FindOrderAsync(salesOrderRecId, ct);
             if (order is null) return new PackingSlipJournalResult(404, null, "Sales order was not found in the selected company.");
@@ -253,11 +268,17 @@ public sealed class PackingSlipJournalService : BaseService<CustPackingSlipJour>
                         $"Available physical stock excluding other reservations is insufficient for item {group.Key.ItemId}.");
             }
 
+            hasWritten = true;
             var packingSlipId = await NextPackingSlipIdAsync(order.DataAreaId, ct);
+            var internalPackingSlipId = packingSlipId + ".1";
+            if (internalPackingSlipId.Length > FieldLengths.PackingSlipId)
+                return new PackingSlipJournalResult(422, null, "The packing slip number is too long for its version identifier.");
+
             var deliveryDate = request.DeliveryDate?.Date ?? DateTime.UtcNow.Date;
             var journal = new CustPackingSlipJour
             {
                 PackingSlipId = packingSlipId,
+                InternalPackingSlipId = internalPackingSlipId,
                 DeliveryDate = deliveryDate,
                 DocumentDate = deliveryDate,
                 SalesId = order.SalesId,
@@ -380,9 +401,11 @@ public sealed class PackingSlipJournalService : BaseService<CustPackingSlipJour>
                 }
                 if (quantityLeft > 0)
                     return new PackingSlipJournalResult(422, null, $"Inventory demand could not be allocated for item {line.ItemId}.");
-                await new PackingSlipPhysicalPosting(Db, _currentUser.GetCurrentUserId()).PostAsync(order.DataAreaId, line.ItemId, origin.RecId,
+                var postedToLedger = await new PackingSlipPhysicalPosting(Db, _currentUser.GetCurrentUserId()).PostAsync(order.DataAreaId, line.ItemId, origin.RecId,
                     packingSlipId, deliveryDate, physicalCost, ct,
                     order.InvoiceAccount.Length > 0 ? order.InvoiceAccount : order.CustAccount);
+                if (postedToLedger)
+                    journal.LedgerVoucher = packingSlipId;
 
                 var lineAmount = line.PriceUnit > 0 ? salesQuantity * line.SalesPrice / line.PriceUnit : 0m;
                 Db.Set<CustPackingSlipTrans>().Add(new CustPackingSlipTrans
@@ -437,8 +460,9 @@ public sealed class PackingSlipJournalService : BaseService<CustPackingSlipJour>
             order.DocumentStatus = DocumentStatus.PackingSlip;
             await _unitOfWork.CompleteAsync(ct);
             await transaction.CommitAsync(ct);
+            hasWritten = false;
             return new PackingSlipJournalResult(200, ToSummary(journal), "Packing slip posted.");
-        });
+        }
     }
 
     private async Task<Dictionary<long, decimal>> ProposedQuantitiesAsync(

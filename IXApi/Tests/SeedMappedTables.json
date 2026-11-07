@@ -12,6 +12,7 @@
   "AspNetUserTokens",
   "AspNetUsers",
   "BankAccountTable",
+  "BankAccountStatement",
   "BankAccountTrans",
   "BankGroup",
   "BatchJobActivePeriod",

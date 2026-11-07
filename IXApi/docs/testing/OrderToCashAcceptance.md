@@ -2,7 +2,7 @@
 
 المرجع المعتمد لدورة التحصيل هو ملف [Logic_Readonly.md](../../src/Infrastructure/Persistence/SeedingERPV2/CycleErpExamples/AccountsReceivable/Logic_Readonly.md)، بأقسامه الثلاثين و77 معرّف اختبار في القسم 28. حُفظت المتطلبات والنتائج المتوقعة في `OrderToCashAcceptancePlan.json`. تبدأ الحالات بحالة `Not run` وتتغير بعد تحقق شروط القبول.
 
-الحصيلة الحالية **68 Passed و9 Not implemented**. سجل الحالات المفتوحة في `OrderToCashOpenGaps.json`.
+الحصيلة الحالية **69 Passed و8 Not implemented**. سجل الحالات المفتوحة في `OrderToCashOpenGaps.json`.
 
 نجحت الاختبارات الثمانية المركزة في `otc-latest-focused.trx`. اكتمل التشغيل العام من داخل مجلد المشروع بنتيجة **873 Passed وصفر Failed و3 Skipped** في `otc-rooted-regression.trx`.
 
@@ -63,6 +63,22 @@
 أضيف `POST /api/v1/customer-payments/refund` لرد كامل الرصيد المفتوح لحركة دائنة واحدة عبر يومية دفع عميل مهيأة. ينشئ الترحيل قيدًا مدينًا للعميل ودائنًا للبنك، ويسوّي الرد مع الحركة الأصلية داخل معاملة واحدة. يدعم النطاق الحالي تطابق عملات الدفتر والبنك والرصيد ويشترط تطابق حساب الذمم والأبعاد مع القيد الأصلي. [مرجع رد مدفوعات العملاء](https://learn.microsoft.com/en-us/dynamics365/finance/accounts-receivable/refund-customers)
 
 نجح مسار SQL Server في `refund-final.trx`. سجّل الرد 165 دائنًا للبنك وأغلق الرصيد الدائن. رفض حساب البنك غير الموجود، وأعادت محاولة الطلب نفسه السند الأصلي دون أثر مكرر. أدلة المراحل في `refund-attempts.jsonl`. صححت محاولتا الاختبار السابقتان اختيار الحركة الدائنة وتاريخ التحصيل التجريبي.
+
+اكتمل التشغيل العام لرد الرصيد بنتيجة **881 Passed وصفر Failed و3 Skipped** في `refund-regression.trx`.
+
+### مطابقة كشف البنك (REC-02)
+
+أثبت `reconciliation-verified.trx` أن استدعاء خدمة المطابقة تعطل عند الوصول إلى `BankAccountStatement` لأن الجدول لم يكن مربوطًا بالنموذج الفعلي. أضيف ربط الجدول وترحيل إنشائه ومفتاح فريد للشركة والحساب ورقم الكشف. أُدرج الجدول ضمن مراجعة تغطية البيانات بوصفه سجلًا تكتبه خدمة المطابقة. تُنفذ معاملة المطابقة ضمن استراتيجية إعادة المحاولة التي يستخدمها التطبيق.
+
+نجحت الاختبارات الستة في `reconciliation-final.trx`، بما فيها تطابق النموذج مع لقطة الترحيلات ومطابقة التحصيلين 700 و680 على SQL Server مع تفعيل إعادة المحاولة. رُفض الكشف الناقص وتكرار الحركة وإعادة استخدامها في كشف آخر. بقي رصيد البنك 1380 دون قيد أستاذ جديد. [مرجع المطابقة البنكية اليدوية](https://learn.microsoft.com/en-us/dynamics365/finance/cash-bank-management/reconcile-bank-account)
+
+### بيانات رأس سند التسليم (INV-04)
+
+أضيف معرّف الإصدار الأول إلى رأس سند التسليم، ومرجع القيد عند توليد قيد المخزون الفعلي. نجحت مرحلة `INV-04` في تشغيل SQL Server المعزول المسجل في `packing-slip-attempts.jsonl`. رحّلت الخدمة 6 وحدات، فأصبح المخزون 94، وطابق مرجع الرأس قيد التسليم بقيمة 360 في الشركة نفسها. يبقى تصحيح السند المرحّل وحفظ تاريخ إصداراته ضمن `INV-07`.
+
+نجحت الاختبارات الخمسة المحددة في `packing-slip-metadata.trx` دون فشل أو تخطٍ.
+
+أُضيف فحص تراجع الترحيل ضمن `INV-04`. عند تعارض ملخص المخزون مع الكمية الملتقطة، رفضت الخدمة الطلب بعد بدء الكتابة داخل المعاملة. تحقق الاختبار من غياب رأس السند في قاعدة البيانات وسياق EF وبقاء المخزون 100. بعد إصلاح ملخص الاختبار، نجحت إعادة إرسال الطلب نفسه وأصبح المخزون 94. نجحت الاختبارات الأربعة المحددة في `packing-slip-rollback-final.trx` بعد توسيع التنظيف ليشمل تخصيص رقم السند.
 
 ### تقريب الدفعة الأخيرة (SYS-07)
 
@@ -196,6 +212,6 @@ $otcBuildOutput = Join-Path $PWD 'IXApi/.ap-service-validation/bin/'
 dotnet test IXApi/Tests/IXApi.Tests.csproj --no-build --no-restore "/p:BaseOutputPath=$otcBuildOutput" --filter FullyQualifiedName~Order_to_cash_attachment
 $env:IXAPI_OTC_REPORT = Join-Path $PWD '.validation/otc/customer-attempts.jsonl'
 dotnet test IXApi/Tests/IXApi.Tests.csproj --no-build --no-restore "/p:BaseOutputPath=$otcBuildOutput" --filter FullyQualifiedName~Order_to_cash_customer_creation --logger 'trx;LogFileName=customer-verified.trx' --results-directory .validation/otc
-$attempts = @('discount-attempts.jsonl','customer-attempts.jsonl','cfg06-attempts.jsonl','sys05-attempts.jsonl','sys08-attempts.jsonl','statement-attempts.jsonl','aging-attempts.jsonl','refund-attempts.jsonl') | ForEach-Object { Join-Path '.validation/otc' $_ }
-./IXApi/scripts/testing/Export-OrderToCashAcceptance.ps1 -AttemptsPath .validation/otc/attempts.jsonl -AdditionalAttemptsPaths $attempts -OutputPath .validation/otc/coverage.json -RegressionTrxPaths @('.validation/otc/manual-rounding-regression.trx')
+$attempts = @('discount-attempts.jsonl','customer-attempts.jsonl','cfg06-attempts.jsonl','sys05-attempts.jsonl','sys08-attempts.jsonl','statement-attempts.jsonl','aging-attempts.jsonl','refund-attempts.jsonl','reconciliation-attempts.jsonl') | ForEach-Object { Join-Path '.validation/otc' $_ }
+./IXApi/scripts/testing/Export-OrderToCashAcceptance.ps1 -AttemptsPath .validation/otc/attempts.jsonl -AdditionalAttemptsPaths $attempts -OutputPath .validation/otc/coverage.json -RegressionTrxPaths @('.validation/otc/refund-regression.trx')
 ```

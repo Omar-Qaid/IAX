@@ -11701,6 +11701,32 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("BankAccountTable");
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.BankAccountStatement", b =>
+                {
+                    b.Property<long>("RecId").ValueGeneratedOnAdd().HasColumnType("bigint").HasColumnName("RECID");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+                    b.Property<string>("AccountId").IsRequired().HasMaxLength(10).HasColumnType("nvarchar(10)");
+                    b.Property<DateTime>("AccountStatementDate").HasColumnType("datetime2");
+                    b.Property<string>("AccountStatementNum").IsRequired().HasMaxLength(20).HasColumnType("nvarchar(20)");
+                    b.Property<DateTime>("CancelDate").HasColumnType("datetime2");
+                    b.Property<DateTime?>("CreatedAt").HasColumnType("datetime2");
+                    b.Property<string>("CreatedBy").HasColumnType("nvarchar(max)");
+                    b.Property<string>("CurrencyCode").IsRequired().HasMaxLength(3).HasColumnType("nvarchar(3)");
+                    b.Property<string>("DataAreaId").IsRequired().HasMaxLength(4).HasColumnType("nvarchar(4)");
+                    b.Property<decimal>("EndingBalance").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
+                    b.Property<bool>("IsActive").HasColumnType("bit");
+                    b.Property<bool>("IsDeleted").HasColumnType("bit");
+                    b.Property<DateTime?>("LastModifiedAt").HasColumnType("datetime2");
+                    b.Property<string>("LastModifiedBy").HasColumnType("nvarchar(max)");
+                    b.Property<string>("OwnerAccountId").HasColumnType("nvarchar(max)");
+                    b.Property<int>("RecVersion").HasColumnType("int");
+                    b.Property<DateTime>("ReconcileDate").HasColumnType("datetime2");
+                    b.Property<byte[]>("RowVersion").IsConcurrencyToken().IsRequired().ValueGeneratedOnAddOrUpdate().HasColumnType("rowversion");
+                    b.HasKey("RecId");
+                    b.HasIndex("DataAreaId", "AccountId", "AccountStatementNum").IsUnique();
+                    b.ToTable("BankAccountStatement");
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.BankAccountTrans", b =>
                 {
                     b.Property<long>("RecId")

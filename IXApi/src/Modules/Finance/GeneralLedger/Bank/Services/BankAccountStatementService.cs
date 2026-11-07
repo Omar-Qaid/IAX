@@ -28,7 +28,13 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.Bank
                 statement.AccountStatementDate, statement.CurrencyCode, statement.EndingBalance, movements);
         }
 
-        public async Task<(BankAccountStatement? Statement, string? Error)> ReconcileAsync(
+        public Task<(BankAccountStatement? Statement, string? Error)> ReconcileAsync(
+            string accountId, string statementNumber, DateTime statementDate, decimal endingBalance,
+            IReadOnlyList<long> transactionIds, CancellationToken ct) =>
+            _unitOfWork.Context.Database.CreateExecutionStrategy().ExecuteAsync(
+                () => ReconcileCoreAsync(accountId, statementNumber, statementDate, endingBalance, transactionIds, ct));
+
+        private async Task<(BankAccountStatement? Statement, string? Error)> ReconcileCoreAsync(
             string accountId, string statementNumber, DateTime statementDate, decimal endingBalance,
             IReadOnlyList<long> transactionIds, CancellationToken ct)
         {
@@ -44,10 +50,11 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.Bank
             await _unitOfWork.BeginTransactionAsync(ct);
             try
             {
-                await new SubledgerPostingSupport(db).LockAsync($"BankReconcile:{area}:{accountId}", ct);
                 var bank = await db.Set<BankAccountTable>().AsNoTracking()
                     .SingleOrDefaultAsync(x => x.DataAreaId == area && x.AccountId == accountId, ct);
                 if (bank == null) return await Reject("Bank account was not found in the selected company.");
+                accountId = bank.AccountId;
+                await new SubledgerPostingSupport(db).LockAsync($"BankReconcile:{area}:{accountId}".ToUpperInvariant(), ct);
                 if (await db.Set<BankAccountStatement>().AnyAsync(x => x.DataAreaId == area &&
                     x.AccountId == accountId && x.AccountStatementNum == statementNumber, ct))
                     return await Reject("The statement number already exists for this bank account.");
@@ -83,9 +90,13 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.Bank
                 await _unitOfWork.CommitTransactionAsync(ct);
                 return (statement, null);
             }
+            catch (SubledgerPostingException ex)
+            {
+                return await Reject(ex.Message);
+            }
             catch
             {
-                await _unitOfWork.RollbackTransactionAsync(ct);
+                await _unitOfWork.RollbackTransactionAsync(CancellationToken.None);
                 db.ChangeTracker.Clear();
                 throw;
             }
