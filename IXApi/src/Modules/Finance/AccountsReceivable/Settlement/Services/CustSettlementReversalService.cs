@@ -83,6 +83,10 @@ public sealed class CustSettlementReversalService : BaseService<CustSettlement>,
                 .Where(x => x.DataAreaId == area && x.SettlementVoucher == voucher).ToListAsync(ct);
             if (rows.Count == 0)
                 return await Fail(404, $"Settlement voucher '{voucher}' was not found in the selected company.", ct);
+            var accounts = rows.Select(x => x.AccountNum).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            if (accounts.Count != 1)
+                return await Fail(422, $"Settlement voucher '{voucher}' must belong to one customer account.", ct);
+            await support.LockCustomerSettlementAsync(area, accounts[0], ct);
 
             var date = (reversalDate ?? DateTime.UtcNow).Date;
             var reversalVoucher = (await _numbers.NextAsync("CustSettlement", area, ct)).Code;

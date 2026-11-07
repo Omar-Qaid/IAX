@@ -86,14 +86,11 @@ public sealed class CustSettleOpenTransactionsService : BaseService<CustSettleme
         await _unitOfWork.BeginTransactionAsync(ct);
         try
         {
-            // Serialised per customer: two settlements marking the same transaction would otherwise
-            // both see it open and settle it twice.
-            await support.LockAsync($"CustSettleOpen:{area}:{account}".ToUpperInvariant(), ct);
-
             var customer = await Db.Set<CustTable>().AsNoTracking()
                 .FirstOrDefaultAsync(x => x.DataAreaId == area && x.AccountNum == account, ct);
             if (customer == null)
                 return await Fail(404, "The customer was not found in the selected company.", ct);
+            await support.LockCustomerSettlementAsync(area, customer.AccountNum, ct);
 
             var marked = await (from trans in Db.Set<CustTrans>()
                 join open in Db.Set<CustTransOpen>() on trans.RecId equals open.RefRecId
@@ -152,6 +149,10 @@ public sealed class CustSettleOpenTransactionsService : BaseService<CustSettleme
                     // CustTrans.SettleAmountMst from the row - not by recomputing it.
                     var debitApplied = ApplyToTransaction(debit.Trans, debit.Open, amount, date, settlementVoucher, account);
                     var creditApplied = ApplyToTransaction(credit.Trans, credit.Open, -amount, date, settlementVoucher, account);
+                    if (debitApplied.Accounting + creditApplied.Accounting != 0m
+                        || debitApplied.Reporting + creditApplied.Reporting != 0m)
+                        return await Fail(422,
+                            "The remaining balances have a rounding difference that requires a ledger voucher.", ct);
                     Db.Set<CustSettlement>().AddRange(
                         Settlement(area, account, date, settlementVoucher, debit.Trans.RecId, debit.Open.RecId,
                             credit.Trans.RecId, credit.Trans.Voucher, debitApplied, debit.Trans.TransType),
@@ -198,11 +199,13 @@ public sealed class CustSettleOpenTransactionsService : BaseService<CustSettleme
     private SettledAmounts ApplyToTransaction(CustTrans trans, CustTransOpen open, decimal amount,
         DateTime date, string settlementVoucher, string account)
     {
-        var accounting = trans.AmountCur == 0m ? amount
+        var closesTransaction = amount == open.AmountCur;
+        var accounting = closesTransaction ? open.AmountMst : trans.AmountCur == 0m ? amount
             : decimal.Round(amount * (trans.AmountMst / trans.AmountCur), 2, MidpointRounding.AwayFromZero);
-        var reporting = trans.AmountCur == 0m ? amount
+        var reporting = closesTransaction ? open.ReportingCurrencyAmount : trans.AmountCur == 0m ? amount
             : decimal.Round(amount * (trans.ReportingCurrencyAmount / trans.AmountCur), 2, MidpointRounding.AwayFromZero);
 
+        trans.SettleAmountReporting = CustSettlementRestore.ReportingSettled(trans, open) + reporting;
         trans.SettleAmountCur += amount;
         trans.SettleAmountMst += accounting;
         trans.LastSettleDate = date;

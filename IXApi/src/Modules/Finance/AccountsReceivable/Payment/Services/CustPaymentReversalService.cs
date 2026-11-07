@@ -98,14 +98,21 @@ public sealed class CustPaymentReversalService : BaseService<CustTrans>, ICustPa
                 return await Fail(422, "Only a single-line customer payment journal can be reversed by this path.", ct);
             var line = lines[0];
 
-            var paymentTrans = await Db.Set<CustTrans>()
-                .FirstOrDefaultAsync(x => x.DataAreaId == area && x.RecId == line.CustTransId, ct);
-            if (paymentTrans == null)
+            var account = await Db.Set<CustTrans>().AsNoTracking()
+                .Where(x => x.DataAreaId == area && x.RecId == line.CustTransId)
+                .Select(x => x.AccountNum).FirstOrDefaultAsync(ct);
+            if (account == null)
                 return await Fail(422, "The customer transaction behind the payment no longer exists.", ct);
+            await support.LockCustomerSettlementAsync(area, account, ct);
+            var paymentTrans = await Db.Set<CustTrans>()
+                .SingleAsync(x => x.DataAreaId == area && x.RecId == line.CustTransId, ct);
 
             var amount = line.AmountCurCredit;
             if (amount <= 0)
                 return await Fail(422, "The payment has no credit amount to reverse.", ct);
+            var date = (reversalDate ?? DateTime.UtcNow).Date;
+            if (date < line.TransDate.Date || date < paymentTrans.TransDate.Date)
+                return await Fail(422, "The reversal date precedes the original customer payment date.", ct);
 
             // Unwind every settlement the payment took part in, before reversing the payment
             // itself: the invoices must go back to open or the counter-voucher would leave the
@@ -114,7 +121,6 @@ public sealed class CustPaymentReversalService : BaseService<CustTrans>, ICustPa
                 .Where(x => x.DataAreaId == area && x.TransRecId == paymentTrans.RecId
                     && x.CanBeReversed == NoYes.Yes)
                 .Select(x => x.SettlementVoucher).Distinct().ToListAsync(ct);
-            var date = (reversalDate ?? DateTime.UtcNow).Date;
             foreach (var settlementVoucher in settlementVouchers)
             {
                 var reversalSettlement = (await _numbers.NextAsync("CustSettlement", area, ct)).Code;
@@ -169,6 +175,7 @@ public sealed class CustPaymentReversalService : BaseService<CustTrans>, ICustPa
 
             reversalTrans.SettleAmountCur += amount;
             reversalTrans.SettleAmountMst += amount;
+            reversalTrans.SettleAmountReporting += amount;
             reversalTrans.LastSettleDate = date;
             reversalTrans.LastSettleVoucher = reversalVoucher;
             reversalTrans.LastSettleAccountNum = paymentTrans.AccountNum;
@@ -177,6 +184,7 @@ public sealed class CustPaymentReversalService : BaseService<CustTrans>, ICustPa
 
             paymentTrans.SettleAmountCur -= amount;
             paymentTrans.SettleAmountMst -= amount;
+            paymentTrans.SettleAmountReporting -= amount;
             paymentTrans.LastSettleDate = date;
             paymentTrans.LastSettleVoucher = reversalVoucher;
             paymentTrans.LastSettleAccountNum = paymentTrans.AccountNum;

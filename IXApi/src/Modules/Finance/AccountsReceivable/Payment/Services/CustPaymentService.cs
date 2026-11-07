@@ -1,5 +1,6 @@
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.NumberSequences;
+using IAX.IXApi.Modules.Finance.AccountsReceivable.Settlement;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Shared.Application.Identity;
@@ -70,7 +71,9 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
         {
             if (!string.IsNullOrWhiteSpace(input.RequestId))
                 await support.LockAsync($"CustPaymentRequest:{area}:{input.RequestId}", ct);
-            await support.LockAsync($"CustPayment:{area}:{input.CustAccount}", ct);
+            var customer = await Db.Set<CustTable>().AsNoTracking()
+                .FirstOrDefaultAsync(x => x.DataAreaId == area && x.AccountNum == input.CustAccount, ct);
+            await support.LockCustomerSettlementAsync(area, customer?.AccountNum ?? input.CustAccount, ct);
             if (!string.IsNullOrWhiteSpace(input.RequestId))
             {
                 var previous = await Db.Set<LedgerJournalTrans>().AsNoTracking().FirstOrDefaultAsync(x => x.DataAreaId == area
@@ -93,8 +96,6 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
                 }
             }
 
-            var customer = await Db.Set<CustTable>().AsNoTracking()
-                .FirstOrDefaultAsync(x => x.DataAreaId == area && x.AccountNum == input.CustAccount, ct);
             if (customer == null) return await Fail(422, "The customer was not found in the selected company.", ct);
             if (customer.Blocked == CustVendorBlocked.All)
                 return await Fail(422, "Payments are blocked for this customer.", ct);
@@ -150,7 +151,8 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
             }
             if (openInvoices.Any(x => x.Open.AmountCur != x.Trans.AmountCur - x.Trans.SettleAmountCur
                 || x.Open.AmountMst != x.Trans.AmountMst - x.Trans.SettleAmountMst
-                || x.Open.ReportingCurrencyAmount != x.Trans.ReportingCurrencyAmount - x.Trans.SettleAmountMst))
+                || x.Open.ReportingCurrencyAmount != x.Trans.ReportingCurrencyAmount
+                    - CustSettlementRestore.ReportingSettled(x.Trans, x.Open)))
                 return await Fail(422, "Customer open balances require reconciliation before settlement.", ct);
             var remaining = input.Amount;
             var settled = new List<object>();
@@ -206,8 +208,11 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
                 // The receivable clears at the accounting value the invoice itself carried, while
                 // the cash and discount arrive at the payment date's rate. The difference between
                 // the two is the realized exchange gain or loss on this settlement.
-                var invoiceAccounting = invoice.Trans.AmountCur == 0m
-                    ? settle
+                // The final allocation consumes the stored remainder, including prior rounding.
+                var closesInvoice = settle == invoice.Open.AmountCur;
+                var invoiceAccounting = closesInvoice
+                    ? invoice.Open.AmountMst
+                    : invoice.Trans.AmountCur == 0m ? settle
                     : decimal.Round(settle * (invoice.Trans.AmountMst / invoice.Trans.AmountCur), 2, MidpointRounding.AwayFromZero);
                 var receivedAccounting = translation.ToAccounting(cash) + translation.ToAccounting(discount);
                 var exchDifference = invoiceAccounting - receivedAccounting;
@@ -217,8 +222,9 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
                     invoice.Trans.CustExchAdjustmentRealized += exchDifference;
                     invoiceRow.ExchAdjustment = exchDifference;
                 }
-                var invoiceReporting = invoice.Trans.AmountCur == 0m
-                    ? settle
+                var invoiceReporting = closesInvoice
+                    ? invoice.Open.ReportingCurrencyAmount
+                    : invoice.Trans.AmountCur == 0m ? settle
                     : decimal.Round(settle * (invoice.Trans.ReportingCurrencyAmount / invoice.Trans.AmountCur), 2, MidpointRounding.AwayFromZero);
                 invoiceRow.SettleAmountMst = invoiceAccounting;
                 invoiceRow.SettleAmountReporting = invoiceReporting;
@@ -228,6 +234,7 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
                 settledAccounting += invoiceAccounting;
                 settledReporting += invoiceReporting;
 
+                invoice.Trans.SettleAmountReporting = CustSettlementRestore.ReportingSettled(invoice.Trans, invoice.Open) + invoiceReporting;
                 invoice.Trans.SettleAmountCur += settle;
                 invoice.Trans.SettleAmountMst += invoiceAccounting;
                 invoice.Trans.LastSettleDate = date;
@@ -244,6 +251,7 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
                 }
                 paymentTrans.SettleAmountCur -= cash;
                 paymentTrans.SettleAmountMst += paymentRow.SettleAmountMst;
+                paymentTrans.SettleAmountReporting += paymentRow.SettleAmountReporting;
                 remaining -= cash;
                 settled.Add(new { invoice = invoice.Trans.Invoice, amount = settle, cashDiscount = discount });
             }

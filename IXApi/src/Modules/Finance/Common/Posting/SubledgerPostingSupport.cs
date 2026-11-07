@@ -405,6 +405,9 @@ internal sealed class SubledgerPostingSupport(DbContext db)
         return dimension;
     }
 
+    public Task LockCustomerSettlementAsync(string area, string account, CancellationToken ct) =>
+        LockAsync($"CustSettleOpen:{area}:{account}".ToUpperInvariant(), ct);
+
     public async Task LockAsync(string key, CancellationToken ct)
     {
         if (db.Database.ProviderName?.Contains("SqlServer", StringComparison.OrdinalIgnoreCase) != true) return;

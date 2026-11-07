@@ -29,6 +29,30 @@ public class SettlementReversalTests
     // ---------- Accounts receivable ----------
 
     [Fact]
+    public async Task A_customer_settlement_cannot_be_reversed_before_its_original_date()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        SeedCustomerSettlement(db, settled: 1000m, invoiceAmount: 1000m, openRemains: false);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var original = await db.Set<CustSettlement>().AsNoTracking().Where(x => x.SettlementVoucher == "CSET-000001")
+            .Select(x => x.TransDate).FirstAsync();
+        var service = NewCustService(db);
+        var refused = await service.ReverseAsync("CSET-000001", original.AddDays(-1), default);
+
+        Assert.Equal(422, refused.StatusCode);
+        Assert.Contains("precedes", refused.Message);
+        Assert.Equal(2, await db.Set<CustSettlement>().CountAsync());
+        Assert.All(await db.Set<CustSettlement>().AsNoTracking().ToListAsync(), row => Assert.Equal(NoYes.Yes, row.CanBeReversed));
+        Assert.Empty(await db.Set<CustTransOpen>().ToListAsync());
+        Assert.Equal(1000m, (await db.Set<CustTrans>().SingleAsync(x => x.RecId == 1)).SettleAmountCur);
+        Assert.Equal(200, (await service.ReverseAsync("CSET-000001", original, default)).StatusCode);
+    }
+
+    [Fact]
     public async Task Reversing_a_full_settlement_puts_the_invoice_back_in_the_open_table()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");

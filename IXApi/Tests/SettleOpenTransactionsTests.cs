@@ -38,6 +38,49 @@ public class SettleOpenTransactionsTests
 
     // ---------- Accounts receivable ----------
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Manual_settlement_checks_the_exact_remaining_accounting_amount(bool matchedRemainder)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        SeedCustomer(db);
+        AddCustTrans(db, 1, 1000m, LedgerTransType.Sales, "INV-1", "USD", 3750m);
+        AddCustTrans(db, 2, -1000m, LedgerTransType.Payment, "PAY-1", "USD", -3750m);
+        var creditRemaining = matchedRemainder ? 1249.98m : 1249.99m;
+        foreach (var transaction in db.Set<CustTrans>().Local)
+        {
+            var open = db.Set<CustTransOpen>().Local.Single(x => x.RefRecId == transaction.RecId);
+            open.AmountCur = transaction.RecId == 1 ? 333.33m : -333.33m;
+            open.AmountMst = transaction.RecId == 1 ? 1249.98m : -creditRemaining;
+            open.ReportingCurrencyAmount = open.AmountMst;
+            transaction.SettleAmountCur = transaction.AmountCur - open.AmountCur;
+            transaction.SettleAmountMst = transaction.AmountMst - open.AmountMst;
+            transaction.SettleAmountReporting = transaction.SettleAmountMst;
+        }
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var result = await NewCustService(db).SettleAsync(new("C-001", Date, [1, 2]), default);
+        if (!matchedRemainder)
+        {
+            Assert.Equal(422, result.StatusCode);
+            Assert.Contains("rounding difference", result.Message);
+            Assert.Empty(await db.Set<CustSettlement>().ToListAsync());
+            Assert.Equal(2, await db.Set<CustTransOpen>().CountAsync());
+            return;
+        }
+
+        Assert.True(result.StatusCode == 200, result.Message);
+        Assert.Empty(await db.Set<CustTransOpen>().ToListAsync());
+        var rows = await db.Set<CustSettlement>().ToListAsync();
+        Assert.Equal(1249.98m, rows.Single(x => x.TransRecId == 1).SettleAmountMst);
+        Assert.Equal(0m, rows.Sum(x => x.SettleAmountMst));
+        Assert.Equal(0m, rows.Sum(x => x.SettleAmountReporting));
+    }
+
     /// <summary>
     /// The case this closes: a credit note that nothing could apply. A 1,000 invoice and a 1,000
     /// credit note both close, and the customer is left with nothing open.

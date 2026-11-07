@@ -358,6 +358,22 @@ public sealed partial class AccountsReceivableCycleStageTests
                 var result = await services.GetRequiredService<ICustSettleOpenTransactionsService>().SettleAsync(new(Customer,Date.AddDays(2),ids),default);
                 Assert.True(result.StatusCode == 200,result.Message);
             }
+            if (!corrections)
+            {
+                await Stage(["SYS-04"],"A payment cannot bypass the manual settlement lock",async () =>
+                {
+                    var before = await CountsAsync(db);
+                    await using var lockingDb = new ApplicationDbContext(options);
+                    await using var held = await lockingDb.Database.BeginTransactionAsync();
+                    await new SubledgerPostingSupport(lockingDb).LockAsync(
+                        $"CustSettleOpen:{Company}:{Customer}".ToUpperInvariant(), default);
+                    var blocked = await payment.PostAsync(new(Customer,Bank,50,Date.AddDays(2),"ARV2",null,"OTC-BLOCKED-LOCK",true),default);
+                    Assert.Equal(422, blocked.StatusCode);
+                    Assert.Contains("concurrency lock", blocked.Message);
+                    Assert.Equal(before, await CountsAsync(db));
+                    await held.RollbackAsync();
+                });
+            }
             await Stage(["SET-01","SET-03","SYS-04"],"Concurrent settlement: allocate 700 once as 690 plus 10",async () =>
             {
                 var ledgerCount = await db.Set<GeneralJournalEntry>().CountAsync();

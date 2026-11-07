@@ -30,6 +30,8 @@ internal static class CustSettlementRestore
         if (rows.Any(x => x.CanBeReversed != NoYes.Yes))
             return $"Settlement '{settlementVoucher}' cannot be reversed: it is either already reversed, or it was "
                 + "settled before settlement reversal was supported and is not marked reversible.";
+        if (rows.Any(x => x.TransDate.Date > date.Date))
+            return $"The reversal date precedes the original settlement date for '{settlementVoucher}'.";
         if (rows.Any(x => x.UtilizedCashDisc != 0m || x.ExchAdjustment != 0m || x.PennyDiff != 0m))
             return $"Settlement '{settlementVoucher}' carries a cash discount, exchange adjustment or penny "
                 + "difference, which post to the ledger and cannot be reversed by this path.";
@@ -64,6 +66,9 @@ internal static class CustSettlementRestore
             if (trans == null)
                 return $"The customer transaction behind settlement '{settlementVoucher}' no longer exists.";
 
+            var open = await db.Set<CustTransOpen>()
+                .FirstOrDefaultAsync(x => x.DataAreaId == area && x.RefRecId == trans.RecId, ct);
+            trans.SettleAmountReporting = ReportingSettled(trans, open) - group.Sum(x => x.SettleAmountReporting);
             trans.SettleAmountCur -= group.Sum(x => x.SettleAmountCur);
             trans.SettleAmountMst -= group.Sum(x => x.SettleAmountMst);
             if (trans.SettleAmountCur == 0m)
@@ -72,7 +77,7 @@ internal static class CustSettlementRestore
                 trans.LastSettleVoucher = string.Empty;
                 trans.LastSettleAccountNum = string.Empty;
             }
-            await RestoreOpenAsync(db, area, trans, ct);
+            RestoreOpen(db, area, trans, open);
         }
         return null;
     }
@@ -83,7 +88,22 @@ internal static class CustSettlementRestore
     /// the restore exact whether the row was decremented on a partial settlement or removed on a
     /// full one.
     /// </summary>
+    internal static decimal ReportingSettled(CustTrans trans, CustTransOpen? open)
+    {
+        if (trans.SettleAmountReporting != 0m || trans.SettleAmountCur == 0m)
+            return trans.SettleAmountReporting;
+        // Older transactions did not maintain the reporting total. Use the amount still open.
+        return trans.ReportingCurrencyAmount - (open?.ReportingCurrencyAmount ?? 0m);
+    }
+
     public static async Task RestoreOpenAsync(DbContext db, string area, CustTrans trans, CancellationToken ct)
+    {
+        var open = await db.Set<CustTransOpen>()
+            .FirstOrDefaultAsync(x => x.DataAreaId == area && x.RefRecId == trans.RecId, ct);
+        RestoreOpen(db, area, trans, open);
+    }
+
+    private static void RestoreOpen(DbContext db, string area, CustTrans trans, CustTransOpen? open)
     {
         var remaining = trans.AmountCur - trans.SettleAmountCur;
         if (remaining != 0m)
@@ -92,8 +112,6 @@ internal static class CustSettlementRestore
             trans.Settlement = CustSettlementStatus.None;
         }
 
-        var open = await db.Set<CustTransOpen>()
-            .FirstOrDefaultAsync(x => x.DataAreaId == area && x.RefRecId == trans.RecId, ct);
         if (remaining == 0m)
         {
             if (open != null) db.Set<CustTransOpen>().Remove(open);
@@ -106,12 +124,12 @@ internal static class CustSettlementRestore
                 DataAreaId = area, AccountNum = trans.AccountNum, RefRecId = trans.RecId,
                 TransDate = trans.TransDate, DueDate = trans.DueDate, AmountCur = remaining,
                 AmountMst = trans.AmountMst - trans.SettleAmountMst,
-                ReportingCurrencyAmount = trans.ReportingCurrencyAmount - trans.SettleAmountMst
+                ReportingCurrencyAmount = trans.ReportingCurrencyAmount - trans.SettleAmountReporting
             });
             return;
         }
         open.AmountCur = remaining;
         open.AmountMst = trans.AmountMst - trans.SettleAmountMst;
-        open.ReportingCurrencyAmount = trans.ReportingCurrencyAmount - trans.SettleAmountMst;
+        open.ReportingCurrencyAmount = trans.ReportingCurrencyAmount - trans.SettleAmountReporting;
     }
 }

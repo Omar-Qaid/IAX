@@ -4,6 +4,7 @@ using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.AccountsPayable;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.Payment;
+using IAX.IXApi.Modules.Finance.AccountsReceivable.Settlement;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Shared.Application.Identity;
@@ -52,6 +53,70 @@ public class RealizedExchangeDifferenceTests
     private const decimal InvoiceRate = 3.75m;
     private static readonly DateTime InvoiceDate = new(2026, 1, 1);
     private static readonly DateTime PaymentDate = new(2026, 1, 20);
+
+    [Fact]
+    public async Task Final_payment_clears_the_exact_accounting_remainder_after_partial_rounding()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection, paymentRate: InvoiceRate);
+        var service = NewService(db);
+        var amounts = new[] { 333.33m, 333.33m, 333.34m };
+        for (var index = 0; index < amounts.Length; index++)
+        {
+            var result = await service.PostAsync(
+                new("C-001", "BANK-1", amounts[index], PaymentDate, null, null, $"rounding-{index}"), default);
+            Assert.True(result.StatusCode == 200, result.Message);
+        }
+        var invoice = await db.Set<CustTrans>().AsNoTracking().SingleAsync(x => x.RecId == 10);
+        Assert.Equal(3750m, invoice.SettleAmountMst);
+        Assert.Equal(3750m, invoice.SettleAmountReporting);
+        var settlements = await db.Set<CustSettlement>().AsNoTracking()
+            .Where(x => x.TransRecId == 10).OrderBy(x => x.RecId).ToListAsync();
+        Assert.Equal(new[] { 1249.99m, 1249.99m, 1250.02m }, settlements.Select(x => x.SettleAmountMst).ToArray());
+        Assert.Empty(await db.Set<CustTransOpen>().ToListAsync());
+        var customerPostings = await db.Set<GeneralJournalAccountEntry>().AsNoTracking()
+            .Where(x => x.PostingType == LedgerPostingType.CustBalance).ToListAsync();
+        Assert.Equal(-3750m, customerPostings.Sum(x => x.AccountingCurrencyAmount));
+    }
+
+    [Fact]
+    public async Task A_second_partial_payment_uses_the_reporting_currency_open_balance()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection, paymentRate: InvoiceRate);
+        (await db.Set<Ledger>().SingleAsync()).ReportingCurrency = "USD";
+        (await db.Set<CustTrans>().SingleAsync(x => x.RecId == 10)).ReportingCurrencyAmount = InvoiceUsd;
+        (await db.Set<CustTransOpen>().SingleAsync(x => x.RefRecId == 10)).ReportingCurrencyAmount = InvoiceUsd;
+        await db.SaveChangesAsync();
+        var numbers = DispatchProxy.Create<ISysNumberSequenceService, ExchangeSequenceProxy>();
+        var company = new TestCompany();
+        var service = new CustPaymentService(new TestUnitOfWork(db), company, numbers);
+        var half = InvoiceUsd / 2;
+
+        var first = await service.PostAsync(new("C-001", "BANK-1", half, PaymentDate, null, null, "reporting-1"), default);
+        Assert.True(first.StatusCode == 200, first.Message);
+        var open = await db.Set<CustTransOpen>().AsNoTracking().SingleAsync(x => x.RefRecId == 10);
+        Assert.Equal(half, open.ReportingCurrencyAmount);
+        Assert.Equal(1875m, open.AmountMst);
+
+        var second = await service.PostAsync(new("C-001", "BANK-1", half, PaymentDate, null, null, "reporting-2"), default);
+        Assert.True(second.StatusCode == 200, second.Message);
+        Assert.Empty(await db.Set<CustTransOpen>().ToListAsync());
+        var invoice = await db.Set<CustTrans>().AsNoTracking().SingleAsync(x => x.RecId == 10);
+        Assert.Equal(InvoiceUsd, invoice.SettleAmountReporting);
+        Assert.Equal(3750m, invoice.SettleAmountMst);
+
+        var secondSettlement = await db.Set<CustSettlement>().AsNoTracking()
+            .Where(x => x.TransRecId == 10).OrderByDescending(x => x.RecId).FirstAsync();
+        var reversal = await new CustSettlementReversalService(new TestUnitOfWork(db), company, numbers)
+            .ReverseAsync(secondSettlement.SettlementVoucher, PaymentDate.AddDays(1), default);
+        Assert.True(reversal.StatusCode == 200, reversal.Message);
+        open = await db.Set<CustTransOpen>().AsNoTracking().SingleAsync(x => x.RefRecId == 10);
+        Assert.Equal(half, open.ReportingCurrencyAmount);
+        Assert.Equal(1875m, open.AmountMst);
+    }
 
     /// <summary>Cash worth less than the receivable it cleared: a realized loss, posted as a debit.</summary>
     [Fact]

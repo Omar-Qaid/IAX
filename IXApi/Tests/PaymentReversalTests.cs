@@ -34,6 +34,28 @@ public class PaymentReversalTests
     // ---------- Accounts receivable ----------
 
     [Fact]
+    public async Task An_unallocated_customer_payment_cannot_be_reversed_before_its_posting_date()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        SeedCustomerPayment(db, amount: 400m);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var service = NewCustReversal(db);
+        var refused = await service.ReverseAsync("LJT-PAY", Posted.AddDays(-1), default);
+        Assert.Equal(422, refused.StatusCode);
+        Assert.Contains("precedes", refused.Message);
+        Assert.Single(await db.Set<LedgerJournalTable>().ToListAsync());
+        Assert.Single(await db.Set<BankAccountTrans>().ToListAsync());
+        Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
+        Assert.Empty(await db.Set<CustSettlement>().ToListAsync());
+        Assert.Equal(-400m, (await db.Set<CustTransOpen>().SingleAsync()).AmountCur);
+        Assert.Equal(200, (await service.ReverseAsync("LJT-PAY", Posted, default)).StatusCode);
+    }
+
+    [Fact]
     public async Task Reversing_a_customer_payment_posts_the_counter_voucher()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
