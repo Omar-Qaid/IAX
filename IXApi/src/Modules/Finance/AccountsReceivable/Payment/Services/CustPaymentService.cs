@@ -18,7 +18,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Payment;
 /// CustSettlement and CustTransOpen. Any unsettled remainder stays open on the payment.
 /// Settlement changes the open receivable only — never invoiced sales quantities.
 /// </summary>
-public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentService
+public sealed partial class CustPaymentService : BaseService<CustTrans>, ICustPaymentService
 {
     private readonly ICompanyExecutionContext _company;
     private readonly ISysNumberSequenceService _numbers;

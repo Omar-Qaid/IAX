@@ -540,6 +540,32 @@ public sealed partial class AccountsReceivableCycleStageTests
                     await AssertOpen(0,-165);
                     Assert.Equal(1200m,await LedgerAsync(db,GeneralLedgerSeedExample.Bank));
                 });
+                await audit.Stage(["PAY-09"],"Refund the remaining 165 credit and settle it against the bank disbursement",async () =>
+                {
+                    var credit = await db.Set<CustTransOpen>().AsNoTracking().SingleAsync(x => x.AccountNum == Customer);
+                    Assert.Equal(-165m, credit.AmountCur);
+                    var request = new CustRefundPostDto(Customer, Bank, "ARV2-PAY", credit.RefRecId, Date.AddDays(10), "OTC-REFUND");
+                    var before = await CountsAsync(db);
+                    var refused = await payment.RefundAsync(request with { BankAccountId = "NO-BANK" }, default);
+                    Assert.Equal(422, refused.StatusCode);
+                    Assert.Equal(before, await CountsAsync(db));
+                    var posted = await payment.RefundAsync(request, default);
+                    Assert.True(posted.StatusCode == 200, posted.Message);
+                    await AssertOpen(0, 0);
+                    Assert.Equal(1035m, await LedgerAsync(db, GeneralLedgerSeedExample.Bank));
+                    Assert.Equal(0m, await LedgerAsync(db, GeneralLedgerSeedExample.CustomerControl));
+                    var line = await db.Set<LedgerJournalTrans>().AsNoTracking().SingleAsync(x => x.PaymReference == request.RequestId);
+                    var bank = await db.Set<BankAccountTrans>().AsNoTracking().SingleAsync(x => x.Voucher == line.Voucher);
+                    Assert.Equal(-165m, bank.AmountMst);
+                    var settlements = await db.Set<CustSettlement>().AsNoTracking()
+                        .Where(x => x.TransRecId == line.CustTransId && x.OffsetRecId == credit.RefRecId).ToListAsync();
+                    Assert.Equal(165m, Assert.Single(settlements).SettleAmountMst);
+                    var after = await CountsAsync(db);
+                    Assert.Equal(200, (await payment.RefundAsync(request, default)).StatusCode);
+                    Assert.Equal(422, (await payment.RefundAsync(request with { RequestId = "OTC-REFUND-AGAIN" }, default)).StatusCode);
+                    Assert.Equal(after, await CountsAsync(db));
+                    return new { line.JournalNum, line.Voucher, bank.AmountMst, credit.RefRecId, settlements };
+                });
                 await Stage(["SYS-07"],"Fractional-price rounding agrees across free-text line, header and receivable",async () =>
                 {
                     var revenue = await db.Set<DimensionAttributeValueCombination>().SingleAsync(x => x.MainAccountValue == GeneralLedgerSeedExample.SalesRevenue);

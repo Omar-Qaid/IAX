@@ -147,8 +147,8 @@ public sealed class CustSettleOpenTransactionsService : BaseService<CustSettleme
                     // The settlement row has to carry the same accounting and reporting amounts that
                     // are taken off the transaction, because the reversal restores
                     // CustTrans.SettleAmountMst from the row - not by recomputing it.
-                    var debitApplied = ApplyToTransaction(debit.Trans, debit.Open, amount, date, settlementVoucher, account);
-                    var creditApplied = ApplyToTransaction(credit.Trans, credit.Open, -amount, date, settlementVoucher, account);
+                    var debitApplied = ApplyToTransaction(Db, debit.Trans, debit.Open, amount, date, settlementVoucher, account);
+                    var creditApplied = ApplyToTransaction(Db, credit.Trans, credit.Open, -amount, date, settlementVoucher, account);
                     if (debitApplied.Accounting + creditApplied.Accounting != 0m
                         || debitApplied.Reporting + creditApplied.Reporting != 0m)
                         return await Fail(422,
@@ -196,7 +196,7 @@ public sealed class CustSettleOpenTransactionsService : BaseService<CustSettleme
     /// own sign. The accounting amount is derived from the transaction's own posted rate, so the
     /// subledger clears at the value it was booked at.
     /// </summary>
-    private SettledAmounts ApplyToTransaction(CustTrans trans, CustTransOpen open, decimal amount,
+    internal static SettledAmounts ApplyToTransaction(DbContext db, CustTrans trans, CustTransOpen open, decimal amount,
         DateTime date, string settlementVoucher, string account)
     {
         var closesTransaction = amount == open.AmountCur;
@@ -220,16 +220,16 @@ public sealed class CustSettleOpenTransactionsService : BaseService<CustSettleme
         {
             trans.Closed = date;
             trans.Settlement = CustSettlementStatus.Settled;
-            Db.Set<CustTransOpen>().Remove(open);
+            db.Set<CustTransOpen>().Remove(open);
         }
         return new SettledAmounts(amount, accounting, reporting);
     }
 
     /// <summary>What one side of a pair actually gave up, in each of the three currencies.</summary>
-    private readonly record struct SettledAmounts(decimal Transaction, decimal Accounting, decimal Reporting);
+    internal readonly record struct SettledAmounts(decimal Transaction, decimal Accounting, decimal Reporting);
 
     /// <summary>Same row shape <c>CustPaymentService</c> writes, so the existing reversal applies.</summary>
-    private static CustSettlement Settlement(string area, string account, DateTime date, string settlementVoucher,
+    internal static CustSettlement Settlement(string area, string account, DateTime date, string settlementVoucher,
         long transRecId, long transOpen, long offsetRecId, string offsetVoucher, SettledAmounts amounts,
         LedgerTransType type) => new()
     {

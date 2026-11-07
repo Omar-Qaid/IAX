@@ -63,6 +63,16 @@ public sealed class CustPaymentController : BaseController<CustTrans, CustPaymen
         };
     }
 
+    [HttpPost("refund")]
+    [DomainPermission("AccountsReceivable", "CustomerPayments", "Post")]
+    public async Task<IActionResult> Refund([FromBody] CustRefundPostDto request, CancellationToken ct)
+    {
+        var result = await _paymentService.RefundAsync(request, ct);
+        return StatusCode(result.StatusCode, result.StatusCode == 200
+            ? APIResponse<object>.Ok(result.Data!, result.Message ?? string.Empty)
+            : APIResponse<object>.Fail(result.Message ?? "Customer refund failed."));
+    }
+
     /// <summary>
     /// Reverses a posted customer payment: unwinds its settlements, posts the counter-voucher and
     /// reverses the bank movement.
