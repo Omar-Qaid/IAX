@@ -86,7 +86,7 @@ public sealed class AccountStructureValidator(DbContext db)
     /// combination's own per-dimension column is the fallback, so a combination written without a
     /// chain is still validated rather than silently read as all blanks.
     /// </summary>
-    private async Task<Dictionary<string, string>> SegmentValuesAsync(string area,
+    internal async Task<Dictionary<string, string>> SegmentValuesAsync(string area,
         DimensionAttributeValueCombination combination, CancellationToken ct)
     {
         var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);

@@ -2,6 +2,7 @@ using IAX.IXApi.Api.Controllers;
 using IAX.IXApi.Modules.Identity.Permissions;
 using IAX.IXApi.Shared.Application.Contracts;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Logging;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
@@ -27,6 +28,19 @@ public class CustTransController : BaseController<CustTrans, CustTransDto>
     public async Task<ActionResult<APIResponse<CustOpenBalanceDto>>> OpenBalance(
         [FromQuery] string? accountNum, [FromQuery] DateTime? asOfDate, CancellationToken ct) =>
         Ok(APIResponse<CustOpenBalanceDto>.Ok(await _custTransService.GetOpenBalanceAsync(accountNum, asOfDate, ct)));
+
+    [HttpGet("statement")]
+    public async Task<ActionResult<APIResponse<CustStatementDto>>> Statement(
+        [FromQuery] string accountNum, [FromQuery, BindRequired] DateTime fromDate,
+        [FromQuery, BindRequired] DateTime toDate, CancellationToken ct) =>
+        Ok(APIResponse<CustStatementDto>.Ok(await _custTransService.GetStatementAsync(accountNum, fromDate, toDate, ct)));
+
+    [HttpGet("aging")]
+    public async Task<ActionResult<APIResponse<CustAgingDto>>> Aging(
+        [FromQuery] string accountNum, [FromQuery, BindRequired] DateTime balanceAsOf,
+        [FromQuery] DateTime? agingAsOf, CancellationToken ct) =>
+        Ok(APIResponse<CustAgingDto>.Ok(await _custTransService.GetAgingAsync(
+            accountNum, balanceAsOf, agingAsOf ?? balanceAsOf, ct)));
 
     [NonAction]
     public override Task<ActionResult<APIResponse<CustTransDto>>> Create(CustTransDto dto, CancellationToken cancellationToken = default) =>

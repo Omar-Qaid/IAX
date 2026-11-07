@@ -10,4 +10,8 @@ public interface ICustTransService : IBaseService<CustTrans>
     /// <param name="accountNum">The customer, or null for every customer in the company.</param>
     /// <param name="asOfDate">Excludes transactions dated after this date; defaults to today.</param>
     Task<CustOpenBalanceDto> GetOpenBalanceAsync(string? accountNum, DateTime? asOfDate, CancellationToken ct);
+
+    Task<CustStatementDto> GetStatementAsync(string accountNum, DateTime fromDate, DateTime toDate, CancellationToken ct);
+
+    Task<CustAgingDto> GetAgingAsync(string accountNum, DateTime balanceAsOf, DateTime agingAsOf, CancellationToken ct);
 }

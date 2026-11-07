@@ -70,6 +70,14 @@ public class CashDiscountSettlementTests
         Assert.Equal(20m, entries.Single(x => x.PostingType == LedgerPostingType.CashDiscount).AccountingCurrencyAmount);
         // The customer is credited for everything cleared, not only the cash banked.
         Assert.Equal(-1000m, entries.Single(x => x.PostingType == LedgerPostingType.CustBalance).AccountingCurrencyAmount);
+        var date = new DateTime(2026, 1, 10);
+        var statement = await new CustTransService(new TestUnitOfWork(db), new TestUser())
+            .GetStatementAsync("C-001", date, date, default);
+        Assert.Equal(1000m, statement.OpeningBalanceMst);
+        Assert.Equal(0m, statement.ClosingBalanceMst);
+        var receipt = Assert.Single(statement.Lines);
+        Assert.Equal(-980m, receipt.AmountCur);
+        Assert.Equal(-1000m, receipt.AmountMst);
     }
 
     [Fact]

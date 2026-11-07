@@ -7,6 +7,7 @@ using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Foundation.Features;
+using IAX.IXApi.Modules.Finance.Foundation.Dimensions.AccountStructure;
 using IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable;
 using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Shared.Application.Identity;
@@ -18,6 +19,80 @@ namespace IAX.IXApi.Tests;
 
 public class LedgerJournalPostingTests
 {
+    [Theory]
+    [InlineData("BU-01", true, false)]
+    [InlineData("", false, false)]
+    [InlineData("BU-02", false, false)]
+    [InlineData("BU-02", true, true)]
+    public async Task Required_business_unit_is_validated_after_journal_defaults(
+        string defaultValue, bool shouldPost, bool useLegacyEnteredValue)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new DimensionPostingContext(
+            new DbContextOptionsBuilder<DimensionPostingContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        Seed(db);
+        SeedSubledgers(db);
+        db.AddRange(
+            new DimensionAttribute { RecId = 1, DataAreaId = "dat", Name = "BusinessUnit" },
+            new DimensionAttributeValue { RecId = 1, DataAreaId = "dat", DimensionAttribute = 1, DisplayValue = "BU-01" },
+            new DimensionAttributeValue { RecId = 2, DataAreaId = "dat", DimensionAttribute = 1, DisplayValue = "BU-02" },
+            new LedgerJournalTrans
+            {
+                RecId = 1, DataAreaId = "dat", JournalNum = "J1", Voucher = "V1", LineNum = 1,
+                TransDate = new DateTime(2026, 1, 15), CurrencyCode = "SAR",
+                AccountType = LedgerJournalACType.Cust, LedgerDimensionName = "C-001",
+                OffsetAccountType = LedgerJournalACType.Ledger, OffsetLedgerDimension = 2,
+                AmountCurCredit = 300m
+            });
+        if (defaultValue.Length > 0)
+        {
+            db.Add(new DimensionAttributeValueSetItem
+            {
+                DataAreaId = "dat", DimensionAttributeValueSet = 1, DisplayValue = defaultValue,
+                DimensionAttributeValue = defaultValue == "BU-01" ? 1 : 2
+            });
+            db.Set<LedgerJournalTable>().Local.Single().DefaultDimension = 1;
+        }
+        if (useLegacyEnteredValue)
+        {
+            foreach (var combination in db.Set<DimensionAttributeValueCombination>().Local.Where(x => x.RecId is 2 or 3))
+                combination.BusinessUnitValue = "BU-01";
+        }
+        await db.SaveChangesAsync();
+        var builder = new AccountStructureBuilder(db);
+        await builder.DefineAsync("dat", new("BU", "Required business unit",
+            [new(AccountStructureBuilder.MainAccountSegment, "*"), new("BusinessUnit", "BU-01")]), default);
+        await builder.ActivateAsync("dat", "BU", default);
+        await builder.AssignToLedgerAsync("dat", "BU", default);
+        db.ChangeTracker.Clear();
+
+        await using var transaction = await db.Database.BeginTransactionAsync();
+        var header = await db.Set<LedgerJournalTable>().SingleAsync();
+        var posting = new LedgerJournalPosting(db);
+        if (!shouldPost)
+        {
+            var error = await Assert.ThrowsAsync<SubledgerPostingException>(() => posting.PostAsync("dat", header, default));
+            Assert.Contains(defaultValue.Length == 0 ? "requires a BusinessUnit" : "'BU-02' is not an allowed BusinessUnit", error.Message);
+            await transaction.RollbackAsync();
+            db.ChangeTracker.Clear();
+            Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
+            Assert.Empty(await db.Set<CustTrans>().ToListAsync());
+            Assert.Equal(NoYes.No, (await db.Set<LedgerJournalTable>().SingleAsync()).Posted);
+            return;
+        }
+
+        await posting.PostAsync("dat", header, default);
+        await db.SaveChangesAsync();
+        await transaction.CommitAsync();
+        var entries = await db.Set<GeneralJournalAccountEntry>().ToListAsync();
+        Assert.Equal(new[] { -300m, 300m }, entries.Select(x => x.AccountingCurrencyAmount).OrderBy(x => x));
+        foreach (var entry in entries)
+            Assert.Equal("BU-01", (await db.Set<DimensionAttributeValueCombination>().FindAsync(entry.LedgerDimension))!.BusinessUnitValue);
+        Assert.Equal(-300m, (await db.Set<CustTrans>().SingleAsync()).AmountCur);
+    }
+
     [Fact]
     public async Task A_customer_prepayment_is_not_silently_posted_as_an_ordinary_receivable()
     {
@@ -753,7 +828,9 @@ public class LedgerJournalPostingTests
         return db;
     }
 
-    private sealed class PostingContext(DbContextOptions<PostingContext> options) : DbContext(options)
+    private sealed class DimensionPostingContext(DbContextOptions<DimensionPostingContext> options) : PostingContext(options);
+
+    private class PostingContext(DbContextOptions options) : DbContext(options)
     {
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -771,6 +848,9 @@ public class LedgerJournalPostingTests
                 typeof(CustLedgerAccounts), typeof(VendTable), typeof(VendTrans), typeof(VendTransOpen),
                 typeof(VendParameters), typeof(VendLedgerAccounts),
                 typeof(BankAccountTable), typeof(BankAccountTrans)];
+            if (this is DimensionPostingContext)
+                types = [.. types, .. TestAccountStructures.Types.Except(types),
+                    typeof(DimensionAttributeValueSetItem), typeof(DimensionAttributeValueGroup)];
             // Everything this harness does not list is ignored outright. Naming the strays one by
             // one does not hold: the customer and vendor tables reach the party, worker, group and
             // payment-term tables, and those reach further still.

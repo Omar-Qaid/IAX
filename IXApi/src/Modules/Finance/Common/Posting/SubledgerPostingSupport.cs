@@ -2,6 +2,7 @@ using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.AccountsPayable;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Foundation.Dimensions.AccountStructure;
+using IAX.IXApi.Modules.Finance.Foundation.Dimensions.LedgerDimension;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Security.Cryptography;
@@ -108,7 +109,8 @@ internal sealed class SubledgerPostingSupport(DbContext db)
 
     /// <summary>Customer posting profile: Table (customer) -> Group (customer group) -> All, within the profile.</summary>
     public async Task<DimensionAttributeValueCombination> ResolveCustomerSummaryAsync(string area, string? postingProfile,
-        CustTable customer, CancellationToken ct)
+        CustTable customer, CancellationToken ct,
+        Func<DimensionAttributeValueCombination, Task<DimensionAttributeValueCombination>>? applyDefaults = null)
     {
         var profile = postingProfile;
         if (string.IsNullOrWhiteSpace(profile))
@@ -124,11 +126,13 @@ internal sealed class SubledgerPostingSupport(DbContext db)
             ?? rules.Where(x => x.AccountCode == AccountCode.All).OrderBy(x => x.RecId).FirstOrDefault();
         if (rule == null || rule.SummaryLedgerDimension == 0)
             throw new SubledgerPostingException($"Customer posting profile summary account is missing for customer '{customer.AccountNum}'.");
-        return await LoadDimensionAsync(area, rule.SummaryLedgerDimension, "customer summary", ct);
+        return await LoadDimensionAsync(area, rule.SummaryLedgerDimension, "customer summary", ct, applyDefaults);
     }
 
     /// <summary>Vendor posting profile: Table (vendor) -> Group (vendor group) -> All, within the profile.</summary>
-    public async Task<DimensionAttributeValueCombination> ResolveVendorSummaryAsync(string area, VendTable vendor, CancellationToken ct, string? postingProfile = null, bool prepayment = false)
+    public async Task<DimensionAttributeValueCombination> ResolveVendorSummaryAsync(string area, VendTable vendor,
+        CancellationToken ct, string? postingProfile = null, bool prepayment = false,
+        Func<DimensionAttributeValueCombination, Task<DimensionAttributeValueCombination>>? applyDefaults = null)
     {
         // The company's default profile from VendParameters, the payable mirror of the customer
         // path. Without it every rule in the company is a candidate and two posting profiles mix.
@@ -145,7 +149,7 @@ internal sealed class SubledgerPostingSupport(DbContext db)
         var dimension = prepayment ? rule?.ClearingLedgerDimension : rule?.SummaryLedgerDimension;
         if (dimension is null or 0)
             throw new SubledgerPostingException($"Vendor posting profile {(prepayment ? "advance" : "summary")} account is missing for vendor '{vendor.AccountNum}'.");
-        return await LoadDimensionAsync(area, dimension.Value, prepayment ? "vendor advance" : "vendor summary", ct);
+        return await LoadDimensionAsync(area, dimension.Value, prepayment ? "vendor advance" : "vendor summary", ct, applyDefaults);
     }
 
     /// <summary>
@@ -374,7 +378,9 @@ internal sealed class SubledgerPostingSupport(DbContext db)
         return await LoadDimensionAsync(area, dimension, $"realized exchange {(isGain ? "gain" : "loss")}", ct);
     }
 
-    public async Task<DimensionAttributeValueCombination> LoadDimensionAsync(string area, long recId, string purpose, CancellationToken ct)
+    public async Task<DimensionAttributeValueCombination> LoadDimensionAsync(string area, long recId, string purpose,
+        CancellationToken ct,
+        Func<DimensionAttributeValueCombination, Task<DimensionAttributeValueCombination>>? applyDefaults = null)
     {
         var dimension = await db.Set<DimensionAttributeValueCombination>().AsNoTracking()
             .FirstOrDefaultAsync(x => x.DataAreaId == area && x.RecId == recId, ct)
@@ -384,8 +390,15 @@ internal sealed class SubledgerPostingSupport(DbContext db)
             : await db.Set<MainAccount>().AsNoTracking().AnyAsync(x => x.DataAreaId == area && x.MainAccountId == dimension.MainAccountValue, ct);
         if (!valid) throw new SubledgerPostingException($"Ledger dimension '{dimension.DisplayValue}' does not reference a valid main account.");
 
-        // The account structures assigned to the ledger decide which dimension combinations may
-        // post. A company with none assigned is not validated, and posts as it did before.
+        // Validate the combination that will post, after journal defaults and fixed values are applied.
+        if (applyDefaults != null)
+        {
+            try { dimension = await applyDefaults(dimension); }
+            catch (LedgerDimensionException ex)
+            {
+                throw new SubledgerPostingException($"The {purpose} account is not valid: {ex.Message}");
+            }
+        }
         _structures ??= new AccountStructureValidator(db);
         if (await _structures.ValidateAsync(area, dimension, ct) is { } refusal)
             throw new SubledgerPostingException($"The {purpose} account is not valid: {refusal}");

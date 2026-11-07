@@ -84,8 +84,20 @@ public class RealizedExchangeDifferenceTests
         Assert.Equal(CustSettlementStatus.Settled, invoice.Settlement);
         Assert.Empty(await db.Set<CustTransOpen>().AsNoTracking().ToListAsync());
         // The realized difference is recorded on the settlement row too.
-        Assert.Equal(150m, (await db.Set<CustSettlement>().AsNoTracking()
-            .SingleAsync(x => x.TransRecId == 10)).ExchAdjustment);
+        var invoiceSettlement = await db.Set<CustSettlement>().AsNoTracking().SingleAsync(x => x.TransRecId == 10);
+        var paymentSettlement = await db.Set<CustSettlement>().AsNoTracking().SingleAsync(x => x.TransRecId == payment.RecId);
+        Assert.Equal(150m, invoiceSettlement.ExchAdjustment);
+        Assert.Equal(1000m, invoiceSettlement.SettleAmountCur);
+        Assert.Equal(3750m, invoiceSettlement.SettleAmountMst);
+        Assert.Equal(-1000m, paymentSettlement.SettleAmountCur);
+        Assert.Equal(-3600m, paymentSettlement.SettleAmountMst);
+        var statement = await new CustTransService(new TestUnitOfWork(db), new TestUser())
+            .GetStatementAsync("C-001", PaymentDate, PaymentDate, default);
+        Assert.Equal(3750m, statement.OpeningBalanceMst);
+        Assert.Equal(0m, statement.ClosingBalanceMst);
+        var receipt = Assert.Single(statement.Lines);
+        Assert.Equal(-1000m, receipt.AmountCur);
+        Assert.Equal(-3750m, receipt.AmountMst);
     }
 
     /// <summary>Cash worth more than the receivable it cleared: a realized gain, posted as a credit.</summary>

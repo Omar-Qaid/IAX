@@ -1,6 +1,12 @@
 # تطبيق مرجع Order to Cash
 
-المصدر هو ملف المستخدم `Pasted text.txt`، بأقسامه الثلاثين و77 معرّف اختبار في القسم 28. حُفظت المتطلبات والنتائج المتوقعة في `OrderToCashAcceptancePlan.json`؛ تبدأ جميع الحالات بـ`Not run`. وجود خدمة أو نجاح اختبار قريب لا يمنح الحالة نجاحًا تلقائيًا.
+المرجع المعتمد لدورة التحصيل هو ملف [Logic_Readonly.md](../../src/Infrastructure/Persistence/SeedingERPV2/CycleErpExamples/AccountsReceivable/Logic_Readonly.md)، بأقسامه الثلاثين و77 معرّف اختبار في القسم 28. حُفظت المتطلبات والنتائج المتوقعة في `OrderToCashAcceptancePlan.json`. تبدأ الحالات بحالة `Not run` وتتغير بعد تحقق شروط القبول.
+
+الحصيلة الحالية **67 Passed و10 Not implemented**. سجل الحالات المفتوحة في `OrderToCashOpenGaps.json`.
+
+نجحت الاختبارات الثمانية المركزة في `otc-latest-focused.trx`. اكتمل التشغيل العام من داخل مجلد المشروع بنتيجة **873 Passed وصفر Failed و3 Skipped** في `otc-rooted-regression.trx`.
+
+سجّل التشغيل السابق `otc-latest-regression.trx` نتيجة **872 Passed و1 Failed و3 Skipped**. تعذر على اختبار إعدادات الأمان العثور على `IXApi.csproj` بسبب موقع مخرجات التشغيل. نجحت إعادة الاختبار من داخل `IXApi` في `otc-latest-root-retest.trx`، ثم نجح التشغيل العام من المسار المصحح.
 
 ## تطبيق المثال العددي
 
@@ -52,6 +58,48 @@
 
 ## نتائج تطبيق المرجع
 
+### عملة سجل التسوية (FX-03 وCOL-01)
+
+أثبت `settlement-currency-before.trx` أن سطر تسوية فاتورة 1000 دولار كان يحفظ 1000 في حقل عملة المحاسبة بدل 3750. تُحفظ الآن مبالغ التسوية بعملة المعاملة والمحاسبة والتقارير على جانبيها. أثبتت الإعادة أن الفاتورة تحمل 3750 والتحصيل يحمل ‎-3600 في عملة المحاسبة، مع بقاء الفرق المحقق 150 والسند متوازنًا. نجح 22 اختبارًا للفروق المحققة وخصم السداد ودورة التحصيل في `settlement-currency-verified.trx`. تحتاج سجلات التسوية التاريخية التي كُتبت بالقيمة القديمة إلى مطابقة مستقلة.
+
+اكتمل التشغيل العام لهذه الدفعة بنتيجة **875 Passed وصفر Failed و3 Skipped** في `settlement-currency-regression.trx`.
+
+### فحص رصيد الائتمان الإلزامي (MD-03، تنفيذ جزئي)
+
+كان تأكيد أمر البيع يرفض العميل المفعّل له الفحص الإلزامي دون حساب الرصيد. عند إيقاف سياسة الشركة العامة، يقارن التأكيد الآن الرصيد المفتوح بعملة المحاسبة بحد العميل الموجب. ينطبق الفحص على حسابات العميل والفاتورة المحددة كإلزامية في الشركة. تظل أوضاع سياسة الشركة العامة قيد التنفيذ، وتبقى حالة MD-03 مفتوحة. [مرجع حدود الائتمان](https://learn.microsoft.com/en-us/dynamics365/supply-chain/sales-marketing/credit-limits-customers)
+
+أثبت `md03-before.trx` الرفض السابق. في `md03-confirmation.trx` نجح تأكيد رصيد 1000 عند حد 1000، ورُفض عند حد 999 دون إنشاء مستند تأكيد. لم تدخل أرصدة شركة أو حساب آخر في الحساب. نجحت اختبارات التأكيد الـ25.
+
+اكتمل التشغيل العام لهذه الدفعة بنتيجة **875 Passed وصفر Failed و3 Skipped** في `md03-regression.trx`.
+
+### أعمار الذمم التاريخية (COL-01)
+
+يعرض `GET /api/v1/CustTrans/aging` الرصيد بعملة المحاسبة حسب تاريخ قطع الحركات وتاريخ القياس على أساس الاستحقاق. الشرائح هي غير المتأخر، و1–30، و31–60، و61–90، و91 يومًا فأكثر. يعيد التقرير بناء الأرصدة من الحركات والتسويات وعكسها، ويحتسب التسوية عند وجود طرفيها في تاريخ القطع. [مرجع تقرير أعمار الذمم](https://learn.microsoft.com/en-us/dynamics365/finance/accounts-receivable/customer-aging)
+
+نجح اختبارا SQL Server في `aging-focused.trx`. ظهرت 1380 في شريحة 1–30 قبل التحصيل، و680 في شريحة 31–60 عند القطع بعد التخصيص الجزئي، ثم صفر بعد إغلاق الذمم. أعاد فك التسوية توزيع 680 مدينًا و680 دائنًا على شرائحهما مع بقاء القطع السابق مغلقًا. الأدلة في `aging-attempts.jsonl`.
+
+اكتمل التشغيل العام الذي شمل التقرير بنتيجة **873 Passed وصفر Failed و3 Skipped** في `aging-regression.trx`.
+
+### كشف الحساب التاريخي (COL-02)
+
+أضيف كشف حساب من `CustTrans` لفترة محددة عبر `GET /api/v1/CustTrans/statement`. يعرض المبلغ الموقع لكل حركة ورقم سندها، ورصيد الافتتاح والجاري والإقفال بعملة المحاسبة. في اختباري SQL Server أظهر الكشف نفس الفاتورتين بقيمة 690 لكل منهما والتحصيل بقيمة 700 قبل التسوية وبعدها. بقي الرصيد التاريخي 680، وبدأ كشف فترة التحصيل برصيد 1380 ثم انخفض إلى 680 وصفر. الأدلة في `statement-attempts.jsonl` و`otc-latest-focused.trx`.
+
+### سجل التدقيق (SYS-08)
+
+أثبت `sys08-red.trx` أن تعديلين رُفضا عند الحفظ ظهرا لاحقًا في سجل التصحيح الناجح. أُعيد بناء قائمة التدقيق لكل محاولة حفظ. نجحت الإعادة عبر اعتراض EF وخدمة التدقيق الفعليين على عينة عميل SQLite. تحقق الاختبار من المستخدم والوقت والجدول ومعرّف السجل والقيمة القديمة والجديدة، ووجد سجلًا واحدًا للتصحيح الناجح. سجل المحاولات في `sys08-attempts.jsonl`.
+
+### صلاحيات API ‏(SYS-05)
+
+اختبر `sys05-verified.trx` إنشاء فاتورة حرة وترحيلها وعكس تسوية عبر خادم HTTP محلي مؤقت. شغّل الاختبار مصادقة JWT وفلاتر صلاحيات MVC ووحدات التحكم الفعلية. وفّرت بيانات الاختبار منح الصلاحيات واستجابات الخدمات المالية. أعاد الخادم 401 للطلب دون مصادقة و403 للأدوار التي ينقصها الإذن، مع صفر استدعاءات لخدمات الكتابة في الحالتين. وصلت الطلبات المصرح بها إلى خدماتها مرة واحدة لكل عملية.
+
+### الأبعاد المالية (CFG-06)
+
+تحققت مطابقة معرّفات الحالات الـ77 بين المرجع وخطة القبول. أثبت `cfg06-before.trx` أن فحص الحساب يرفض اليومية قبل قراءة قيمة `BusinessUnit` الافتراضية. أصبح فحص هيكل الحساب يستخدم التركيبة النهائية بعد تطبيق الأبعاد على الحساب والحساب المقابل.
+
+سجل `cfg06-attempts.jsonl` الإخفاق والإصلاح والنجاح. في `cfg06-retry.trx` أنتجت القيمة `BU-01` سندًا متوازنًا بقيدين بقيمة 300 ريال وأثبتت حركة العميل، وحافظ الاختبار على القيمة الصريحة المخزنة في سجل قديم. رُفضت القيمة الغائبة و`BU-02` دون قيد أو حركة عميل. نجح 34 اختبارًا في مجموعة اليومية وهيكل الحساب، و128 في المخزون. تعطل مضيف الاختبار مرة بسبب خطأ CLR داخلي ونجحت الإعادة.
+
+بلغت الحصيلة بعد دفعة الأبعاد **63 Passed و12 Not implemented و2 Not run**. جرى إثبات CFG-06 على يومية عميل بحساب مقابل من الأستاذ في SQLite. سجل التشغيل العام لهذه الدفعة **871 Passed وصفر Failed و3 Skipped** في `cfg06-regression.trx`.
+
 ### متابعة صيانة العميل (MD-01)
 
 - **Failed:** `customer-before.trx` أثبت أن `QuickUpdateAsync` يرجع Updated بينما بقي الشارع `First street` بدل `Second street`.
@@ -60,7 +108,9 @@
 
 احتُفظ بسجل المحاولات في `customer-attempts.jsonl`. في الإعادة الأولى، تجاوز رمز الدولة التجريبي طول العمود فرفضه SQL Server قبل فحص مرجع الدولة؛ استُبدل برمز `ZZZ` غير موجود وضمن طول العمود، ثم نجح فحص التراجع. نجح بناء Finance وAPI والاختبارات دون أخطاء، ونجحت اختبارات المخزون **128/128** في `customer-inventory.trx`.
 
-حصيلة القبول الحالية: **62 Passed، و12 Not implemented، و3 Not run**. الحالات المتبقية دون اختبار قبول هي CFG-06 للأبعاد المطلوبة والقيم الافتراضية، وSYS-05 لصلاحيات API، وSYS-08 لمسار التدقيق. مراجعة الكود لـCFG-06 وجدت أن `LedgerJournalPosting` يستدعي `LoadDimensionAsync` لفحص تركيبة الحساب قبل `LedgerJournalDimensionDefaulting.ApplyAsync`؛ يلزم اختبار ترحيل مستقل لإثبات أثر ذلك على البُعد الإلزامي والقيمة المثبتة عند الترحيل. [مرجع القيم الافتراضية والأبعاد المثبتة](https://learn.microsoft.com/en-us/dynamics365/finance/general-ledger/dimensions-default-values).
+بلغت حصيلة القبول بعد دفعة صيانة العميل **62 Passed و12 Not implemented و3 Not run**.
+
+التشغيل العام على النسخة المعدلة: **867 Passed، صفر Failed، و3 Skipped** من 870 في `customer-regression.trx`. نجحت MD-01 مرة أخرى، وكذلك فحوص تكامل AR الثلاثون ومراحل دورة AR الثماني والثلاثون على SQL Server. أكد `customer-database-cleanup.txt` عدم بقاء قواعد اختبار مؤقتة، وحدّث `coverage.json` حالة كل معرّف من الـ77.
 
 ### متابعة الخصومات والمصاريف
 
@@ -102,5 +152,6 @@ $otcBuildOutput = Join-Path $PWD 'IXApi/.ap-service-validation/bin/'
 dotnet test IXApi/Tests/IXApi.Tests.csproj --no-build --no-restore "/p:BaseOutputPath=$otcBuildOutput" --filter FullyQualifiedName~Order_to_cash_attachment
 $env:IXAPI_OTC_REPORT = Join-Path $PWD '.validation/otc/customer-attempts.jsonl'
 dotnet test IXApi/Tests/IXApi.Tests.csproj --no-build --no-restore "/p:BaseOutputPath=$otcBuildOutput" --filter FullyQualifiedName~Order_to_cash_customer_creation --logger 'trx;LogFileName=customer-verified.trx' --results-directory .validation/otc
-./IXApi/scripts/testing/Export-OrderToCashAcceptance.ps1 -AttemptsPath .validation/otc/attempts.jsonl -AdditionalAttemptsPaths @('.validation/otc/discount-attempts.jsonl','.validation/otc/customer-attempts.jsonl') -OutputPath .validation/otc/coverage.json -RegressionTrxPaths @('.validation/otc/discounts-regression.trx')
+$attempts = @('discount-attempts.jsonl','customer-attempts.jsonl','cfg06-attempts.jsonl','sys05-attempts.jsonl','sys08-attempts.jsonl','statement-attempts.jsonl','aging-attempts.jsonl') | ForEach-Object { Join-Path '.validation/otc' $_ }
+./IXApi/scripts/testing/Export-OrderToCashAcceptance.ps1 -AttemptsPath .validation/otc/attempts.jsonl -AdditionalAttemptsPaths $attempts -OutputPath .validation/otc/coverage.json -RegressionTrxPaths @('.validation/otc/otc-rooted-regression.trx')
 ```

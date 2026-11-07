@@ -169,6 +169,8 @@ namespace IAX.IXApi.Infrastructure.Persistence.Interceptors
 
             try
             {
+                // A failed save never reaches SavedChanges. Build from this attempt only.
+                _pendingAudits.Clear();
                 var userId = _currentUser?.GetCurrentUserId() ?? "SYSTEM";
                 var nowUtc = DateTime.UtcNow;
 

@@ -84,8 +84,9 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
             foreach (var line in voucher)
             {
                 var amount = line.AmountCurDebit - line.AmountCurCredit;
-                var side = await ResolveSideAsync(area, line, $"line {line.LineNum} account", ct);
-                var dimension = await defaulting.ApplyAsync(area, side.Dimension, header.DefaultDimension, line.DefaultDimension);
+                var side = await ResolveSideAsync(support, area, line, $"line {line.LineNum} account", ct,
+                    entered => defaulting.ApplyAsync(area, entered, ct, header.DefaultDimension, line.DefaultDimension));
+                var dimension = side.Dimension;
                 line.LedgerDimension = dimension.RecId;
                 var accountingAmount = await converter.ConvertAsync(area, amount, line.CurrencyCode,
                     accountingCurrency, ledger.DefaultExchangeRateType, line.TransDate, ct);
@@ -101,8 +102,9 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                     voucher.Key.Voucher, ct);
                 if (line.OffsetLedgerDimension != 0)
                 {
-                    var enteredOffset = await support.LoadDimensionAsync(area, line.OffsetLedgerDimension, $"line {line.LineNum} offset account", ct);
-                    var offset = await defaulting.ApplyAsync(area, enteredOffset, header.DefaultDimension, line.OffsetDefaultDimension);
+                    var offset = await support.LoadDimensionAsync(area, line.OffsetLedgerDimension,
+                        $"line {line.LineNum} offset account", ct,
+                        entered => defaulting.ApplyAsync(area, entered, ct, header.DefaultDimension, line.OffsetDefaultDimension));
                     line.OffsetLedgerDimension = offset.RecId;
                     posted.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, offset,
                         LedgerPostingType.LedgerJournal, -amount, -accountingAmount, -reportingAmount,
@@ -214,9 +216,10 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
     /// vendor line resolves its summary account from the posting profile, exactly as an invoice or
     /// payment does, and a bank line uses the bank account's own ledger account.
     /// </summary>
-    private async Task<PostingSide> ResolveSideAsync(string area, LedgerJournalTrans line, string what, CancellationToken ct)
+    private async Task<PostingSide> ResolveSideAsync(SubledgerPostingSupport support, string area,
+        LedgerJournalTrans line, string what, CancellationToken ct,
+        Func<DimensionAttributeValueCombination, Task<DimensionAttributeValueCombination>> applyDefaults)
     {
-        var support = new SubledgerPostingSupport(db);
         var accountNum = line.LedgerDimensionName.Trim();
         switch (line.AccountType)
         {
@@ -226,7 +229,7 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                     .FirstOrDefaultAsync(x => x.DataAreaId == area && x.AccountNum == accountNum, ct)
                     ?? throw new SubledgerPostingException($"Customer '{accountNum}' was not found for {what}.");
                 // No profile on the line, so the company default from CustParameters applies.
-                var dimension = await support.ResolveCustomerSummaryAsync(area, null, customer, ct);
+                var dimension = await support.ResolveCustomerSummaryAsync(area, null, customer, ct, applyDefaults);
                 return new PostingSide(dimension, LedgerPostingType.CustBalance, line.AccountType, customer.AccountNum, null);
             }
             case LedgerJournalACType.Vend:
@@ -235,7 +238,8 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                     .FirstOrDefaultAsync(x => x.DataAreaId == area && x.AccountNum == accountNum, ct)
                     ?? throw new SubledgerPostingException($"Vendor '{accountNum}' was not found for {what}.");
                 var dimension = await support.ResolveVendorSummaryAsync(area, vendor, ct,
-                    string.IsNullOrWhiteSpace(line.PostingProfile) ? null : line.PostingProfile, prepayment: line.Prepayment == NoYes.Yes);
+                    string.IsNullOrWhiteSpace(line.PostingProfile) ? null : line.PostingProfile,
+                    prepayment: line.Prepayment == NoYes.Yes, applyDefaults: applyDefaults);
                 return new PostingSide(dimension, LedgerPostingType.VendBalance, line.AccountType, vendor.AccountNum, null);
             }
             case LedgerJournalACType.Bank:
@@ -246,12 +250,12 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                 if (bank.LedgerDimension == 0 || bank.BankAccountStatus != BankAccountStatus.Active)
                     throw new SubledgerPostingException(
                         $"Bank account '{accountNum}' must be active and have a ledger account for {what}.");
-                var dimension = await support.LoadDimensionAsync(area, bank.LedgerDimension, what, ct);
+                var dimension = await support.LoadDimensionAsync(area, bank.LedgerDimension, what, ct, applyDefaults);
                 return new PostingSide(dimension, LedgerPostingType.Bank, line.AccountType, bank.AccountId, bank);
             }
             default:
             {
-                var dimension = await support.LoadDimensionAsync(area, line.LedgerDimension, what, ct);
+                var dimension = await support.LoadDimensionAsync(area, line.LedgerDimension, what, ct, applyDefaults);
                 return new PostingSide(dimension, LedgerPostingType.LedgerJournal, line.AccountType, string.Empty, null);
             }
         }

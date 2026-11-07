@@ -338,6 +338,10 @@ public sealed partial class AccountsReceivableCycleStageTests
                 Assert.Equal(0m,await LedgerAsync(db,GeneralLedgerSeedExample.Bank));
                 await AssertOpen(1380,0);
             });
+            var statements = new CustTransService(
+                services.GetRequiredService<IAX.IXApi.Infrastructure.Persistence.Repositories.IUnitOfWork>(),
+                new ArCycleIdentity());
+            CustStatementDto? beforeSettlement = null;
             await Stage(["PAY-02","PAY-03"],"Post 700 unallocated: invoices 1380, payment -700",async () =>
             {
                 var result = await payment.PostAsync(new(Customer,Bank,700,Date.AddDays(1),"ARV2",null,"OTC-P1",false),default);
@@ -346,6 +350,7 @@ public sealed partial class AccountsReceivableCycleStageTests
                 Assert.Equal(680m,await LedgerAsync(db,GeneralLedgerSeedExample.CustomerControl));
                 Assert.Equal(700m,await LedgerAsync(db,GeneralLedgerSeedExample.Bank));
                 openAfterPayment = 680;
+                beforeSettlement = await statements.GetStatementAsync(Customer, Date, Date.AddDays(1), default);
             });
             async Task SettleOpen()
             {
@@ -385,6 +390,33 @@ public sealed partial class AccountsReceivableCycleStageTests
                 Assert.NotEmpty(await db.Set<CustSettlement>().ToListAsync());
                 Assert.Equal(2,await db.Set<LedgerJournalTrans>().Where(x => x.PaymReference == "OTC-P1" || x.PaymReference == "OTC-P2").Select(x => x.Voucher).Distinct().CountAsync());
             });
+            await audit.Stage(["COL-02"],"Customer statement retains invoices and payments after settlement",async () =>
+            {
+                var historical = await statements.GetStatementAsync(Customer, Date, Date.AddDays(1), default);
+                Assert.Equal(680m, beforeSettlement!.ClosingBalanceMst);
+                Assert.Equal(beforeSettlement.ClosingBalanceMst, historical.ClosingBalanceMst);
+                Assert.Equal(beforeSettlement.Lines.ToArray(), historical.Lines.ToArray());
+                Assert.Equal(new[] { 690m, 690m, -700m }, historical.Lines.Select(x => x.AmountMst).ToArray());
+                Assert.All(historical.Lines, line => Assert.False(string.IsNullOrWhiteSpace(line.Voucher)));
+
+                var payments = await statements.GetStatementAsync(Customer, Date.AddDays(1), Date.AddDays(3), default);
+                Assert.Equal(1380m, payments.OpeningBalanceMst);
+                Assert.Equal(new[] { 680m, 0m }, payments.Lines.Select(x => x.RunningBalanceMst).ToArray());
+                Assert.Equal(0m, payments.ClosingBalanceMst);
+                return new { beforeSettlement, historical, payments };
+            });
+            var invoiceDueDate = await db.Set<CustTrans>().Where(x => x.AccountNum == Customer && x.Invoice == firstInvoice)
+                .Select(x => x.DueDate).SingleAsync();
+            await audit.Stage(["COL-01"],"Customer aging reconstructs due-date buckets at earlier cutoffs",async () =>
+            {
+                var original = await statements.GetAgingAsync(Customer, Date, invoiceDueDate.AddDays(1), default);
+                var partial = await statements.GetAgingAsync(Customer, Date.AddDays(2), invoiceDueDate.AddDays(31), default);
+                var closed = await statements.GetAgingAsync(Customer, Date.AddDays(3), invoiceDueDate.AddDays(91), default);
+                Assert.Equal(new[] { 0m, 1380m, 0m, 0m, 0m }, original.Buckets.Select(x => x.BalanceMst).ToArray());
+                Assert.Equal(new[] { 0m, 0m, 680m, 0m, 0m }, partial.Buckets.Select(x => x.BalanceMst).ToArray());
+                Assert.All(closed.Buckets, bucket => Assert.Equal(0m, bucket.BalanceMst));
+                return new { original, partial, closed };
+            });
             await Stage(["REC-01","REC-03"],"Reconcile customer, tax, inventory, source vouchers and balanced GL",async () =>
             {
                 var entries = await db.Set<GeneralJournalAccountEntry>().ToListAsync();
@@ -409,6 +441,11 @@ public sealed partial class AccountsReceivableCycleStageTests
                     Assert.True(result.StatusCode == 200,result.Message);
                     await AssertOpen(680,-680);
                     Assert.Equal(1380m,await LedgerAsync(db,GeneralLedgerSeedExample.Bank));
+                    var beforeUndo = await statements.GetAgingAsync(Customer, Date.AddDays(3), invoiceDueDate, default);
+                    var afterUndo = await statements.GetAgingAsync(Customer, Date.AddDays(4), invoiceDueDate, default);
+                    Assert.All(beforeUndo.Buckets, bucket => Assert.Equal(0m, bucket.BalanceMst));
+                    Assert.Equal(680m, afterUndo.Buckets[0].BalanceMst);
+                    Assert.Equal(-680m, afterUndo.Buckets.Skip(1).Sum(bucket => bucket.BalanceMst));
                 });
                 await Stage(["PAY-08"],"Reverse the second payment: bank 700 and invoice debt 680",async () =>
                 {

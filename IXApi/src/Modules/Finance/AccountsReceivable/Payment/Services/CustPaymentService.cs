@@ -201,10 +201,8 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
                     invoiceRow.CustCashDiscDate = terms.DiscountDate;
                     invoiceRow.CashDiscountLedgerDimension = terms.Discount!.CashDiscLedgerDimension;
                 }
-                Db.Set<CustSettlement>().AddRange(
-                    invoiceRow,
-                    Settlement(area, customer.AccountNum, date, settlementVoucher, paymentTrans.RecId, 0,
-                        invoice.Trans.RecId, invoice.Trans.Voucher, -cash, LedgerTransType.Payment));
+                var paymentRow = Settlement(area, customer.AccountNum, date, settlementVoucher, paymentTrans.RecId, 0,
+                    invoice.Trans.RecId, invoice.Trans.Voucher, -cash, LedgerTransType.Payment);
                 // The receivable clears at the accounting value the invoice itself carried, while
                 // the cash and discount arrive at the payment date's rate. The difference between
                 // the two is the realized exchange gain or loss on this settlement.
@@ -222,6 +220,11 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
                 var invoiceReporting = invoice.Trans.AmountCur == 0m
                     ? settle
                     : decimal.Round(settle * (invoice.Trans.ReportingCurrencyAmount / invoice.Trans.AmountCur), 2, MidpointRounding.AwayFromZero);
+                invoiceRow.SettleAmountMst = invoiceAccounting;
+                invoiceRow.SettleAmountReporting = invoiceReporting;
+                paymentRow.SettleAmountMst = translation.ToAccounting(-cash);
+                paymentRow.SettleAmountReporting = translation.ToReporting(-cash);
+                Db.Set<CustSettlement>().AddRange(invoiceRow, paymentRow);
                 settledAccounting += invoiceAccounting;
                 settledReporting += invoiceReporting;
 
@@ -240,7 +243,7 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
                     Db.Set<CustTransOpen>().Remove(invoice.Open);
                 }
                 paymentTrans.SettleAmountCur -= cash;
-                paymentTrans.SettleAmountMst -= translation.ToAccounting(cash);
+                paymentTrans.SettleAmountMst += paymentRow.SettleAmountMst;
                 remaining -= cash;
                 settled.Add(new { invoice = invoice.Trans.Invoice, amount = settle, cashDiscount = discount });
             }
@@ -365,7 +368,7 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
         DataAreaId = area, AccountNum = account, TransDate = date, SettlementVoucher = settlementVoucher, TransCompany = area,
         TransType = type, TransRecId = transRecId, TransOpen = transOpen, OffsetRecId = offsetRecId,
         OffsetAccountNum = account, OffsetCompany = area, OffsetTransVoucher = offsetVoucher,
-        SettleAmountCur = amount, SettleAmountMst = amount, SettleAmountReporting = amount, DueDate = date, ClosedDate = date,
+        SettleAmountCur = amount, DueDate = date, ClosedDate = date,
         // Marks the match as in force, so CustSettlementReversalService can reverse it once.
         CanBeReversed = NoYes.Yes
     };

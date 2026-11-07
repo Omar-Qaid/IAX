@@ -155,10 +155,21 @@ public sealed class SalesOrderConfirmationService : BaseService<CustConfirmJour>
                 return new ConfirmationResult(422, null, "The invoice customer is blocked for sales order confirmation.");
             var parameters = await db.Set<CustParameters>().AsNoTracking()
                 .Where(x => x.DataAreaId == order.DataAreaId).OrderBy(x => x.Key).FirstOrDefaultAsync(ct);
-            if (customer.MandatoryCreditLimit == NoYes.Yes || invoiceCustomer.MandatoryCreditLimit == NoYes.Yes
-                || parameters?.CreditLimitCheck > 0)
+            if (parameters?.CreditLimitCheck > 0)
                 return new ConfirmationResult(422, null,
-                    "Credit limit validation is required, but a confirmation credit calculation is not configured.");
+                    "The configured company credit-limit mode is not supported for confirmation.");
+            foreach (var account in new[] { customer, invoiceCustomer }.DistinctBy(x => x.RecId)
+                .Where(x => x.MandatoryCreditLimit == NoYes.Yes))
+            {
+                if (account.CreditMax <= 0m)
+                    return new ConfirmationResult(422, null, $"Customer '{account.AccountNum}' requires a positive credit limit.");
+                var balance = await db.Set<CustTransOpen>().AsNoTracking()
+                    .Where(x => x.DataAreaId == order.DataAreaId && x.AccountNum == account.AccountNum)
+                    .SumAsync(x => x.AmountMst, ct);
+                if (balance > account.CreditMax)
+                    return new ConfirmationResult(422, null,
+                        $"Customer '{account.AccountNum}' balance {balance} exceeds the credit limit {account.CreditMax}.");
+            }
             var lines = await db.Set<SalesLine>().AsNoTracking()
                 .Where(x => x.DataAreaId == order.DataAreaId && x.SalesId == order.SalesId).ToListAsync(ct);
             lines = lines.OrderBy(x => x.LineNum).ToList();

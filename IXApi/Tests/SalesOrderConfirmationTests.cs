@@ -444,6 +444,37 @@ public sealed class SalesOrderConfirmationTests
         Assert.Equal(DocumentStatus.None, (await fixture.Db.Set<SalesTable>().SingleAsync()).DocumentStatus);
     }
 
+    [Theory]
+    [InlineData(1000, true)]
+    [InlineData(999, false)]
+    public async Task Mandatory_credit_check_compares_the_open_accounting_balance(int limit, bool allowed)
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var customer = await fixture.Db.Set<CustTable>().SingleAsync();
+        customer.MandatoryCreditLimit = NoYes.Yes;
+        customer.CreditMax = limit;
+        fixture.Db.AddRange(
+            new CustTransOpen { DataAreaId = "dat", AccountNum = "C1", AmountCur = 400, AmountMst = 1500 },
+            new CustTransOpen { DataAreaId = "dat", AccountNum = "C1", AmountCur = -500, AmountMst = -500 },
+            new CustTransOpen { DataAreaId = "other", AccountNum = "C1", AmountMst = 10000 },
+            new CustTransOpen { DataAreaId = "dat", AccountNum = "C2", AmountMst = 10000 });
+        await fixture.Db.SaveChangesAsync();
+
+        var result = await fixture.Controller.Post(1, new(), default);
+        if (allowed)
+        {
+            Assert.IsType<OkObjectResult>(result);
+            Assert.Single(await fixture.Db.Set<CustConfirmJour>().ToListAsync());
+        }
+        else
+        {
+            var denied = Assert.IsType<UnprocessableEntityObjectResult>(result);
+            Assert.Contains("exceeds", Assert.IsType<APIResponse<object>>(denied.Value).Message);
+            Assert.Empty(await fixture.Db.Set<CustConfirmJour>().ToListAsync());
+            Assert.Empty(await fixture.Db.Set<CustConfirmTrans>().ToListAsync());
+        }
+    }
+
     [Fact]
     public async Task Pro_forma_preview_calculates_document_without_posting()
     {
@@ -694,7 +725,7 @@ public sealed class SalesOrderConfirmationTests
         {
             var included = new HashSet<Type>
             {
-                typeof(SalesTable), typeof(SalesLine), typeof(CustTable), typeof(CustParameters),
+                typeof(SalesTable), typeof(SalesLine), typeof(CustTable), typeof(CustParameters), typeof(CustTransOpen),
                 typeof(DirPartyTable), typeof(LogisticsPostalAddress),
                 typeof(CustConfirmJour), typeof(CustConfirmTrans), typeof(InventTrans),
                 typeof(InventDim),
@@ -710,6 +741,7 @@ public sealed class SalesOrderConfirmationTests
             Configure<SalesLine>(builder);
             Configure<CustTable>(builder);
             Configure<CustParameters>(builder);
+            Configure<CustTransOpen>(builder);
             Configure<DirPartyTable>(builder);
             Configure<LogisticsPostalAddress>(builder);
             Configure<CustConfirmJour>(builder);

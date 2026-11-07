@@ -8,10 +8,9 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable;
 internal sealed class LedgerJournalDimensionDefaulting(DbContext db)
 {
     public async Task<DimensionAttributeValueCombination> ApplyAsync(string area,
-        DimensionAttributeValueCombination entered, params long[] defaultSets)
+        DimensionAttributeValueCombination entered, CancellationToken ct, params long[] defaultSets)
     {
         if (db.Model.FindEntityType(typeof(DimensionConstraintTree)) == null) return entered;
-        var ct = CancellationToken.None;
         var validator = new AccountStructureValidator(db);
         var structure = await validator.ResolveAsync(area, entered, ct);
         var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -20,20 +19,20 @@ internal sealed class LedgerJournalDimensionDefaulting(DbContext db)
             foreach (var pair in await SetValuesAsync(area, set, ct))
                 values.TryAdd(pair.Key, pair.Value);
 
-        foreach (var pair in await new LedgerDimensionResolver(db).SegmentValuesAsync(area, entered.RecId, ct))
-            values[pair.Dimension] = pair.Value;
+        foreach (var pair in await validator.SegmentValuesAsync(area, entered, ct))
+            values[pair.Key] = pair.Value;
 
+        var account = await db.Set<MainAccount>().AsNoTracking().SingleAsync(x => x.DataAreaId == area
+            && (entered.MainAccount > 0 ? x.RecId == entered.MainAccount : x.MainAccountId == entered.MainAccountValue), ct);
         var company = await db.Set<CompanyInfo>().AsNoTracking().Where(x => x.DataAreaId == area)
             .Select(x => x.RecId).FirstOrDefaultAsync(ct);
         var legal = company == 0 ? null : await db.Set<MainAccountLegalEntity>().AsNoTracking()
-            .SingleOrDefaultAsync(x => x.LegalEntity == company && x.MainAccount == entered.MainAccount, ct);
+            .SingleOrDefaultAsync(x => x.LegalEntity == company && x.MainAccount == account.RecId, ct);
         if (legal?.DefaultDimension > 0)
             foreach (var pair in await SetValuesAsync(area, legal.DefaultDimension, ct)) values.TryAdd(pair.Key, pair.Value);
         if (legal?.FixedDimensions > 0)
             foreach (var pair in await SetValuesAsync(area, legal.FixedDimensions, ct)) values[pair.Key] = pair.Value;
 
-        var account = await db.Set<MainAccount>().AsNoTracking()
-            .SingleAsync(x => x.DataAreaId == area && x.RecId == entered.MainAccount, ct);
         return await new LedgerDimensionResolver(db).ResolveAsync(area, account,
             structure.Dimensions.Select(x => (x, values.GetValueOrDefault(x, string.Empty))).ToList(), structure.RecId, ct);
     }
