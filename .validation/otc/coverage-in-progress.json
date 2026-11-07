@@ -1,0 +1,2754 @@
+{
+  "generatedAtUtc": "2026-11-06T23:40:33.6035698Z",
+  "planned": 77,
+  "summary": {
+    "Failed": 1,
+    "Fixed — awaiting retest": 1,
+    "Not implemented": 12,
+    "Not run": 52,
+    "Passed": 11
+  },
+  "completeAcceptancePassed": false,
+  "cases": [
+    {
+      "id": "CFG-01",
+      "service": "إعداد الفترة المالية",
+      "expected": "السماح بالأولى ورفض الثانية",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "CFG-02",
+      "service": "Customer posting profile",
+      "expected": "استخدام القاعدة الصحيحة",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "CFG-03",
+      "service": "Inventory posting",
+      "expected": "حساب صحيح لكل Posting type",
+      "status": "Passed",
+      "runId": "b542db8bee2941cca682485f9b4091ed",
+      "evidence": {
+        "name": "Configuration and master-data policies",
+        "actual": {
+          "orderId": 0,
+          "salesId": "",
+          "stockLineId": 0,
+          "serviceLineId": 0,
+          "firstInvoice": "",
+          "secondInvoice": "",
+          "PhysicalInvent": 0,
+          "ReservPhysical": 0,
+          "AvailPhysical": 0,
+          "PostedValue": 0,
+          "customerBalance": 0,
+          "openDebit": 0,
+          "openCredit": 0,
+          "customerControl": 0,
+          "revenue": 0,
+          "cogs": 0,
+          "inventoryLedger": 0,
+          "outputTax": 0,
+          "bank": 0,
+          "invoices": [],
+          "customerTransactions": [],
+          "settlements": []
+        }
+      },
+      "gap": null,
+      "attempts": [
+        {
+          "runId": "c3a8bbf021a04ec1972b757026968f0a",
+          "id": "CFG-03",
+          "status": "Running",
+          "company": "dat",
+          "actor": "otc-acceptance",
+          "atUtc": "2026-11-06T23:16:24.8603672Z",
+          "evidence": {
+            "name": "Configuration and master-data policies"
+          }
+        },
+        {
+          "runId": "c3a8bbf021a04ec1972b757026968f0a",
+          "id": "CFG-03",
+          "status": "Failed",
+          "company": "dat",
+          "actor": "otc-acceptance",
+          "atUtc": "2026-11-06T23:16:42.955262Z",
+          "evidence": {
+            "name": "Configuration and master-data policies",
+            "error": "System.InvalidOperationException: Sequence contains no elements.\r\n   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)\r\n   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.<>c__DisplayClass23_1.<<Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer>g__Evidence|0>d.MoveNext() in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 50\r\n--- End of stack trace from previous location ---\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.<>c__DisplayClass23_2.<<Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer>b__36>d.MoveNext() in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 73\r\n--- End of stack trace from previous location ---\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.OtcAudit.Stage(String[] ids, String name, Func`1 action) in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 335"
+          }
+        },
+        {
+          "runId": "e36b74a547fd4d50b8f2cc48b4cf8c73",
+          "id": "CFG-03",
+          "status": "Running",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:17:52.2640209Z",
+          "evidence": {
+            "name": "Configuration and master-data policies"
+          }
+        },
+        {
+          "runId": "e36b74a547fd4d50b8f2cc48b4cf8c73",
+          "id": "CFG-03",
+          "status": "Passed",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:18:10.8665904Z",
+          "evidence": {
+            "name": "Configuration and master-data policies",
+            "actual": {
+              "orderId": 0,
+              "salesId": "",
+              "stockLineId": 0,
+              "serviceLineId": 0,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 0,
+              "ReservPhysical": 0,
+              "AvailPhysical": 0,
+              "PostedValue": 0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        },
+        {
+          "runId": "65614e4307494f1e8c823e8934a90d2d",
+          "id": "CFG-03",
+          "status": "Running",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:21:49.9858763Z",
+          "evidence": {
+            "name": "Configuration and master-data policies"
+          }
+        },
+        {
+          "runId": "65614e4307494f1e8c823e8934a90d2d",
+          "id": "CFG-03",
+          "status": "Passed",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:22:13.9763754Z",
+          "evidence": {
+            "name": "Configuration and master-data policies",
+            "actual": {
+              "orderId": 0,
+              "salesId": "",
+              "stockLineId": 0,
+              "serviceLineId": 0,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 0,
+              "ReservPhysical": 0,
+              "AvailPhysical": 0,
+              "PostedValue": 0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        },
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "CFG-03",
+          "status": "Running",
+          "attempt": 4,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:10.2370814Z",
+          "evidence": {
+            "name": "Configuration and master-data policies"
+          }
+        },
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "CFG-03",
+          "status": "Passed",
+          "attempt": 4,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:24.8344715Z",
+          "evidence": {
+            "name": "Configuration and master-data policies",
+            "actual": {
+              "orderId": 0,
+              "salesId": "",
+              "stockLineId": 0,
+              "serviceLineId": 0,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 0,
+              "ReservPhysical": 0,
+              "AvailPhysical": 0,
+              "PostedValue": 0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "CFG-04",
+      "service": "Tax calculation",
+      "expected": "ناتج الضريبة المتوقع",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "CFG-05",
+      "service": "Number sequences",
+      "expected": "عدم تكرار المعرّفات",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "CFG-06",
+      "service": "Financial dimensions",
+      "expected": "احترام الإلزام والقيم الافتراضية",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "CFG-07",
+      "service": "Payment setup",
+      "expected": "القيم والحسابات صحيحة",
+      "status": "Passed",
+      "runId": "b542db8bee2941cca682485f9b4091ed",
+      "evidence": {
+        "name": "Configuration and master-data policies",
+        "actual": {
+          "orderId": 0,
+          "salesId": "",
+          "stockLineId": 0,
+          "serviceLineId": 0,
+          "firstInvoice": "",
+          "secondInvoice": "",
+          "PhysicalInvent": 0,
+          "ReservPhysical": 0,
+          "AvailPhysical": 0,
+          "PostedValue": 0,
+          "customerBalance": 0,
+          "openDebit": 0,
+          "openCredit": 0,
+          "customerControl": 0,
+          "revenue": 0,
+          "cogs": 0,
+          "inventoryLedger": 0,
+          "outputTax": 0,
+          "bank": 0,
+          "invoices": [],
+          "customerTransactions": [],
+          "settlements": []
+        }
+      },
+      "gap": null,
+      "attempts": [
+        {
+          "runId": "c3a8bbf021a04ec1972b757026968f0a",
+          "id": "CFG-07",
+          "status": "Running",
+          "company": "dat",
+          "actor": "otc-acceptance",
+          "atUtc": "2026-11-06T23:16:24.867004Z",
+          "evidence": {
+            "name": "Configuration and master-data policies"
+          }
+        },
+        {
+          "runId": "c3a8bbf021a04ec1972b757026968f0a",
+          "id": "CFG-07",
+          "status": "Failed",
+          "company": "dat",
+          "actor": "otc-acceptance",
+          "atUtc": "2026-11-06T23:16:42.9577891Z",
+          "evidence": {
+            "name": "Configuration and master-data policies",
+            "error": "System.InvalidOperationException: Sequence contains no elements.\r\n   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)\r\n   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.<>c__DisplayClass23_1.<<Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer>g__Evidence|0>d.MoveNext() in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 50\r\n--- End of stack trace from previous location ---\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.<>c__DisplayClass23_2.<<Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer>b__36>d.MoveNext() in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 73\r\n--- End of stack trace from previous location ---\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.OtcAudit.Stage(String[] ids, String name, Func`1 action) in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 335"
+          }
+        },
+        {
+          "runId": "e36b74a547fd4d50b8f2cc48b4cf8c73",
+          "id": "CFG-07",
+          "status": "Running",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:17:52.2687116Z",
+          "evidence": {
+            "name": "Configuration and master-data policies"
+          }
+        },
+        {
+          "runId": "e36b74a547fd4d50b8f2cc48b4cf8c73",
+          "id": "CFG-07",
+          "status": "Passed",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:18:10.8796059Z",
+          "evidence": {
+            "name": "Configuration and master-data policies",
+            "actual": {
+              "orderId": 0,
+              "salesId": "",
+              "stockLineId": 0,
+              "serviceLineId": 0,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 0,
+              "ReservPhysical": 0,
+              "AvailPhysical": 0,
+              "PostedValue": 0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        },
+        {
+          "runId": "65614e4307494f1e8c823e8934a90d2d",
+          "id": "CFG-07",
+          "status": "Running",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:21:49.9947475Z",
+          "evidence": {
+            "name": "Configuration and master-data policies"
+          }
+        },
+        {
+          "runId": "65614e4307494f1e8c823e8934a90d2d",
+          "id": "CFG-07",
+          "status": "Passed",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:22:13.9956276Z",
+          "evidence": {
+            "name": "Configuration and master-data policies",
+            "actual": {
+              "orderId": 0,
+              "salesId": "",
+              "stockLineId": 0,
+              "serviceLineId": 0,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 0,
+              "ReservPhysical": 0,
+              "AvailPhysical": 0,
+              "PostedValue": 0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        },
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "CFG-07",
+          "status": "Running",
+          "attempt": 4,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:10.241915Z",
+          "evidence": {
+            "name": "Configuration and master-data policies"
+          }
+        },
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "CFG-07",
+          "status": "Passed",
+          "attempt": 4,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:24.8475861Z",
+          "evidence": {
+            "name": "Configuration and master-data policies",
+            "actual": {
+              "orderId": 0,
+              "salesId": "",
+              "stockLineId": 0,
+              "serviceLineId": 0,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 0,
+              "ReservPhysical": 0,
+              "AvailPhysical": 0,
+              "PostedValue": 0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "MD-01",
+      "service": "Customer maintenance",
+      "expected": "حفظ وربط الاسم والعنوان والإعداد",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "MD-02",
+      "service": "Invoice account",
+      "expected": "المديونية على Invoice account",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "MD-03",
+      "service": "Credit validation",
+      "expected": "تطبيق سياسة الائتمان المفعلة",
+      "status": "Not implemented",
+      "runId": null,
+      "evidence": null,
+      "gap": {
+        "id": "MD-03",
+        "status": "Not implemented",
+        "reason": "Confirmation explicitly refuses enabled credit-limit validation because its credit calculation is not configured.",
+        "source": "src/Modules/Finance/AccountsReceivable/Confirm/Services/SalesOrderConfirmationService.cs"
+      },
+      "attempts": []
+    },
+    {
+      "id": "MD-04",
+      "service": "Customer blocking",
+      "expected": "منع العمليات المحددة بالحظر",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "MD-05",
+      "service": "Stocked product",
+      "expected": "حركات مخزون وتكلفة صحيحة",
+      "status": "Passed",
+      "runId": "b542db8bee2941cca682485f9b4091ed",
+      "evidence": {
+        "name": "Configuration and master-data policies",
+        "actual": {
+          "orderId": 0,
+          "salesId": "",
+          "stockLineId": 0,
+          "serviceLineId": 0,
+          "firstInvoice": "",
+          "secondInvoice": "",
+          "PhysicalInvent": 0,
+          "ReservPhysical": 0,
+          "AvailPhysical": 0,
+          "PostedValue": 0,
+          "customerBalance": 0,
+          "openDebit": 0,
+          "openCredit": 0,
+          "customerControl": 0,
+          "revenue": 0,
+          "cogs": 0,
+          "inventoryLedger": 0,
+          "outputTax": 0,
+          "bank": 0,
+          "invoices": [],
+          "customerTransactions": [],
+          "settlements": []
+        }
+      },
+      "gap": null,
+      "attempts": [
+        {
+          "runId": "c3a8bbf021a04ec1972b757026968f0a",
+          "id": "MD-05",
+          "status": "Running",
+          "company": "dat",
+          "actor": "otc-acceptance",
+          "atUtc": "2026-11-06T23:16:24.8674482Z",
+          "evidence": {
+            "name": "Configuration and master-data policies"
+          }
+        },
+        {
+          "runId": "c3a8bbf021a04ec1972b757026968f0a",
+          "id": "MD-05",
+          "status": "Failed",
+          "company": "dat",
+          "actor": "otc-acceptance",
+          "atUtc": "2026-11-06T23:16:42.9584627Z",
+          "evidence": {
+            "name": "Configuration and master-data policies",
+            "error": "System.InvalidOperationException: Sequence contains no elements.\r\n   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)\r\n   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.<>c__DisplayClass23_1.<<Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer>g__Evidence|0>d.MoveNext() in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 50\r\n--- End of stack trace from previous location ---\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.<>c__DisplayClass23_2.<<Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer>b__36>d.MoveNext() in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 73\r\n--- End of stack trace from previous location ---\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.OtcAudit.Stage(String[] ids, String name, Func`1 action) in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 335"
+          }
+        },
+        {
+          "runId": "e36b74a547fd4d50b8f2cc48b4cf8c73",
+          "id": "MD-05",
+          "status": "Running",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:17:52.2691244Z",
+          "evidence": {
+            "name": "Configuration and master-data policies"
+          }
+        },
+        {
+          "runId": "e36b74a547fd4d50b8f2cc48b4cf8c73",
+          "id": "MD-05",
+          "status": "Passed",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:18:10.8801753Z",
+          "evidence": {
+            "name": "Configuration and master-data policies",
+            "actual": {
+              "orderId": 0,
+              "salesId": "",
+              "stockLineId": 0,
+              "serviceLineId": 0,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 0,
+              "ReservPhysical": 0,
+              "AvailPhysical": 0,
+              "PostedValue": 0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        },
+        {
+          "runId": "65614e4307494f1e8c823e8934a90d2d",
+          "id": "MD-05",
+          "status": "Running",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:21:49.9954603Z",
+          "evidence": {
+            "name": "Configuration and master-data policies"
+          }
+        },
+        {
+          "runId": "65614e4307494f1e8c823e8934a90d2d",
+          "id": "MD-05",
+          "status": "Passed",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:22:13.9965165Z",
+          "evidence": {
+            "name": "Configuration and master-data policies",
+            "actual": {
+              "orderId": 0,
+              "salesId": "",
+              "stockLineId": 0,
+              "serviceLineId": 0,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 0,
+              "ReservPhysical": 0,
+              "AvailPhysical": 0,
+              "PostedValue": 0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        },
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "MD-05",
+          "status": "Running",
+          "attempt": 4,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:10.2422881Z",
+          "evidence": {
+            "name": "Configuration and master-data policies"
+          }
+        },
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "MD-05",
+          "status": "Passed",
+          "attempt": 4,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:24.8481711Z",
+          "evidence": {
+            "name": "Configuration and master-data policies",
+            "actual": {
+              "orderId": 0,
+              "salesId": "",
+              "stockLineId": 0,
+              "serviceLineId": 0,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 0,
+              "ReservPhysical": 0,
+              "AvailPhysical": 0,
+              "PostedValue": 0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "MD-06",
+      "service": "Non-stocked service",
+      "expected": "عدم إنشاء حركات مخزون",
+      "status": "Passed",
+      "runId": "b542db8bee2941cca682485f9b4091ed",
+      "evidence": {
+        "name": "Configuration and master-data policies",
+        "actual": {
+          "orderId": 0,
+          "salesId": "",
+          "stockLineId": 0,
+          "serviceLineId": 0,
+          "firstInvoice": "",
+          "secondInvoice": "",
+          "PhysicalInvent": 0,
+          "ReservPhysical": 0,
+          "AvailPhysical": 0,
+          "PostedValue": 0,
+          "customerBalance": 0,
+          "openDebit": 0,
+          "openCredit": 0,
+          "customerControl": 0,
+          "revenue": 0,
+          "cogs": 0,
+          "inventoryLedger": 0,
+          "outputTax": 0,
+          "bank": 0,
+          "invoices": [],
+          "customerTransactions": [],
+          "settlements": []
+        }
+      },
+      "gap": null,
+      "attempts": [
+        {
+          "runId": "c3a8bbf021a04ec1972b757026968f0a",
+          "id": "MD-06",
+          "status": "Running",
+          "company": "dat",
+          "actor": "otc-acceptance",
+          "atUtc": "2026-11-06T23:16:24.8678155Z",
+          "evidence": {
+            "name": "Configuration and master-data policies"
+          }
+        },
+        {
+          "runId": "c3a8bbf021a04ec1972b757026968f0a",
+          "id": "MD-06",
+          "status": "Failed",
+          "company": "dat",
+          "actor": "otc-acceptance",
+          "atUtc": "2026-11-06T23:16:42.9590258Z",
+          "evidence": {
+            "name": "Configuration and master-data policies",
+            "error": "System.InvalidOperationException: Sequence contains no elements.\r\n   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)\r\n   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.<>c__DisplayClass23_1.<<Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer>g__Evidence|0>d.MoveNext() in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 50\r\n--- End of stack trace from previous location ---\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.<>c__DisplayClass23_2.<<Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer>b__36>d.MoveNext() in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 73\r\n--- End of stack trace from previous location ---\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.OtcAudit.Stage(String[] ids, String name, Func`1 action) in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 335"
+          }
+        },
+        {
+          "runId": "e36b74a547fd4d50b8f2cc48b4cf8c73",
+          "id": "MD-06",
+          "status": "Running",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:17:52.2694496Z",
+          "evidence": {
+            "name": "Configuration and master-data policies"
+          }
+        },
+        {
+          "runId": "e36b74a547fd4d50b8f2cc48b4cf8c73",
+          "id": "MD-06",
+          "status": "Passed",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:18:10.8805606Z",
+          "evidence": {
+            "name": "Configuration and master-data policies",
+            "actual": {
+              "orderId": 0,
+              "salesId": "",
+              "stockLineId": 0,
+              "serviceLineId": 0,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 0,
+              "ReservPhysical": 0,
+              "AvailPhysical": 0,
+              "PostedValue": 0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        },
+        {
+          "runId": "65614e4307494f1e8c823e8934a90d2d",
+          "id": "MD-06",
+          "status": "Running",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:21:49.9959646Z",
+          "evidence": {
+            "name": "Configuration and master-data policies"
+          }
+        },
+        {
+          "runId": "65614e4307494f1e8c823e8934a90d2d",
+          "id": "MD-06",
+          "status": "Passed",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:22:13.9970073Z",
+          "evidence": {
+            "name": "Configuration and master-data policies",
+            "actual": {
+              "orderId": 0,
+              "salesId": "",
+              "stockLineId": 0,
+              "serviceLineId": 0,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 0,
+              "ReservPhysical": 0,
+              "AvailPhysical": 0,
+              "PostedValue": 0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        },
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "MD-06",
+          "status": "Running",
+          "attempt": 4,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:10.2426882Z",
+          "evidence": {
+            "name": "Configuration and master-data policies"
+          }
+        },
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "MD-06",
+          "status": "Passed",
+          "attempt": 4,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:24.8485379Z",
+          "evidence": {
+            "name": "Configuration and master-data policies",
+            "actual": {
+              "orderId": 0,
+              "salesId": "",
+              "stockLineId": 0,
+              "serviceLineId": 0,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 0,
+              "ReservPhysical": 0,
+              "AvailPhysical": 0,
+              "PostedValue": 0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "MD-07",
+      "service": "Unit conversion",
+      "expected": "تحويل الكميات والأسعار صحيح",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "SO-01",
+      "service": "Sales order creation",
+      "expected": "القيم الافتراضية والإجمالي صحيحان",
+      "status": "Passed",
+      "runId": "b542db8bee2941cca682485f9b4091ed",
+      "evidence": {
+        "name": "Mixed sales order: 10 at 100 plus service 200",
+        "actual": {
+          "orderId": 1,
+          "salesId": "AR2SO-000001",
+          "stockLineId": 1,
+          "serviceLineId": 2,
+          "firstInvoice": "",
+          "secondInvoice": "",
+          "PhysicalInvent": 100.0,
+          "ReservPhysical": 0.0,
+          "AvailPhysical": 100.0,
+          "PostedValue": 6000.0,
+          "customerBalance": 0,
+          "openDebit": 0,
+          "openCredit": 0,
+          "customerControl": 0,
+          "revenue": 0,
+          "cogs": 0,
+          "inventoryLedger": 6000.0,
+          "outputTax": 0,
+          "bank": 0,
+          "invoices": [],
+          "customerTransactions": [],
+          "settlements": []
+        }
+      },
+      "gap": null,
+      "attempts": [
+        {
+          "runId": "e36b74a547fd4d50b8f2cc48b4cf8c73",
+          "id": "SO-01",
+          "status": "Running",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:18:15.3920873Z",
+          "evidence": {
+            "name": "Mixed sales order: 10 at 100 plus service 200"
+          }
+        },
+        {
+          "runId": "e36b74a547fd4d50b8f2cc48b4cf8c73",
+          "id": "SO-01",
+          "status": "Passed",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:18:17.9514968Z",
+          "evidence": {
+            "name": "Mixed sales order: 10 at 100 plus service 200",
+            "actual": {
+              "orderId": 1,
+              "salesId": "AR2SO-000001",
+              "stockLineId": 1,
+              "serviceLineId": 2,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 100.0,
+              "ReservPhysical": 0.0,
+              "AvailPhysical": 100.0,
+              "PostedValue": 6000.0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 6000.0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        },
+        {
+          "runId": "65614e4307494f1e8c823e8934a90d2d",
+          "id": "SO-01",
+          "status": "Running",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:22:19.3692225Z",
+          "evidence": {
+            "name": "Mixed sales order: 10 at 100 plus service 200"
+          }
+        },
+        {
+          "runId": "65614e4307494f1e8c823e8934a90d2d",
+          "id": "SO-01",
+          "status": "Passed",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:22:21.2770086Z",
+          "evidence": {
+            "name": "Mixed sales order: 10 at 100 plus service 200",
+            "actual": {
+              "orderId": 1,
+              "salesId": "AR2SO-000001",
+              "stockLineId": 1,
+              "serviceLineId": 2,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 100.0,
+              "ReservPhysical": 0.0,
+              "AvailPhysical": 100.0,
+              "PostedValue": 6000.0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 6000.0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        },
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "SO-01",
+          "status": "Running",
+          "attempt": 3,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:35.3373181Z",
+          "evidence": {
+            "name": "Mixed sales order: 10 at 100 plus service 200"
+          }
+        },
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "SO-01",
+          "status": "Passed",
+          "attempt": 3,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:41.7963849Z",
+          "evidence": {
+            "name": "Mixed sales order: 10 at 100 plus service 200",
+            "actual": {
+              "orderId": 1,
+              "salesId": "AR2SO-000001",
+              "stockLineId": 1,
+              "serviceLineId": 2,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 100.0,
+              "ReservPhysical": 0.0,
+              "AvailPhysical": 100.0,
+              "PostedValue": 6000.0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 6000.0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "SO-02",
+      "service": "Pricing",
+      "expected": "تطبيق السعر وPrice unit الصحيحين",
+      "status": "Passed",
+      "runId": "b542db8bee2941cca682485f9b4091ed",
+      "evidence": {
+        "name": "Mixed sales order: 10 at 100 plus service 200",
+        "actual": {
+          "orderId": 1,
+          "salesId": "AR2SO-000001",
+          "stockLineId": 1,
+          "serviceLineId": 2,
+          "firstInvoice": "",
+          "secondInvoice": "",
+          "PhysicalInvent": 100.0,
+          "ReservPhysical": 0.0,
+          "AvailPhysical": 100.0,
+          "PostedValue": 6000.0,
+          "customerBalance": 0,
+          "openDebit": 0,
+          "openCredit": 0,
+          "customerControl": 0,
+          "revenue": 0,
+          "cogs": 0,
+          "inventoryLedger": 6000.0,
+          "outputTax": 0,
+          "bank": 0,
+          "invoices": [],
+          "customerTransactions": [],
+          "settlements": []
+        }
+      },
+      "gap": null,
+      "attempts": [
+        {
+          "runId": "e36b74a547fd4d50b8f2cc48b4cf8c73",
+          "id": "SO-02",
+          "status": "Running",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:18:15.3924248Z",
+          "evidence": {
+            "name": "Mixed sales order: 10 at 100 plus service 200"
+          }
+        },
+        {
+          "runId": "e36b74a547fd4d50b8f2cc48b4cf8c73",
+          "id": "SO-02",
+          "status": "Passed",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:18:17.9523819Z",
+          "evidence": {
+            "name": "Mixed sales order: 10 at 100 plus service 200",
+            "actual": {
+              "orderId": 1,
+              "salesId": "AR2SO-000001",
+              "stockLineId": 1,
+              "serviceLineId": 2,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 100.0,
+              "ReservPhysical": 0.0,
+              "AvailPhysical": 100.0,
+              "PostedValue": 6000.0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 6000.0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        },
+        {
+          "runId": "65614e4307494f1e8c823e8934a90d2d",
+          "id": "SO-02",
+          "status": "Running",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:22:19.3696056Z",
+          "evidence": {
+            "name": "Mixed sales order: 10 at 100 plus service 200"
+          }
+        },
+        {
+          "runId": "65614e4307494f1e8c823e8934a90d2d",
+          "id": "SO-02",
+          "status": "Passed",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:22:21.2777322Z",
+          "evidence": {
+            "name": "Mixed sales order: 10 at 100 plus service 200",
+            "actual": {
+              "orderId": 1,
+              "salesId": "AR2SO-000001",
+              "stockLineId": 1,
+              "serviceLineId": 2,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 100.0,
+              "ReservPhysical": 0.0,
+              "AvailPhysical": 100.0,
+              "PostedValue": 6000.0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 6000.0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        },
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "SO-02",
+          "status": "Running",
+          "attempt": 3,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:35.3376621Z",
+          "evidence": {
+            "name": "Mixed sales order: 10 at 100 plus service 200"
+          }
+        },
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "SO-02",
+          "status": "Passed",
+          "attempt": 3,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:41.797485Z",
+          "evidence": {
+            "name": "Mixed sales order: 10 at 100 plus service 200",
+            "actual": {
+              "orderId": 1,
+              "salesId": "AR2SO-000001",
+              "stockLineId": 1,
+              "serviceLineId": 2,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 100.0,
+              "ReservPhysical": 0.0,
+              "AvailPhysical": 100.0,
+              "PostedValue": 6000.0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 6000.0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "SO-03",
+      "service": "Discounts",
+      "expected": "الصافي والضريبة صحيحان",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "SO-04",
+      "service": "Charges",
+      "expected": "الحساب والضريبة والإجمالي صحيحة",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "SO-05",
+      "service": "Confirmation",
+      "expected": "مستند تأكيد دون أثر مالي",
+      "status": "Passed",
+      "runId": "b542db8bee2941cca682485f9b4091ed",
+      "evidence": {
+        "name": "Confirm without customer or revenue posting",
+        "actual": {
+          "orderId": 1,
+          "salesId": "AR2SO-000001",
+          "stockLineId": 1,
+          "serviceLineId": 2,
+          "firstInvoice": "",
+          "secondInvoice": "",
+          "PhysicalInvent": 100.0,
+          "ReservPhysical": 0.0,
+          "AvailPhysical": 100.0,
+          "PostedValue": 6000.0,
+          "customerBalance": 0,
+          "openDebit": 0,
+          "openCredit": 0,
+          "customerControl": 0,
+          "revenue": 0,
+          "cogs": 0,
+          "inventoryLedger": 6000.0,
+          "outputTax": 0,
+          "bank": 0,
+          "invoices": [],
+          "customerTransactions": [],
+          "settlements": []
+        }
+      },
+      "gap": null,
+      "attempts": [
+        {
+          "runId": "e36b74a547fd4d50b8f2cc48b4cf8c73",
+          "id": "SO-05",
+          "status": "Running",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:18:17.952761Z",
+          "evidence": {
+            "name": "Confirm without customer or revenue posting"
+          }
+        },
+        {
+          "runId": "e36b74a547fd4d50b8f2cc48b4cf8c73",
+          "id": "SO-05",
+          "status": "Passed",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:18:18.598064Z",
+          "evidence": {
+            "name": "Confirm without customer or revenue posting",
+            "actual": {
+              "orderId": 1,
+              "salesId": "AR2SO-000001",
+              "stockLineId": 1,
+              "serviceLineId": 2,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 100.0,
+              "ReservPhysical": 0.0,
+              "AvailPhysical": 100.0,
+              "PostedValue": 6000.0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 6000.0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        },
+        {
+          "runId": "65614e4307494f1e8c823e8934a90d2d",
+          "id": "SO-05",
+          "status": "Running",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:22:21.2781625Z",
+          "evidence": {
+            "name": "Confirm without customer or revenue posting"
+          }
+        },
+        {
+          "runId": "65614e4307494f1e8c823e8934a90d2d",
+          "id": "SO-05",
+          "status": "Passed",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:22:21.9297485Z",
+          "evidence": {
+            "name": "Confirm without customer or revenue posting",
+            "actual": {
+              "orderId": 1,
+              "salesId": "AR2SO-000001",
+              "stockLineId": 1,
+              "serviceLineId": 2,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 100.0,
+              "ReservPhysical": 0.0,
+              "AvailPhysical": 100.0,
+              "PostedValue": 6000.0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 6000.0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        },
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "SO-05",
+          "status": "Running",
+          "attempt": 3,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:41.7979185Z",
+          "evidence": {
+            "name": "Confirm without customer or revenue posting"
+          }
+        },
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "SO-05",
+          "status": "Passed",
+          "attempt": 3,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:43.4649717Z",
+          "evidence": {
+            "name": "Confirm without customer or revenue posting",
+            "actual": {
+              "orderId": 1,
+              "salesId": "AR2SO-000001",
+              "stockLineId": 1,
+              "serviceLineId": 2,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 100.0,
+              "ReservPhysical": 0.0,
+              "AvailPhysical": 100.0,
+              "PostedValue": 6000.0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 6000.0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "SO-06",
+      "service": "Order amendment",
+      "expected": "انعكاس التعديل وفق السياسة",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "INV-01",
+      "service": "Reservation",
+      "expected": "المتاح ينخفض دون نقص الفعلي",
+      "status": "Passed",
+      "runId": "b542db8bee2941cca682485f9b4091ed",
+      "evidence": {
+        "name": "Reserve 10 without physical or financial issue",
+        "actual": {
+          "orderId": 1,
+          "salesId": "AR2SO-000001",
+          "stockLineId": 1,
+          "serviceLineId": 2,
+          "firstInvoice": "",
+          "secondInvoice": "",
+          "PhysicalInvent": 100.0,
+          "ReservPhysical": 10.0,
+          "AvailPhysical": 90.0,
+          "PostedValue": 6000.0,
+          "customerBalance": 0,
+          "openDebit": 0,
+          "openCredit": 0,
+          "customerControl": 0,
+          "revenue": 0,
+          "cogs": 0,
+          "inventoryLedger": 6000.0,
+          "outputTax": 0,
+          "bank": 0,
+          "invoices": [],
+          "customerTransactions": [],
+          "settlements": []
+        }
+      },
+      "gap": null,
+      "attempts": [
+        {
+          "runId": "e36b74a547fd4d50b8f2cc48b4cf8c73",
+          "id": "INV-01",
+          "status": "Running",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:18:18.5989646Z",
+          "evidence": {
+            "name": "Reserve 10 without physical or financial issue"
+          }
+        },
+        {
+          "runId": "e36b74a547fd4d50b8f2cc48b4cf8c73",
+          "id": "INV-01",
+          "status": "Passed",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:18:18.6773875Z",
+          "evidence": {
+            "name": "Reserve 10 without physical or financial issue",
+            "actual": {
+              "orderId": 1,
+              "salesId": "AR2SO-000001",
+              "stockLineId": 1,
+              "serviceLineId": 2,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 100.0,
+              "ReservPhysical": 10.0,
+              "AvailPhysical": 90.0,
+              "PostedValue": 6000.0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 6000.0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        },
+        {
+          "runId": "65614e4307494f1e8c823e8934a90d2d",
+          "id": "INV-01",
+          "status": "Running",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:22:21.9306794Z",
+          "evidence": {
+            "name": "Reserve 10 without physical or financial issue"
+          }
+        },
+        {
+          "runId": "65614e4307494f1e8c823e8934a90d2d",
+          "id": "INV-01",
+          "status": "Passed",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:22:22.0185154Z",
+          "evidence": {
+            "name": "Reserve 10 without physical or financial issue",
+            "actual": {
+              "orderId": 1,
+              "salesId": "AR2SO-000001",
+              "stockLineId": 1,
+              "serviceLineId": 2,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 100.0,
+              "ReservPhysical": 10.0,
+              "AvailPhysical": 90.0,
+              "PostedValue": 6000.0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 6000.0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        },
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "INV-01",
+          "status": "Running",
+          "attempt": 3,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:43.466293Z",
+          "evidence": {
+            "name": "Reserve 10 without physical or financial issue"
+          }
+        },
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "INV-01",
+          "status": "Passed",
+          "attempt": 3,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:43.7157817Z",
+          "evidence": {
+            "name": "Reserve 10 without physical or financial issue",
+            "actual": {
+              "orderId": 1,
+              "salesId": "AR2SO-000001",
+              "stockLineId": 1,
+              "serviceLineId": 2,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 100.0,
+              "ReservPhysical": 10.0,
+              "AvailPhysical": 90.0,
+              "PostedValue": 6000.0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 6000.0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "INV-02",
+      "service": "Unreservation",
+      "expected": "عودة المتاح",
+      "status": "Passed",
+      "runId": "b542db8bee2941cca682485f9b4091ed",
+      "evidence": {
+        "name": "Release reservation and reserve again",
+        "actual": {
+          "orderId": 1,
+          "salesId": "AR2SO-000001",
+          "stockLineId": 1,
+          "serviceLineId": 2,
+          "firstInvoice": "",
+          "secondInvoice": "",
+          "PhysicalInvent": 100.0,
+          "ReservPhysical": 10.0,
+          "AvailPhysical": 90.0,
+          "PostedValue": 6000.0,
+          "customerBalance": 0,
+          "openDebit": 0,
+          "openCredit": 0,
+          "customerControl": 0,
+          "revenue": 0,
+          "cogs": 0,
+          "inventoryLedger": 6000.0,
+          "outputTax": 0,
+          "bank": 0,
+          "invoices": [],
+          "customerTransactions": [],
+          "settlements": []
+        }
+      },
+      "gap": null,
+      "attempts": [
+        {
+          "runId": "e36b74a547fd4d50b8f2cc48b4cf8c73",
+          "id": "INV-02",
+          "status": "Running",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:18:18.6779001Z",
+          "evidence": {
+            "name": "Release reservation and reserve again"
+          }
+        },
+        {
+          "runId": "e36b74a547fd4d50b8f2cc48b4cf8c73",
+          "id": "INV-02",
+          "status": "Passed",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:18:18.7253418Z",
+          "evidence": {
+            "name": "Release reservation and reserve again",
+            "actual": {
+              "orderId": 1,
+              "salesId": "AR2SO-000001",
+              "stockLineId": 1,
+              "serviceLineId": 2,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 100.0,
+              "ReservPhysical": 10.0,
+              "AvailPhysical": 90.0,
+              "PostedValue": 6000.0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 6000.0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        },
+        {
+          "runId": "65614e4307494f1e8c823e8934a90d2d",
+          "id": "INV-02",
+          "status": "Running",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:22:22.0190542Z",
+          "evidence": {
+            "name": "Release reservation and reserve again"
+          }
+        },
+        {
+          "runId": "65614e4307494f1e8c823e8934a90d2d",
+          "id": "INV-02",
+          "status": "Passed",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:22:22.0552701Z",
+          "evidence": {
+            "name": "Release reservation and reserve again",
+            "actual": {
+              "orderId": 1,
+              "salesId": "AR2SO-000001",
+              "stockLineId": 1,
+              "serviceLineId": 2,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 100.0,
+              "ReservPhysical": 10.0,
+              "AvailPhysical": 90.0,
+              "PostedValue": 6000.0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 6000.0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        },
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "INV-02",
+          "status": "Running",
+          "attempt": 3,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:43.716404Z",
+          "evidence": {
+            "name": "Release reservation and reserve again"
+          }
+        },
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "INV-02",
+          "status": "Passed",
+          "attempt": 3,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:43.9750578Z",
+          "evidence": {
+            "name": "Release reservation and reserve again",
+            "actual": {
+              "orderId": 1,
+              "salesId": "AR2SO-000001",
+              "stockLineId": 1,
+              "serviceLineId": 2,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 100.0,
+              "ReservPhysical": 10.0,
+              "AvailPhysical": 90.0,
+              "PostedValue": 6000.0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 6000.0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "INV-03",
+      "service": "Picking",
+      "expected": "حالة Picked دون فاتورة",
+      "status": "Passed",
+      "runId": "b542db8bee2941cca682485f9b4091ed",
+      "evidence": {
+        "name": "Pick 6 without physical issue",
+        "actual": {
+          "orderId": 1,
+          "salesId": "AR2SO-000001",
+          "stockLineId": 1,
+          "serviceLineId": 2,
+          "firstInvoice": "",
+          "secondInvoice": "",
+          "PhysicalInvent": 100.0,
+          "ReservPhysical": 4.0,
+          "AvailPhysical": 90.0,
+          "PostedValue": 6000.0,
+          "customerBalance": 0,
+          "openDebit": 0,
+          "openCredit": 0,
+          "customerControl": 0,
+          "revenue": 0,
+          "cogs": 0,
+          "inventoryLedger": 6000.0,
+          "outputTax": 0,
+          "bank": 0,
+          "invoices": [],
+          "customerTransactions": [],
+          "settlements": []
+        }
+      },
+      "gap": null,
+      "attempts": [
+        {
+          "runId": "e36b74a547fd4d50b8f2cc48b4cf8c73",
+          "id": "INV-03",
+          "status": "Running",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:18:18.7259331Z",
+          "evidence": {
+            "name": "Pick 6 without physical issue"
+          }
+        },
+        {
+          "runId": "e36b74a547fd4d50b8f2cc48b4cf8c73",
+          "id": "INV-03",
+          "status": "Failed",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:18:18.8840806Z",
+          "evidence": {
+            "name": "Pick 6 without physical issue",
+            "error": "Xunit.Sdk.EqualException: Assert.Equal() Failure: Strings differ\r\n                   ↓ (pos 8)\r\nExpected: \"0:0:0:0:2:2:7:0\"\r\nActual:   \"0:0:0:0:3:2:7:0\"\r\n                   ↑ (pos 8)\r\n   at Xunit.Assert.Equal(ReadOnlySpan`1 expected, ReadOnlySpan`1 actual, Boolean ignoreCase, Boolean ignoreLineEndingDifferences, Boolean ignoreWhiteSpaceDifferences, Boolean ignoreAllWhiteSpace) in /_/src/xunit.assert/Asserts/StringAsserts.cs:line 965\r\n   at Xunit.Assert.Equal(String expected, String actual, Boolean ignoreCase, Boolean ignoreLineEndingDifferences, Boolean ignoreWhiteSpaceDifferences, Boolean ignoreAllWhiteSpace) in /_/src/xunit.assert/Asserts/StringAsserts.cs:line 1342\r\n   at Xunit.Assert.Equal(String expected, String actual) in /_/src/xunit.assert/Asserts/StringAsserts.cs:line 849\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.<>c__DisplayClass23_1.<<Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer>b__10>d.MoveNext() in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 171\r\n--- End of stack trace from previous location ---\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.<>c__DisplayClass23_2.<<Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer>b__37>d.MoveNext() in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 74\r\n--- End of stack trace from previous location ---\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.OtcAudit.Stage(String[] ids, String name, Func`1 action) in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 339"
+          }
+        },
+        {
+          "runId": "65614e4307494f1e8c823e8934a90d2d",
+          "id": "INV-03",
+          "status": "Running",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:22:22.0558154Z",
+          "evidence": {
+            "name": "Pick 6 without physical issue"
+          }
+        },
+        {
+          "runId": "65614e4307494f1e8c823e8934a90d2d",
+          "id": "INV-03",
+          "status": "Passed",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:22:22.2169249Z",
+          "evidence": {
+            "name": "Pick 6 without physical issue",
+            "actual": {
+              "orderId": 1,
+              "salesId": "AR2SO-000001",
+              "stockLineId": 1,
+              "serviceLineId": 2,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 100.0,
+              "ReservPhysical": 4.0,
+              "AvailPhysical": 90.0,
+              "PostedValue": 6000.0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 6000.0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        },
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "INV-03",
+          "status": "Running",
+          "attempt": 3,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:43.9756004Z",
+          "evidence": {
+            "name": "Pick 6 without physical issue"
+          }
+        },
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "INV-03",
+          "status": "Passed",
+          "attempt": 3,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:44.4426006Z",
+          "evidence": {
+            "name": "Pick 6 without physical issue",
+            "actual": {
+              "orderId": 1,
+              "salesId": "AR2SO-000001",
+              "stockLineId": 1,
+              "serviceLineId": 2,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 100.0,
+              "ReservPhysical": 4.0,
+              "AvailPhysical": 90.0,
+              "PostedValue": 6000.0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 6000.0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "INV-04",
+      "service": "Packing slip",
+      "expected": "On-hand = 94 وDeducted",
+      "status": "Passed",
+      "runId": "b542db8bee2941cca682485f9b4091ed",
+      "evidence": {
+        "name": "Deliver 6: on hand 94 and physical cost 360",
+        "actual": {
+          "orderId": 1,
+          "salesId": "AR2SO-000001",
+          "stockLineId": 1,
+          "serviceLineId": 2,
+          "firstInvoice": "",
+          "secondInvoice": "",
+          "PhysicalInvent": 94.0,
+          "ReservPhysical": 4.0,
+          "AvailPhysical": 90.0,
+          "PostedValue": 6000.0,
+          "customerBalance": 0,
+          "openDebit": 0,
+          "openCredit": 0,
+          "customerControl": 0,
+          "revenue": 0,
+          "cogs": 0,
+          "inventoryLedger": 6000.0,
+          "outputTax": 0,
+          "bank": 0,
+          "invoices": [],
+          "customerTransactions": [],
+          "settlements": []
+        }
+      },
+      "gap": null,
+      "attempts": [
+        {
+          "runId": "65614e4307494f1e8c823e8934a90d2d",
+          "id": "INV-04",
+          "status": "Running",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:22:22.2175293Z",
+          "evidence": {
+            "name": "Deliver 6: on hand 94 and physical cost 360"
+          }
+        },
+        {
+          "runId": "65614e4307494f1e8c823e8934a90d2d",
+          "id": "INV-04",
+          "status": "Failed",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:22:22.9477064Z",
+          "evidence": {
+            "name": "Deliver 6: on hand 94 and physical cost 360",
+            "error": "Xunit.Sdk.EqualException: Assert.Equal() Failure: Values differ\r\nExpected: 360\r\nActual:   -360.0000\r\n   at Xunit.Assert.Equal[T](T expected, T actual, IEqualityComparer`1 comparer) in /_/src/xunit.assert/Asserts/EqualityAsserts.cs:line 154\r\n   at Xunit.Assert.Equal[T](T expected, T actual) in /_/src/xunit.assert/Asserts/EqualityAsserts.cs:line 89\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.<>c__DisplayClass23_1.<<Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer>b__12>d.MoveNext() in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 188\r\n--- End of stack trace from previous location ---\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.<>c__DisplayClass23_2.<<Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer>b__37>d.MoveNext() in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 75\r\n--- End of stack trace from previous location ---\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.OtcAudit.Stage(String[] ids, String name, Func`1 action) in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 360"
+          }
+        },
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "INV-04",
+          "status": "Running",
+          "attempt": 2,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:44.4432185Z",
+          "evidence": {
+            "name": "Deliver 6: on hand 94 and physical cost 360"
+          }
+        },
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "INV-04",
+          "status": "Passed",
+          "attempt": 2,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:46.0529535Z",
+          "evidence": {
+            "name": "Deliver 6: on hand 94 and physical cost 360",
+            "actual": {
+              "orderId": 1,
+              "salesId": "AR2SO-000001",
+              "stockLineId": 1,
+              "serviceLineId": 2,
+              "firstInvoice": "",
+              "secondInvoice": "",
+              "PhysicalInvent": 94.0,
+              "ReservPhysical": 4.0,
+              "AvailPhysical": 90.0,
+              "PostedValue": 6000.0,
+              "customerBalance": 0,
+              "openDebit": 0,
+              "openCredit": 0,
+              "customerControl": 0,
+              "revenue": 0,
+              "cogs": 0,
+              "inventoryLedger": 6000.0,
+              "outputTax": 0,
+              "bank": 0,
+              "invoices": [],
+              "customerTransactions": [],
+              "settlements": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "INV-05",
+      "service": "Partial delivery",
+      "expected": "عدم تكرار التسليم والمتبقي صفر",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "INV-06",
+      "service": "Delivery validation",
+      "expected": "تطبيق السياسة الصحيحة",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "INV-07",
+      "service": "Packing slip correction",
+      "expected": "استرجاع الكمية والأثر المحاسبي الصحيح",
+      "status": "Not implemented",
+      "runId": null,
+      "evidence": null,
+      "gap": {
+        "id": "INV-07",
+        "status": "Not implemented",
+        "reason": "The packing-slip business interface has no posted-delivery correction operation.",
+        "source": "src/Modules/Finance/AccountsReceivable/PackingSlip/Interfaces/IPackingSlipJournalService.cs"
+      },
+      "attempts": []
+    },
+    {
+      "id": "BILL-01",
+      "service": "Partial invoicing",
+      "expected": "فاتورة 690، وتكلفة أولية 360",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "BILL-02",
+      "service": "Remaining invoicing",
+      "expected": "فاتورة 690 والمتبقي صفر",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "BILL-03",
+      "service": "Full stock sale",
+      "expected": "كمية وإيراد وضريبة وتكلفة صحيحة",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "BILL-04",
+      "service": "Service sales order",
+      "expected": "إيراد وذمم دون مخزون",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "BILL-05",
+      "service": "Mixed sales order",
+      "expected": "تكلفة للبضاعة فقط",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "BILL-06",
+      "service": "Invoice validation",
+      "expected": "تطبيق متطلبات المسار المعتمد",
+      "status": "Fixed — awaiting retest",
+      "runId": "b542db8bee2941cca682485f9b4091ed",
+      "evidence": {
+        "change": "Reject duplicate SalesLineRecId before invoice allocation; seed InventClosing and SettleTransId through inventory owner."
+      },
+      "gap": null,
+      "attempts": [
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "BILL-06",
+          "status": "Running",
+          "attempt": 1,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:46.0535164Z",
+          "evidence": {
+            "name": "Reject a repeated sales line in one invoice request"
+          }
+        },
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "BILL-06",
+          "status": "Failed",
+          "attempt": 1,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:48.6687929Z",
+          "evidence": {
+            "name": "Reject a repeated sales line in one invoice request",
+            "error": "Xunit.Sdk.EqualException: Assert.Equal() Failure: Values differ\r\nExpected: 422\r\nActual:   200\r\n   at Xunit.Assert.Equal[T](T expected, T actual, IEqualityComparer`1 comparer) in /_/src/xunit.assert/Asserts/EqualityAsserts.cs:line 154\r\n   at Xunit.Assert.Equal[T](T expected, T actual) in /_/src/xunit.assert/Asserts/EqualityAsserts.cs:line 89\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.<>c__DisplayClass23_1.<<Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer>b__13>d.MoveNext() in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 201\r\n--- End of stack trace from previous location ---\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.<>c__DisplayClass23_2.<<Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer>b__37>d.MoveNext() in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 75\r\n--- End of stack trace from previous location ---\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.OtcAudit.Stage(String[] ids, String name, Func`1 action) in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 371"
+          }
+        },
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "BILL-06",
+          "status": "Fixed — awaiting retest",
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:26:50.2141664Z",
+          "evidence": {
+            "change": "Reject duplicate SalesLineRecId before invoice allocation; seed InventClosing and SettleTransId through inventory owner."
+          }
+        }
+      ]
+    },
+    {
+      "id": "BILL-07",
+      "service": "Invoice grouping",
+      "expected": "لا فقد أو تكرار كميات",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "BILL-08",
+      "service": "Free text invoice",
+      "expected": "مديونية 345 دون مخزون",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "BILL-09",
+      "service": "Free text correction",
+      "expected": "أثر عكسي وروابط صحيحة",
+      "status": "Not implemented",
+      "runId": null,
+      "evidence": null,
+      "gap": {
+        "id": "BILL-09",
+        "status": "Not implemented",
+        "reason": "Free-text invoice service exposes draft maintenance and posting, not a posted-invoice correction cycle.",
+        "source": "src/Modules/Finance/AccountsReceivable/Invoice/Interfaces/IFreeTextInvoiceService.cs"
+      },
+      "attempts": []
+    },
+    {
+      "id": "PAY-01",
+      "service": "Payment journal creation",
+      "expected": "لا أثر مرحل على البنك أو العميل",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "PAY-02",
+      "service": "Payment posting",
+      "expected": "بنك مدين وعميل دائن",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "PAY-03",
+      "service": "Unallocated payment",
+      "expected": "حركة دفع مفتوحة",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "SET-01",
+      "service": "Partial settlement",
+      "expected": "الأولى مغلقة والثانية 680",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "SET-02",
+      "service": "Final settlement",
+      "expected": "جميع أرصدة المثال مغلقة",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "SET-03",
+      "service": "One payment / many invoices",
+      "expected": "تخصيص المبالغ صحيح",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "SET-04",
+      "service": "Many payments / one invoice",
+      "expected": "الرصيد يتناقص دون تكرار",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "SET-05",
+      "service": "Settlement validation",
+      "expected": "رفض أو تقييد العملية وفق القاعدة",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "SET-06",
+      "service": "Automatic settlement",
+      "expected": "اتباع قواعد وأولوية التسوية",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "PAY-04",
+      "service": "Customer prepayment",
+      "expected": "التزام ثم تحريره مقابل الفاتورة",
+      "status": "Not implemented",
+      "runId": null,
+      "evidence": null,
+      "gap": {
+        "id": "PAY-04",
+        "status": "Not implemented",
+        "reason": "Customer advance-liability posting and subsequent application are missing; customer prepayment journals are now explicitly refused instead of posted to ordinary receivables.",
+        "source": "src/Modules/Finance/GeneralLedger/LedgerJournalTable/Services/LedgerJournalPosting.cs"
+      },
+      "attempts": []
+    },
+    {
+      "id": "PAY-05",
+      "service": "Cash discount",
+      "expected": "تطبيق الخصم فقط عند الاستحقاق",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "PAY-06",
+      "service": "Overpayment",
+      "expected": "رصيد دائن صحيح",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "PAY-07",
+      "service": "Underpayment",
+      "expected": "بقاء الفرق أو معالجته المعتمدة",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "SET-07",
+      "service": "Undo settlement",
+      "expected": "الأرصدة تعود دون عكس البنك تلقائيًا",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "PAY-08",
+      "service": "Payment reversal",
+      "expected": "معالجة البنك والعميل والتسوية",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "PAY-09",
+      "service": "Customer refund",
+      "expected": "خروج البنك وإغلاق الرصيد",
+      "status": "Not implemented",
+      "runId": null,
+      "evidence": null,
+      "gap": {
+        "id": "PAY-09",
+        "status": "Not implemented",
+        "reason": "There is no customer credit-balance refund business-service operation. Payment reversal is a different cycle.",
+        "source": "src/Modules/Finance/AccountsReceivable/Payment/Interfaces/ICustPaymentService.cs"
+      },
+      "attempts": []
+    },
+    {
+      "id": "RET-01",
+      "service": "Physical return",
+      "expected": "زيادة المخزون 2 وإشعار 230",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "RET-02",
+      "service": "Return costing",
+      "expected": "تكلفة المرجع صحيحة",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "RET-03",
+      "service": "Credit only",
+      "expected": "لا زيادة في On-hand",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "RET-04",
+      "service": "Credit settlement",
+      "expected": "تخفيض الرصيد المفتوح",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "FX-01",
+      "service": "Foreign-currency invoice",
+      "expected": "AmountCur وAmountMST صحيحان",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "FX-02",
+      "service": "Revaluation",
+      "expected": "فرق غير محقق صحيح",
+      "status": "Not implemented",
+      "runId": null,
+      "evidence": null,
+      "gap": {
+        "id": "FX-02",
+        "status": "Not implemented",
+        "reason": "AR foreign-currency revaluation and its run-history/posting service are absent; realized settlement FX is a different feature.",
+        "source": "src/Modules/Finance/AccountsReceivable"
+      },
+      "attempts": []
+    },
+    {
+      "id": "FX-03",
+      "service": "Foreign-currency settlement",
+      "expected": "فرق محقق وإغلاق بعملة المعاملة",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "COL-01",
+      "service": "Aging",
+      "expected": "الشرائح والتاريخ صحيحان",
+      "status": "Not implemented",
+      "runId": null,
+      "evidence": null,
+      "gap": {
+        "id": "COL-01",
+        "status": "Not implemented",
+        "reason": "There is no historical aging-bucket report. Days overdue on current open rows is not an as-of aging reconstruction.",
+        "source": "src/Modules/Finance/AccountsReceivable/CustTrans/Services/CustTransService.cs"
+      },
+      "attempts": []
+    },
+    {
+      "id": "COL-02",
+      "service": "Customer statement",
+      "expected": "الحركات والرصيد صحيحان",
+      "status": "Not implemented",
+      "runId": null,
+      "evidence": null,
+      "gap": {
+        "id": "COL-02",
+        "status": "Not implemented",
+        "reason": "Current open-balance read is not a historical customer statement; settled transactions disappear from its CustTransOpen join.",
+        "source": "src/Modules/Finance/AccountsReceivable/CustTrans/Interfaces/ICustTransService.cs"
+      },
+      "attempts": []
+    },
+    {
+      "id": "COL-03",
+      "service": "Collection letter",
+      "expected": "شمول المستحقات الصحيحة",
+      "status": "Not implemented",
+      "runId": null,
+      "evidence": null,
+      "gap": {
+        "id": "COL-03",
+        "status": "Not implemented",
+        "reason": "No collection-letter generation/posting service exists in the AR module.",
+        "source": "src/Modules/Finance/AccountsReceivable"
+      },
+      "attempts": []
+    },
+    {
+      "id": "COL-04",
+      "service": "Interest / fees",
+      "expected": "القاعدة والمبلغ والقيد صحيحة",
+      "status": "Not implemented",
+      "runId": null,
+      "evidence": null,
+      "gap": {
+        "id": "COL-04",
+        "status": "Not implemented",
+        "reason": "No customer-interest or fee-note calculation/posting cycle exists.",
+        "source": "src/Modules/Finance/AccountsReceivable"
+      },
+      "attempts": []
+    },
+    {
+      "id": "COL-05",
+      "service": "Write-off",
+      "expected": "حساب المصروف وإغلاق الذمم",
+      "status": "Not implemented",
+      "runId": null,
+      "evidence": null,
+      "gap": {
+        "id": "COL-05",
+        "status": "Not implemented",
+        "reason": "No approved customer write-off posting/settlement service exists.",
+        "source": "src/Modules/Finance/AccountsReceivable"
+      },
+      "attempts": []
+    },
+    {
+      "id": "REC-01",
+      "service": "AR to GL reconciliation",
+      "expected": "لا فرق غير مفسر",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "REC-02",
+      "service": "Bank reconciliation",
+      "expected": "لا تحصيل مكرر أو مفقود",
+      "status": "Not implemented",
+      "runId": null,
+      "evidence": null,
+      "gap": {
+        "id": "REC-02",
+        "status": "Not implemented",
+        "reason": "Bank statement CRUD and bank-to-GL totals do not implement statement matching/reconciliation.",
+        "source": "src/Modules/Finance/GeneralLedger/Bank/Interfaces/IBankAccountStatementService.cs"
+      },
+      "attempts": []
+    },
+    {
+      "id": "REC-03",
+      "service": "Inventory reconciliation",
+      "expected": "تطابق حسب نطاق التقرير",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "CLOSE-01",
+      "service": "Weighted average close",
+      "expected": "تعديل التكلفة 100 في السيناريو المحدد",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "CLOSE-02",
+      "service": "Period close",
+      "expected": "رفض الترحيل غير المسموح",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "SYS-01",
+      "service": "إرسال طلب الترحيل مرتين",
+      "expected": "لا فاتورة أو قيد مكرر لنفس الطلب",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "SYS-02",
+      "service": "فشل أثناء الترحيل",
+      "expected": "لا مستند نصف مرحل أو حركة يتيمة",
+      "status": "Failed",
+      "runId": "b542db8bee2941cca682485f9b4091ed",
+      "evidence": {
+        "name": "Reject a repeated sales line in one invoice request",
+        "error": "Xunit.Sdk.EqualException: Assert.Equal() Failure: Values differ\r\nExpected: 422\r\nActual:   200\r\n   at Xunit.Assert.Equal[T](T expected, T actual, IEqualityComparer`1 comparer) in /_/src/xunit.assert/Asserts/EqualityAsserts.cs:line 154\r\n   at Xunit.Assert.Equal[T](T expected, T actual) in /_/src/xunit.assert/Asserts/EqualityAsserts.cs:line 89\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.<>c__DisplayClass23_1.<<Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer>b__13>d.MoveNext() in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 201\r\n--- End of stack trace from previous location ---\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.<>c__DisplayClass23_2.<<Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer>b__37>d.MoveNext() in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 75\r\n--- End of stack trace from previous location ---\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.OtcAudit.Stage(String[] ids, String name, Func`1 action) in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 371"
+      },
+      "gap": null,
+      "attempts": [
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "SYS-02",
+          "status": "Running",
+          "attempt": 1,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:46.0538664Z",
+          "evidence": {
+            "name": "Reject a repeated sales line in one invoice request"
+          }
+        },
+        {
+          "runId": "b542db8bee2941cca682485f9b4091ed",
+          "id": "SYS-02",
+          "status": "Failed",
+          "attempt": 1,
+          "company": "dat",
+          "actor": "ar-cycle-test",
+          "atUtc": "2026-11-06T23:25:48.6714487Z",
+          "evidence": {
+            "name": "Reject a repeated sales line in one invoice request",
+            "error": "Xunit.Sdk.EqualException: Assert.Equal() Failure: Values differ\r\nExpected: 422\r\nActual:   200\r\n   at Xunit.Assert.Equal[T](T expected, T actual, IEqualityComparer`1 comparer) in /_/src/xunit.assert/Asserts/EqualityAsserts.cs:line 154\r\n   at Xunit.Assert.Equal[T](T expected, T actual) in /_/src/xunit.assert/Asserts/EqualityAsserts.cs:line 89\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.<>c__DisplayClass23_1.<<Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer>b__13>d.MoveNext() in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 201\r\n--- End of stack trace from previous location ---\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.<>c__DisplayClass23_2.<<Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer>b__37>d.MoveNext() in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 75\r\n--- End of stack trace from previous location ---\r\n   at IXApi.Tests.AccountsReceivableCycleStageTests.OtcAudit.Stage(String[] ids, String name, Func`1 action) in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\OrderToCashAcceptanceTests.cs:line 371"
+          }
+        }
+      ]
+    },
+    {
+      "id": "SYS-03",
+      "service": "مستخدمان يفوتران الكمية نفسها",
+      "expected": "منع الفوترة المزدوجة",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "SYS-04",
+      "service": "مستخدمان يسويان التحصيل نفسه",
+      "expected": "منع استخدام المبلغ مرتين",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "SYS-05",
+      "service": "صلاحيات الإنشاء والترحيل والعكس",
+      "expected": "كل مستخدم ينفذ المسموح فقط",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": {
+        "id": "SYS-05",
+        "status": "Not run",
+        "reason": "Authorization through API policy/middleware requires an authenticated API integration test; direct service execution does not prove endpoint permissions.",
+        "source": "src/Modules/Finance/AccountsReceivable"
+      },
+      "attempts": []
+    },
+    {
+      "id": "SYS-06",
+      "service": "عزل الشركات",
+      "expected": "عدم قراءة أو ترحيل أرصدة شركة أخرى",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "SYS-07",
+      "service": "التقريب",
+      "expected": "تطابق السطور والرأس والضريبة والذمم",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    },
+    {
+      "id": "SYS-08",
+      "service": "Audit trail",
+      "expected": "معرفة المستخدم والوقت والمصدر والتصحيح",
+      "status": "Not run",
+      "runId": null,
+      "evidence": null,
+      "gap": null,
+      "attempts": []
+    }
+  ]
+}

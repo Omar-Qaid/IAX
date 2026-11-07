@@ -1,0 +1,14 @@
+{
+  "general": {
+    "total": 864,
+    "passed": 861,
+    "skipped": 3,
+    "failed": 0
+  },
+  "inventory": {
+    "passed": 128,
+    "failed": 0
+  },
+  "arPassedStages": 38,
+  "rejectedCorruptions": 30
+}

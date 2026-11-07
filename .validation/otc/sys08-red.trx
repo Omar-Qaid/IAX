@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="3fe6a987-21e2-46d1-be8a-9d58202ea5c2" name="Omar Almojahid@DESKTOP-3Q67JPL 2026-11-07 06:38:20" runUser="DESKTOP-3Q67JPL\Omar Almojahid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-07T06:38:20.1261038+03:00" queuing="2026-11-07T06:38:20.1261041+03:00" start="2026-11-07T06:38:12.4937757+03:00" finish="2026-11-07T06:38:20.1390180+03:00" />
+  <TestSettings name="default" id="c1f54417-dd18-4bae-94c0-0471b0c7ce7c">
+    <Deployment runDeploymentRoot="Omar_Almojahid_DESKTOP-3Q67JPL_2026-11-07_06_38_20" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="d5fa47e5-dc23-423e-88ab-3c926a25478f" testId="f7349101-bbc7-1881-f014-d8130a21d77d" testName="IXApi.Tests.OrderToCashAuditTests.Customer_correction_audit_records_actor_source_time_and_excludes_rejected_changes" computerName="DESKTOP-3Q67JPL" duration="00:00:04.8994793" startTime="2026-11-07T06:38:14.9024775+03:00" endTime="2026-11-07T06:38:19.8523765+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d5fa47e5-dc23-423e-88ab-3c926a25478f">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Single() Failure: The collection contained 3 items&#xD;
+Collection: [SysAuditLog { ChangedBy = "corrector", ChangedOn = 2026-11-07T03:38:19.6927343Z, ColumnName = "AccountNum", NewValue = "C-02", OldValue = "C-01", ··· }, SysAuditLog { ChangedBy = "corrector", ChangedOn = 2026-11-07T03:38:19.6927343Z, ColumnName = "Memo", NewValue = "Rejected", OldValue = "Original", ··· }, SysAuditLog { ChangedBy = "corrector", ChangedOn = 2026-11-07T03:38:19.7650858Z, ColumnName = "Memo", NewValue = "Corrected", OldValue = "Original", ··· }]</Message>
+          <StackTrace>   at IXApi.Tests.OrderToCashAuditTests.Customer_correction_audit_records_actor_source_time_and_excludes_rejected_changes() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAuditTests.cs:line 52&#xD;
+   at IXApi.Tests.OrderToCashAuditTests.Customer_correction_audit_records_actor_source_time_and_excludes_rejected_changes() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAuditTests.cs:line 57&#xD;
+   at IXApi.Tests.OrderToCashAuditTests.Customer_correction_audit_records_actor_source_time_and_excludes_rejected_changes() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAuditTests.cs:line 57&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IXApi.Tests.OrderToCashAuditTests.Customer_correction_audit_records_actor_source_time_and_excludes_rejected_changes" storage="c:\users\omar almojahid\desktop\iax\.validation\otc-auth-build\bin\debug\net9.0\ixapi.tests.dll" id="f7349101-bbc7-1881-f014-d8130a21d77d">
+      <Execution id="d5fa47e5-dc23-423e-88ab-3c926a25478f" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\.validation\otc-auth-build\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.OrderToCashAuditTests" name="Customer_correction_audit_records_actor_source_time_and_excludes_rejected_changes" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="f7349101-bbc7-1881-f014-d8130a21d77d" executionId="d5fa47e5-dc23-423e-88ab-3c926a25478f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="1" executed="1" passed="0" failed="1" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.01] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.51]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:00.83]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:00.93]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:00:05.98]       Assert.Single() Failure: The collection contained 3 items&#xD;
+[xUnit.net 00:00:05.98]       Collection: [SysAuditLog { ChangedBy = "corrector", ChangedOn = 2026-11-07T03:38:19.6927343Z, ColumnName = "AccountNum", NewValue = "C-02", OldValue = "C-01", ··· }, SysAuditLog { ChangedBy = "corrector", ChangedOn = 2026-11-07T03:38:19.6927343Z, ColumnName = "Memo", NewValue = "Rejected", OldValue = "Original", ··· }, SysAuditLog { ChangedBy = "corrector", ChangedOn = 2026-11-07T03:38:19.7650858Z, ColumnName = "Memo", NewValue = "Corrected", OldValue = "Original", ··· }]&#xD;
+[xUnit.net 00:00:05.98]       Stack Trace:&#xD;
+[xUnit.net 00:00:05.98]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAuditTests.cs(52,0): at IXApi.Tests.OrderToCashAuditTests.Customer_correction_audit_records_actor_source_time_and_excludes_rejected_changes()&#xD;
+[xUnit.net 00:00:05.98]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAuditTests.cs(57,0): at IXApi.Tests.OrderToCashAuditTests.Customer_correction_audit_records_actor_source_time_and_excludes_rejected_changes()&#xD;
+[xUnit.net 00:00:05.98]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAuditTests.cs(57,0): at IXApi.Tests.OrderToCashAuditTests.Customer_correction_audit_records_actor_source_time_and_excludes_rejected_changes()&#xD;
+[xUnit.net 00:00:05.98]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:06.04]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="DESKTOP-3Q67JPL" outcome="Error" timestamp="2026-11-07T06:38:19.8602181+03:00">
+        <Text>[xUnit.net 00:00:05.98]     IXApi.Tests.OrderToCashAuditTests.Customer_correction_audit_records_actor_source_time_and_excludes_rejected_changes [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

@@ -1,0 +1,30 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "ConnectionStrings": {
+    "DbConnString": ""
+  },
+  "CorsAllowedOrigins": ["http://localhost:5173"],
+  // Leave empty
+  "Uploads": {
+    "FileVirtualDirectory": "",
+    "FileUploadDirectory": "",
+    "MaxImageWidth": 1000,
+    "MaxImageHeight": 1000
+  },
+  "JwtSettings": {
+    "Secret": "",
+    "Issuer": "IXApi",
+    "Audience": "IXApp",
+    "Expires": 300
+  },
+  "OpenAI": {
+    "ApiKey": "",
+    "Model": "gpt-4.1"
+  }
+}

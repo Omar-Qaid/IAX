@@ -1,0 +1,24 @@
+{
+  "ar-integrity-verified.trx": {
+    "total": 2,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0
+  },
+  "ar-integrity-regression.trx": {
+    "total": 862,
+    "passed": 859,
+    "failed": 0,
+    "skipped": 3
+  },
+  "ar-integrity-inventory.trx": {
+    "total": 128,
+    "passed": 128,
+    "failed": 0,
+    "skipped": 0
+  },
+  "integrityRunId": "6f78b029bbbf4010b86ed5aff983f4aa",
+  "rejectedCorruptionsVerified": 16,
+  "cycleSQLServerRunId": "d65c2de860a74fee93ff81ec740c9619",
+  "cyclePassedStages": 37
+}

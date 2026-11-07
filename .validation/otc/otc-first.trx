@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="0a3c9dd2-be4d-491a-bdc0-dc4a216a0edd" name="Omar Almojahid@DESKTOP-3Q67JPL 2026-11-07 02:16:43" runUser="DESKTOP-3Q67JPL\Omar Almojahid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-07T02:16:43.2841855+03:00" queuing="2026-11-07T02:16:43.2841859+03:00" start="2026-11-07T02:16:03.4342136+03:00" finish="2026-11-07T02:16:43.2928080+03:00" />
+  <TestSettings name="default" id="916fd202-6197-44b1-ad1a-18161e66ae46">
+    <Deployment runDeploymentRoot="Omar_Almojahid_DESKTOP-3Q67JPL_2026-11-07_02_16_43" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="9e8707ac-5dce-4dc9-8541-7ec5acb5ff8b" testId="744bdfdc-ffcc-a06a-c671-a0dd9a8852e0" testName="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer" computerName="DESKTOP-3Q67JPL" duration="00:00:36.8200653" startTime="2026-11-07T02:16:06.2289137+03:00" endTime="2026-11-07T02:16:43.0764668+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9e8707ac-5dce-4dc9-8541-7ec5acb5ff8b">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : Sequence contains no elements.</Message>
+          <StackTrace>   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.&lt;&gt;c__DisplayClass23_1.&lt;&lt;Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer&gt;g__Evidence|0&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs:line 50&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.&lt;&gt;c__DisplayClass23_2.&lt;&lt;Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer&gt;b__36&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs:line 73&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.OtcAudit.Stage(String[] ids, String name, Func`1 action) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs:line 335&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs:line 87&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs:line 312&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs:line 312&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer" storage="c:\users\omar almojahid\desktop\iax\ixapi\.ap-service-validation\bin\debug\net9.0\ixapi.tests.dll" id="744bdfdc-ffcc-a06a-c671-a0dd9a8852e0">
+      <Execution id="9e8707ac-5dce-4dc9-8541-7ec5acb5ff8b" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\.ap-service-validation\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableCycleStageTests" name="Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="744bdfdc-ffcc-a06a-c671-a0dd9a8852e0" executionId="9e8707ac-5dce-4dc9-8541-7ec5acb5ff8b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="1" executed="1" passed="0" failed="1" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.41]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:00.87]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:00.94]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:00:37.84]       System.InvalidOperationException : Sequence contains no elements.&#xD;
+[xUnit.net 00:00:37.84]       Stack Trace:&#xD;
+[xUnit.net 00:00:37.84]            at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:37.84]            at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:37.84]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs(50,0): at IXApi.Tests.AccountsReceivableCycleStageTests.&lt;&gt;c__DisplayClass23_1.&lt;&lt;Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer&gt;g__Evidence|0&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:37.84]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:37.84]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs(73,0): at IXApi.Tests.AccountsReceivableCycleStageTests.&lt;&gt;c__DisplayClass23_2.&lt;&lt;Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer&gt;b__36&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:37.84]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:37.84]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs(335,0): at IXApi.Tests.AccountsReceivableCycleStageTests.OtcAudit.Stage(String[] ids, String name, Func`1 action)&#xD;
+[xUnit.net 00:00:37.84]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs(87,0): at IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer()&#xD;
+[xUnit.net 00:00:37.84]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs(312,0): at IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer()&#xD;
+[xUnit.net 00:00:37.84]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs(312,0): at IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer()&#xD;
+[xUnit.net 00:00:37.84]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:37.87]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="DESKTOP-3Q67JPL" outcome="Error" timestamp="2026-11-07T02:16:43.0801564+03:00">
+        <Text>[xUnit.net 00:00:37.84]     IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

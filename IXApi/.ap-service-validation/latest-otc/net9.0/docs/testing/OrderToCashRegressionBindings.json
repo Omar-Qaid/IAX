@@ -1,0 +1,72 @@
+[
+  {
+    "id": "CFG-02",
+    "patterns": [
+      "*Explicit_missing_customer_profile_cannot_borrow_another_profiles_accounts*"
+    ],
+    "scope": "Full EF model: explicit/default profile, Table/Group/All priority; separate from the exact numeric acceptance path.",
+    "satisfiesAcceptanceCondition": true
+  },
+  {
+    "id": "MD-07",
+    "patterns": [
+      "*Sales_unit_conversion_uses_product_rule_and_rejects_missing_unit*",
+      "*Sales_unit_conversion_does_not_treat_item_record_id_as_product_scope*"
+    ],
+    "scope": "Sales service unit-conversion regression fixtures.",
+    "satisfiesAcceptanceCondition": true
+  },
+  {
+    "id": "SO-03",
+    "patterns": [
+      "*Two_line_confirmation_keeps_discount_tax_and_journal_lines_together*",
+      "*Discount_recalculation_does_not_exceed_value_after_multiline_discount*"
+    ],
+    "scope": "Confirmation and discount regression; not a new discounted invoice acceptance scenario.",
+    "satisfiesAcceptanceCondition": false
+  },
+  {
+    "id": "SO-04",
+    "patterns": [
+      "*A_charge_billed_to_the_customer_credits_its_account_and_is_returned_as_billed*",
+      "*Tax_on_a_billed_charge_is_returned_for_the_invoices_tax_voucher*"
+    ],
+    "scope": "Sales charge posting/calculation regression; not an added shipping-charge acceptance scenario.",
+    "satisfiesAcceptanceCondition": false
+  },
+  {
+    "id": "SO-06",
+    "patterns": [
+      "*Removing_sales_charge_requires_a_new_confirmation_without_erasing_history*"
+    ],
+    "scope": "Order-change and re-confirmation regression fixture.",
+    "satisfiesAcceptanceCondition": true
+  },
+  {
+    "id": "SET-05",
+    "patterns": [
+      "*Two_invoices_cannot_be_settled_against_each_other*",
+      "*A_single_marked_transaction_is_refused*"
+    ],
+    "scope": "Standalone settlement refusal regression fixtures.",
+    "satisfiesAcceptanceCondition": true
+  },
+  {
+    "id": "PAY-05",
+    "patterns": [
+      "*A_payment_in_time_clears_the_invoice_for_less_cash_and_posts_the_discount*",
+      "*A_payment_after_the_discount_date_earns_nothing_and_settles_only_the_cash*"
+    ],
+    "scope": "Cash-discount eligibility and ledger regression; not an added VAT-discount acceptance scenario.",
+    "satisfiesAcceptanceCondition": true
+  },
+  {
+    "id": "FX-03",
+    "patterns": [
+      "*A_payment_at_a_stronger_rate_posts_a_realized_gain_and_the_voucher_balances*",
+      "*A_payment_at_a_weaker_rate_posts_a_realized_loss_and_the_voucher_balances*"
+    ],
+    "scope": "Realized FX settlement regression fixtures.",
+    "satisfiesAcceptanceCondition": false
+  }
+]

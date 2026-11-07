@@ -1,0 +1,18 @@
+[
+  {
+    "project": "IXApi.Tests",
+    "assetsOwner": "C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\IXApi.Tests.csproj"
+  },
+  {
+    "project": "CustomerMapping.Tests",
+    "assetsOwner": "C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\CustomerMapping.Tests.csproj"
+  },
+  {
+    "project": "InventoryCycle.Tests",
+    "assetsOwner": "C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\InventoryCycle.Tests.csproj"
+  },
+  {
+    "project": "SalesOrderConfirmation.Tests",
+    "assetsOwner": "C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\SalesOrderConfirmation.Tests.csproj"
+  }
+]

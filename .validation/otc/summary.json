@@ -1,0 +1,17 @@
+{
+  "verificationMode": "Full run followed by rerun of the five AP registration-count failures; not a second clean full-suite run",
+  "distinctGeneralTests": 868,
+  "generalPassed": 865,
+  "generalFailed": 0,
+  "generalSkipped": 3,
+  "inventoryPassed": 128,
+  "inventoryFailed": 0,
+  "acceptancePlanned": 77,
+  "acceptance": {
+    "Not implemented": 12,
+    "Not run": 6,
+    "Passed": 59
+  },
+  "completeAcceptancePassed": false,
+  "sourceSha256": "7BB4EB0B932A0C9D0111D5DEC54AB7E22AA83FF5C64E970633C4531DEE532F45"
+}

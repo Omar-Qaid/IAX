@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="72ed0e68-87d1-4024-a6c1-806fd00928e8" name="Omar Almojahid@DESKTOP-3Q67JPL 2026-11-07 06:47:28" runUser="DESKTOP-3Q67JPL\Omar Almojahid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-07T06:47:28.8680802+03:00" queuing="2026-11-07T06:47:28.8680806+03:00" start="2026-11-07T06:47:19.8930861+03:00" finish="2026-11-07T06:49:02.6160980+03:00" />
+  <TestSettings name="default" id="173c8ec9-e8a5-4b3e-9ef8-ab769b5165ff">
+    <Deployment runDeploymentRoot="Omar_Almojahid_DESKTOP-3Q67JPL_2026-11-07_06_47_28" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="7ceede1c-d399-41d3-91d6-04b8e9fed7a3" testId="58a5c3dd-0c11-d827-c4f3-9632facc0e98" testName="IAX.IXApi.Tests.LedgerJournalPostingTests.Required_business_unit_is_validated_after_journal_defaults(defaultValue: &quot;BU-02&quot;, shouldPost: True, useLegacyEnteredValue: True)" computerName="DESKTOP-3Q67JPL" duration="00:00:08.2301839" startTime="2026-11-07T06:47:27.2958578+03:00" endTime="2026-11-07T06:47:35.5262786+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7ceede1c-d399-41d3-91d6-04b8e9fed7a3" />
+    <UnitTestResult executionId="1d296797-e368-4a4a-8b3c-235ea75aeaad" testId="ce1112ba-92be-2039-064e-0079240ff6d2" testName="IXApi.Tests.OrderToCashAuthorizationTests.Invoice_create_post_and_settlement_reversal_enforce_distinct_permissions_over_http" computerName="DESKTOP-3Q67JPL" duration="00:00:06.6936140" startTime="2026-11-07T06:47:22.9792328+03:00" endTime="2026-11-07T06:47:29.6443271+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1d296797-e368-4a4a-8b3c-235ea75aeaad" />
+    <UnitTestResult executionId="d4eda2ad-1873-49aa-a26b-c58d268130ec" testId="3f8da7c3-ff08-ec70-d7c8-d681e56aa6bc" testName="IAX.IXApi.Tests.LedgerJournalPostingTests.Required_business_unit_is_validated_after_journal_defaults(defaultValue: &quot;&quot;, shouldPost: False, useLegacyEnteredValue: False)" computerName="DESKTOP-3Q67JPL" duration="00:00:00.2483241" startTime="2026-11-07T06:47:36.1504015+03:00" endTime="2026-11-07T06:47:36.3986792+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d4eda2ad-1873-49aa-a26b-c58d268130ec" />
+    <UnitTestResult executionId="7949778a-aa8c-427f-83e6-585b19d7f4be" testId="9da05514-19c9-ced4-9f08-7d6f51c716aa" testName="IAX.IXApi.Tests.LedgerJournalPostingTests.Required_business_unit_is_validated_after_journal_defaults(defaultValue: &quot;BU-02&quot;, shouldPost: False, useLegacyEnteredValue: False)" computerName="DESKTOP-3Q67JPL" duration="00:00:00.2911664" startTime="2026-11-07T06:47:35.8589601+03:00" endTime="2026-11-07T06:47:36.1500877+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7949778a-aa8c-427f-83e6-585b19d7f4be" />
+    <UnitTestResult executionId="869b9e22-db7a-4012-bf4b-65daeb656242" testId="f7349101-bbc7-1881-f014-d8130a21d77d" testName="IXApi.Tests.OrderToCashAuditTests.Customer_correction_audit_records_actor_source_time_and_excludes_rejected_changes" computerName="DESKTOP-3Q67JPL" duration="00:00:05.4615614" startTime="2026-11-07T06:47:22.9752678+03:00" endTime="2026-11-07T06:47:28.4067746+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="869b9e22-db7a-4012-bf4b-65daeb656242" />
+    <UnitTestResult executionId="f7b87d73-d400-4663-be7e-17dafa2e01f8" testId="744bdfdc-ffcc-a06a-c671-a0dd9a8852e0" testName="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer" computerName="DESKTOP-3Q67JPL" duration="00:00:26.6003956" startTime="2026-11-07T06:48:35.7740023+03:00" endTime="2026-11-07T06:49:02.3753041+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f7b87d73-d400-4663-be7e-17dafa2e01f8" />
+    <UnitTestResult executionId="6a63f62d-f704-42ac-a807-61af17d3488f" testId="8cbe800e-5293-98a2-e00b-02f820e25779" testName="IAX.IXApi.Tests.LedgerJournalPostingTests.Required_business_unit_is_validated_after_journal_defaults(defaultValue: &quot;BU-01&quot;, shouldPost: True, useLegacyEnteredValue: False)" computerName="DESKTOP-3Q67JPL" duration="00:00:00.3324111" startTime="2026-11-07T06:47:35.5268845+03:00" endTime="2026-11-07T06:47:35.8587498+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6a63f62d-f704-42ac-a807-61af17d3488f" />
+    <UnitTestResult executionId="b31cc865-7e41-42cd-8164-a12c19b797ea" testId="2d4c8a76-3076-6297-9f0c-75fc09f3e649" testName="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_returns_credit_only_and_corrections_SQLServer" computerName="DESKTOP-3Q67JPL" duration="00:00:59.3689326" startTime="2026-11-07T06:47:36.4017027+03:00" endTime="2026-11-07T06:48:35.7723815+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b31cc865-7e41-42cd-8164-a12c19b797ea" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IXApi.Tests.OrderToCashAuthorizationTests.Invoice_create_post_and_settlement_reversal_enforce_distinct_permissions_over_http" storage="c:\users\omar almojahid\desktop\iax\.validation\otc-auth-build\bin\debug\net9.0\ixapi.tests.dll" id="ce1112ba-92be-2039-064e-0079240ff6d2">
+      <Execution id="1d296797-e368-4a4a-8b3c-235ea75aeaad" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\.validation\otc-auth-build\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.OrderToCashAuthorizationTests" name="Invoice_create_post_and_settlement_reversal_enforce_distinct_permissions_over_http" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.LedgerJournalPostingTests.Required_business_unit_is_validated_after_journal_defaults(defaultValue: &quot;&quot;, shouldPost: False, useLegacyEnteredValue: False)" storage="c:\users\omar almojahid\desktop\iax\.validation\otc-auth-build\bin\debug\net9.0\ixapi.tests.dll" id="3f8da7c3-ff08-ec70-d7c8-d681e56aa6bc">
+      <Execution id="d4eda2ad-1873-49aa-a26b-c58d268130ec" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\.validation\otc-auth-build\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.LedgerJournalPostingTests" name="Required_business_unit_is_validated_after_journal_defaults" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.OrderToCashAuditTests.Customer_correction_audit_records_actor_source_time_and_excludes_rejected_changes" storage="c:\users\omar almojahid\desktop\iax\.validation\otc-auth-build\bin\debug\net9.0\ixapi.tests.dll" id="f7349101-bbc7-1881-f014-d8130a21d77d">
+      <Execution id="869b9e22-db7a-4012-bf4b-65daeb656242" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\.validation\otc-auth-build\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.OrderToCashAuditTests" name="Customer_correction_audit_records_actor_source_time_and_excludes_rejected_changes" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_returns_credit_only_and_corrections_SQLServer" storage="c:\users\omar almojahid\desktop\iax\.validation\otc-auth-build\bin\debug\net9.0\ixapi.tests.dll" id="2d4c8a76-3076-6297-9f0c-75fc09f3e649">
+      <Execution id="b31cc865-7e41-42cd-8164-a12c19b797ea" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\.validation\otc-auth-build\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableCycleStageTests" name="Order_to_cash_attachment_returns_credit_only_and_corrections_SQLServer" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer" storage="c:\users\omar almojahid\desktop\iax\.validation\otc-auth-build\bin\debug\net9.0\ixapi.tests.dll" id="744bdfdc-ffcc-a06a-c671-a0dd9a8852e0">
+      <Execution id="f7b87d73-d400-4663-be7e-17dafa2e01f8" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\.validation\otc-auth-build\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableCycleStageTests" name="Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.LedgerJournalPostingTests.Required_business_unit_is_validated_after_journal_defaults(defaultValue: &quot;BU-01&quot;, shouldPost: True, useLegacyEnteredValue: False)" storage="c:\users\omar almojahid\desktop\iax\.validation\otc-auth-build\bin\debug\net9.0\ixapi.tests.dll" id="8cbe800e-5293-98a2-e00b-02f820e25779">
+      <Execution id="6a63f62d-f704-42ac-a807-61af17d3488f" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\.validation\otc-auth-build\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.LedgerJournalPostingTests" name="Required_business_unit_is_validated_after_journal_defaults" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.LedgerJournalPostingTests.Required_business_unit_is_validated_after_journal_defaults(defaultValue: &quot;BU-02&quot;, shouldPost: True, useLegacyEnteredValue: True)" storage="c:\users\omar almojahid\desktop\iax\.validation\otc-auth-build\bin\debug\net9.0\ixapi.tests.dll" id="58a5c3dd-0c11-d827-c4f3-9632facc0e98">
+      <Execution id="7ceede1c-d399-41d3-91d6-04b8e9fed7a3" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\.validation\otc-auth-build\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.LedgerJournalPostingTests" name="Required_business_unit_is_validated_after_journal_defaults" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.LedgerJournalPostingTests.Required_business_unit_is_validated_after_journal_defaults(defaultValue: &quot;BU-02&quot;, shouldPost: False, useLegacyEnteredValue: False)" storage="c:\users\omar almojahid\desktop\iax\.validation\otc-auth-build\bin\debug\net9.0\ixapi.tests.dll" id="9da05514-19c9-ced4-9f08-7d6f51c716aa">
+      <Execution id="7949778a-aa8c-427f-83e6-585b19d7f4be" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\.validation\otc-auth-build\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.LedgerJournalPostingTests" name="Required_business_unit_is_validated_after_journal_defaults" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="58a5c3dd-0c11-d827-c4f3-9632facc0e98" executionId="7ceede1c-d399-41d3-91d6-04b8e9fed7a3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ce1112ba-92be-2039-064e-0079240ff6d2" executionId="1d296797-e368-4a4a-8b3c-235ea75aeaad" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3f8da7c3-ff08-ec70-d7c8-d681e56aa6bc" executionId="d4eda2ad-1873-49aa-a26b-c58d268130ec" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9da05514-19c9-ced4-9f08-7d6f51c716aa" executionId="7949778a-aa8c-427f-83e6-585b19d7f4be" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f7349101-bbc7-1881-f014-d8130a21d77d" executionId="869b9e22-db7a-4012-bf4b-65daeb656242" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="744bdfdc-ffcc-a06a-c671-a0dd9a8852e0" executionId="f7b87d73-d400-4663-be7e-17dafa2e01f8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8cbe800e-5293-98a2-e00b-02f820e25779" executionId="6a63f62d-f704-42ac-a807-61af17d3488f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2d4c8a76-3076-6297-9f0c-75fc09f3e649" executionId="b31cc865-7e41-42cd-8164-a12c19b797ea" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="8" executed="8" passed="8" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.01] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.72]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:01.06]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:01.17]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:01:40.73]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

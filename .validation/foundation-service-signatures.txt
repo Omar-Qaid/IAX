@@ -1,0 +1,330 @@
+IXApi/src/Modules/Finance/Foundation\CashDiscount\Validation\CashDiscDtoValidator.cs:6:public sealed class CashDiscDtoValidator : BaseValidator<CashDiscDto>
+IXApi/src/Modules/Finance/Foundation\CashDiscount\Validation\CashDiscDtoValidator.cs:8:    public CashDiscDtoValidator()
+IXApi/src/Modules/Finance/Foundation\Currency\Validation\ExchangeRateTypeDtoValidator.cs:7:    public class ExchangeRateTypeDtoValidator : BaseValidator<ExchangeRateTypeDto>
+IXApi/src/Modules/Finance/Foundation\Currency\Validation\ExchangeRateTypeDtoValidator.cs:9:        public ExchangeRateTypeDtoValidator()
+IXApi/src/Modules/Finance/Foundation\Currency\Validation\ExchangeRateDtoValidator.cs:6:    public class ExchangeRateDtoValidator : BaseValidator<ExchangeRateDto>
+IXApi/src/Modules/Finance/Foundation\Currency\Validation\ExchangeRateDtoValidator.cs:8:        public ExchangeRateDtoValidator()
+IXApi/src/Modules/Finance/Foundation\Currency\Validation\ExchangeRateCurrencyPairDtoValidator.cs:7:    public class ExchangeRateCurrencyPairDtoValidator : BaseValidator<ExchangeRateCurrencyPairDto>
+IXApi/src/Modules/Finance/Foundation\Currency\Validation\ExchangeRateCurrencyPairDtoValidator.cs:9:        public ExchangeRateCurrencyPairDtoValidator()
+IXApi/src/Modules/Finance/Foundation\CashDiscount\Services\CashDiscService.cs:8:public class CashDiscService : BaseService<CashDisc>, ICashDiscService
+IXApi/src/Modules/Finance/Foundation\CashDiscount\Services\CashDiscService.cs:10:    public CashDiscService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
+IXApi/src/Modules/Finance/Foundation\Currency\Validation\CurrencyDtoValidator.cs:7:    public class CurrencyDtoValidator : BaseValidator<CurrencyDto>
+IXApi/src/Modules/Finance/Foundation\Currency\Validation\CurrencyDtoValidator.cs:9:        public CurrencyDtoValidator()
+IXApi/src/Modules/Finance/Foundation\CashDiscount\Services\CashDiscountResolver.cs:16:public sealed record CashDiscountTerms(CashDisc? Discount, DateTime DiscountDate, decimal PossibleAmount)
+IXApi/src/Modules/Finance/Foundation\CashDiscount\Services\CashDiscountResolver.cs:25:internal static class CashDiscountResolver
+IXApi/src/Modules/Finance/Foundation\CashDiscount\Services\CashDiscountResolver.cs:32:    public static async Task<CashDiscountTerms> ResolveAsync(DbContext db, string area, string? code,
+IXApi/src/Modules/Finance/Foundation\CashDiscount\Services\CashDiscountCalculator.cs:9:public static class CashDiscountCalculator
+IXApi/src/Modules/Finance/Foundation\CashDiscount\Services\CashDiscountCalculator.cs:14:    public static DateTime Date(DateTime baseDate, CashDisc discount)
+IXApi/src/Modules/Finance/Foundation\CashDiscount\Services\CashDiscountCalculator.cs:26:    public static decimal Amount(decimal amount, CashDisc discount)
+IXApi/src/Modules/Finance/Foundation\CashDiscount\Services\CashDiscountCalculator.cs:36:    public static bool IsWithinPeriod(DateTime paymentDate, DateTime discountDate) =>
+IXApi/src/Modules/Finance/Foundation\Currency\Validation\BulkExchangeRatePairDtoValidator.cs:6:    public class BulkExchangeRatePairDtoValidator : BaseValidator<BulkExchangeRatePairDto>
+IXApi/src/Modules/Finance/Foundation\Currency\Validation\BulkExchangeRatePairDtoValidator.cs:8:        public BulkExchangeRatePairDtoValidator()
+IXApi/src/Modules/Finance/Foundation\Tax\Validation\TaxTableDtoValidator.cs:7:    public class TaxTableDtoValidator : BaseValidator<TaxTableDto>
+IXApi/src/Modules/Finance/Foundation\Tax\Validation\TaxTableDtoValidator.cs:9:        public TaxTableDtoValidator()
+IXApi/src/Modules/Finance/Foundation\Tax\Validation\TaxPeriodHeadDtoValidator.cs:7:    public class TaxPeriodHeadDtoValidator : BaseValidator<TaxPeriodHeadDto>
+IXApi/src/Modules/Finance/Foundation\Tax\Validation\TaxPeriodHeadDtoValidator.cs:9:        public TaxPeriodHeadDtoValidator()
+IXApi/src/Modules/Finance/Foundation\Tax\Validation\TaxOnItemDtoValidator.cs:7:    public class TaxOnItemDtoValidator : BaseValidator<TaxOnItemDto>
+IXApi/src/Modules/Finance/Foundation\Tax\Validation\TaxOnItemDtoValidator.cs:9:        public TaxOnItemDtoValidator()
+IXApi/src/Modules/Finance/Foundation\Tax\Validation\TaxLedgerAccountGroupDtoValidator.cs:7:    public class TaxLedgerAccountGroupDtoValidator : BaseValidator<TaxLedgerAccountGroupDto>
+IXApi/src/Modules/Finance/Foundation\Tax\Validation\TaxLedgerAccountGroupDtoValidator.cs:9:        public TaxLedgerAccountGroupDtoValidator()
+IXApi/src/Modules/Finance/Foundation\Currency\Services\LedgerExchangeRateCheck.cs:7:public sealed class LedgerExchangeRateCheck(DbContext db)
+IXApi/src/Modules/Finance/Foundation\Currency\Services\LedgerExchangeRateCheck.cs:9:    public async Task<(IReadOnlyList<string> Errors, IReadOnlyList<string> Unverified)> CheckAsync(
+IXApi/src/Modules/Finance/Foundation\Tax\Validation\TaxItemGroupDtoValidator.cs:7:    public class TaxItemGroupDtoValidator : BaseValidator<TaxItemGroupDto>
+IXApi/src/Modules/Finance/Foundation\Tax\Validation\TaxItemGroupDtoValidator.cs:9:        public TaxItemGroupDtoValidator()
+IXApi/src/Modules/Finance/Foundation\Tax\Validation\TaxGroupDtoValidator.cs:7:    public class TaxGroupDtoValidator : BaseValidator<TaxGroupDto>
+IXApi/src/Modules/Finance/Foundation\Tax\Validation\TaxGroupDtoValidator.cs:9:        public TaxGroupDtoValidator()
+IXApi/src/Modules/Finance/Foundation\Currency\Services\ExchangeRateTypeService.cs:15:    public class ExchangeRateTypeService : BaseService<ExchangeRateType>, IExchangeRateTypeService
+IXApi/src/Modules/Finance/Foundation\Currency\Services\ExchangeRateTypeService.cs:17:        public ExchangeRateTypeService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
+IXApi/src/Modules/Finance/Foundation\Tax\Validation\TaxGroupDataDtoValidator.cs:7:    public class TaxGroupDataDtoValidator : BaseValidator<TaxGroupDataDto>
+IXApi/src/Modules/Finance/Foundation\Tax\Validation\TaxGroupDataDtoValidator.cs:9:        public TaxGroupDataDtoValidator()
+IXApi/src/Modules/Finance/Foundation\Currency\Services\EffectiveExchangeRateLookup.cs:7:public sealed class EffectiveExchangeRateLookup(DbContext db)
+IXApi/src/Modules/Finance/Foundation\Currency\Services\EffectiveExchangeRateLookup.cs:9:    public async Task<EffectiveExchangeRateDto> FindAsync(string area, long rateType, string fromCurrency,
+IXApi/src/Modules/Finance/Foundation\Currency\Services\EffectiveExchangeRateLookup.cs:30:    public static (ExchangeRate? Rate, string? Error) Select(IEnumerable<ExchangeRate> rates, DateTime date)
+IXApi/src/Modules/Finance/Foundation\Tax\Validation\TaxExemptCodeDtoValidator.cs:6:    public class TaxExemptCodeDtoValidator : BaseValidator<TaxExemptCodeDto>
+IXApi/src/Modules/Finance/Foundation\Tax\Validation\TaxExemptCodeDtoValidator.cs:8:        public TaxExemptCodeDtoValidator()
+IXApi/src/Modules/Finance/Foundation\Currency\Services\CurrencyService.cs:16:    public class CurrencyService : BaseService<CurrencyEntity>, ICurrencyService
+IXApi/src/Modules/Finance/Foundation\Currency\Services\CurrencyService.cs:18:        public CurrencyService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
+IXApi/src/Modules/Finance/Foundation\Tax\Validation\TaxDataDtoValidator.cs:6:    public class TaxDataDtoValidator : BaseValidator<TaxDataDto>
+IXApi/src/Modules/Finance/Foundation\Tax\Validation\TaxDataDtoValidator.cs:8:        public TaxDataDtoValidator()
+IXApi/src/Modules/Finance/Foundation\Tax\Validation\TaxAuthorityAddressDtoValidator.cs:6:    public class TaxAuthorityAddressDtoValidator : BaseValidator<TaxAuthorityAddressDto>
+IXApi/src/Modules/Finance/Foundation\Tax\Validation\TaxAuthorityAddressDtoValidator.cs:8:        public TaxAuthorityAddressDtoValidator()
+IXApi/src/Modules/Finance/Foundation\Currency\Services\ExchangeRateCurrencyPairService.cs:16:    public class ExchangeRateCurrencyPairService : BaseService<ExchangeRateCurrencyPair>, IExchangeRateCurrencyPairService
+IXApi/src/Modules/Finance/Foundation\Currency\Services\ExchangeRateCurrencyPairService.cs:18:        public ExchangeRateCurrencyPairService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
+IXApi/src/Modules/Finance/Foundation\Currency\Services\ExchangeRateCurrencyPairService.cs:23:        public async Task<BulkExchangeRatePairDto> BulkSaveAsync(BulkExchangeRatePairDto dto)
+IXApi/src/Modules/Finance/Foundation\Nationalities\Validation\HcmNationalityDtoValidator.cs:6:    public class HcmNationalityDtoValidator : BaseValidator<HcmNationalityDto>
+IXApi/src/Modules/Finance/Foundation\Nationalities\Validation\HcmNationalityDtoValidator.cs:8:        public HcmNationalityDtoValidator()
+IXApi/src/Modules/Finance/Foundation\HcmShowrooms\Validation\HcmShowroomDtoValidator.cs:6:public class HcmShowroomDtoValidator : BaseValidator<HcmShowroomDto>
+IXApi/src/Modules/Finance/Foundation\HcmShowrooms\Validation\HcmShowroomDtoValidator.cs:8:    public HcmShowroomDtoValidator()
+IXApi/src/Modules/Finance/Foundation\Nationalities\Services\HcmNationalityService.cs:8:    public class HcmNationalityService : BaseService<HcmNationality>, IHcmNationalityService
+IXApi/src/Modules/Finance/Foundation\Nationalities\Services\HcmNationalityService.cs:10:        public HcmNationalityService(IUnitOfWork unitOfWork) : this(unitOfWork, NullCurrentUserService.Instance)
+IXApi/src/Modules/Finance/Foundation\Nationalities\Services\HcmNationalityService.cs:14:        public HcmNationalityService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxTableService.cs:11:public sealed class TaxTableService : BaseService<TaxTable>, ITaxTableService
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxTableService.cs:31:    public TaxTableService(IUnitOfWork unitOfWork, ICurrentUserService currentUser,
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxTableService.cs:37:    public async Task<IEnumerable<TaxTableDto>> GetDetailsAsync(CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxTableService.cs:75:    public async Task<TaxTableDto?> GetDetailAsync(string id, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxTableService.cs:114:    public Task<TaxTableDto?> CreateFromDtoAsync(TaxTableDto dto, CancellationToken cancellationToken = default) =>
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxTableService.cs:130:    public Task<TaxTableDto?> UpdateFromDtoAsync(string id, TaxTableDto dto, CancellationToken cancellationToken = default) =>
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxTableService.cs:170:    public async Task<bool> DeleteByCodeAsync(string id, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\HcmShowrooms\Services\HcmShowroomService.cs:14:public class HcmShowroomService : BaseService<HcmShowroom>, IHcmShowroomService
+IXApi/src/Modules/Finance/Foundation\HcmShowrooms\Services\HcmShowroomService.cs:16:    public async Task<HcmShowroomDto> CreateFromDtoAsync(HcmShowroomDto dto, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\HcmShowrooms\Services\HcmShowroomService.cs:28:    public async Task<HcmShowroomDto?> UpdateFromDtoAsync(string id, HcmShowroomDto dto, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\HcmShowrooms\Services\HcmShowroomService.cs:48:    public HcmShowroomService(
+IXApi/src/Modules/Finance/Foundation\HcmShowrooms\Services\HcmShowroomService.cs:54:    public HcmShowroomService(
+IXApi/src/Modules/Finance/Foundation\HcmShowrooms\Services\HcmShowroomService.cs:62:    public async Task<HcmShowroom> AddShowroomAsync(
+IXApi/src/Modules/Finance/Foundation\HcmShowrooms\Services\HcmShowroomService.cs:127:    public async Task<HcmShowroom> UpdateShowroomAsync(
+IXApi/src/Modules/Finance/Foundation\HcmShowrooms\Services\HcmShowroomService.cs:143:    public async Task<IReadOnlyList<HcmShowroomWorkerAssignmentDto>> GetWorkerAssignmentsAsync(
+IXApi/src/Modules/Finance/Foundation\HcmShowrooms\Services\HcmShowroomService.cs:155:    public async Task SaveWorkerAssignmentAsync(
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxSettlementService.cs:28:public sealed class TaxSettlementService : ITaxSettlementService
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxSettlementService.cs:37:    public TaxSettlementService(IUnitOfWork unitOfWork, ICompanyExecutionContext company,
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxSettlementService.cs:46:    public Task<(TaxSettlementResultDto? Result, string? Error)> PreviewAsync(
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxSettlementService.cs:49:    public Task<(TaxSettlementResultDto? Result, string? Error)> SettleAndPostAsync(
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxReportService.cs:20:public sealed class TaxReportService(IUnitOfWork unitOfWork, ICompanyExecutionContext company) : ITaxReportService
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxReportService.cs:24:    public async Task<(TaxReportDto? Result, string? Error)> RunAsync(DateOnly? fromDate, DateOnly? toDate,
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxPeriodService.cs:9:public sealed class TaxPeriodService : ITaxPeriodService
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxPeriodService.cs:15:    public TaxPeriodService(IUnitOfWork unitOfWork, IBaseService<TaxPeriodHead> headers)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxPeriodService.cs:21:    public async Task<IEnumerable<TaxPeriodHeadDto>> GetAllAsync(CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxPeriodService.cs:39:    public async Task<TaxPeriodHeadDto?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxPeriodService.cs:69:    public Task<TaxPeriodHead> CreateAsync(TaxPeriodHeadDto dto, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxPeriodService.cs:101:    public Task<TaxPeriodHead?> UpdateAsync(string id, TaxPeriodHeadDto dto, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxPeriodService.cs:162:    public Task<bool> DeleteAsync(string id, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxPeriodHeadCrudService.cs:8:public sealed class TaxPeriodHeadCrudService : BaseService<TaxPeriodHead>, ITaxPeriodHeadCrudService
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxPeriodHeadCrudService.cs:10:    public TaxPeriodHeadCrudService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxLedgerAccountGroupService.cs:8:public sealed class TaxLedgerAccountGroupService : BaseService<TaxLedgerAccountGroup>, ITaxLedgerAccountGroupService
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxLedgerAccountGroupService.cs:10:    public TaxLedgerAccountGroupService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxLedgerAccountGroupService.cs:12:    public void Normalize(TaxLedgerAccountGroup entity)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxItemGroupService.cs:8:public sealed class TaxItemGroupService : BaseService<TaxItemGroupHeading>, ITaxItemGroupService
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxItemGroupService.cs:10:    public TaxItemGroupService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxItemGroupQueryService.cs:8:public sealed class TaxItemGroupQueryService : ITaxItemGroupQueryService
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxItemGroupQueryService.cs:13:    public TaxItemGroupQueryService(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxItemGroupQueryService.cs:15:    public async Task<IEnumerable<TaxItemGroupDto>> GetAllAsync(CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxItemGroupQueryService.cs:37:    public async Task<TaxItemGroupDto?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxItemGroupLineService.cs:8:public sealed class TaxItemGroupLineService : ITaxItemGroupLineService
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxItemGroupLineService.cs:13:    public TaxItemGroupLineService(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxItemGroupLineService.cs:15:    public async Task<TaxOnItemDto?> AddLineAsync(string id, TaxOnItemDto lineDto)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxItemGroupLineService.cs:49:    public async Task<bool> DeleteLineAsync(long lineId)
+IXApi/src/Modules/Finance/Foundation\Currency\Services\ExchangeRateService.cs:15:    public class ExchangeRateService : BaseService<ExchangeRate>, IExchangeRateService
+IXApi/src/Modules/Finance/Foundation\Currency\Services\ExchangeRateService.cs:17:        public Task<EffectiveExchangeRateDto> FindEffectiveAsync(long rateType, string fromCurrency, string toCurrency,
+IXApi/src/Modules/Finance/Foundation\Currency\Services\ExchangeRateService.cs:22:        public ExchangeRateService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxItemGroupCommandService.cs:9:public sealed class TaxItemGroupCommandService : ITaxItemGroupCommandService
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxItemGroupCommandService.cs:15:    public TaxItemGroupCommandService(IUnitOfWork unitOfWork, IBaseService<TaxItemGroupHeading> headers)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxItemGroupCommandService.cs:21:    public Task<TaxItemGroupHeading> CreateAsync(TaxItemGroupDto dto, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxItemGroupCommandService.cs:51:    public Task<TaxItemGroupHeading?> UpdateAsync(string id, TaxItemGroupDto dto, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxGroupService.cs:8:public sealed class TaxGroupService : BaseService<TaxGroupHeading>, ITaxGroupService
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxGroupService.cs:10:    public TaxGroupService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxGroupQueryService.cs:8:public sealed class TaxGroupQueryService : ITaxGroupQueryService
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxGroupQueryService.cs:13:    public TaxGroupQueryService(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxGroupQueryService.cs:15:    public async Task<IEnumerable<TaxGroupDto>> GetAllAsync(CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxGroupQueryService.cs:37:    public async Task<TaxGroupDto?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxGroupLineService.cs:8:public sealed class TaxGroupLineService : ITaxGroupLineService
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxGroupLineService.cs:13:    public TaxGroupLineService(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxGroupLineService.cs:15:    public async Task<(TaxGroupDataDto? Line, bool Updated)> AddLineAsync(string id, TaxGroupDataDto lineDto)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxGroupLineService.cs:46:    public async Task<bool> DeleteLineAsync(long lineId)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxGroupCommandService.cs:9:public sealed class TaxGroupCommandService : ITaxGroupCommandService
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxGroupCommandService.cs:15:    public TaxGroupCommandService(IUnitOfWork unitOfWork, IBaseService<TaxGroupHeading> headers)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxGroupCommandService.cs:21:    public Task<TaxGroupHeading> CreateAsync(TaxGroupDto dto, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxGroupCommandService.cs:48:    public Task<TaxGroupHeading?> UpdateAsync(string id, TaxGroupDto dto, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxExemptCodeService.cs:8:public sealed class TaxExemptCodeService : BaseService<TaxExemptCodeTable>, ITaxExemptCodeService
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxExemptCodeService.cs:10:    public TaxExemptCodeService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxCodeRateService.cs:9:public sealed class TaxCodeRateService : ITaxCodeRateService
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxCodeRateService.cs:16:    public TaxCodeRateService(IUnitOfWork unitOfWork, ILogger<TaxCodeRateService> logger, ICurrentUserService currentUser)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxCodeRateService.cs:23:    public async Task SyncTaxDataRateAsync(string taxCode, decimal taxValue, CancellationToken cancellationToken)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxCodeRateService.cs:58:    public static void SanitizeEntity(TaxTable entity)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxAuthorityAddressService.cs:8:public sealed class TaxAuthorityAddressService : BaseService<TaxAuthorityAddress>, ITaxAuthorityAddressService
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxAuthorityAddressService.cs:10:    public TaxAuthorityAddressService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxAuthorityAddressService.cs:13:    public override Task<TaxAuthorityAddress> AddAsync(TaxAuthorityAddress entity, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\Tax\Services\TaxAuthorityAddressService.cs:19:    public override Task<TaxAuthorityAddress> UpdateAsync(TaxAuthorityAddress entity, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\Genders\Validation\GenderDtoValidator.cs:6:    public class GenderDtoValidator : BaseValidator<GenderDto>
+IXApi/src/Modules/Finance/Foundation\Genders\Validation\GenderDtoValidator.cs:8:        public GenderDtoValidator()
+IXApi/src/Modules/Finance/Foundation\Genders\Services\GenderService.cs:8:    public class GenderService : BaseService<Gender>, IGenderService
+IXApi/src/Modules/Finance/Foundation\Genders\Services\GenderService.cs:10:        public GenderService(IUnitOfWork unitOfWork) : this(unitOfWork, NullCurrentUserService.Instance)
+IXApi/src/Modules/Finance/Foundation\Genders\Services\GenderService.cs:14:        public GenderService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)
+IXApi/src/Modules/Finance/Foundation\Dimensions\LedgerDimension\Services\LedgerDimensionResolver.cs:9:public sealed class LedgerDimensionException(string message) : Exception(message);
+IXApi/src/Modules/Finance/Foundation\Dimensions\LedgerDimension\Services\LedgerDimensionResolver.cs:26:public sealed class LedgerDimensionResolver(DbContext db)
+IXApi/src/Modules/Finance/Foundation\Dimensions\LedgerDimension\Services\LedgerDimensionResolver.cs:37:    public async Task<DimensionAttributeValueCombination> ResolveAsync(string area, MainAccount account,
+IXApi/src/Modules/Finance/Foundation\Dimensions\LedgerDimension\Services\LedgerDimensionResolver.cs:90:    public async Task<IReadOnlyList<(string Dimension, string Value)>> SegmentValuesAsync(
+IXApi/src/Modules/Finance/Foundation\Dimensions\LedgerDimension\Services\LedgerDimensionResolver.cs:148:    public static string DenormalisedValue(DimensionAttributeValueCombination combination, string dimension) =>
+IXApi/src/Modules/Finance/Foundation\Markup\Validation\MarkupTransValidator.cs:7:public sealed class MarkupTransValidator : BaseValidator<MarkupTransDto>
+IXApi/src/Modules/Finance/Foundation\Markup\Validation\MarkupTransValidator.cs:9:    public MarkupTransValidator()
+IXApi/src/Modules/Finance/Foundation\Markup\Validation\MarkupTableDtoValidator.cs:7:public sealed class MarkupTableDtoValidator : BaseValidator<MarkupTableDto>
+IXApi/src/Modules/Finance/Foundation\Markup\Validation\MarkupTableDtoValidator.cs:9:    public MarkupTableDtoValidator()
+IXApi/src/Modules/Finance/Foundation\Dimensions\AccountStructure\Validation\AccountStructureCreateDtoValidator.cs:11:public sealed class AccountStructureCreateDtoValidator : BaseValidator<AccountStructureCreateDto>
+IXApi/src/Modules/Finance/Foundation\Dimensions\AccountStructure\Validation\AccountStructureCreateDtoValidator.cs:13:    public AccountStructureCreateDtoValidator()
+IXApi/src/Modules/Finance/Foundation\Markup\Services\MarkupTransService.cs:12:public sealed class MarkupTransService(
+IXApi/src/Modules/Finance/Foundation\Markup\Services\MarkupTransService.cs:23:    public async Task<MarkupResult<IEnumerable<MarkupTransDto>>> GetDocumentChargesAsync(
+IXApi/src/Modules/Finance/Foundation\Markup\Services\MarkupTransService.cs:57:    public async Task<MarkupResult<IEnumerable<MarkupCodeDto>>> GetChargeCodesAsync(string documentType, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\Markup\Services\MarkupTransService.cs:74:    public async Task<MarkupResult<MarkupTransDto>> CreateAsync(
+IXApi/src/Modules/Finance/Foundation\Markup\Services\MarkupTransService.cs:95:    public async Task<MarkupResult<MarkupTransDto>> UpdateAsync(long id, MarkupTransDto input, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\Markup\Services\MarkupTransService.cs:108:    public async Task<MarkupResult<bool>> DeleteAsync(long id, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\Markup\Services\MarkupTransCommandService.cs:10:public sealed class MarkupTransCommandService : IMarkupTransCommandService
+IXApi/src/Modules/Finance/Foundation\Markup\Services\MarkupTransCommandService.cs:17:    public MarkupTransCommandService(IUnitOfWork unitOfWork, ICompanyExecutionContext company, IMarkupChargeCalculator calculator)
+IXApi/src/Modules/Finance/Foundation\Markup\Services\MarkupTransCommandService.cs:24:    public async Task<MarkupTrans> CreateAsync(MarkupModuleType moduleType, int transTableId, long documentRecId, MarkupTransDto input, CancellationToken ct)
+IXApi/src/Modules/Finance/Foundation\Markup\Services\MarkupTransCommandService.cs:59:    public async Task<MarkupTrans> UpdateAsync(MarkupTrans entity, MarkupTransDto input, CancellationToken ct)
+IXApi/src/Modules/Finance/Foundation\Markup\Services\MarkupTransCommandService.cs:68:    public async Task DeleteAsync(MarkupTrans entity, CancellationToken ct)
+IXApi/src/Modules/Finance/Foundation\Markup\Services\MarkupTableService.cs:8:public sealed class MarkupTableService : BaseService<MarkupTable>, IMarkupTableService
+IXApi/src/Modules/Finance/Foundation\Markup\Services\MarkupTableService.cs:10:    public MarkupTableService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
+IXApi/src/Modules/Finance/Foundation\Dimensions\AccountStructure\Services\DimensionCriteriaMatcher.cs:22:public static class DimensionCriteriaMatcher
+IXApi/src/Modules/Finance/Foundation\Dimensions\AccountStructure\Services\DimensionCriteriaMatcher.cs:29:    public sealed record Criterion(string RangeFrom, string RangeTo, string WildCardString, bool IsBlank)
+IXApi/src/Modules/Finance/Foundation\Dimensions\AccountStructure\Services\DimensionCriteriaMatcher.cs:39:    public static IReadOnlyList<Criterion> Parse(string allowedValues)
+IXApi/src/Modules/Finance/Foundation\Dimensions\AccountStructure\Services\DimensionCriteriaMatcher.cs:68:    public static bool Allows(IEnumerable<DimensionConstraintNodeCriteria> criteria, NoYes isOptional, string value)
+IXApi/src/Modules/Finance/Foundation\Dimensions\AccountStructure\Services\DimensionCriteriaMatcher.cs:83:    public static bool InRange(string value, string from, string to, bool fromExclusive, bool toExclusive)
+IXApi/src/Modules/Finance/Foundation\Dimensions\AccountStructure\Services\DimensionCriteriaMatcher.cs:99:    public static bool MatchesWildcard(string value, string pattern)
+IXApi/src/Modules/Finance/Foundation\Dimensions\AccountStructure\Services\DimensionCriteriaMatcher.cs:119:    public static bool MayOverlap(IReadOnlyList<Criterion> left, IReadOnlyList<Criterion> right) =>
+IXApi/src/Modules/Finance/Foundation\Markup\Services\MarkupChargeCalculator.cs:11:public sealed class MarkupChargeCalculator : IMarkupChargeCalculator
+IXApi/src/Modules/Finance/Foundation\Markup\Services\MarkupChargeCalculator.cs:17:    public MarkupChargeCalculator(IUnitOfWork unitOfWork, ICompanyExecutionContext company)
+IXApi/src/Modules/Finance/Foundation\Markup\Services\MarkupChargeCalculator.cs:23:    public async Task<decimal> CalculateAmount(MarkupTrans charge, CancellationToken ct)
+IXApi/src/Modules/Finance/Foundation\Dimensions\AccountStructure\Services\AccountStructureValidator.cs:23:public sealed class AccountStructureValidator(DbContext db)
+IXApi/src/Modules/Finance/Foundation\Dimensions\AccountStructure\Services\AccountStructureValidator.cs:28:    public async Task<string?> ValidateAsync(string area, DimensionAttributeValueCombination combination,
+IXApi/src/Modules/Finance/Foundation\Dimensions\AccountStructure\Services\AccountStructureValidator.cs:65:    public async Task<AccountStructureResolution> ResolveAsync(string area,
+IXApi/src/Modules/Finance/Foundation\Dimensions\AccountStructure\Services\AccountStructureValidator.cs:172:        public static Snapshot Empty { get; } = new([], new Dictionary<long, string>(), []);
+IXApi/src/Modules/Finance/Foundation\Dimensions\AccountStructure\Services\AccountStructureValidator.cs:176:public sealed record AccountStructureResolution(long RecId, IReadOnlyList<string> Dimensions);
+IXApi/src/Modules/Finance/Foundation\Dimensions\AccountStructure\Services\AccountStructureService.cs:13:public sealed class AccountStructureService(
+IXApi/src/Modules/Finance/Foundation\Dimensions\AccountStructure\Services\AccountStructureService.cs:20:    public async Task<(AccountStructureDto? Result, string? Error)> CreateAsync(
+IXApi/src/Modules/Finance/Foundation\Dimensions\AccountStructure\Services\AccountStructureService.cs:29:    public async Task<(AccountStructureDto? Result, string? Error)> ActivateAsync(string name, CancellationToken ct)
+IXApi/src/Modules/Finance/Foundation\Dimensions\AccountStructure\Services\AccountStructureService.cs:37:    public async Task<(AccountStructureDto? Result, string? Error)> AssignToLedgerAsync(string name, CancellationToken ct)
+IXApi/src/Modules/Finance/Foundation\Dimensions\AccountStructure\Services\AccountStructureService.cs:45:    public async Task<(IReadOnlyList<AccountStructureDto>? Items, string? Error)> ListAsync(CancellationToken ct)
+IXApi/src/Modules/Finance/Foundation\Dimensions\AccountStructure\Services\AccountStructureBuilder.cs:27:public sealed class AccountStructureBuilder(DbContext db)
+IXApi/src/Modules/Finance/Foundation\Dimensions\AccountStructure\Services\AccountStructureBuilder.cs:35:    public async Task<(DimensionHierarchy? Structure, string? Error)> DefineAsync(
+IXApi/src/Modules/Finance/Foundation\Dimensions\AccountStructure\Services\AccountStructureBuilder.cs:85:    public async Task<(DimensionHierarchy? Structure, string? Error)> ActivateAsync(
+IXApi/src/Modules/Finance/Foundation\Dimensions\AccountStructure\Services\AccountStructureBuilder.cs:109:    public async Task<(DimensionHierarchy? Structure, string? Error)> AssignToLedgerAsync(
+IXApi/src/Modules/Finance/Foundation\Dimensions\AccountStructure\Services\AccountStructureBuilder.cs:132:    public async Task<AccountStructureDto> DescribeAsync(string area, DimensionHierarchy structure, CancellationToken ct)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Validation\ContactPersonDtoValidator.cs:6:    public class ContactPersonDtoValidator : BaseValidator<ContactPersonDto>
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Validation\ContactPersonDtoValidator.cs:8:        public ContactPersonDtoValidator()
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Validation\ContactInfoDtoValidator.cs:6:    public class ContactInfoDtoValidator : BaseValidator<ContactInfoDto>
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Validation\ContactInfoDtoValidator.cs:8:        public ContactInfoDtoValidator()
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Validation\AddressInfoDtoValidator.cs:6:    public class AddressInfoDtoValidator : BaseValidator<AddressInfoDto>
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Validation\AddressInfoDtoValidator.cs:8:        public AddressInfoDtoValidator()
+IXApi/src/Modules/Finance/Foundation\Departments\Validation\HcmDepartmentDtoValidator.cs:6:    public class HcmDepartmentDtoValidator : BaseValidator<HcmDepartmentDto>
+IXApi/src/Modules/Finance/Foundation\Departments\Validation\HcmDepartmentDtoValidator.cs:8:        public HcmDepartmentDtoValidator()
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\PostalAddressService.cs:19:    public class PostalAddressService : BaseService<LogisticsPostalAddress>, IPostalAddressService
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\PostalAddressService.cs:21:        public PostalAddressService(
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\PostalAddressService.cs:164:        public async Task<LogisticsPostalAddress> CreatePostalAddressAsync(long locationRecId, AddressInfoDto dto, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\PostalAddressService.cs:176:        public async Task<LogisticsPostalAddress> UpdatePostalAddressAsync(long locationRecId, AddressInfoDto dto, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\PostalAddressService.cs:195:        public async Task<bool> DeletePostalAddressAsync(long postalAddressRecId, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\PostalAddressService.cs:207:        public async Task<List<LogisticsPostalAddress>> GetAddressesByLocationsAsync(List<long> locationIds, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\Departments\Services\HcmDepartmentService.cs:7:    public class HcmDepartmentService : BaseService<HcmDepartment>, IHcmDepartmentService
+IXApi/src/Modules/Finance/Foundation\Departments\Services\HcmDepartmentService.cs:9:        public HcmDepartmentService(IUnitOfWork unitOfWork) : this(unitOfWork, NullCurrentUserService.Instance)
+IXApi/src/Modules/Finance/Foundation\Departments\Services\HcmDepartmentService.cs:13:        public HcmDepartmentService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\PartyService.cs:17:    public class PartyService : BaseService<DirPartyTable>, IPartyService
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\PartyService.cs:21:        public PartyService(
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\PartyService.cs:30:        public async Task<DirPartyTable> CreatePartyAsync(string name, string languageId, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\PartyService.cs:53:        public async Task<DirPartyTable> UpdatePartyNameAsync(long partyRecId, string name, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\PaymentTerms\Services\PaymTermService.cs:11:    public class PaymTermService : BaseService<PaymTerm>, IPaymTermService
+IXApi/src/Modules/Finance/Foundation\PaymentTerms\Services\PaymTermService.cs:13:        public PaymTermService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\PartyLocationService.cs:17:    public class PartyLocationService : BaseService<DirPartyLocation>, IPartyLocationService
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\PartyLocationService.cs:19:        public PartyLocationService(
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\PartyLocationService.cs:39:        public async Task<DirPartyLocation> LinkLocationToPartyAsync(long partyRecId, long locationRecId, bool isPostalAddress, bool isPrimary, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\PartyLocationService.cs:62:        public async Task<DirPartyLocation> UpdatePartyLocationPrimaryAsync(long partyRecId, long locationRecId, bool isPostalAddress, bool isPrimary, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\PartyLocationService.cs:81:        public async Task<bool> UnlinkLocationAsync(long partyRecId, long locationRecId, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\PartyLocationService.cs:93:        public async Task<bool> DeleteOrphanedLocationAsync(long locationRecId, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\PartyLocationService.cs:144:        public async Task<List<DirPartyLocation>> GetPartyLocationsAsync(long partyRecId, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\PaymentTerms\Services\PaymentDueDateCalculator.cs:6:public static class PaymentDueDateCalculator
+IXApi/src/Modules/Finance/Foundation\PaymentTerms\Services\PaymentDueDateCalculator.cs:8:    public static DateTime Calculate(DateTime invoiceDate, PaymTerm term)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\LocationService.cs:17:    public class LocationService : BaseService<LogisticsLocation>, ILocationService
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\LocationService.cs:21:        public LocationService(
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\LocationService.cs:30:        public async Task<LogisticsLocation> CreateLocationAsync(string description, bool isPostalAddress, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\LocationService.cs:48:        public async Task<LogisticsLocation> UpdateLocationDescriptionAsync(long locationRecId, string description, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\LocationService.cs:62:        public async Task<bool> DeleteLocationAsync(long locationRecId, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\GlobalAddressBookService.cs:15:    public class GlobalAddressBookService : IGlobalAddressBookService
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\GlobalAddressBookService.cs:23:        public GlobalAddressBookService(
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\GlobalAddressBookService.cs:37:        public async Task UpdateGlobalAddressBookAsync(long partyRecId, List<AddressInfoDto> addresses, List<ContactInfoDto> contacts, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\GlobalAddressBookService.cs:180:        public async Task<AddressInfoDto> CreatePartyAddressAsync(long partyId, AddressInfoDto dto, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\GlobalAddressBookService.cs:208:        public async Task<AddressInfoDto> UpdatePartyAddressAsync(long partyId, AddressInfoDto dto, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\GlobalAddressBookService.cs:232:        public async Task<bool> DeletePartyAddressAsync(long partyId, long locationId, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\GlobalAddressBookService.cs:259:        public async Task<ContactInfoDto> CreatePartyContactAsync(long partyId, ContactInfoDto dto, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\GlobalAddressBookService.cs:286:        public async Task<ContactInfoDto> UpdatePartyContactAsync(long partyId, ContactInfoDto dto, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\GlobalAddressBookService.cs:310:        public async Task<bool> DeletePartyContactAsync(long partyId, long locationId, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\ElectronicAddressService.cs:19:    public class ElectronicAddressService : BaseService<LogisticsElectronicAddress>, IElectronicAddressService
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\ElectronicAddressService.cs:21:        public ElectronicAddressService(
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\ElectronicAddressService.cs:28:        public async Task<LogisticsElectronicAddress> CreateElectronicAddressAsync(long locationRecId, ContactInfoDto dto, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\ElectronicAddressService.cs:40:        public async Task<LogisticsElectronicAddress> UpdateElectronicAddressAsync(long locationRecId, ContactInfoDto dto, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\ElectronicAddressService.cs:59:        public async Task<bool> DeleteElectronicAddressAsync(long contactRecId, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\ElectronicAddressService.cs:71:        public async Task<List<LogisticsElectronicAddress>> GetContactsByLocationsAsync(List<long> locationIds, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\ContactPersonService.cs:8:public class ContactPersonService : BaseService<ContactPerson>, IContactPersonService
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\ContactPersonService.cs:10:    public ContactPersonService(
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\AddressBookQueryService.cs:8:public sealed class AddressBookQueryService(IUnitOfWork unitOfWork, IPartyLocationService partyLocations,
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\AddressBookQueryService.cs:15:    public async Task<List<ContactInfoDto>> GetPartyContactsAsync(long partyId)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\AddressBookQueryService.cs:29:    public async Task<object> GetCountryRegionsAsync()
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\AddressBookQueryService.cs:39:    public async Task<object> GetStatesAsync(string countryRegionId)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\AddressBookQueryService.cs:50:    public async Task<object> GetCitiesAsync(string stateId)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\AddressBookQueryService.cs:60:    public async Task<object> GetCitiesAsync(string countryRegionId, string stateId)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\AddressBookQueryService.cs:71:    public async Task<object> GetCountiesAsync(string stateId)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\AddressBookQueryService.cs:81:    public async Task<object> GetCountiesAsync(string countryRegionId, string stateId)
+IXApi/src/Modules/Finance/Foundation\LogisticsAddresses\Services\AddressBookQueryService.cs:92:    public async Task<List<AddressInfoDto>> GetPartyAddressesAsync(long partyId)
+IXApi/src/Modules/Finance/Foundation\PaymentSchedules\Validation\PaymSchedLineDtoValidator.cs:6:    public class PaymSchedLineDtoValidator : BaseValidator<PaymSchedLineDto>
+IXApi/src/Modules/Finance/Foundation\PaymentSchedules\Validation\PaymSchedLineDtoValidator.cs:8:        public PaymSchedLineDtoValidator()
+IXApi/src/Modules/Finance/Foundation\PaymentSchedules\Validation\PaymSchedDtoValidator.cs:7:    public class PaymSchedDtoValidator : BaseValidator<PaymSchedDto>
+IXApi/src/Modules/Finance/Foundation\PaymentSchedules\Validation\PaymSchedDtoValidator.cs:9:        public PaymSchedDtoValidator()
+IXApi/src/Modules/Finance/Foundation\DeliveryTerms\Services\DlvTermService.cs:11:    public class DlvTermService : BaseService<DlvTerm>, IDlvTermService
+IXApi/src/Modules/Finance/Foundation\DeliveryTerms\Services\DlvTermService.cs:13:        public DlvTermService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
+IXApi/src/Modules/Finance/Foundation\PaymentSchedules\Services\PaymSchedService.cs:11:    public class PaymSchedService : BaseService<PaymSched>, IPaymSchedService
+IXApi/src/Modules/Finance/Foundation\PaymentSchedules\Services\PaymSchedService.cs:13:        public PaymSchedService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
+IXApi/src/Modules/Finance/Foundation\PaymentSchedules\Services\PaymSchedLineService.cs:11:    public class PaymSchedLineService : BaseService<PaymSchedLine>, IPaymSchedLineService
+IXApi/src/Modules/Finance/Foundation\PaymentSchedules\Services\PaymSchedLineService.cs:13:        public PaymSchedLineService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
+IXApi/src/Modules/Finance/Foundation\LegalEntities\Validation\CompanyInfoDtoValidator.cs:6:    public class CompanyInfoDtoValidator : BaseValidator<CompanyInfoDto>
+IXApi/src/Modules/Finance/Foundation\LegalEntities\Validation\CompanyInfoDtoValidator.cs:8:        public CompanyInfoDtoValidator()
+IXApi/src/Modules/Finance/Foundation\LegalEntities\Services\CompanyInfoService.cs:17:    public class CompanyInfoService : BaseService<CompanyInfo>, ICompanyInfoService
+IXApi/src/Modules/Finance/Foundation\LegalEntities\Services\CompanyInfoService.cs:26:        public CompanyInfoService(
+IXApi/src/Modules/Finance/Foundation\LegalEntities\Services\CompanyInfoService.cs:50:        public override async Task<CompanyInfo?> GetByIdAsync(object id, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\LegalEntities\Services\CompanyInfoService.cs:56:        public override async Task<CompanyInfo> AddAsync(CompanyInfo entity, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\LegalEntities\Services\CompanyInfoService.cs:79:        public async Task<CompanyInfo> CreateCompanyWithAddressBookAsync(CompanyInfoDto dto, CancellationToken cancellationToken)
+IXApi/src/Modules/Finance/Foundation\LegalEntities\Services\CompanyInfoService.cs:132:        public async Task<CompanyInfo> UpdateCompanyWithAddressBookAsync(string id, CompanyInfoDto dto, CancellationToken cancellationToken)
+IXApi/src/Modules/Finance/Foundation\LegalEntities\Services\CompanyInfoService.cs:185:        public async Task PopulateGlobalAddressBookAsync(IEnumerable<CompanyInfoDto> dtos, CancellationToken cancellationToken)
+IXApi/src/Modules/Finance/Foundation\OrganizationUnits\Validation\OrganizationUnitDtoValidator.cs:6:public sealed class OrganizationUnitDtoValidator : BaseValidator<OrganizationUnitDto>
+IXApi/src/Modules/Finance/Foundation\OrganizationUnits\Validation\OrganizationUnitDtoValidator.cs:8:    public OrganizationUnitDtoValidator()
+IXApi/src/Modules/Finance/Foundation\DeliveryModes\Services\DlvModeService.cs:11:    public class DlvModeService : BaseService<DlvMode>, IDlvModeService
+IXApi/src/Modules/Finance/Foundation\DeliveryModes\Services\DlvModeService.cs:13:        public DlvModeService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
+IXApi/src/Modules/Finance/Foundation\OrganizationUnits\Services\OrganizationUnitService.cs:7:public class OrganizationUnitService : BaseService<OrganizationUnit>, IOrganizationUnitService
+IXApi/src/Modules/Finance/Foundation\OrganizationUnits\Services\OrganizationUnitService.cs:9:    public OrganizationUnitService(
+IXApi/src/Modules/Finance/Foundation\Occupations\Validation\HcmOccupationDtoValidator.cs:6:    public class HcmOccupationDtoValidator : BaseValidator<HcmOccupationDto>
+IXApi/src/Modules/Finance/Foundation\Occupations\Validation\HcmOccupationDtoValidator.cs:8:        public HcmOccupationDtoValidator()
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:14:public sealed class OrganizationStructureService(IUnitOfWork unitOfWork, ICompanyExecutionContext company) : IOrganizationStructureService
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:35:    public async Task<IReadOnlyList<OrganizationUnitInfo>> GetUnitsAsync(DateOnly asOf, CancellationToken ct) =>
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:39:    public async Task<IReadOnlyList<OrganizationRoleInfo>> GetRolesAsync(CancellationToken ct) =>
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:43:    public async Task<IReadOnlyList<OrganizationHierarchyInfo>> GetHierarchiesAsync(CancellationToken ct) =>
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:47:    public async Task<IReadOnlyList<OrganizationNodeInfo>> GetNodesAsync(long hierarchyId, DateOnly asOf, CancellationToken ct)
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:54:    public async Task<IReadOnlyList<PositionInfo>> GetPositionsAsync(DateOnly asOf, CancellationToken ct) =>
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:58:    public Task<long> CreateUnitAsync(CreateOrganizationUnit request, CancellationToken ct) => WriteAsync(async () =>
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:77:    public Task<long> UpdateUnitAsync(long id, UpdateOrganizationUnit request, CancellationToken ct) => WriteAsync(async () =>
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:99:    public Task<long> CreateRoleAsync(CreateOrganizationRole request, CancellationToken ct) => WriteAsync(async () =>
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:110:    public Task<long> UpdateRoleAsync(long id, UpdateOrganizationRole request, CancellationToken ct) => WriteAsync(async () =>
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:122:    public Task<long> DeactivateRoleAsync(long id, CancellationToken ct) => WriteAsync(async () =>
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:132:    public Task<long> CreateHierarchyAsync(CreateOrganizationHierarchy request, CancellationToken ct) => WriteAsync(async () =>
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:143:    public Task<long> CreateHierarchyWithRootNodeAsync(CreateOrganizationHierarchyWithRootNode request, CancellationToken ct) => WriteAsync(async () =>
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:163:    public Task<long> UpdateHierarchyAsync(long id, UpdateOrganizationHierarchy request, CancellationToken ct) => WriteAsync(async () =>
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:174:    public Task<long> CreateNodeAsync(CreateOrganizationNode request, CancellationToken ct) => WriteAsync(async () =>
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:200:    public Task<long> UpdateNodeAsync(long id, UpdateOrganizationNode request, CancellationToken ct) => WriteAsync(async () =>
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:227:    public Task<long> CreatePositionAsync(CreatePosition request, CancellationToken ct) => WriteAsync(async () =>
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:242:    public Task<long> UpdatePositionAsync(long id, UpdatePosition request, CancellationToken ct) => WriteAsync(async () =>
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:262:    public Task<long> AssignWorkerAsync(AssignWorker request, CancellationToken ct) => WriteAsync(() => AssignAsync(request, null, ct), ct);
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:286:    public Task<long> UpdateAssignmentAsync(long id, UpdateWorkerAssignment request, CancellationToken ct) => WriteAsync(async () =>
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:306:    public Task<long> TransferAsync(long assignmentId, TransferWorker request, CancellationToken ct) => WriteAsync(async () =>
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:317:    public Task<long> CloseAssignmentAsync(long id, DateOnly end, CancellationToken ct) => WriteAsync(async () =>
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:327:    public Task<long> CloseNodeAsync(long id, DateOnly end, CancellationToken ct) => WriteAsync(async () =>
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:338:    public Task<long> ClosePositionAsync(long id, DateOnly end, CancellationToken ct) => WriteAsync(async () =>
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:349:    public Task<long> CloseUnitAsync(long id, DateOnly end, CancellationToken ct) => WriteAsync(async () =>
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:362:    public async Task<IReadOnlyList<WorkerAssignmentInfo>> GetWorkerAssignmentsAsync(long workerId, DateOnly asOf, CancellationToken ct = default)
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:368:    public async Task<IReadOnlyList<OrganizationUnitInfo>> GetAncestorsAsync(long hierarchyId, long unitId, DateOnly asOf, CancellationToken ct = default)
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\Structure\Services\OrganizationStructureService.cs:393:    public async Task<IReadOnlyList<WorkerAssignmentInfo>> GetRoleOccupantsAsync(long hierarchyId, long unitId, string roleCode, DateOnly asOf, CancellationToken ct = default)
+IXApi/src/Modules/Finance/Foundation\Occupations\Services\HcmOccupationService.cs:7:    public class HcmOccupationService : BaseService<HcmOccupation>, IHcmOccupationService
+IXApi/src/Modules/Finance/Foundation\Occupations\Services\HcmOccupationService.cs:9:        public HcmOccupationService(IUnitOfWork unitOfWork) : this(unitOfWork, NullCurrentUserService.Instance)
+IXApi/src/Modules/Finance/Foundation\Occupations\Services\HcmOccupationService.cs:13:        public HcmOccupationService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\HcmWorker\Validation\HcmWorkerDtoValidator.cs:6:public sealed class HcmWorkerDtoValidator : BaseValidator<HcmWorkerDto>
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\HcmWorker\Validation\HcmWorkerDtoValidator.cs:8:    public HcmWorkerDtoValidator()
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\HcmWorker\Services\HcmWorkerService.cs:18:public class HcmWorkerService : BaseService<HcmWorker>, IHcmWorkerService
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\HcmWorker\Services\HcmWorkerService.cs:20:    public async Task<HcmWorkerDto> CreateFromDtoAsync(HcmWorkerDto dto, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\HcmWorker\Services\HcmWorkerService.cs:35:    public async Task<HcmWorkerDto?> UpdateFromDtoAsync(string id, HcmWorkerDto dto, CancellationToken cancellationToken = default)
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\HcmWorker\Services\HcmWorkerService.cs:60:    public HcmWorkerService(
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\HcmWorker\Services\HcmWorkerService.cs:66:    public HcmWorkerService(
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\HcmWorker\Services\HcmWorkerService.cs:74:    public override async Task<IEnumerable<HcmWorker>> GetAllAsync(
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\HcmWorker\Services\HcmWorkerService.cs:84:    public async Task<IReadOnlyList<HcmWorkerDto>> GetWorkerListAsync(
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\HcmWorker\Services\HcmWorkerService.cs:137:    public async Task<HcmWorkerLookupPageDto> GetWorkerLookupAsync(
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\HcmWorker\Services\HcmWorkerService.cs:171:    public async Task<IReadOnlyList<HcmWorkerAssignmentChainNodeDto>> GetAssignmentChainAsync(
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\HcmWorker\Services\HcmWorkerService.cs:212:    public async Task<HcmWorker> AddWorkerAsync(
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\HcmWorker\Services\HcmWorkerService.cs:287:    public async Task<HcmWorker> UpdateWorkerAsync(
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\HcmWorker\Services\HcmWorkerService.cs:304:    public async Task<IReadOnlyList<HcmWorkerOrganizationAssignmentV1Dto>> GetOrganizationAssignmentsV1Async(
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\HcmWorker\Services\HcmWorkerService.cs:316:    public async Task<IReadOnlyList<HcmWorkerShowroomAssignmentDto>> GetShowroomAssignmentsAsync(
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\HcmWorker\Services\HcmWorkerService.cs:328:    public async Task SaveOrganizationAssignmentV1Async(
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\HcmWorker\Services\HcmWorkerService.cs:396:    public async Task SaveShowroomAssignmentAsync(
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\HcmWorker\Services\HcmWorkerService.cs:459:    public override async Task RemoveAsync(
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\HcmWorker\Services\HcmWorkerService.cs:467:    public override async Task RemoveRangeAsync(
+IXApi/src/Modules/Finance/Foundation\HcmWorkers\HcmWorker\Services\HcmWorkerService.cs:483:        public async Task SaveAssignmentChangesAsync(

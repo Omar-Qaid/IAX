@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="c26d38e1-0258-494f-9855-5214f632fd55" name="Omar Almojahid@DESKTOP-3Q67JPL 2026-11-07 02:22:23" runUser="DESKTOP-3Q67JPL\Omar Almojahid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-07T02:22:23.2892587+03:00" queuing="2026-11-07T02:22:23.2892590+03:00" start="2026-11-07T02:21:28.3771861+03:00" finish="2026-11-07T02:22:23.2978553+03:00" />
+  <TestSettings name="default" id="c65a2653-5213-4b70-9ace-3a156d7edfcf">
+    <Deployment runDeploymentRoot="Omar_Almojahid_DESKTOP-3Q67JPL_2026-11-07_02_22_23" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="2be7fc1f-c6e2-437a-85c9-9ced169a2239" testId="744bdfdc-ffcc-a06a-c671-a0dd9a8852e0" testName="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer" computerName="DESKTOP-3Q67JPL" duration="00:00:52.8995989" startTime="2026-11-07T02:21:30.1436353+03:00" endTime="2026-11-07T02:22:23.0641239+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2be7fc1f-c6e2-437a-85c9-9ced169a2239">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ&#xD;
+Expected: 360&#xD;
+Actual:   -360.0000</Message>
+          <StackTrace>   at IXApi.Tests.AccountsReceivableCycleStageTests.&lt;&gt;c__DisplayClass23_1.&lt;&lt;Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer&gt;b__12&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs:line 188&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.&lt;&gt;c__DisplayClass23_2.&lt;&lt;Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer&gt;b__37&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs:line 75&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.OtcAudit.Stage(String[] ids, String name, Func`1 action) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs:line 360&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs:line 182&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs:line 337&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs:line 337&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer" storage="c:\users\omar almojahid\desktop\iax\ixapi\.ap-service-validation\bin\debug\net9.0\ixapi.tests.dll" id="744bdfdc-ffcc-a06a-c671-a0dd9a8852e0">
+      <Execution id="2be7fc1f-c6e2-437a-85c9-9ced169a2239" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\.ap-service-validation\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableCycleStageTests" name="Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="744bdfdc-ffcc-a06a-c671-a0dd9a8852e0" executionId="2be7fc1f-c6e2-437a-85c9-9ced169a2239" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="1" executed="1" passed="0" failed="1" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.35]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:00.66]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:00.70]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:00:53.67]       Assert.Equal() Failure: Values differ&#xD;
+[xUnit.net 00:00:53.67]       Expected: 360&#xD;
+[xUnit.net 00:00:53.67]       Actual:   -360.0000&#xD;
+[xUnit.net 00:00:53.67]       Stack Trace:&#xD;
+[xUnit.net 00:00:53.68]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs(188,0): at IXApi.Tests.AccountsReceivableCycleStageTests.&lt;&gt;c__DisplayClass23_1.&lt;&lt;Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer&gt;b__12&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:53.68]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:53.68]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs(75,0): at IXApi.Tests.AccountsReceivableCycleStageTests.&lt;&gt;c__DisplayClass23_2.&lt;&lt;Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer&gt;b__37&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:53.68]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:53.68]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs(360,0): at IXApi.Tests.AccountsReceivableCycleStageTests.OtcAudit.Stage(String[] ids, String name, Func`1 action)&#xD;
+[xUnit.net 00:00:53.68]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs(182,0): at IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer()&#xD;
+[xUnit.net 00:00:53.68]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs(337,0): at IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer()&#xD;
+[xUnit.net 00:00:53.68]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs(337,0): at IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer()&#xD;
+[xUnit.net 00:00:53.68]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:53.70]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="DESKTOP-3Q67JPL" outcome="Error" timestamp="2026-11-07T02:22:23.0678741+03:00">
+        <Text>[xUnit.net 00:00:53.67]     IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

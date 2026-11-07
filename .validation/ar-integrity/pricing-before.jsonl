@@ -1,0 +1,51 @@
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"initial-seed","status":"PASSED","detail":null,"atUtc":"2026-11-06T22:48:21.4230364Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"invoice-account","status":"RUNNING","detail":null,"atUtc":"2026-11-06T22:48:21.7113271Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"invoice-account","status":"PASSED","detail":"Rejected corruption, rolled back data/counter/history, and reran without duplicates.","atUtc":"2026-11-06T22:48:24.0411Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"currency","status":"RUNNING","detail":null,"atUtc":"2026-11-06T22:48:24.0416036Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"currency","status":"PASSED","detail":"Rejected corruption, rolled back data/counter/history, and reran without duplicates.","atUtc":"2026-11-06T22:48:26.4838223Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"payment-mode","status":"RUNNING","detail":null,"atUtc":"2026-11-06T22:48:26.4844272Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"payment-mode","status":"PASSED","detail":"Rejected corruption, rolled back data/counter/history, and reran without duplicates.","atUtc":"2026-11-06T22:48:27.6703379Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"foreign-party","status":"RUNNING","detail":null,"atUtc":"2026-11-06T22:48:27.6709628Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"foreign-party","status":"PASSED","detail":"Rejected corruption, rolled back data/counter/history, and reran without duplicates.","atUtc":"2026-11-06T22:48:28.6188881Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"postal-role","status":"RUNNING","detail":null,"atUtc":"2026-11-06T22:48:28.6193809Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"postal-role","status":"PASSED","detail":"Rejected corruption, rolled back data/counter/history, and reran without duplicates.","atUtc":"2026-11-06T22:48:29.5920076Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"sales-issue-account","status":"RUNNING","detail":null,"atUtc":"2026-11-06T22:48:29.5936989Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"sales-issue-account","status":"PASSED","detail":"Rejected corruption, rolled back data/counter/history, and reran without duplicates.","atUtc":"2026-11-06T22:48:30.4802176Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"sales-cost-account","status":"RUNNING","detail":null,"atUtc":"2026-11-06T22:48:30.4808558Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"sales-cost-account","status":"PASSED","detail":"Rejected corruption, rolled back data/counter/history, and reran without duplicates.","atUtc":"2026-11-06T22:48:31.5185593Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"tax-exemption","status":"RUNNING","detail":null,"atUtc":"2026-11-06T22:48:31.5193124Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"tax-exemption","status":"PASSED","detail":"Rejected corruption, rolled back data/counter/history, and reran without duplicates.","atUtc":"2026-11-06T22:48:32.4660176Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"manual-sequence","status":"RUNNING","detail":null,"atUtc":"2026-11-06T22:48:32.4664882Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"manual-sequence","status":"PASSED","detail":"Rejected corruption, rolled back data/counter/history, and reran without duplicates.","atUtc":"2026-11-06T22:48:33.4115299Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"nonincrementing-sequence","status":"RUNNING","detail":null,"atUtc":"2026-11-06T22:48:33.4120119Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"nonincrementing-sequence","status":"PASSED","detail":"Rejected corruption, rolled back data/counter/history, and reran without duplicates.","atUtc":"2026-11-06T22:48:34.2973922Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"return-disposition","status":"RUNNING","detail":null,"atUtc":"2026-11-06T22:48:34.2980056Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"return-disposition","status":"PASSED","detail":"Rejected corruption, rolled back data/counter/history, and reran without duplicates.","atUtc":"2026-11-06T22:48:35.2972841Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"price-currency","status":"RUNNING","detail":null,"atUtc":"2026-11-06T22:48:35.2979482Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"price-currency","status":"PASSED","detail":"Rejected corruption, rolled back data/counter/history, and reran without duplicates.","atUtc":"2026-11-06T22:48:36.2480242Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"missing-party","status":"RUNNING","detail":null,"atUtc":"2026-11-06T22:48:36.2485179Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"missing-party","status":"PASSED","detail":"Rejected corruption, rolled back data/counter/history, and reran without duplicates.","atUtc":"2026-11-06T22:48:37.0911057Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"inactive-party","status":"RUNNING","detail":null,"atUtc":"2026-11-06T22:48:37.091837Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"inactive-party","status":"PASSED","detail":"Rejected corruption, rolled back data/counter/history, and reran without duplicates.","atUtc":"2026-11-06T22:48:37.9930263Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"customer-control","status":"RUNNING","detail":null,"atUtc":"2026-11-06T22:48:37.9936014Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"customer-control","status":"PASSED","detail":"Rejected corruption, rolled back data/counter/history, and reran without duplicates.","atUtc":"2026-11-06T22:48:39.128504Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"discount-account","status":"RUNNING","detail":null,"atUtc":"2026-11-06T22:48:39.1305704Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"discount-account","status":"PASSED","detail":"Rejected corruption, rolled back data/counter/history, and reran without duplicates.","atUtc":"2026-11-06T22:48:40.2097296Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"journal-exhausted","status":"RUNNING","detail":null,"atUtc":"2026-11-06T22:48:40.2104138Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"journal-exhausted","status":"PASSED","detail":"Rejected corruption, rolled back data/counter/history, and reran without duplicates.","atUtc":"2026-11-06T22:48:41.2220014Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"journal-below-minimum","status":"RUNNING","detail":null,"atUtc":"2026-11-06T22:48:41.2236132Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"journal-below-minimum","status":"PASSED","detail":"Rejected corruption, rolled back data/counter/history, and reran without duplicates.","atUtc":"2026-11-06T22:48:42.4568878Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"journal-missing-counter","status":"RUNNING","detail":null,"atUtc":"2026-11-06T22:48:42.4576603Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"journal-missing-counter","status":"PASSED","detail":"Rejected corruption, rolled back data/counter/history, and reran without duplicates.","atUtc":"2026-11-06T22:48:43.3174998Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"output-tax-account","status":"RUNNING","detail":null,"atUtc":"2026-11-06T22:48:43.3183698Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"output-tax-account","status":"PASSED","detail":"Rejected corruption, rolled back data/counter/history, and reran without duplicates.","atUtc":"2026-11-06T22:48:44.8396208Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"tax-base","status":"RUNNING","detail":null,"atUtc":"2026-11-06T22:48:44.8491705Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"tax-base","status":"PASSED","detail":"Rejected corruption, rolled back data/counter/history, and reran without duplicates.","atUtc":"2026-11-06T22:48:46.5006589Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"tax-calculation","status":"RUNNING","detail":null,"atUtc":"2026-11-06T22:48:46.5033405Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"tax-calculation","status":"PASSED","detail":"Rejected corruption, rolled back data/counter/history, and reran without duplicates.","atUtc":"2026-11-06T22:48:48.5748227Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"tax-rounding","status":"RUNNING","detail":null,"atUtc":"2026-11-06T22:48:48.5754238Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"tax-rounding","status":"PASSED","detail":"Rejected corruption, rolled back data/counter/history, and reran without duplicates.","atUtc":"2026-11-06T22:48:50.4145947Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"tax-currency","status":"RUNNING","detail":null,"atUtc":"2026-11-06T22:48:50.4151275Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"tax-currency","status":"PASSED","detail":"Rejected corruption, rolled back data/counter/history, and reran without duplicates.","atUtc":"2026-11-06T22:48:52.6605019Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"price-party-scope","status":"RUNNING","detail":null,"atUtc":"2026-11-06T22:48:52.6624315Z"}
+{"runId":"f573c32b69b14eda8fff93ddc2a6b8e3","stage":"price-party-scope","status":"FAILED","detail":"Xunit.Sdk.NotNullException: Assert.NotNull() Failure: Value is null\r\n   at Xunit.Assert.NotNull(Object object) in /_/src/xunit.assert/Asserts/NullAsserts.cs:line 37\r\n   at IXApi.Tests.AccountsReceivableSeedIntegrityTests.Cross_module_corruptions_are_rejected_before_commit_and_every_write_rolls_back() in C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\AccountsReceivableSeedIntegrityTests.cs:line 113","atUtc":"2026-11-06T22:48:53.7403047Z"}

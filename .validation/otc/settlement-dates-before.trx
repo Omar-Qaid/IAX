@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="2a8a43c9-c545-44f5-9f55-e9cfebc0d0d9" name="Omar Almojahid@DESKTOP-3Q67JPL 2026-11-07 10:45:29" runUser="DESKTOP-3Q67JPL\Omar Almojahid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-07T10:45:29.3336098+03:00" queuing="2026-11-07T10:45:29.3336101+03:00" start="2026-11-07T10:45:18.8149795+03:00" finish="2026-11-07T10:45:29.3459814+03:00" />
+  <TestSettings name="default" id="1a751433-563a-4767-b1f3-5b0c5cffd01e">
+    <Deployment runDeploymentRoot="Omar_Almojahid_DESKTOP-3Q67JPL_2026-11-07_10_45_29" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="f556ecf9-ab7b-4b31-b0b6-621ff62abc75" testId="0067d628-3c15-0848-a25a-722038cc257c" testName="IAX.IXApi.Tests.SettlementReversalTests.A_customer_settlement_cannot_be_reversed_before_its_original_date" computerName="DESKTOP-3Q67JPL" duration="00:00:06.0422986" startTime="2026-11-07T10:45:22.8884918+03:00" endTime="2026-11-07T10:45:28.9485597+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f556ecf9-ab7b-4b31-b0b6-621ff62abc75">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ&#xD;
+Expected: 422&#xD;
+Actual:   200</Message>
+          <StackTrace>   at IAX.IXApi.Tests.SettlementReversalTests.A_customer_settlement_cannot_be_reversed_before_its_original_date() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\SettlementReversalTests.cs:line 46&#xD;
+   at IAX.IXApi.Tests.SettlementReversalTests.A_customer_settlement_cannot_be_reversed_before_its_original_date() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\SettlementReversalTests.cs:line 52&#xD;
+   at IAX.IXApi.Tests.SettlementReversalTests.A_customer_settlement_cannot_be_reversed_before_its_original_date() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\SettlementReversalTests.cs:line 52&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IAX.IXApi.Tests.SettlementReversalTests.A_customer_settlement_cannot_be_reversed_before_its_original_date" storage="c:\users\omar almojahid\desktop\iax\ixapi\.ap-service-validation\settlement-dates\debug\net9.0\ixapi.tests.dll" id="0067d628-3c15-0848-a25a-722038cc257c">
+      <Execution id="f556ecf9-ab7b-4b31-b0b6-621ff62abc75" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\.ap-service-validation\settlement-dates\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.SettlementReversalTests" name="A_customer_settlement_cannot_be_reversed_before_its_original_date" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="0067d628-3c15-0848-a25a-722038cc257c" executionId="f556ecf9-ab7b-4b31-b0b6-621ff62abc75" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="1" executed="1" passed="0" failed="1" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.01] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.71]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:01.24]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:01.46]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:00:07.68]       Assert.Equal() Failure: Values differ&#xD;
+[xUnit.net 00:00:07.68]       Expected: 422&#xD;
+[xUnit.net 00:00:07.68]       Actual:   200&#xD;
+[xUnit.net 00:00:07.68]       Stack Trace:&#xD;
+[xUnit.net 00:00:07.69]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\SettlementReversalTests.cs(46,0): at IAX.IXApi.Tests.SettlementReversalTests.A_customer_settlement_cannot_be_reversed_before_its_original_date()&#xD;
+[xUnit.net 00:00:07.69]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\SettlementReversalTests.cs(52,0): at IAX.IXApi.Tests.SettlementReversalTests.A_customer_settlement_cannot_be_reversed_before_its_original_date()&#xD;
+[xUnit.net 00:00:07.69]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\SettlementReversalTests.cs(52,0): at IAX.IXApi.Tests.SettlementReversalTests.A_customer_settlement_cannot_be_reversed_before_its_original_date()&#xD;
+[xUnit.net 00:00:07.69]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:07.74]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="DESKTOP-3Q67JPL" outcome="Error" timestamp="2026-11-07T10:45:28.9564708+03:00">
+        <Text>[xUnit.net 00:00:07.68]     IAX.IXApi.Tests.SettlementReversalTests.A_customer_settlement_cannot_be_reversed_before_its_original_date [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

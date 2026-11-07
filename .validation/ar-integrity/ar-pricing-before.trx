@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="da068f0d-cb3d-4393-81d4-834edf22add0" name="Omar Almojahid@DESKTOP-3Q67JPL 2026-11-07 01:48:54" runUser="DESKTOP-3Q67JPL\Omar Almojahid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-07T01:48:54.3587385+03:00" queuing="2026-11-07T01:48:54.3587389+03:00" start="2026-11-07T01:47:52.9295228+03:00" finish="2026-11-07T01:48:54.3677171+03:00" />
+  <TestSettings name="default" id="e7161779-93f7-4087-9313-44b1c3bf00e4">
+    <Deployment runDeploymentRoot="Omar_Almojahid_DESKTOP-3Q67JPL_2026-11-07_01_48_54" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="1f5813d8-6824-4345-97ad-08ae72b23b1e" testId="355fcc9e-77f7-08bd-6270-97c9c234696d" testName="IXApi.Tests.AccountsReceivableSeedIntegrityTests.Cross_module_corruptions_are_rejected_before_commit_and_every_write_rolls_back" computerName="DESKTOP-3Q67JPL" duration="00:00:59.1140911" startTime="2026-11-07T01:47:54.6284117+03:00" endTime="2026-11-07T01:48:53.7855878+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1f5813d8-6824-4345-97ad-08ae72b23b1e">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.NotNull() Failure: Value is null</Message>
+          <StackTrace>   at IXApi.Tests.AccountsReceivableSeedIntegrityTests.Cross_module_corruptions_are_rejected_before_commit_and_every_write_rolls_back() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableSeedIntegrityTests.cs:line 113&#xD;
+   at IXApi.Tests.AccountsReceivableSeedIntegrityTests.Cross_module_corruptions_are_rejected_before_commit_and_every_write_rolls_back() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableSeedIntegrityTests.cs:line 146&#xD;
+   at IXApi.Tests.AccountsReceivableSeedIntegrityTests.Cross_module_corruptions_are_rejected_before_commit_and_every_write_rolls_back() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableSeedIntegrityTests.cs:line 146&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IXApi.Tests.AccountsReceivableSeedIntegrityTests.Cross_module_corruptions_are_rejected_before_commit_and_every_write_rolls_back" storage="c:\users\omar almojahid\desktop\iax\ixapi\.ap-service-validation\bin\debug\net9.0\ixapi.tests.dll" id="355fcc9e-77f7-08bd-6270-97c9c234696d">
+      <Execution id="1f5813d8-6824-4345-97ad-08ae72b23b1e" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\.ap-service-validation\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableSeedIntegrityTests" name="Cross_module_corruptions_are_rejected_before_commit_and_every_write_rolls_back" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="355fcc9e-77f7-08bd-6270-97c9c234696d" executionId="1f5813d8-6824-4345-97ad-08ae72b23b1e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="1" executed="1" passed="0" failed="1" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.39]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:00.72]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:00.79]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:00:59.98]       Assert.NotNull() Failure: Value is null&#xD;
+[xUnit.net 00:00:59.98]       Stack Trace:&#xD;
+[xUnit.net 00:00:59.98]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableSeedIntegrityTests.cs(113,0): at IXApi.Tests.AccountsReceivableSeedIntegrityTests.Cross_module_corruptions_are_rejected_before_commit_and_every_write_rolls_back()&#xD;
+[xUnit.net 00:00:59.98]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableSeedIntegrityTests.cs(146,0): at IXApi.Tests.AccountsReceivableSeedIntegrityTests.Cross_module_corruptions_are_rejected_before_commit_and_every_write_rolls_back()&#xD;
+[xUnit.net 00:00:59.98]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableSeedIntegrityTests.cs(146,0): at IXApi.Tests.AccountsReceivableSeedIntegrityTests.Cross_module_corruptions_are_rejected_before_commit_and_every_write_rolls_back()&#xD;
+[xUnit.net 00:00:59.98]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:01:00.00]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="DESKTOP-3Q67JPL" outcome="Error" timestamp="2026-11-07T01:48:53.7895286+03:00">
+        <Text>[xUnit.net 00:00:59.98]     IXApi.Tests.AccountsReceivableSeedIntegrityTests.Cross_module_corruptions_are_rejected_before_commit_and_every_write_rolls_back [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

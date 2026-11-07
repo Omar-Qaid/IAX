@@ -1,0 +1,16 @@
+{
+  "verificationMode": "Single clean full-suite run after the discount and isolated-assets fixes",
+  "generalPassed": 866,
+  "generalFailed": 0,
+  "generalSkipped": 3,
+  "inventoryPassed": 128,
+  "inventoryFailed": 0,
+  "customerMappingPassed": 2,
+  "confirmationPassed": 23,
+  "acceptance": {
+    "Not implemented": 12,
+    "Not run": 4,
+    "Passed": 61
+  },
+  "completeAcceptancePassed": false
+}

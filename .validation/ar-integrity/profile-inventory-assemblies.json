@@ -1,0 +1,10 @@
+[
+  {
+    "Path": "C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\.ap-service-validation\\bin\\Debug\\net9.0\\IAX.IXApi.Modules.Finance.dll",
+    "Hash": "F28D7E2A420AFAFF9C50E9B5F648CF2D1DB5144F205D2C6562FC57BF77839D7A"
+  },
+  {
+    "Path": "C:\\Users\\Omar Almojahid\\Desktop\\IAX\\IXApi\\Tests\\bin\\InventoryCycle.Tests\\net9.0\\IAX.IXApi.Modules.Finance.dll",
+    "Hash": "F28D7E2A420AFAFF9C50E9B5F648CF2D1DB5144F205D2C6562FC57BF77839D7A"
+  }
+]

@@ -1,0 +1,496 @@
+{
+  "serviceCount": 60,
+  "crudCount": 32,
+  "services": [
+    {
+      "service": "CashDiscountCalculator",
+      "source": "IXApi/src/Modules/Finance/Foundation/CashDiscount/Services/CashDiscountCalculator.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "CashDiscountTests",
+        "FoundationServiceStageTests"
+      ]
+    },
+    {
+      "service": "CashDiscountResolver",
+      "source": "IXApi/src/Modules/Finance/Foundation/CashDiscount/Services/CashDiscountResolver.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "FoundationServiceStageTests"
+      ]
+    },
+    {
+      "service": "CashDiscService",
+      "source": "IXApi/src/Modules/Finance/Foundation/CashDiscount/Services/CashDiscService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "CurrencyService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Currency/Services/CurrencyService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "EffectiveExchangeRateLookup",
+      "source": "IXApi/src/Modules/Finance/Foundation/Currency/Services/EffectiveExchangeRateLookup.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "EffectiveExchangeRateTests",
+        "FoundationServiceStageTests"
+      ]
+    },
+    {
+      "service": "ExchangeRateCurrencyPairService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Currency/Services/ExchangeRateCurrencyPairService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "ExchangeRateService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Currency/Services/ExchangeRateService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "ExchangeRateTypeService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Currency/Services/ExchangeRateTypeService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "LedgerCurrencyConverter",
+      "source": "IXApi/src/Modules/Finance/Foundation/Currency/Services/LedgerCurrencyConverter.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "FoundationServiceStageTests"
+      ]
+    },
+    {
+      "service": "LedgerExchangeRateCheck",
+      "source": "IXApi/src/Modules/Finance/Foundation/Currency/Services/LedgerExchangeRateCheck.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "FoundationServiceStageTests",
+        "LedgerJournalSetupCheckTests"
+      ]
+    },
+    {
+      "service": "DlvModeService",
+      "source": "IXApi/src/Modules/Finance/Foundation/DeliveryModes/Services/DlvModeService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "DlvTermService",
+      "source": "IXApi/src/Modules/Finance/Foundation/DeliveryTerms/Services/DlvTermService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "HcmDepartmentService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Departments/Services/HcmDepartmentService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "AccountStructureBuilder",
+      "source": "IXApi/src/Modules/Finance/Foundation/Dimensions/AccountStructure/Services/AccountStructureBuilder.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "AccountStructureBuilderTests",
+        "AccountStructureValidationTests",
+        "TestAccountStructures"
+      ]
+    },
+    {
+      "service": "AccountStructureService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Dimensions/AccountStructure/Services/AccountStructureService.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "FoundationServiceStageTests: through the owning service; see stage report"
+      ]
+    },
+    {
+      "service": "AccountStructureValidator",
+      "source": "IXApi/src/Modules/Finance/Foundation/Dimensions/AccountStructure/Services/AccountStructureValidator.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "AccountStructureValidationTests"
+      ]
+    },
+    {
+      "service": "DimensionCriteriaMatcher",
+      "source": "IXApi/src/Modules/Finance/Foundation/Dimensions/AccountStructure/Services/DimensionCriteriaMatcher.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "DimensionCriteriaMatcherTests"
+      ]
+    },
+    {
+      "service": "LedgerDimensionResolver",
+      "source": "IXApi/src/Modules/Finance/Foundation/Dimensions/LedgerDimension/Services/LedgerDimensionResolver.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "AccountStructureValidationTests",
+        "FoundationServiceStageTests",
+        "LedgerDimensionResolverTests",
+        "TestAccountStructures"
+      ]
+    },
+    {
+      "service": "GenderService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Genders/Services/GenderService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "HcmShowroomService",
+      "source": "IXApi/src/Modules/Finance/Foundation/HcmShowrooms/Services/HcmShowroomService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "HcmWorkerService",
+      "source": "IXApi/src/Modules/Finance/Foundation/HcmWorkers/HcmWorker/Services/HcmWorkerService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "OrganizationStructureService",
+      "source": "IXApi/src/Modules/Finance/Foundation/HcmWorkers/Structure/Services/OrganizationStructureService.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "OrganizationStructureTests"
+      ]
+    },
+    {
+      "service": "CompanyInfoService",
+      "source": "IXApi/src/Modules/Finance/Foundation/LegalEntities/Services/CompanyInfoService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "AddressBookQueryService",
+      "source": "IXApi/src/Modules/Finance/Foundation/LogisticsAddresses/Services/AddressBookQueryService.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "FoundationServiceStageTests: through the owning service; see stage report"
+      ]
+    },
+    {
+      "service": "ContactPersonService",
+      "source": "IXApi/src/Modules/Finance/Foundation/LogisticsAddresses/Services/ContactPersonService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "ElectronicAddressService",
+      "source": "IXApi/src/Modules/Finance/Foundation/LogisticsAddresses/Services/ElectronicAddressService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "GlobalAddressBookService",
+      "source": "IXApi/src/Modules/Finance/Foundation/LogisticsAddresses/Services/GlobalAddressBookService.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "FoundationRefactorTests"
+      ]
+    },
+    {
+      "service": "LocationService",
+      "source": "IXApi/src/Modules/Finance/Foundation/LogisticsAddresses/Services/LocationService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "PartyLocationService",
+      "source": "IXApi/src/Modules/Finance/Foundation/LogisticsAddresses/Services/PartyLocationService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "PartyService",
+      "source": "IXApi/src/Modules/Finance/Foundation/LogisticsAddresses/Services/PartyService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "PostalAddressService",
+      "source": "IXApi/src/Modules/Finance/Foundation/LogisticsAddresses/Services/PostalAddressService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "MarkupChargeCalculator",
+      "source": "IXApi/src/Modules/Finance/Foundation/Markup/Services/MarkupChargeCalculator.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "FoundationServiceStageTests: through the owning service; see stage report"
+      ]
+    },
+    {
+      "service": "MarkupTableService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Markup/Services/MarkupTableService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "MarkupTransCommandService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Markup/Services/MarkupTransCommandService.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "SalesOrderConfirmationTests"
+      ]
+    },
+    {
+      "service": "MarkupTransService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Markup/Services/MarkupTransService.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "SalesOrderConfirmationTests"
+      ]
+    },
+    {
+      "service": "HcmNationalityService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Nationalities/Services/HcmNationalityService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "HcmOccupationService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Occupations/Services/HcmOccupationService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "OrganizationUnitService",
+      "source": "IXApi/src/Modules/Finance/Foundation/OrganizationUnits/Services/OrganizationUnitService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "PaymSchedLineService",
+      "source": "IXApi/src/Modules/Finance/Foundation/PaymentSchedules/Services/PaymSchedLineService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "PaymSchedService",
+      "source": "IXApi/src/Modules/Finance/Foundation/PaymentSchedules/Services/PaymSchedService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "PaymentDueDateCalculator",
+      "source": "IXApi/src/Modules/Finance/Foundation/PaymentTerms/Services/PaymentDueDateCalculator.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "CashDiscountTests",
+        "FoundationServiceStageTests",
+        "PurchasePaymentDueDateTests"
+      ]
+    },
+    {
+      "service": "PaymTermService",
+      "source": "IXApi/src/Modules/Finance/Foundation/PaymentTerms/Services/PaymTermService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "TaxAuthorityAddressService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxAuthorityAddressService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "TaxCodeRateService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxCodeRateService.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "TaxCompanyIsolationTests"
+      ]
+    },
+    {
+      "service": "TaxCodeSaveTransaction",
+      "source": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxCodeSaveTransaction.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "FoundationServiceStageTests: through the owning service; see stage report"
+      ]
+    },
+    {
+      "service": "TaxExemptCodeService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxExemptCodeService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "TaxGroupCommandService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxGroupCommandService.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "FoundationServiceStageTests: through the owning service; see stage report"
+      ]
+    },
+    {
+      "service": "TaxGroupLineService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxGroupLineService.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "FoundationServiceStageTests: through the owning service; see stage report"
+      ]
+    },
+    {
+      "service": "TaxGroupQueryService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxGroupQueryService.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "FoundationServiceStageTests: through the owning service; see stage report"
+      ]
+    },
+    {
+      "service": "TaxGroupService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxGroupService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "TaxItemGroupCommandService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxItemGroupCommandService.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "FoundationServiceStageTests: through the owning service; see stage report"
+      ]
+    },
+    {
+      "service": "TaxItemGroupLineService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxItemGroupLineService.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "FoundationServiceStageTests: through the owning service; see stage report"
+      ]
+    },
+    {
+      "service": "TaxItemGroupQueryService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxItemGroupQueryService.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "FoundationServiceStageTests: through the owning service; see stage report"
+      ]
+    },
+    {
+      "service": "TaxItemGroupService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxItemGroupService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "TaxLedgerAccountGroupService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxLedgerAccountGroupService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "TaxPeriodHeadCrudService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxPeriodHeadCrudService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    },
+    {
+      "service": "TaxPeriodService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxPeriodService.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "FoundationServiceStageTests: through the owning service; see stage report"
+      ]
+    },
+    {
+      "service": "TaxReportService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxReportService.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "TaxSettlementTests"
+      ]
+    },
+    {
+      "service": "TaxSettlementService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxSettlementService.cs",
+      "scope": "Specialized behavior; direct or through its owning service",
+      "tests": [
+        "TaxSettlementTests"
+      ]
+    },
+    {
+      "service": "TaxTableService",
+      "source": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxTableService.cs",
+      "scope": "Inherited CRUD read/create/update/delete",
+      "tests": [
+        "FoundationServiceStageTests: per-service CRUD stage"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "general": {
+    "passed": 859,
+    "skipped": 3,
+    "total": 862,
+    "failed": 0
+  },
+  "inventory": {
+    "failed": 0,
+    "passed": 128
+  },
+  "rejectedCorruptions": 24,
+  "arPassedStages": 37,
+  "temporaryDatabasesRemaining": 0
+}

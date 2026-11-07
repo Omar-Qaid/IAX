@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="b3fe7db3-d7e3-4c13-856d-270d0c790b51" name="Omar Almojahid@DESKTOP-3Q67JPL 2026-11-06 16:27:47" runUser="DESKTOP-3Q67JPL\Omar Almojahid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-06T16:27:47.1723008+03:00" queuing="2026-11-06T16:27:47.1723013+03:00" start="2026-11-06T16:26:50.1430702+03:00" finish="2026-11-06T16:27:47.1806198+03:00" />
+  <TestSettings name="default" id="b0a53f10-cd43-4f0e-85de-56e86771821e">
+    <Deployment runDeploymentRoot="Omar_Almojahid_DESKTOP-3Q67JPL_2026-11-06_16_27_47" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="add545e6-e870-4973-a59d-6fdc0811b3ec" testId="7b988b31-2005-31be-d8bb-5695c1ecc1a8" testName="IXApi.Tests.AccountsReceivableCycleStageTests.Detailed_AR_stages_SQLServer" computerName="DESKTOP-3Q67JPL" duration="00:00:55.3250780" startTime="2026-11-06T16:26:51.5948167+03:00" endTime="2026-11-06T16:27:46.9462343+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="add545e6-e870-4973-a59d-6fdc0811b3ec">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : AR packing slip failed (422): Delivery quantities must be positive and cannot exceed the remaining physical quantity on stocked open lines.</Message>
+          <StackTrace>   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsReceivable.AccountsReceivableTransactionFlow.Success(Int32 statusCode, String message, String stage) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\AccountsReceivable\AccountsReceivableTransactionFlow.cs:line 55&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsReceivable.AccountsReceivableTransactionFlow.Deliver(SalesTable order, String number, DateTime date, List`1 quantities, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\AccountsReceivable\AccountsReceivableTransactionFlow.cs:line 283&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsReceivable.AccountsReceivableTransactionFlow.ExecuteAsync(AccountsReceivableTransactionOptions options, String id, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\AccountsReceivable\AccountsReceivableTransactionFlow.cs:line 123&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsReceivable.AccountsReceivableTransactionExamples.RunAsync(AccountsReceivableTransactionOptions options, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\AccountsReceivable\AccountsReceivableTransactionExamples.cs:line 29&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsReceivable.AccountsReceivableTransactionExamples.RunAsync(AccountsReceivableTransactionOptions options, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\AccountsReceivable\AccountsReceivableTransactionExamples.cs:line 33&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.&lt;&gt;c__DisplayClass10_4.&lt;&lt;RunStagesAsync&gt;b__19&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs:line 198&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.&lt;&gt;c__DisplayClass10_0.&lt;&lt;RunStagesAsync&gt;g__Stage|1&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs:line 101&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.RunStagesAsync(ApplicationDbContext db, String providerName, Func`1 initialize) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs:line 196&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.Detailed_AR_stages_SQLServer() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs:line 77&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.Detailed_AR_stages_SQLServer() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs:line 82&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.Detailed_AR_stages_SQLServer() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs:line 82&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IXApi.Tests.AccountsReceivableCycleStageTests.Detailed_AR_stages_SQLServer" storage="c:\users\omar almojahid\desktop\iax\ixapi\.ap-service-validation\bin\debug\net9.0\ixapi.tests.dll" id="7b988b31-2005-31be-d8bb-5695c1ecc1a8">
+      <Execution id="add545e6-e870-4973-a59d-6fdc0811b3ec" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\.ap-service-validation\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableCycleStageTests" name="Detailed_AR_stages_SQLServer" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="7b988b31-2005-31be-d8bb-5695c1ecc1a8" executionId="add545e6-e870-4973-a59d-6fdc0811b3ec" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="1" executed="1" passed="0" failed="1" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.29]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:00.57]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:00.61]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:00:56.00]       System.InvalidOperationException : AR packing slip failed (422): Delivery quantities must be positive and cannot exceed the remaining physical quantity on stocked open lines.&#xD;
+[xUnit.net 00:00:56.00]       Stack Trace:&#xD;
+[xUnit.net 00:00:56.01]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\AccountsReceivable\AccountsReceivableTransactionFlow.cs(55,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsReceivable.AccountsReceivableTransactionFlow.Success(Int32 statusCode, String message, String stage)&#xD;
+[xUnit.net 00:00:56.01]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\AccountsReceivable\AccountsReceivableTransactionFlow.cs(283,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsReceivable.AccountsReceivableTransactionFlow.Deliver(SalesTable order, String number, DateTime date, List`1 quantities, CancellationToken ct)&#xD;
+[xUnit.net 00:00:56.01]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\AccountsReceivable\AccountsReceivableTransactionFlow.cs(123,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsReceivable.AccountsReceivableTransactionFlow.ExecuteAsync(AccountsReceivableTransactionOptions options, String id, CancellationToken ct)&#xD;
+[xUnit.net 00:00:56.01]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\AccountsReceivable\AccountsReceivableTransactionExamples.cs(29,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsReceivable.AccountsReceivableTransactionExamples.RunAsync(AccountsReceivableTransactionOptions options, CancellationToken ct)&#xD;
+[xUnit.net 00:00:56.01]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\AccountsReceivable\AccountsReceivableTransactionExamples.cs(33,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsReceivable.AccountsReceivableTransactionExamples.RunAsync(AccountsReceivableTransactionOptions options, CancellationToken ct)&#xD;
+[xUnit.net 00:00:56.01]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs(198,0): at IXApi.Tests.AccountsReceivableCycleStageTests.&lt;&gt;c__DisplayClass10_4.&lt;&lt;RunStagesAsync&gt;b__19&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:56.01]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:56.01]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs(101,0): at IXApi.Tests.AccountsReceivableCycleStageTests.&lt;&gt;c__DisplayClass10_0.&lt;&lt;RunStagesAsync&gt;g__Stage|1&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:56.01]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:56.01]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs(196,0): at IXApi.Tests.AccountsReceivableCycleStageTests.RunStagesAsync(ApplicationDbContext db, String providerName, Func`1 initialize)&#xD;
+[xUnit.net 00:00:56.01]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs(77,0): at IXApi.Tests.AccountsReceivableCycleStageTests.Detailed_AR_stages_SQLServer()&#xD;
+[xUnit.net 00:00:56.01]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs(82,0): at IXApi.Tests.AccountsReceivableCycleStageTests.Detailed_AR_stages_SQLServer()&#xD;
+[xUnit.net 00:00:56.01]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs(82,0): at IXApi.Tests.AccountsReceivableCycleStageTests.Detailed_AR_stages_SQLServer()&#xD;
+[xUnit.net 00:00:56.01]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:56.03]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="DESKTOP-3Q67JPL" outcome="Error" timestamp="2026-11-06T16:27:46.9501268+03:00">
+        <Text>[xUnit.net 00:00:56.00]     IXApi.Tests.AccountsReceivableCycleStageTests.Detailed_AR_stages_SQLServer [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

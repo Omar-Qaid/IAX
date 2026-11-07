@@ -1,0 +1,135 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="8990a194-1921-4b2a-9818-4aec62b4d1d6" name="Omar Almojahid@DESKTOP-3Q67JPL 2026-11-06 16:12:27" runUser="DESKTOP-3Q67JPL\Omar Almojahid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-06T16:12:27.3504872+03:00" queuing="2026-11-06T16:12:27.3504875+03:00" start="2026-11-06T16:11:46.1178621+03:00" finish="2026-11-06T16:12:27.3603403+03:00" />
+  <TestSettings name="default" id="5a42d46b-1f2f-4199-9718-eb6c2f048ca4">
+    <Deployment runDeploymentRoot="Omar_Almojahid_DESKTOP-3Q67JPL_2026-11-06_16_12_27" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="bd8c5b82-b990-4793-bdba-bbba1e79c4e5" testId="9136e4f7-3d94-2027-11a3-305b1956e0d4" testName="IXApi.Tests.AccountsReceivableCycleStageTests.Detailed_AR_stages_SQLite" computerName="DESKTOP-3Q67JPL" duration="00:00:39.4445207" startTime="2026-11-06T16:11:47.6084821+03:00" endTime="2026-11-06T16:12:27.0767106+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="bd8c5b82-b990-4793-bdba-bbba1e79c4e5">
+      <Output>
+        <ErrorInfo>
+          <Message>System.NotSupportedException : SQLite cannot apply aggregate operator 'Max' on expressions of type 'decimal'. Convert the values to a supported type, or use LINQ to Objects to aggregate the results on the client side.</Message>
+          <StackTrace>   at Microsoft.EntityFrameworkCore.Sqlite.Query.Internal.SqliteQueryableAggregateMethodTranslator.Translate(MethodInfo method, EnumerableExpression source, IReadOnlyList`1 arguments, IDiagnosticsLogger`1 logger)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.RelationalAggregateMethodCallTranslatorProvider.&lt;&gt;c__DisplayClass6_0.&lt;Translate&gt;b__0(IAggregateMethodCallTranslator t)&#xD;
+   at System.Linq.Enumerable.IteratorSelectIterator`2.MoveNext()&#xD;
+   at System.Linq.Enumerable.TryGetFirst[TSource](IEnumerable`1 source, Func`2 predicate, Boolean&amp; found)&#xD;
+   at System.Linq.Enumerable.FirstOrDefault[TSource](IEnumerable`1 source, Func`2 predicate)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.RelationalAggregateMethodCallTranslatorProvider.Translate(IModel model, MethodInfo method, EnumerableExpression source, IReadOnlyList`1 arguments, IDiagnosticsLogger`1 logger)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.RelationalSqlTranslatingExpressionVisitor.TranslateAggregateMethod(EnumerableExpression enumerableExpression, MethodInfo method, List`1 scalarArguments)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.RelationalSqlTranslatingExpressionVisitor.TryTranslateAggregateMethodCall(MethodCallExpression methodCallExpression, SqlExpression&amp; translation)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.RelationalSqlTranslatingExpressionVisitor.VisitMethodCall(MethodCallExpression methodCallExpression)&#xD;
+   at Microsoft.EntityFrameworkCore.Sqlite.Query.Internal.SqliteSqlTranslatingExpressionVisitor.VisitMethodCall(MethodCallExpression methodCallExpression)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.RelationalSqlTranslatingExpressionVisitor.TranslateInternal(Expression expression, Boolean applyDefaultTypeMapping)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.RelationalSqlTranslatingExpressionVisitor.Translate(Expression expression, Boolean applyDefaultTypeMapping)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.RelationalQueryableMethodTranslatingExpressionVisitor.TranslateAggregateWithSelector(ShapedQueryExpression source, LambdaExpression selectorLambda, Func`2 methodGenerator, Boolean throwWhenEmpty, Type resultType)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.RelationalQueryableMethodTranslatingExpressionVisitor.TranslateMax(ShapedQueryExpression source, LambdaExpression selector, Type resultType)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.QueryableMethodTranslatingExpressionVisitor.VisitMethodCall(MethodCallExpression methodCallExpression)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.RelationalQueryableMethodTranslatingExpressionVisitor.VisitMethodCall(MethodCallExpression methodCallExpression)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.QueryableMethodTranslatingExpressionVisitor.Translate(Expression expression)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.QueryCompilationContext.CreateQueryExecutorExpression[TResult](Expression query)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.QueryCompilationContext.CreateQueryExecutor[TResult](Expression query)&#xD;
+   at Microsoft.EntityFrameworkCore.Storage.Database.CompileQuery[TResult](Expression query, Boolean async)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.CompileQueryCore[TResult](IDatabase database, Expression query, IModel model, Boolean async)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.&lt;&gt;c__DisplayClass11_0`1.&lt;ExecuteCore&gt;b__0()&#xD;
+   at Microsoft.EntityFrameworkCore.Query.Internal.CompiledQueryCache.GetOrAddQuery[TResult](Object cacheKey, Func`1 compiler)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.ExecuteCore[TResult](Expression query, Boolean async, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.ExecuteAsync[TResult](Expression query, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryProvider.ExecuteAsync[TResult](Expression expression, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ExecuteAsync[TSource,TResult](MethodInfo operatorMethodInfo, IQueryable`1 source, Expression expression, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ExecuteAsync[TSource,TResult](MethodInfo operatorMethodInfo, IQueryable`1 source, LambdaExpression expression, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.MaxAsync[TSource,TResult](IQueryable`1 source, Expression`1 selector, CancellationToken cancellationToken)&#xD;
+   at IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrderLineService.&lt;&gt;c__DisplayClass6_0.&lt;&lt;AddAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Modules\Finance\AccountsReceivable\SalesOrder\Services\SalesOrderLineService.cs:line 95&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrderLineService.&lt;&gt;c__DisplayClass6_0.&lt;&lt;AddAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Modules\Finance\AccountsReceivable\SalesOrder\Services\SalesOrderLineService.cs:line 205&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrderLineService.AddAsync(Int64 recId, SalesLineInputDto input, CancellationToken cancellationToken) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Modules\Finance\AccountsReceivable\SalesOrder\Services\SalesOrderLineService.cs:line 31&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.&lt;&gt;c__DisplayClass12_0.&lt;&lt;RunSalesPathAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs:line 233&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.&lt;&gt;c__DisplayClass10_0.&lt;&lt;RunStagesAsync&gt;g__Stage|1&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs:line 101&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.RunSalesPathAsync(ApplicationDbContext db, IServiceProvider services, Func`4 Stage, String key, Decimal ordered, Decimal delivered, Decimal invoiced, Boolean full) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs:line 223&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.RunStagesAsync(ApplicationDbContext db, String providerName, Func`1 initialize) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs:line 142&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.Detailed_AR_stages_SQLite() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs:line 62&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.Detailed_AR_stages_SQLite() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs:line 62&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.Detailed_AR_stages_SQLite() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs:line 62&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IXApi.Tests.AccountsReceivableCycleStageTests.Detailed_AR_stages_SQLite" storage="c:\users\omar almojahid\desktop\iax\ixapi\.ap-service-validation\bin\debug\net9.0\ixapi.tests.dll" id="9136e4f7-3d94-2027-11a3-305b1956e0d4">
+      <Execution id="bd8c5b82-b990-4793-bdba-bbba1e79c4e5" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\.ap-service-validation\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableCycleStageTests" name="Detailed_AR_stages_SQLite" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="9136e4f7-3d94-2027-11a3-305b1956e0d4" executionId="bd8c5b82-b990-4793-bdba-bbba1e79c4e5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="1" executed="1" passed="0" failed="1" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.28]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:00.57]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:00.62]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:00:40.13]       System.NotSupportedException : SQLite cannot apply aggregate operator 'Max' on expressions of type 'decimal'. Convert the values to a supported type, or use LINQ to Objects to aggregate the results on the client side.&#xD;
+[xUnit.net 00:00:40.13]       Stack Trace:&#xD;
+[xUnit.net 00:00:40.13]            at Microsoft.EntityFrameworkCore.Sqlite.Query.Internal.SqliteQueryableAggregateMethodTranslator.Translate(MethodInfo method, EnumerableExpression source, IReadOnlyList`1 arguments, IDiagnosticsLogger`1 logger)&#xD;
+[xUnit.net 00:00:40.13]            at Microsoft.EntityFrameworkCore.Query.RelationalAggregateMethodCallTranslatorProvider.&lt;&gt;c__DisplayClass6_0.&lt;Translate&gt;b__0(IAggregateMethodCallTranslator t)&#xD;
+[xUnit.net 00:00:40.13]            at System.Linq.Enumerable.IteratorSelectIterator`2.MoveNext()&#xD;
+[xUnit.net 00:00:40.13]            at System.Linq.Enumerable.TryGetFirst[TSource](IEnumerable`1 source, Func`2 predicate, Boolean&amp; found)&#xD;
+[xUnit.net 00:00:40.13]            at System.Linq.Enumerable.FirstOrDefault[TSource](IEnumerable`1 source, Func`2 predicate)&#xD;
+[xUnit.net 00:00:40.13]            at Microsoft.EntityFrameworkCore.Query.RelationalAggregateMethodCallTranslatorProvider.Translate(IModel model, MethodInfo method, EnumerableExpression source, IReadOnlyList`1 arguments, IDiagnosticsLogger`1 logger)&#xD;
+[xUnit.net 00:00:40.13]            at Microsoft.EntityFrameworkCore.Query.RelationalSqlTranslatingExpressionVisitor.TranslateAggregateMethod(EnumerableExpression enumerableExpression, MethodInfo method, List`1 scalarArguments)&#xD;
+[xUnit.net 00:00:40.13]            at Microsoft.EntityFrameworkCore.Query.RelationalSqlTranslatingExpressionVisitor.TryTranslateAggregateMethodCall(MethodCallExpression methodCallExpression, SqlExpression&amp; translation)&#xD;
+[xUnit.net 00:00:40.13]            at Microsoft.EntityFrameworkCore.Query.RelationalSqlTranslatingExpressionVisitor.VisitMethodCall(MethodCallExpression methodCallExpression)&#xD;
+[xUnit.net 00:00:40.13]            at Microsoft.EntityFrameworkCore.Sqlite.Query.Internal.SqliteSqlTranslatingExpressionVisitor.VisitMethodCall(MethodCallExpression methodCallExpression)&#xD;
+[xUnit.net 00:00:40.13]            at Microsoft.EntityFrameworkCore.Query.RelationalSqlTranslatingExpressionVisitor.TranslateInternal(Expression expression, Boolean applyDefaultTypeMapping)&#xD;
+[xUnit.net 00:00:40.13]            at Microsoft.EntityFrameworkCore.Query.RelationalSqlTranslatingExpressionVisitor.Translate(Expression expression, Boolean applyDefaultTypeMapping)&#xD;
+[xUnit.net 00:00:40.13]            at Microsoft.EntityFrameworkCore.Query.RelationalQueryableMethodTranslatingExpressionVisitor.TranslateAggregateWithSelector(ShapedQueryExpression source, LambdaExpression selectorLambda, Func`2 methodGenerator, Boolean throwWhenEmpty, Type resultType)&#xD;
+[xUnit.net 00:00:40.13]            at Microsoft.EntityFrameworkCore.Query.RelationalQueryableMethodTranslatingExpressionVisitor.TranslateMax(ShapedQueryExpression source, LambdaExpression selector, Type resultType)&#xD;
+[xUnit.net 00:00:40.13]            at Microsoft.EntityFrameworkCore.Query.QueryableMethodTranslatingExpressionVisitor.VisitMethodCall(MethodCallExpression methodCallExpression)&#xD;
+[xUnit.net 00:00:40.13]            at Microsoft.EntityFrameworkCore.Query.RelationalQueryableMethodTranslatingExpressionVisitor.VisitMethodCall(MethodCallExpression methodCallExpression)&#xD;
+[xUnit.net 00:00:40.13]            at Microsoft.EntityFrameworkCore.Query.QueryableMethodTranslatingExpressionVisitor.Translate(Expression expression)&#xD;
+[xUnit.net 00:00:40.13]            at Microsoft.EntityFrameworkCore.Query.QueryCompilationContext.CreateQueryExecutorExpression[TResult](Expression query)&#xD;
+[xUnit.net 00:00:40.13]            at Microsoft.EntityFrameworkCore.Query.QueryCompilationContext.CreateQueryExecutor[TResult](Expression query)&#xD;
+[xUnit.net 00:00:40.13]            at Microsoft.EntityFrameworkCore.Storage.Database.CompileQuery[TResult](Expression query, Boolean async)&#xD;
+[xUnit.net 00:00:40.13]            at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.CompileQueryCore[TResult](IDatabase database, Expression query, IModel model, Boolean async)&#xD;
+[xUnit.net 00:00:40.13]            at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.&lt;&gt;c__DisplayClass11_0`1.&lt;ExecuteCore&gt;b__0()&#xD;
+[xUnit.net 00:00:40.14]            at Microsoft.EntityFrameworkCore.Query.Internal.CompiledQueryCache.GetOrAddQuery[TResult](Object cacheKey, Func`1 compiler)&#xD;
+[xUnit.net 00:00:40.14]            at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.ExecuteCore[TResult](Expression query, Boolean async, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:40.14]            at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.ExecuteAsync[TResult](Expression query, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:40.14]            at Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryProvider.ExecuteAsync[TResult](Expression expression, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:40.14]            at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ExecuteAsync[TSource,TResult](MethodInfo operatorMethodInfo, IQueryable`1 source, Expression expression, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:40.14]            at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ExecuteAsync[TSource,TResult](MethodInfo operatorMethodInfo, IQueryable`1 source, LambdaExpression expression, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:40.14]            at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.MaxAsync[TSource,TResult](IQueryable`1 source, Expression`1 selector, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:40.14]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Modules\Finance\AccountsReceivable\SalesOrder\Services\SalesOrderLineService.cs(95,0): at IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrderLineService.&lt;&gt;c__DisplayClass6_0.&lt;&lt;AddAsync&gt;b__0&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:40.14]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:40.14]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Modules\Finance\AccountsReceivable\SalesOrder\Services\SalesOrderLineService.cs(205,0): at IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrderLineService.&lt;&gt;c__DisplayClass6_0.&lt;&lt;AddAsync&gt;b__0&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:40.14]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:40.14]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Modules\Finance\AccountsReceivable\SalesOrder\Services\SalesOrderLineService.cs(31,0): at IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrderLineService.AddAsync(Int64 recId, SalesLineInputDto input, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:40.14]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs(233,0): at IXApi.Tests.AccountsReceivableCycleStageTests.&lt;&gt;c__DisplayClass12_0.&lt;&lt;RunSalesPathAsync&gt;b__0&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:40.14]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:40.14]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs(101,0): at IXApi.Tests.AccountsReceivableCycleStageTests.&lt;&gt;c__DisplayClass10_0.&lt;&lt;RunStagesAsync&gt;g__Stage|1&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:40.14]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:40.14]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs(223,0): at IXApi.Tests.AccountsReceivableCycleStageTests.RunSalesPathAsync(ApplicationDbContext db, IServiceProvider services, Func`4 Stage, String key, Decimal ordered, Decimal delivered, Decimal invoiced, Boolean full)&#xD;
+[xUnit.net 00:00:40.14]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs(142,0): at IXApi.Tests.AccountsReceivableCycleStageTests.RunStagesAsync(ApplicationDbContext db, String providerName, Func`1 initialize)&#xD;
+[xUnit.net 00:00:40.14]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs(62,0): at IXApi.Tests.AccountsReceivableCycleStageTests.Detailed_AR_stages_SQLite()&#xD;
+[xUnit.net 00:00:40.14]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs(62,0): at IXApi.Tests.AccountsReceivableCycleStageTests.Detailed_AR_stages_SQLite()&#xD;
+[xUnit.net 00:00:40.14]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsReceivableCycleStageTests.cs(62,0): at IXApi.Tests.AccountsReceivableCycleStageTests.Detailed_AR_stages_SQLite()&#xD;
+[xUnit.net 00:00:40.14]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:40.17]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="DESKTOP-3Q67JPL" outcome="Error" timestamp="2026-11-06T16:12:27.0833091+03:00">
+        <Text>[xUnit.net 00:00:40.13]     IXApi.Tests.AccountsReceivableCycleStageTests.Detailed_AR_stages_SQLite [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

@@ -1,0 +1,397 @@
+[
+  {
+    "service": "CashDiscountCalculator",
+    "path": "IXApi/src/Modules/Finance/Foundation/CashDiscount/Services/CashDiscountCalculator.cs",
+    "base": false,
+    "tests": [
+      "CashDiscountTests"
+    ]
+  },
+  {
+    "service": "CashDiscountResolver",
+    "path": "IXApi/src/Modules/Finance/Foundation/CashDiscount/Services/CashDiscountResolver.cs",
+    "base": false,
+    "tests": []
+  },
+  {
+    "service": "CashDiscService",
+    "path": "IXApi/src/Modules/Finance/Foundation/CashDiscount/Services/CashDiscService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "CurrencyService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Currency/Services/CurrencyService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "EffectiveExchangeRateLookup",
+    "path": "IXApi/src/Modules/Finance/Foundation/Currency/Services/EffectiveExchangeRateLookup.cs",
+    "base": false,
+    "tests": [
+      "EffectiveExchangeRateTests"
+    ]
+  },
+  {
+    "service": "ExchangeRateCurrencyPairService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Currency/Services/ExchangeRateCurrencyPairService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "ExchangeRateService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Currency/Services/ExchangeRateService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "ExchangeRateTypeService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Currency/Services/ExchangeRateTypeService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "LedgerCurrencyConverter",
+    "path": "IXApi/src/Modules/Finance/Foundation/Currency/Services/LedgerCurrencyConverter.cs",
+    "base": false,
+    "tests": []
+  },
+  {
+    "service": "LedgerExchangeRateCheck",
+    "path": "IXApi/src/Modules/Finance/Foundation/Currency/Services/LedgerExchangeRateCheck.cs",
+    "base": false,
+    "tests": [
+      "LedgerJournalSetupCheckTests"
+    ]
+  },
+  {
+    "service": "DlvModeService",
+    "path": "IXApi/src/Modules/Finance/Foundation/DeliveryModes/Services/DlvModeService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "DlvTermService",
+    "path": "IXApi/src/Modules/Finance/Foundation/DeliveryTerms/Services/DlvTermService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "HcmDepartmentService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Departments/Services/HcmDepartmentService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "AccountStructureBuilder",
+    "path": "IXApi/src/Modules/Finance/Foundation/Dimensions/AccountStructure/Services/AccountStructureBuilder.cs",
+    "base": false,
+    "tests": [
+      "AccountStructureBuilderTests",
+      "AccountStructureValidationTests",
+      "TestAccountStructures"
+    ]
+  },
+  {
+    "service": "AccountStructureService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Dimensions/AccountStructure/Services/AccountStructureService.cs",
+    "base": false,
+    "tests": []
+  },
+  {
+    "service": "AccountStructureValidator",
+    "path": "IXApi/src/Modules/Finance/Foundation/Dimensions/AccountStructure/Services/AccountStructureValidator.cs",
+    "base": false,
+    "tests": [
+      "AccountStructureValidationTests"
+    ]
+  },
+  {
+    "service": "DimensionCriteriaMatcher",
+    "path": "IXApi/src/Modules/Finance/Foundation/Dimensions/AccountStructure/Services/DimensionCriteriaMatcher.cs",
+    "base": false,
+    "tests": [
+      "DimensionCriteriaMatcherTests"
+    ]
+  },
+  {
+    "service": "LedgerDimensionException",
+    "path": "IXApi/src/Modules/Finance/Foundation/Dimensions/LedgerDimension/Services/LedgerDimensionResolver.cs",
+    "base": false,
+    "tests": [
+      "LedgerDimensionResolverTests"
+    ]
+  },
+  {
+    "service": "GenderService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Genders/Services/GenderService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "HcmShowroomService",
+    "path": "IXApi/src/Modules/Finance/Foundation/HcmShowrooms/Services/HcmShowroomService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "HcmWorkerService",
+    "path": "IXApi/src/Modules/Finance/Foundation/HcmWorkers/HcmWorker/Services/HcmWorkerService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "OrganizationStructureService",
+    "path": "IXApi/src/Modules/Finance/Foundation/HcmWorkers/Structure/Services/OrganizationStructureService.cs",
+    "base": false,
+    "tests": [
+      "OrganizationStructureTests"
+    ]
+  },
+  {
+    "service": "CompanyInfoService",
+    "path": "IXApi/src/Modules/Finance/Foundation/LegalEntities/Services/CompanyInfoService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "AddressBookQueryService",
+    "path": "IXApi/src/Modules/Finance/Foundation/LogisticsAddresses/Services/AddressBookQueryService.cs",
+    "base": false,
+    "tests": []
+  },
+  {
+    "service": "ContactPersonService",
+    "path": "IXApi/src/Modules/Finance/Foundation/LogisticsAddresses/Services/ContactPersonService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "ElectronicAddressService",
+    "path": "IXApi/src/Modules/Finance/Foundation/LogisticsAddresses/Services/ElectronicAddressService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "GlobalAddressBookService",
+    "path": "IXApi/src/Modules/Finance/Foundation/LogisticsAddresses/Services/GlobalAddressBookService.cs",
+    "base": false,
+    "tests": [
+      "FoundationRefactorTests"
+    ]
+  },
+  {
+    "service": "LocationService",
+    "path": "IXApi/src/Modules/Finance/Foundation/LogisticsAddresses/Services/LocationService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "PartyLocationService",
+    "path": "IXApi/src/Modules/Finance/Foundation/LogisticsAddresses/Services/PartyLocationService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "PartyService",
+    "path": "IXApi/src/Modules/Finance/Foundation/LogisticsAddresses/Services/PartyService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "PostalAddressService",
+    "path": "IXApi/src/Modules/Finance/Foundation/LogisticsAddresses/Services/PostalAddressService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "MarkupChargeCalculator",
+    "path": "IXApi/src/Modules/Finance/Foundation/Markup/Services/MarkupChargeCalculator.cs",
+    "base": false,
+    "tests": []
+  },
+  {
+    "service": "MarkupTableService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Markup/Services/MarkupTableService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "MarkupTransCommandService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Markup/Services/MarkupTransCommandService.cs",
+    "base": false,
+    "tests": [
+      "SalesOrderConfirmationTests"
+    ]
+  },
+  {
+    "service": "MarkupTransService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Markup/Services/MarkupTransService.cs",
+    "base": false,
+    "tests": [
+      "SalesOrderConfirmationTests"
+    ]
+  },
+  {
+    "service": "HcmNationalityService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Nationalities/Services/HcmNationalityService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "HcmOccupationService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Occupations/Services/HcmOccupationService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "OrganizationUnitService",
+    "path": "IXApi/src/Modules/Finance/Foundation/OrganizationUnits/Services/OrganizationUnitService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "PaymSchedLineService",
+    "path": "IXApi/src/Modules/Finance/Foundation/PaymentSchedules/Services/PaymSchedLineService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "PaymSchedService",
+    "path": "IXApi/src/Modules/Finance/Foundation/PaymentSchedules/Services/PaymSchedService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "PaymentDueDateCalculator",
+    "path": "IXApi/src/Modules/Finance/Foundation/PaymentTerms/Services/PaymentDueDateCalculator.cs",
+    "base": false,
+    "tests": [
+      "CashDiscountTests",
+      "PurchasePaymentDueDateTests"
+    ]
+  },
+  {
+    "service": "PaymTermService",
+    "path": "IXApi/src/Modules/Finance/Foundation/PaymentTerms/Services/PaymTermService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "TaxAuthorityAddressService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxAuthorityAddressService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "TaxCodeRateService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxCodeRateService.cs",
+    "base": false,
+    "tests": [
+      "TaxCompanyIsolationTests"
+    ]
+  },
+  {
+    "service": "TaxCodeSaveTransaction",
+    "path": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxCodeSaveTransaction.cs",
+    "base": false,
+    "tests": []
+  },
+  {
+    "service": "TaxExemptCodeService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxExemptCodeService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "TaxGroupCommandService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxGroupCommandService.cs",
+    "base": false,
+    "tests": []
+  },
+  {
+    "service": "TaxGroupLineService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxGroupLineService.cs",
+    "base": false,
+    "tests": []
+  },
+  {
+    "service": "TaxGroupQueryService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxGroupQueryService.cs",
+    "base": false,
+    "tests": []
+  },
+  {
+    "service": "TaxGroupService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxGroupService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "TaxItemGroupCommandService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxItemGroupCommandService.cs",
+    "base": false,
+    "tests": []
+  },
+  {
+    "service": "TaxItemGroupLineService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxItemGroupLineService.cs",
+    "base": false,
+    "tests": []
+  },
+  {
+    "service": "TaxItemGroupQueryService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxItemGroupQueryService.cs",
+    "base": false,
+    "tests": []
+  },
+  {
+    "service": "TaxItemGroupService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxItemGroupService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "TaxLedgerAccountGroupService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxLedgerAccountGroupService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "TaxPeriodHeadCrudService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxPeriodHeadCrudService.cs",
+    "base": true,
+    "tests": []
+  },
+  {
+    "service": "TaxPeriodService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxPeriodService.cs",
+    "base": false,
+    "tests": []
+  },
+  {
+    "service": "TaxReportService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxReportService.cs",
+    "base": false,
+    "tests": [
+      "TaxSettlementTests"
+    ]
+  },
+  {
+    "service": "TaxSettlementService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxSettlementService.cs",
+    "base": false,
+    "tests": [
+      "TaxSettlementTests"
+    ]
+  },
+  {
+    "service": "TaxTableService",
+    "path": "IXApi/src/Modules/Finance/Foundation/Tax/Services/TaxTableService.cs",
+    "base": true,
+    "tests": [
+      "TaxCompanyIsolationTests"
+    ]
+  }
+]

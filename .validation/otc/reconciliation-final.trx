@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="fa64dee4-40e3-462e-a338-058a52288e15" name="Omar Almojahid@DESKTOP-3Q67JPL 2026-11-07 15:20:31" runUser="DESKTOP-3Q67JPL\Omar Almojahid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-07T15:20:31.0217972+03:00" queuing="2026-11-07T15:20:31.0217975+03:00" start="2026-11-07T15:20:22.3832983+03:00" finish="2026-11-07T15:21:34.2782399+03:00" />
+  <TestSettings name="default" id="98464ffd-2bf9-45e5-bae9-df653c2aa1a0">
+    <Deployment runDeploymentRoot="Omar_Almojahid_DESKTOP-3Q67JPL_2026-11-07_15_20_31" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="7d6f56cd-16e0-44d5-9ee6-28a4cdb0e3b8" testId="744bdfdc-ffcc-a06a-c671-a0dd9a8852e0" testName="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer" computerName="DESKTOP-3Q67JPL" duration="00:00:55.5641093" startTime="2026-11-07T15:20:38.4658920+03:00" endTime="2026-11-07T15:21:34.0415190+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7d6f56cd-16e0-44d5-9ee6-28a4cdb0e3b8" />
+    <UnitTestResult executionId="7365447d-44b5-477d-a72c-33d88aaf9360" testId="9330cb10-478c-a078-cb7a-60eec7c2dcf9" testName="IAX.IXApi.Tests.FinanceCoreCloseAndReconciliationTests.Reconciliation_requires_statement_balance_and_marks_selected_movements" computerName="DESKTOP-3Q67JPL" duration="00:00:04.7058000" startTime="2026-11-07T15:20:26.1972263+03:00" endTime="2026-11-07T15:20:30.9304742+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7365447d-44b5-477d-a72c-33d88aaf9360" />
+    <UnitTestResult executionId="ddb881f2-0990-4e12-9979-fbd138552daf" testId="0afc7a3c-f360-42e4-bba5-bdb8b90410a6" testName="IAX.IXApi.Tests.FinanceCoreCloseAndReconciliationTests.Year_end_close_transfers_profit_to_equity_and_closes_periods" computerName="DESKTOP-3Q67JPL" duration="00:00:01.7147880" startTime="2026-11-07T15:20:30.9948413+03:00" endTime="2026-11-07T15:20:32.6449851+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ddb881f2-0990-4e12-9979-fbd138552daf" />
+    <UnitTestResult executionId="a9423334-43b2-486b-8471-73e0cd69ac30" testId="3b18f8be-d61a-e68c-0db1-4cc1fa123473" testName="IXApi.Tests.SeedPostingModelTests.AP_transaction_storage_has_documented_nullability_precision_and_restrictive_relationships" computerName="DESKTOP-3Q67JPL" duration="00:00:00.0851256" startTime="2026-11-07T15:20:38.3796006+03:00" endTime="2026-11-07T15:20:38.4642027+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a9423334-43b2-486b-8471-73e0cd69ac30" />
+    <UnitTestResult executionId="daec2410-a7a4-4963-90a5-e9c953a47867" testId="3394b523-b871-dcf4-d325-3601be80f722" testName="IXApi.Tests.SeedPostingModelTests.Every_mapped_table_is_in_the_seed_coverage_review" computerName="DESKTOP-3Q67JPL" duration="00:00:09.2702425" startTime="2026-11-07T15:20:26.2006729+03:00" endTime="2026-11-07T15:20:35.4885167+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="daec2410-a7a4-4963-90a5-e9c953a47867" />
+    <UnitTestResult executionId="08783315-f10f-4c99-af4c-ac08144cdb50" testId="bc868e73-7387-5363-8068-5cf88325aa3a" testName="IXApi.Tests.SeedPostingModelTests.Posting_links_and_multiple_request_variables_have_persistable_keys" computerName="DESKTOP-3Q67JPL" duration="00:00:02.8903352" startTime="2026-11-07T15:20:35.4888904+03:00" endTime="2026-11-07T15:20:38.3790224+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="08783315-f10f-4c99-af4c-ac08144cdb50" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IXApi.Tests.SeedPostingModelTests.Posting_links_and_multiple_request_variables_have_persistable_keys" storage="c:\users\omar almojahid\desktop\iax\ixapi\.ap-service-validation\reconciliation\debug\net9.0\ixapi.tests.dll" id="bc868e73-7387-5363-8068-5cf88325aa3a">
+      <Execution id="08783315-f10f-4c99-af4c-ac08144cdb50" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\.ap-service-validation\reconciliation\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.SeedPostingModelTests" name="Posting_links_and_multiple_request_variables_have_persistable_keys" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.SeedPostingModelTests.AP_transaction_storage_has_documented_nullability_precision_and_restrictive_relationships" storage="c:\users\omar almojahid\desktop\iax\ixapi\.ap-service-validation\reconciliation\debug\net9.0\ixapi.tests.dll" id="3b18f8be-d61a-e68c-0db1-4cc1fa123473">
+      <Execution id="a9423334-43b2-486b-8471-73e0cd69ac30" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\.ap-service-validation\reconciliation\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.SeedPostingModelTests" name="AP_transaction_storage_has_documented_nullability_precision_and_restrictive_relationships" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.SeedPostingModelTests.Every_mapped_table_is_in_the_seed_coverage_review" storage="c:\users\omar almojahid\desktop\iax\ixapi\.ap-service-validation\reconciliation\debug\net9.0\ixapi.tests.dll" id="3394b523-b871-dcf4-d325-3601be80f722">
+      <Execution id="daec2410-a7a4-4963-90a5-e9c953a47867" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\.ap-service-validation\reconciliation\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.SeedPostingModelTests" name="Every_mapped_table_is_in_the_seed_coverage_review" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.FinanceCoreCloseAndReconciliationTests.Year_end_close_transfers_profit_to_equity_and_closes_periods" storage="c:\users\omar almojahid\desktop\iax\ixapi\.ap-service-validation\reconciliation\debug\net9.0\ixapi.tests.dll" id="0afc7a3c-f360-42e4-bba5-bdb8b90410a6">
+      <Execution id="ddb881f2-0990-4e12-9979-fbd138552daf" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\.ap-service-validation\reconciliation\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.FinanceCoreCloseAndReconciliationTests" name="Year_end_close_transfers_profit_to_equity_and_closes_periods" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer" storage="c:\users\omar almojahid\desktop\iax\ixapi\.ap-service-validation\reconciliation\debug\net9.0\ixapi.tests.dll" id="744bdfdc-ffcc-a06a-c671-a0dd9a8852e0">
+      <Execution id="7d6f56cd-16e0-44d5-9ee6-28a4cdb0e3b8" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\.ap-service-validation\reconciliation\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableCycleStageTests" name="Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.FinanceCoreCloseAndReconciliationTests.Reconciliation_requires_statement_balance_and_marks_selected_movements" storage="c:\users\omar almojahid\desktop\iax\ixapi\.ap-service-validation\reconciliation\debug\net9.0\ixapi.tests.dll" id="9330cb10-478c-a078-cb7a-60eec7c2dcf9">
+      <Execution id="7365447d-44b5-477d-a72c-33d88aaf9360" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\.ap-service-validation\reconciliation\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.FinanceCoreCloseAndReconciliationTests" name="Reconciliation_requires_statement_balance_and_marks_selected_movements" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="744bdfdc-ffcc-a06a-c671-a0dd9a8852e0" executionId="7d6f56cd-16e0-44d5-9ee6-28a4cdb0e3b8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9330cb10-478c-a078-cb7a-60eec7c2dcf9" executionId="7365447d-44b5-477d-a72c-33d88aaf9360" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0afc7a3c-f360-42e4-bba5-bdb8b90410a6" executionId="ddb881f2-0990-4e12-9979-fbd138552daf" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3b18f8be-d61a-e68c-0db1-4cc1fa123473" executionId="a9423334-43b2-486b-8471-73e0cd69ac30" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3394b523-b871-dcf4-d325-3601be80f722" executionId="daec2410-a7a4-4963-90a5-e9c953a47867" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bc868e73-7387-5363-8068-5cf88325aa3a" executionId="08783315-f10f-4c99-af4c-ac08144cdb50" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="6" executed="6" passed="6" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.01] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.67]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:00.96]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:01.09]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:01:08.99]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

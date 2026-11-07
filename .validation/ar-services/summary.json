@@ -1,0 +1,22 @@
+{
+  "ar-fixed-scenarios.trx": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0
+  },
+  "ar-complete-regression.trx": {
+    "total": 860,
+    "passed": 857,
+    "failed": 0,
+    "skipped": 3
+  },
+  "ar-inventory-regression.trx": {
+    "total": 128,
+    "passed": 128,
+    "failed": 0,
+    "skipped": 0
+  },
+  "latestSQLServerRunId": "5bb14bb082a24e7bb789604bbebc35c0",
+  "passedStages": 37
+}

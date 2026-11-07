@@ -1,0 +1,980 @@
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"run","status":"STARTED","detail":null,"atUtc":"2026-11-07T04:15:16.3382233Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Foundation CRUD inventory","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:30.7805073Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Foundation CRUD inventory","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:30.7818886Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"CashDiscService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:30.7829672Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"CashDiscService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:30.8693932Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"CurrencyService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:30.8700201Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"CurrencyService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:30.9558849Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"ExchangeRateCurrencyPairService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:30.9564605Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"ExchangeRateCurrencyPairService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:31.0016249Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"ExchangeRateService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:31.0021979Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"ExchangeRateService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:31.050287Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"ExchangeRateTypeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:31.0508574Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"ExchangeRateTypeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:31.1090202Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"DlvModeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:31.1095892Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"DlvModeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:31.1735943Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"DlvTermService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:31.1741686Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"DlvTermService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:31.2381701Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"HcmDepartmentService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:31.2387429Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"HcmDepartmentService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:31.3081897Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"GenderService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:31.3087546Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"GenderService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:31.4068817Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"HcmShowroomService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:31.407456Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"HcmShowroomService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:31.4609113Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"HcmWorkerService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:31.4614827Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"HcmWorkerService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:31.6081775Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"CompanyInfoService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:31.6087812Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"CompanyInfoService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:31.6680021Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"ContactPersonService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:31.6685655Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"ContactPersonService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:31.7440373Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"ElectronicAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:31.7446062Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"ElectronicAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:31.8299153Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"LocationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:31.8307193Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"LocationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:31.9031552Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"PartyLocationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:31.9037113Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"PartyLocationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:31.9896212Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"PartyService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:31.9902735Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"PartyService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:32.1379204Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"PostalAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:32.1385624Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"PostalAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:32.2112852Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"MarkupTableService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:32.2120697Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"MarkupTableService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:32.3168946Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"HcmNationalityService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:32.3174686Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"HcmNationalityService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:32.4175404Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"HcmOccupationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:32.4181218Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"HcmOccupationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:32.4916018Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"OrganizationUnitService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:32.4922119Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"OrganizationUnitService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:32.591841Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"PaymSchedLineService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:32.5923928Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"PaymSchedLineService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:32.6542078Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"PaymSchedService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:32.654739Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"PaymSchedService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:32.743705Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"PaymTermService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:32.7442568Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"PaymTermService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:32.8891506Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"TaxAuthorityAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:32.8897088Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"TaxAuthorityAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:32.9765202Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"TaxExemptCodeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:32.9770901Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"TaxExemptCodeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:33.0401151Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"TaxGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:33.0407112Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"TaxGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:33.1273726Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"TaxItemGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:33.1279038Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"TaxItemGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:33.2206977Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"TaxLedgerAccountGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:33.2212832Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"TaxLedgerAccountGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:33.3157914Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"TaxPeriodHeadCrudService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:33.3164392Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"TaxPeriodHeadCrudService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:33.4362431Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"TaxTableService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:33.4367906Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"TaxTableService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:33.5696112Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Currency pair bulk save and effective rate","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:33.570195Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Currency pair bulk save and effective rate","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:33.8619071Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Payment due dates, schedules and cash discount arithmetic","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:33.8631044Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Payment due dates, schedules and cash discount arithmetic","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:33.9357287Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Tax group commands, lines and queries","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:33.9365037Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Tax group commands, lines and queries","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:34.7437543Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Tax item group commands, lines and queries","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:34.744361Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Tax item group commands, lines and queries","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:35.1061428Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Tax period create, update, query and delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:35.1067664Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Tax period create, update, query and delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:35.3443157Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Party, location, postal and electronic addresses","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:35.3467638Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Party, location, postal and electronic addresses","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:36.1660686Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Legal entity and address book transaction","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:36.1667317Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Legal entity and address book transaction","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:36.6889235Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Worker, showroom and assignment services","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:36.6899061Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Worker, showroom and assignment services","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:38.2015512Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Organization positions, transfer history and overlap rejection","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:38.2022225Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Organization positions, transfer history and overlap rejection","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:38.5675226Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Tax codes, rates and save transaction","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:38.5681731Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Tax codes, rates and save transaction","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:38.6896105Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Account structure service and dimensions","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:38.6902502Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Account structure service and dimensions","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:38.855659Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Charge commands, calculation, update, deletion and validation","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:38.8565205Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Charge commands, calculation, update, deletion and validation","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:39.1693966Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Tax and charges financial effects, reporting and settlement","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:39.1701695Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Tax and charges financial effects, reporting and settlement","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:54.7837483Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Tracked primary keys respect company isolation","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:54.784503Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Tracked primary keys respect company isolation","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:54.830524Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Tracked tax keys cannot read, update or delete another company","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:15:54.831502Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"Tracked tax keys cannot read, update or delete another company","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:15:54.9767357Z"}
+{"runId":"e069d2b9c7724471ae7c3894fe8a38c1","provider":"SQL Server","stage":"run","status":"PASSED","detail":"","atUtc":"2026-11-07T04:15:54.9775292Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"run","status":"STARTED","detail":null,"atUtc":"2026-11-07T04:15:55.0743157Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Foundation CRUD inventory","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:16.4555853Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Foundation CRUD inventory","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:16.456324Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"CashDiscService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:16.4567712Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"CashDiscService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:16.4994384Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"CurrencyService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:16.500059Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"CurrencyService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:16.5454157Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"ExchangeRateCurrencyPairService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:16.5467606Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"ExchangeRateCurrencyPairService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:16.5834893Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"ExchangeRateService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:16.5841671Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"ExchangeRateService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:16.6185601Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"ExchangeRateTypeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:16.6191866Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"ExchangeRateTypeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:16.6531302Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"DlvModeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:16.6539411Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"DlvModeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:16.6906305Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"DlvTermService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:16.691383Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"DlvTermService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:16.7299631Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"HcmDepartmentService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:16.7306985Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"HcmDepartmentService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:16.8233295Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"GenderService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:16.8239215Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"GenderService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:16.8665455Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"HcmShowroomService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:16.8672232Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"HcmShowroomService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:16.9024809Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"HcmWorkerService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:16.9032421Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"HcmWorkerService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:16.9397181Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"CompanyInfoService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:16.9403731Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"CompanyInfoService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:16.9825219Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"ContactPersonService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:16.983339Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"ContactPersonService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:17.0411513Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"ElectronicAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:17.0418234Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"ElectronicAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:17.0870388Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"LocationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:17.087752Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"LocationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:17.1408305Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"PartyLocationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:17.1415767Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"PartyLocationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:17.1935708Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"PartyService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:17.1942562Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"PartyService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:17.2938314Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"PostalAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:17.2946873Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"PostalAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:17.3857146Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"MarkupTableService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:17.3866486Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"MarkupTableService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:17.4490878Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"HcmNationalityService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:17.4497091Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"HcmNationalityService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:17.4906603Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"HcmOccupationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:17.4916503Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"HcmOccupationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:17.5342117Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"OrganizationUnitService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:17.5348853Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"OrganizationUnitService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:17.577046Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"PaymSchedLineService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:17.5776859Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"PaymSchedLineService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:17.6206321Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"PaymSchedService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:17.6221019Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"PaymSchedService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:17.6766166Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"PaymTermService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:17.677238Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"PaymTermService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:17.7347772Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"TaxAuthorityAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:17.735398Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"TaxAuthorityAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:17.7852794Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"TaxExemptCodeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:17.78596Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"TaxExemptCodeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:17.8196901Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"TaxGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:17.8203669Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"TaxGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:17.8835354Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"TaxItemGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:17.8842684Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"TaxItemGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:17.9274918Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"TaxLedgerAccountGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:17.9280139Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"TaxLedgerAccountGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:18.0101543Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"TaxPeriodHeadCrudService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:18.0107468Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"TaxPeriodHeadCrudService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:18.0614377Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"TaxTableService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:18.0637678Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"TaxTableService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:18.1456227Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Currency pair bulk save and effective rate","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:18.1469899Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Currency pair bulk save and effective rate","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:18.2231733Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Payment due dates, schedules and cash discount arithmetic","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:18.2239761Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Payment due dates, schedules and cash discount arithmetic","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:18.2748Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Tax group commands, lines and queries","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:18.2754036Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Tax group commands, lines and queries","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:18.479935Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Tax item group commands, lines and queries","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:18.4806629Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Tax item group commands, lines and queries","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:18.6108444Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Tax period create, update, query and delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:18.6114674Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Tax period create, update, query and delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:18.6888335Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Party, location, postal and electronic addresses","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:18.6896072Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Party, location, postal and electronic addresses","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:19.1535152Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Legal entity and address book transaction","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:19.1543195Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Legal entity and address book transaction","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:19.4836076Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Worker, showroom and assignment services","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:19.4846647Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Worker, showroom and assignment services","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:20.019626Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Organization positions, transfer history and overlap rejection","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:20.0204569Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Organization positions, transfer history and overlap rejection","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:20.1529909Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Tax codes, rates and save transaction","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:20.1537487Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Tax codes, rates and save transaction","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:20.2256236Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Account structure service and dimensions","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:20.226258Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Account structure service and dimensions","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:20.3843474Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Charge commands, calculation, update, deletion and validation","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:20.3851893Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Charge commands, calculation, update, deletion and validation","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:21.0879667Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Tax and charges financial effects, reporting and settlement","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:21.0888104Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Tax and charges financial effects, reporting and settlement","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:37.9577432Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Tracked primary keys respect company isolation","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:37.9584637Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Tracked primary keys respect company isolation","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:37.9947599Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Tracked tax keys cannot read, update or delete another company","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:16:37.9970822Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"Tracked tax keys cannot read, update or delete another company","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:16:38.1222302Z"}
+{"runId":"5c98b1643cce40249d6042bd812aee0e","provider":"SQLite","stage":"run","status":"PASSED","detail":"","atUtc":"2026-11-07T04:16:38.1232316Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"run","status":"STARTED","detail":null,"atUtc":"2026-11-07T04:36:08.4791385Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Foundation CRUD inventory","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:23.9472232Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Foundation CRUD inventory","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:23.9479517Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"CashDiscService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:23.949306Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"CashDiscService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:24.0345443Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"CurrencyService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:24.0351257Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"CurrencyService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:24.1164985Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"ExchangeRateCurrencyPairService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:24.1170621Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"ExchangeRateCurrencyPairService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:24.1745368Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"ExchangeRateService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:24.1751115Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"ExchangeRateService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:24.2200889Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"ExchangeRateTypeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:24.2206743Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"ExchangeRateTypeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:24.2810815Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"DlvModeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:24.2816722Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"DlvModeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:24.3953401Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"DlvTermService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:24.3959494Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"DlvTermService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:24.4640303Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"HcmDepartmentService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:24.4646193Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"HcmDepartmentService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:24.5323889Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"GenderService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:24.5330117Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"GenderService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:24.6169388Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"HcmShowroomService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:24.6175297Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"HcmShowroomService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:24.6936638Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"HcmWorkerService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:24.6942113Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"HcmWorkerService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:24.8677409Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"CompanyInfoService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:24.8684428Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"CompanyInfoService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:24.9367304Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"ContactPersonService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:24.9373055Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"ContactPersonService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:25.0545435Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"ElectronicAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:25.0554596Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"ElectronicAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:25.1733575Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"LocationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:25.1739926Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"LocationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:25.2518394Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"PartyLocationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:25.2524091Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"PartyLocationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:25.325824Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"PartyService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:25.3266044Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"PartyService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:25.4739471Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"PostalAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:25.4745383Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"PostalAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:25.5965883Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"MarkupTableService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:25.5971532Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"MarkupTableService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:25.6770287Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"HcmNationalityService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:25.677576Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"HcmNationalityService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:25.7346364Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"HcmOccupationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:25.7351905Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"HcmOccupationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:25.7970645Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"OrganizationUnitService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:25.7976187Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"OrganizationUnitService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:25.8840508Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"PaymSchedLineService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:25.8846523Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"PaymSchedLineService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:25.9494145Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"PaymSchedService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:25.9499785Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"PaymSchedService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:26.0753316Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"PaymTermService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:26.0759137Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"PaymTermService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:26.1774648Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"TaxAuthorityAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:26.1780683Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"TaxAuthorityAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:26.270184Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"TaxExemptCodeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:26.2707355Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"TaxExemptCodeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:26.4042382Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"TaxGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:26.4050043Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"TaxGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:26.5491875Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"TaxItemGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:26.5497385Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"TaxItemGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:26.7023267Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"TaxLedgerAccountGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:26.7029084Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"TaxLedgerAccountGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:27.0128363Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"TaxPeriodHeadCrudService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:27.0134387Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"TaxPeriodHeadCrudService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:27.1355878Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"TaxTableService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:27.1361615Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"TaxTableService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:27.3025928Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Currency pair bulk save and effective rate","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:27.3032736Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Currency pair bulk save and effective rate","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:27.4459525Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Payment due dates, schedules and cash discount arithmetic","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:27.4465232Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Payment due dates, schedules and cash discount arithmetic","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:27.5633732Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Tax group commands, lines and queries","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:27.5641066Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Tax group commands, lines and queries","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:28.5642923Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Tax item group commands, lines and queries","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:28.565004Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Tax item group commands, lines and queries","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:28.979477Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Tax period create, update, query and delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:28.980152Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Tax period create, update, query and delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:29.1755121Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Party, location, postal and electronic addresses","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:29.1761322Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Party, location, postal and electronic addresses","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:30.1126713Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Legal entity and address book transaction","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:30.1134719Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Legal entity and address book transaction","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:30.6269259Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Worker, showroom and assignment services","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:30.6277463Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Worker, showroom and assignment services","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:32.0458657Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Organization positions, transfer history and overlap rejection","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:32.0469219Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Organization positions, transfer history and overlap rejection","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:32.3325854Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Tax codes, rates and save transaction","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:32.3332551Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Tax codes, rates and save transaction","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:32.4971848Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Account structure service and dimensions","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:32.4981377Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Account structure service and dimensions","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:32.6495253Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Charge commands, calculation, update, deletion and validation","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:32.6502103Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Charge commands, calculation, update, deletion and validation","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:32.9151424Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Tax and charges financial effects, reporting and settlement","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:32.9159722Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Tax and charges financial effects, reporting and settlement","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:49.0928998Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Tracked primary keys respect company isolation","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:49.093771Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Tracked primary keys respect company isolation","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:49.1415757Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Tracked tax keys cannot read, update or delete another company","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:36:49.1422449Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"Tracked tax keys cannot read, update or delete another company","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:36:49.3016801Z"}
+{"runId":"0c3be8f34d7c4d669deee9f310c7ea31","provider":"SQL Server","stage":"run","status":"PASSED","detail":"","atUtc":"2026-11-07T04:36:49.30246Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"run","status":"STARTED","detail":null,"atUtc":"2026-11-07T04:36:49.396979Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Foundation CRUD inventory","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:11.9380189Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Foundation CRUD inventory","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:11.940833Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"CashDiscService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:11.9418685Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"CashDiscService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:11.9809088Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"CurrencyService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:11.9814994Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"CurrencyService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:12.0316743Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"ExchangeRateCurrencyPairService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:12.032203Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"ExchangeRateCurrencyPairService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:12.0691152Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"ExchangeRateService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:12.0697241Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"ExchangeRateService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:12.1055281Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"ExchangeRateTypeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:12.1067446Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"ExchangeRateTypeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:12.1411716Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"DlvModeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:12.1418596Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"DlvModeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:12.1785664Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"DlvTermService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:12.1791719Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"DlvTermService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:12.2198172Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"HcmDepartmentService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:12.2204268Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"HcmDepartmentService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:12.2583778Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"GenderService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:12.2589974Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"GenderService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:12.295718Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"HcmShowroomService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:12.2963441Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"HcmShowroomService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:12.3353035Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"HcmWorkerService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:12.336051Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"HcmWorkerService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:12.3735603Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"CompanyInfoService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:12.3750408Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"CompanyInfoService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:12.4142374Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"ContactPersonService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:12.4148102Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"ContactPersonService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:12.4700727Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"ElectronicAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:12.4707359Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"ElectronicAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:12.5168885Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"LocationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:12.5175104Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"LocationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:12.5719482Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"PartyLocationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:12.5734868Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"PartyLocationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:12.624239Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"PartyService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:12.6250166Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"PartyService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:12.7245504Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"PostalAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:12.7252584Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"PostalAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:12.8073446Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"MarkupTableService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:12.8085278Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"MarkupTableService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:12.8616569Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"HcmNationalityService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:12.8623189Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"HcmNationalityService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:12.9013511Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"HcmOccupationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:12.9020263Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"HcmOccupationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:12.9530229Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"OrganizationUnitService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:12.9538805Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"OrganizationUnitService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:13.0076402Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"PaymSchedLineService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:13.0086098Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"PaymSchedLineService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:13.0480906Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"PaymSchedService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:13.0486339Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"PaymSchedService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:13.1039321Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"PaymTermService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:13.1045735Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"PaymTermService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:13.1646314Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"TaxAuthorityAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:13.1652756Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"TaxAuthorityAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:13.2194933Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"TaxExemptCodeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:13.2206134Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"TaxExemptCodeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:13.25579Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"TaxGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:13.2569513Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"TaxGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:13.3114911Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"TaxItemGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:13.3121243Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"TaxItemGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:13.349294Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"TaxLedgerAccountGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:13.3499014Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"TaxLedgerAccountGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:13.4081237Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"TaxPeriodHeadCrudService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:13.4087419Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"TaxPeriodHeadCrudService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:13.4528322Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"TaxTableService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:13.4534417Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"TaxTableService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:13.5542456Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Currency pair bulk save and effective rate","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:13.5548393Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Currency pair bulk save and effective rate","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:13.6337553Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Payment due dates, schedules and cash discount arithmetic","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:13.6343984Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Payment due dates, schedules and cash discount arithmetic","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:13.6904645Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Tax group commands, lines and queries","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:13.6912538Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Tax group commands, lines and queries","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:13.8616404Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Tax item group commands, lines and queries","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:13.8622809Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Tax item group commands, lines and queries","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:14.0319906Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Tax period create, update, query and delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:14.0326508Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Tax period create, update, query and delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:14.1117152Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Party, location, postal and electronic addresses","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:14.1123289Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Party, location, postal and electronic addresses","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:14.5206278Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Legal entity and address book transaction","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:14.5250593Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Legal entity and address book transaction","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:14.7701672Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Worker, showroom and assignment services","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:14.7713728Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Worker, showroom and assignment services","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:15.2686868Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Organization positions, transfer history and overlap rejection","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:15.2693945Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Organization positions, transfer history and overlap rejection","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:15.4149649Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Tax codes, rates and save transaction","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:15.4414019Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Tax codes, rates and save transaction","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:15.527203Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Account structure service and dimensions","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:15.5279736Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Account structure service and dimensions","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:15.6801804Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Charge commands, calculation, update, deletion and validation","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:15.6814882Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Charge commands, calculation, update, deletion and validation","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:16.3637586Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Tax and charges financial effects, reporting and settlement","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:16.3645718Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Tax and charges financial effects, reporting and settlement","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:33.8692355Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Tracked primary keys respect company isolation","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:33.8700163Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Tracked primary keys respect company isolation","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:33.9108528Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Tracked tax keys cannot read, update or delete another company","status":"RUNNING","detail":null,"atUtc":"2026-11-07T04:37:33.9124313Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"Tracked tax keys cannot read, update or delete another company","status":"PASSED","detail":null,"atUtc":"2026-11-07T04:37:34.0421851Z"}
+{"runId":"9bda1ed12666452b952140921bc6ad50","provider":"SQLite","stage":"run","status":"PASSED","detail":"","atUtc":"2026-11-07T04:37:34.0431601Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"run","status":"STARTED","detail":null,"atUtc":"2026-11-07T05:02:02.0373494Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Foundation CRUD inventory","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:24.6880138Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Foundation CRUD inventory","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:24.688785Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"CashDiscService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:24.6896601Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"CashDiscService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:24.7851186Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"CurrencyService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:24.7857187Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"CurrencyService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:24.8642249Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"ExchangeRateCurrencyPairService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:24.864827Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"ExchangeRateCurrencyPairService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:24.9097655Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"ExchangeRateService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:24.9103329Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"ExchangeRateService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:24.9573954Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"ExchangeRateTypeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:24.9579732Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"ExchangeRateTypeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:25.0278243Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"DlvModeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:25.0284683Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"DlvModeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:25.089636Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"DlvTermService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:25.0901929Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"DlvTermService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:25.1497077Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"HcmDepartmentService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:25.1505635Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"HcmDepartmentService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:25.2106712Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"GenderService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:25.2112301Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"GenderService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:25.2736678Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"HcmShowroomService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:25.2742444Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"HcmShowroomService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:25.3297465Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"HcmWorkerService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:25.3303054Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"HcmWorkerService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:25.4781856Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"CompanyInfoService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:25.4787497Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"CompanyInfoService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:25.5374137Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"ContactPersonService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:25.5379662Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"ContactPersonService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:25.6106263Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"ElectronicAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:25.6111889Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"ElectronicAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:25.6919855Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"LocationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:25.6925396Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"LocationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:25.7702379Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"PartyLocationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:25.770899Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"PartyLocationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:25.8386174Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"PartyService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:25.8391935Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"PartyService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:25.9738884Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"PostalAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:25.9745219Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"PostalAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:26.0463476Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"MarkupTableService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:26.0469169Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"MarkupTableService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:26.1276953Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"HcmNationalityService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:26.1282602Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"HcmNationalityService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:26.2384254Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"HcmOccupationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:26.238969Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"HcmOccupationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:26.2993166Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"OrganizationUnitService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:26.2998711Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"OrganizationUnitService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:26.3849278Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"PaymSchedLineService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:26.3854748Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"PaymSchedLineService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:26.4395443Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"PaymSchedService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:26.440094Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"PaymSchedService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:26.5111896Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"PaymTermService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:26.5118091Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"PaymTermService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:26.5996795Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"TaxAuthorityAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:26.6005206Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"TaxAuthorityAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:26.7216784Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"TaxExemptCodeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:26.7222214Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"TaxExemptCodeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:26.7785562Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"TaxGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:26.7790936Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"TaxGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:26.848733Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"TaxItemGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:26.8493424Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"TaxItemGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:26.9087811Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"TaxLedgerAccountGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:26.909325Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"TaxLedgerAccountGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:27.039156Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"TaxPeriodHeadCrudService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:27.0397554Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"TaxPeriodHeadCrudService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:27.1194638Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"TaxTableService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:27.1200387Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"TaxTableService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:27.2420009Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Currency pair bulk save and effective rate","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:27.2426219Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Currency pair bulk save and effective rate","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:27.4102127Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Payment due dates, schedules and cash discount arithmetic","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:27.4108816Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Payment due dates, schedules and cash discount arithmetic","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:27.5361443Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Tax group commands, lines and queries","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:27.5381749Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Tax group commands, lines and queries","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:27.8788394Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Tax item group commands, lines and queries","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:27.8794565Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Tax item group commands, lines and queries","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:28.1451842Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Tax period create, update, query and delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:28.1457625Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Tax period create, update, query and delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:28.3152891Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Party, location, postal and electronic addresses","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:28.315875Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Party, location, postal and electronic addresses","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:29.1419388Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Legal entity and address book transaction","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:29.1426345Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Legal entity and address book transaction","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:29.4819044Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Worker, showroom and assignment services","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:29.482544Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Worker, showroom and assignment services","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:30.9787172Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Organization positions, transfer history and overlap rejection","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:30.9795391Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Organization positions, transfer history and overlap rejection","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:31.2815054Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Tax codes, rates and save transaction","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:31.2828734Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Tax codes, rates and save transaction","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:31.4034793Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Account structure service and dimensions","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:31.4044439Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Account structure service and dimensions","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:31.5315917Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Charge commands, calculation, update, deletion and validation","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:31.5322698Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Charge commands, calculation, update, deletion and validation","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:32.1284496Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Tax and charges financial effects, reporting and settlement","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:32.1293187Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Tax and charges financial effects, reporting and settlement","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:51.7841647Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Tracked primary keys respect company isolation","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:51.7854727Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Tracked primary keys respect company isolation","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:51.8288197Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Tracked tax keys cannot read, update or delete another company","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:02:51.8295014Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"Tracked tax keys cannot read, update or delete another company","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:02:51.9786469Z"}
+{"runId":"fe131d9cb3af4aa4adb13593747b97af","provider":"SQL Server","stage":"run","status":"PASSED","detail":"","atUtc":"2026-11-07T05:02:51.9795324Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"run","status":"STARTED","detail":null,"atUtc":"2026-11-07T05:02:52.0893015Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Foundation CRUD inventory","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:13.6935812Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Foundation CRUD inventory","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:13.6946299Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"CashDiscService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:13.6952316Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"CashDiscService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:13.7329599Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"CurrencyService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:13.7352921Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"CurrencyService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:13.7808789Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"ExchangeRateCurrencyPairService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:13.7815601Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"ExchangeRateCurrencyPairService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:13.8163493Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"ExchangeRateService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:13.8185951Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"ExchangeRateService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:13.8558607Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"ExchangeRateTypeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:13.8565266Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"ExchangeRateTypeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:13.8897668Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"DlvModeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:13.890462Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"DlvModeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:13.9270649Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"DlvTermService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:13.9277777Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"DlvTermService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:13.9714032Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"HcmDepartmentService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:13.9721892Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"HcmDepartmentService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:14.012132Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"GenderService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:14.0128109Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"GenderService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:14.0553427Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"HcmShowroomService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:14.0559596Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"HcmShowroomService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:14.091406Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"HcmWorkerService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:14.092131Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"HcmWorkerService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:14.1476875Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"CompanyInfoService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:14.1483115Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"CompanyInfoService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:14.1908571Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"ContactPersonService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:14.1915556Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"ContactPersonService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:14.2425348Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"ElectronicAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:14.243182Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"ElectronicAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:14.2841124Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"LocationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:14.2855768Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"LocationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:14.3190291Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"PartyLocationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:14.3197388Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"PartyLocationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:14.3655059Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"PartyService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:14.3662022Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"PartyService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:14.4648174Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"PostalAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:14.465573Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"PostalAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:14.5195168Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"MarkupTableService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:14.5202497Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"MarkupTableService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:14.5669467Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"HcmNationalityService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:14.5688897Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"HcmNationalityService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:14.6067242Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"HcmOccupationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:14.6074702Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"HcmOccupationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:14.6412714Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"OrganizationUnitService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:14.64196Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"OrganizationUnitService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:14.6762041Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"PaymSchedLineService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:14.6768907Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"PaymSchedLineService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:14.7212049Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"PaymSchedService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:14.7220906Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"PaymSchedService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:14.7773901Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"PaymTermService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:14.7780572Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"PaymTermService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:14.8526171Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"TaxAuthorityAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:14.8533019Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"TaxAuthorityAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:14.9197019Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"TaxExemptCodeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:14.9211714Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"TaxExemptCodeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:14.9716019Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"TaxGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:14.9722584Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"TaxGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:15.0361892Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"TaxItemGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:15.036971Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"TaxItemGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:15.0772041Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"TaxLedgerAccountGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:15.0778902Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"TaxLedgerAccountGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:15.1372787Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"TaxPeriodHeadCrudService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:15.1379944Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"TaxPeriodHeadCrudService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:15.2067822Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"TaxTableService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:15.2073324Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"TaxTableService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:15.3543016Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Currency pair bulk save and effective rate","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:15.3551614Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Currency pair bulk save and effective rate","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:15.442511Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Payment due dates, schedules and cash discount arithmetic","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:15.4448569Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Payment due dates, schedules and cash discount arithmetic","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:15.5120097Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Tax group commands, lines and queries","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:15.5128647Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Tax group commands, lines and queries","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:15.7283538Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Tax item group commands, lines and queries","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:15.7305Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Tax item group commands, lines and queries","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:15.9038173Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Tax period create, update, query and delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:15.9046455Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Tax period create, update, query and delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:15.9832299Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Party, location, postal and electronic addresses","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:15.9886141Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Party, location, postal and electronic addresses","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:16.4881502Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Legal entity and address book transaction","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:16.4891587Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Legal entity and address book transaction","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:16.7646449Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Worker, showroom and assignment services","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:16.7723919Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Worker, showroom and assignment services","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:17.2733496Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Organization positions, transfer history and overlap rejection","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:17.2746235Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Organization positions, transfer history and overlap rejection","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:17.4334885Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Tax codes, rates and save transaction","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:17.4366839Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Tax codes, rates and save transaction","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:17.5334921Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Account structure service and dimensions","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:17.5388569Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Account structure service and dimensions","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:17.7066225Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Charge commands, calculation, update, deletion and validation","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:17.7077332Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Charge commands, calculation, update, deletion and validation","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:18.3452009Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Tax and charges financial effects, reporting and settlement","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:18.3458728Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Tax and charges financial effects, reporting and settlement","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:34.0798451Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Tracked primary keys respect company isolation","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:34.0806036Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Tracked primary keys respect company isolation","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:34.1136218Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Tracked tax keys cannot read, update or delete another company","status":"RUNNING","detail":null,"atUtc":"2026-11-07T05:03:34.1142535Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"Tracked tax keys cannot read, update or delete another company","status":"PASSED","detail":null,"atUtc":"2026-11-07T05:03:34.2313406Z"}
+{"runId":"5c38dd946c354156924f42603f81a78c","provider":"SQLite","stage":"run","status":"PASSED","detail":"","atUtc":"2026-11-07T05:03:34.2321868Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"run","status":"STARTED","detail":null,"atUtc":"2026-11-07T07:16:56.0922627Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Foundation CRUD inventory","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:20.4180715Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Foundation CRUD inventory","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:20.418981Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"CashDiscService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:20.420799Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"CashDiscService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:20.5336159Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"CurrencyService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:20.5342437Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"CurrencyService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:20.6385833Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"ExchangeRateCurrencyPairService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:20.6391743Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"ExchangeRateCurrencyPairService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:20.6893357Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"ExchangeRateService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:20.6900104Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"ExchangeRateService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:20.7597574Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"ExchangeRateTypeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:20.7603466Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"ExchangeRateTypeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:20.8394233Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"DlvModeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:20.840061Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"DlvModeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:20.9065632Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"DlvTermService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:20.9071819Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"DlvTermService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:21.0114714Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"HcmDepartmentService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:21.0121905Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"HcmDepartmentService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:21.108068Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"GenderService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:21.1086397Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"GenderService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:21.1683035Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"HcmShowroomService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:21.1688614Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"HcmShowroomService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:21.2232098Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"HcmWorkerService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:21.2238266Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"HcmWorkerService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:21.3762312Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"CompanyInfoService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:21.3767849Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"CompanyInfoService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:21.4378869Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"ContactPersonService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:21.4384314Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"ContactPersonService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:21.5261121Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"ElectronicAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:21.5266655Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"ElectronicAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:21.6090368Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"LocationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:21.6095872Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"LocationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:21.6712387Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"PartyLocationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:21.6717834Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"PartyLocationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:21.7442291Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"PartyService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:21.7448496Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"PartyService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:21.8734618Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"PostalAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:21.873989Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"PostalAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:21.9916516Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"MarkupTableService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:21.9921943Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"MarkupTableService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:22.0968131Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"HcmNationalityService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:22.097468Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"HcmNationalityService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:22.154098Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"HcmOccupationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:22.1546434Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"HcmOccupationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:22.2166796Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"OrganizationUnitService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:22.2172369Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"OrganizationUnitService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:22.3062787Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"PaymSchedLineService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:22.3068095Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"PaymSchedLineService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:22.3623918Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"PaymSchedService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:22.3635464Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"PaymSchedService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:22.4613838Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"PaymTermService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:22.4619762Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"PaymTermService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:22.5558519Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"TaxAuthorityAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:22.5564359Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"TaxAuthorityAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:22.6378251Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"TaxExemptCodeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:22.6383799Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"TaxExemptCodeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:22.6949275Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"TaxGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:22.6954634Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"TaxGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:22.7786182Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"TaxItemGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:22.7791926Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"TaxItemGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:22.8599478Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"TaxLedgerAccountGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:22.8605755Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"TaxLedgerAccountGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:23.0077581Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"TaxPeriodHeadCrudService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:23.0084398Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"TaxPeriodHeadCrudService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:23.086362Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"TaxTableService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:23.0869329Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"TaxTableService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:23.2285184Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Currency pair bulk save and effective rate","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:23.2290553Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Currency pair bulk save and effective rate","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:23.4552848Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Payment due dates, schedules and cash discount arithmetic","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:23.4558863Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Payment due dates, schedules and cash discount arithmetic","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:23.5231441Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Tax group commands, lines and queries","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:23.5239359Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Tax group commands, lines and queries","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:23.8781537Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Tax item group commands, lines and queries","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:23.8787428Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Tax item group commands, lines and queries","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:24.1053493Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Tax period create, update, query and delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:24.1059853Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Tax period create, update, query and delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:24.3440124Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Party, location, postal and electronic addresses","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:24.3447342Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Party, location, postal and electronic addresses","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:25.2049872Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Legal entity and address book transaction","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:25.2055971Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Legal entity and address book transaction","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:25.5622804Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Worker, showroom and assignment services","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:25.5650528Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Worker, showroom and assignment services","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:26.7205223Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Organization positions, transfer history and overlap rejection","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:26.7212275Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Organization positions, transfer history and overlap rejection","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:26.9925261Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Tax codes, rates and save transaction","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:26.9933019Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Tax codes, rates and save transaction","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:27.2551006Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Account structure service and dimensions","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:27.2558322Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Account structure service and dimensions","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:27.4419477Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Charge commands, calculation, update, deletion and validation","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:27.442978Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Charge commands, calculation, update, deletion and validation","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:28.243626Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Tax and charges financial effects, reporting and settlement","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:28.2479489Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Tax and charges financial effects, reporting and settlement","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:48.3939684Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Tracked primary keys respect company isolation","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:48.394891Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Tracked primary keys respect company isolation","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:48.4406795Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Tracked tax keys cannot read, update or delete another company","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:17:48.4414483Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"Tracked tax keys cannot read, update or delete another company","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:17:48.5891872Z"}
+{"runId":"7a4d88e356f840828ca51df9bb9961bb","provider":"SQL Server","stage":"run","status":"PASSED","detail":"","atUtc":"2026-11-07T07:17:48.589926Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"run","status":"STARTED","detail":null,"atUtc":"2026-11-07T07:17:48.6991482Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Foundation CRUD inventory","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:11.6673985Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Foundation CRUD inventory","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:11.6683914Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"CashDiscService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:11.6689042Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"CashDiscService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:11.706952Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"CurrencyService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:11.7078226Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"CurrencyService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:11.753971Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"ExchangeRateCurrencyPairService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:11.7546715Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"ExchangeRateCurrencyPairService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:11.7876282Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"ExchangeRateService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:11.788239Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"ExchangeRateService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:11.8281938Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"ExchangeRateTypeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:11.829161Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"ExchangeRateTypeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:11.8663009Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"DlvModeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:11.8673252Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"DlvModeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:11.9053029Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"DlvTermService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:11.906036Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"DlvTermService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:11.9468546Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"HcmDepartmentService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:11.9482612Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"HcmDepartmentService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:11.9835735Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"GenderService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:11.9843648Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"GenderService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:12.0211673Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"HcmShowroomService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:12.0218406Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"HcmShowroomService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:12.055757Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"HcmWorkerService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:12.0565307Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"HcmWorkerService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:12.1113457Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"CompanyInfoService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:12.1119648Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"CompanyInfoService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:12.1508038Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"ContactPersonService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:12.1515856Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"ContactPersonService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:12.217106Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"ElectronicAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:12.2182833Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"ElectronicAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:12.2625373Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"LocationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:12.2635299Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"LocationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:12.2986723Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"PartyLocationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:12.2994041Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"PartyLocationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:12.3446494Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"PartyService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:12.345353Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"PartyService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:12.4451774Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"PostalAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:12.4461242Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"PostalAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:12.502882Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"MarkupTableService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:12.5036155Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"MarkupTableService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:12.5599604Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"HcmNationalityService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:12.5606871Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"HcmNationalityService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:12.5964559Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"HcmOccupationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:12.5986747Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"HcmOccupationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:12.6333487Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"OrganizationUnitService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:12.6340252Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"OrganizationUnitService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:12.6697465Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"PaymSchedLineService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:12.6705362Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"PaymSchedLineService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:12.719383Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"PaymSchedService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:12.7200503Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"PaymSchedService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:12.7684507Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"PaymTermService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:12.7691736Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"PaymTermService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:12.8331938Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"TaxAuthorityAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:12.8338125Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"TaxAuthorityAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:12.8851576Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"TaxExemptCodeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:12.8858007Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"TaxExemptCodeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:12.9210393Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"TaxGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:12.9216773Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"TaxGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:12.9763841Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"TaxItemGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:12.9770635Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"TaxItemGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:13.0118589Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"TaxLedgerAccountGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:13.0126425Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"TaxLedgerAccountGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:13.0580104Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"TaxPeriodHeadCrudService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:13.0586401Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"TaxPeriodHeadCrudService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:13.1182054Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"TaxTableService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:13.118948Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"TaxTableService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:13.2569368Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Currency pair bulk save and effective rate","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:13.2598111Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Currency pair bulk save and effective rate","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:13.3508149Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Payment due dates, schedules and cash discount arithmetic","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:13.3516666Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Payment due dates, schedules and cash discount arithmetic","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:13.4074904Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Tax group commands, lines and queries","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:13.4083725Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Tax group commands, lines and queries","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:13.6031919Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Tax item group commands, lines and queries","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:13.6045861Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Tax item group commands, lines and queries","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:13.775336Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Tax period create, update, query and delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:13.776128Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Tax period create, update, query and delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:13.9275723Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Party, location, postal and electronic addresses","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:13.9283646Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Party, location, postal and electronic addresses","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:14.4621017Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Legal entity and address book transaction","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:14.4628346Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Legal entity and address book transaction","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:14.8289435Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Worker, showroom and assignment services","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:14.8311454Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Worker, showroom and assignment services","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:15.4041799Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Organization positions, transfer history and overlap rejection","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:15.4050776Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Organization positions, transfer history and overlap rejection","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:15.5693343Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Tax codes, rates and save transaction","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:15.5707691Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Tax codes, rates and save transaction","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:15.6549561Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Account structure service and dimensions","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:15.6567468Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Account structure service and dimensions","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:15.8417369Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Charge commands, calculation, update, deletion and validation","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:15.8424111Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Charge commands, calculation, update, deletion and validation","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:16.5880187Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Tax and charges financial effects, reporting and settlement","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:16.5888193Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Tax and charges financial effects, reporting and settlement","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:34.6778421Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Tracked primary keys respect company isolation","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:34.6786527Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Tracked primary keys respect company isolation","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:34.7192193Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Tracked tax keys cannot read, update or delete another company","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:18:34.7199029Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"Tracked tax keys cannot read, update or delete another company","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:18:34.8442992Z"}
+{"runId":"ce44004b767e49688f9547d723c6771c","provider":"SQLite","stage":"run","status":"PASSED","detail":"","atUtc":"2026-11-07T07:18:34.8449946Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"run","status":"STARTED","detail":null,"atUtc":"2026-11-07T07:47:37.2102366Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Foundation CRUD inventory","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:05.6428176Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Foundation CRUD inventory","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:05.6438113Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"CashDiscService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:05.6464361Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"CashDiscService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:05.7366721Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"CurrencyService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:05.7373949Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"CurrencyService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:05.8184764Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"ExchangeRateCurrencyPairService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:05.819044Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"ExchangeRateCurrencyPairService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:05.8615616Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"ExchangeRateService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:05.8621232Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"ExchangeRateService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:05.9037765Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"ExchangeRateTypeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:05.9043511Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"ExchangeRateTypeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:05.9604403Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"DlvModeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:05.9610662Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"DlvModeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:06.0304089Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"DlvTermService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:06.0309699Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"DlvTermService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:06.0886718Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"HcmDepartmentService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:06.0892333Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"HcmDepartmentService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:06.1528782Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"GenderService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:06.1534828Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"GenderService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:06.2133868Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"HcmShowroomService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:06.2140058Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"HcmShowroomService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:06.2674084Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"HcmWorkerService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:06.268018Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"HcmWorkerService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:06.4266046Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"CompanyInfoService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:06.4272957Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"CompanyInfoService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:06.4965227Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"ContactPersonService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:06.4970945Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"ContactPersonService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:06.5694593Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"ElectronicAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:06.5700323Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"ElectronicAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:06.6466433Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"LocationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:06.6472106Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"LocationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:06.7025224Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"PartyLocationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:06.7030876Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"PartyLocationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:06.7693183Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"PartyService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:06.7699081Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"PartyService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:06.9343754Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"PostalAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:06.9350109Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"PostalAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:07.008789Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"MarkupTableService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:07.0093565Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"MarkupTableService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:07.093003Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"HcmNationalityService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:07.0936245Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"HcmNationalityService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:07.1572954Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"HcmOccupationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:07.1578641Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"HcmOccupationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:07.2169461Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"OrganizationUnitService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:07.2175102Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"OrganizationUnitService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:07.3449436Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"PaymSchedLineService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:07.3455608Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"PaymSchedLineService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:07.408858Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"PaymSchedService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:07.4094178Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"PaymSchedService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:07.4911539Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"PaymTermService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:07.4917398Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"PaymTermService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:07.6138536Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"TaxAuthorityAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:07.6145193Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"TaxAuthorityAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:07.7538047Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"TaxExemptCodeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:07.7544324Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"TaxExemptCodeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:07.8885968Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"TaxGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:07.8891719Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"TaxGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:08.0069581Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"TaxItemGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:08.0074889Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"TaxItemGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:08.1252125Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"TaxLedgerAccountGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:08.1257441Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"TaxLedgerAccountGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:08.3706392Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"TaxPeriodHeadCrudService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:08.3711724Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"TaxPeriodHeadCrudService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:08.5294239Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"TaxTableService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:08.5300068Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"TaxTableService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:08.6657292Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Currency pair bulk save and effective rate","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:08.6662956Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Currency pair bulk save and effective rate","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:08.8216535Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Payment due dates, schedules and cash discount arithmetic","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:08.8222534Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Payment due dates, schedules and cash discount arithmetic","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:08.9061483Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Tax group commands, lines and queries","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:08.9157356Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Tax group commands, lines and queries","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:09.3314087Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Tax item group commands, lines and queries","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:09.332028Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Tax item group commands, lines and queries","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:09.6336883Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Tax period create, update, query and delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:09.6343184Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Tax period create, update, query and delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:09.8596222Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Party, location, postal and electronic addresses","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:09.8604291Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Party, location, postal and electronic addresses","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:10.5897733Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Legal entity and address book transaction","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:10.5918819Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Legal entity and address book transaction","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:11.0289779Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Worker, showroom and assignment services","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:11.029729Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Worker, showroom and assignment services","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:12.4071562Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Organization positions, transfer history and overlap rejection","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:12.4078424Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Organization positions, transfer history and overlap rejection","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:12.6605004Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Tax codes, rates and save transaction","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:12.6615798Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Tax codes, rates and save transaction","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:12.8343Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Account structure service and dimensions","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:12.8348633Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Account structure service and dimensions","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:12.9583319Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Charge commands, calculation, update, deletion and validation","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:12.959009Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Charge commands, calculation, update, deletion and validation","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:13.6027417Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Tax and charges financial effects, reporting and settlement","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:13.6036948Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Tax and charges financial effects, reporting and settlement","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:39.0564764Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Tracked primary keys respect company isolation","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:39.0574768Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Tracked primary keys respect company isolation","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:39.1373236Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Tracked tax keys cannot read, update or delete another company","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:48:39.1380775Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"Tracked tax keys cannot read, update or delete another company","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:48:39.6820206Z"}
+{"runId":"62815513985c4ba99af30ca145623b2b","provider":"SQL Server","stage":"run","status":"PASSED","detail":"","atUtc":"2026-11-07T07:48:39.6828823Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"run","status":"STARTED","detail":null,"atUtc":"2026-11-07T07:48:43.5891254Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Foundation CRUD inventory","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:06.6458228Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Foundation CRUD inventory","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:06.646616Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"CashDiscService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:06.6473133Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"CashDiscService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:06.6806732Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"CurrencyService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:06.6812808Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"CurrencyService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:06.7211009Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"ExchangeRateCurrencyPairService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:06.721881Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"ExchangeRateCurrencyPairService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:06.7550721Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"ExchangeRateService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:06.755895Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"ExchangeRateService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:06.7987121Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"ExchangeRateTypeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:06.7993017Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"ExchangeRateTypeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:06.8308389Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"DlvModeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:06.8318563Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"DlvModeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:06.866564Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"DlvTermService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:06.8672534Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"DlvTermService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:06.9046842Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"HcmDepartmentService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:06.9053807Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"HcmDepartmentService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:06.9381554Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"GenderService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:06.9389073Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"GenderService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:06.9693308Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"HcmShowroomService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:06.9698913Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"HcmShowroomService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:06.998811Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"HcmWorkerService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:06.9995247Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"HcmWorkerService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:07.0369764Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"CompanyInfoService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:07.0377215Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"CompanyInfoService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:07.0704332Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"ContactPersonService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:07.0711834Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"ContactPersonService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:07.1163929Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"ElectronicAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:07.1170996Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"ElectronicAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:07.1553752Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"LocationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:07.1562189Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"LocationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:07.1875519Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"PartyLocationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:07.1883602Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"PartyLocationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:07.2365938Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"PartyService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:07.2374515Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"PartyService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:07.3236372Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"PostalAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:07.3243917Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"PostalAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:07.3724829Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"MarkupTableService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:07.3732476Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"MarkupTableService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:07.4219192Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"HcmNationalityService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:07.4226227Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"HcmNationalityService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:07.4536123Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"HcmOccupationService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:07.4543138Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"HcmOccupationService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:07.4844514Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"OrganizationUnitService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:07.485194Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"OrganizationUnitService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:07.5168208Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"PaymSchedLineService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:07.5176046Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"PaymSchedLineService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:07.5495315Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"PaymSchedService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:07.5503326Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"PaymSchedService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:07.5892689Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"PaymTermService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:07.5901706Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"PaymTermService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:07.6425672Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"TaxAuthorityAddressService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:07.6433118Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"TaxAuthorityAddressService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:07.6946827Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"TaxExemptCodeService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:07.6953285Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"TaxExemptCodeService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:07.7270687Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"TaxGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:07.7278307Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"TaxGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:07.7786958Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"TaxItemGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:07.7793332Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"TaxItemGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:07.815129Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"TaxLedgerAccountGroupService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:07.8158228Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"TaxLedgerAccountGroupService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:07.8577354Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"TaxPeriodHeadCrudService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:07.8584968Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"TaxPeriodHeadCrudService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:07.9143872Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"TaxTableService: read/create/update/delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:07.9150055Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"TaxTableService: read/create/update/delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:07.9799857Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Currency pair bulk save and effective rate","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:07.9807376Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Currency pair bulk save and effective rate","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:08.0496185Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Payment due dates, schedules and cash discount arithmetic","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:08.0503806Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Payment due dates, schedules and cash discount arithmetic","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:08.0907862Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Tax group commands, lines and queries","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:08.0916969Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Tax group commands, lines and queries","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:08.2662264Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Tax item group commands, lines and queries","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:08.2671904Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Tax item group commands, lines and queries","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:08.380293Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Tax period create, update, query and delete","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:08.380991Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Tax period create, update, query and delete","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:08.4448245Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Party, location, postal and electronic addresses","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:08.445476Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Party, location, postal and electronic addresses","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:08.8023568Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Legal entity and address book transaction","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:08.8030911Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Legal entity and address book transaction","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:08.9898314Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Worker, showroom and assignment services","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:08.9905067Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Worker, showroom and assignment services","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:09.4614585Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Organization positions, transfer history and overlap rejection","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:09.4622918Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Organization positions, transfer history and overlap rejection","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:09.5766181Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Tax codes, rates and save transaction","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:09.5775058Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Tax codes, rates and save transaction","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:09.6491492Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Account structure service and dimensions","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:09.6498371Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Account structure service and dimensions","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:09.7706443Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Charge commands, calculation, update, deletion and validation","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:09.7714007Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Charge commands, calculation, update, deletion and validation","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:10.264794Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Tax and charges financial effects, reporting and settlement","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:10.2654612Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Tax and charges financial effects, reporting and settlement","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:25.1679106Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Tracked primary keys respect company isolation","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:25.1690102Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Tracked primary keys respect company isolation","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:25.2023303Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Tracked tax keys cannot read, update or delete another company","status":"RUNNING","detail":null,"atUtc":"2026-11-07T07:49:25.2031572Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"Tracked tax keys cannot read, update or delete another company","status":"PASSED","detail":null,"atUtc":"2026-11-07T07:49:25.3124017Z"}
+{"runId":"504d426306c74d698ba096bbe679e7a1","provider":"SQLite","stage":"run","status":"PASSED","detail":"","atUtc":"2026-11-07T07:49:25.3132899Z"}

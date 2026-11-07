@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="ebc48f3c-0ee8-4b26-9f95-fb2b164eb7b5" name="Omar Almojahid@DESKTOP-3Q67JPL 2026-11-06 17:31:50" runUser="DESKTOP-3Q67JPL\Omar Almojahid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-06T17:31:50.3146126+03:00" queuing="2026-11-06T17:31:50.3146130+03:00" start="2026-11-06T17:31:05.8986742+03:00" finish="2026-11-06T17:31:50.4571141+03:00" />
+  <TestSettings name="default" id="2472175d-b7c7-4d5f-8c49-3870144a1911">
+    <Deployment runDeploymentRoot="Omar_Almojahid_DESKTOP-3Q67JPL_2026-11-06_17_31_50" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="7005666a-ee30-4b79-b1aa-a5f4dba9a446" testId="355fcc9e-77f7-08bd-6270-97c9c234696d" testName="IXApi.Tests.AccountsReceivableSeedIntegrityTests.Cross_module_corruptions_are_rejected_before_commit_and_every_write_rolls_back" computerName="DESKTOP-3Q67JPL" duration="00:00:43.0815295" startTime="2026-11-06T17:31:07.1714633+03:00" endTime="2026-11-06T17:31:50.2624880+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7005666a-ee30-4b79-b1aa-a5f4dba9a446" />
+    <UnitTestResult executionId="e97a4aea-ca7c-4313-a189-03c5cd0d324e" testId="d25714f6-0cee-21f1-feab-e59b2f21ac2a" testName="IXApi.Tests.AccountsReceivableSeedIntegrityTests.Shared_inventory_dimension_owner_is_an_explicit_seed_dependency" computerName="DESKTOP-3Q67JPL" duration="00:00:00.0215108" startTime="2026-11-06T17:31:50.2897014+03:00" endTime="2026-11-06T17:31:50.2900577+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e97a4aea-ca7c-4313-a189-03c5cd0d324e" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IXApi.Tests.AccountsReceivableSeedIntegrityTests.Shared_inventory_dimension_owner_is_an_explicit_seed_dependency" storage="c:\users\omar almojahid\desktop\iax\ixapi\.ap-service-validation\bin\debug\net9.0\ixapi.tests.dll" id="d25714f6-0cee-21f1-feab-e59b2f21ac2a">
+      <Execution id="e97a4aea-ca7c-4313-a189-03c5cd0d324e" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\.ap-service-validation\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableSeedIntegrityTests" name="Shared_inventory_dimension_owner_is_an_explicit_seed_dependency" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.AccountsReceivableSeedIntegrityTests.Cross_module_corruptions_are_rejected_before_commit_and_every_write_rolls_back" storage="c:\users\omar almojahid\desktop\iax\ixapi\.ap-service-validation\bin\debug\net9.0\ixapi.tests.dll" id="355fcc9e-77f7-08bd-6270-97c9c234696d">
+      <Execution id="7005666a-ee30-4b79-b1aa-a5f4dba9a446" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\.ap-service-validation\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableSeedIntegrityTests" name="Cross_module_corruptions_are_rejected_before_commit_and_every_write_rolls_back" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="355fcc9e-77f7-08bd-6270-97c9c234696d" executionId="7005666a-ee30-4b79-b1aa-a5f4dba9a446" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d25714f6-0cee-21f1-feab-e59b2f21ac2a" executionId="e97a4aea-ca7c-4313-a189-03c5cd0d324e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="2" executed="2" passed="2" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.26]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:00.51]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:00.54]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:00:43.70]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

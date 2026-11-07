@@ -1,0 +1,25 @@
+{
+  "general": {
+    "failed": 0,
+    "total": 864,
+    "passed": 861,
+    "skipped": 3
+  },
+  "inventory": {
+    "failed": 0,
+    "passed": 128
+  },
+  "profileTests": [
+    {
+      "testName": "IXApi.Tests.AccountsReceivableSeedIntegrityTests.Explicit_missing_customer_profile_cannot_borrow_another_profiles_accounts(requestedProfile: \"EMPTY\", createHeader: True)",
+      "outcome": "Passed"
+    },
+    {
+      "testName": "IXApi.Tests.AccountsReceivableSeedIntegrityTests.Explicit_missing_customer_profile_cannot_borrow_another_profiles_accounts(requestedProfile: \"MISSING\", createHeader: False)",
+      "outcome": "Passed"
+    }
+  ],
+  "arPassedStages": 38,
+  "rejectedCorruptions": 24,
+  "temporaryDatabasesRemaining": 0
+}

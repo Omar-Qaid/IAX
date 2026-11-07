@@ -1,0 +1,13 @@
+{
+  "Scope": "Direct business services; aggregate of an interrupted broad run and completed focused runs",
+  "Total": 855,
+  "Passed": 853,
+  "Failed": 0,
+  "Skipped": 2,
+  "InventoryPassed": 128,
+  "Evidence": [
+    "ap-services-latest.trx",
+    "ap-independent-amounts.trx",
+    "ap-regression-completion.trx"
+  ]
+}
