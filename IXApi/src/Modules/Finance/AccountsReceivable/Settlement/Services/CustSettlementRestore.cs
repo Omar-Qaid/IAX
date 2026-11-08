@@ -21,7 +21,7 @@ internal static class CustSettlementRestore
     /// or the reason it was refused.
     /// </summary>
     public static async Task<string?> ApplyAsync(DbContext db, string area, string settlementVoucher,
-        DateTime date, string reversalVoucher, CancellationToken ct)
+        DateTime date, string reversalVoucher, CancellationToken ct, string userId = "")
     {
         var rows = await db.Set<CustSettlement>()
             .Where(x => x.DataAreaId == area && x.SettlementVoucher == settlementVoucher).ToListAsync(ct);
@@ -35,6 +35,11 @@ internal static class CustSettlementRestore
         if (rows.Any(x => x.UtilizedCashDisc != 0m || x.ExchAdjustment != 0m || x.PennyDiff != 0m))
             return $"Settlement '{settlementVoucher}' carries a cash discount, exchange adjustment or penny "
                 + "difference, which post to the ledger and cannot be reversed by this path.";
+        var creditIds = rows.Where(x => x.SettleAmountCur < 0m).Select(x => x.TransRecId).ToArray();
+        if (await db.Set<CustTrans>().AnyAsync(x => x.DataAreaId == area && creditIds.Contains(x.RecId)
+            && x.Prepayment == NoYes.Yes, ct))
+            await CustPrepaymentSettlementPosting.ReverseAsync(db, area, settlementVoucher, reversalVoucher,
+                rows[0].TransDate.Date, date, userId, rows.Where(x => x.SettleAmountCur > 0m).Sum(x => x.SettleAmountCur), ct);
 
         // The originals stay as history; the reversal is its own set of rows with the amounts
         // negated. There is no field linking a reversal back to the settlement it reverses, so the

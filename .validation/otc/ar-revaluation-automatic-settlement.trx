@@ -1,0 +1,130 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="02ae610d-bc2f-4bc7-9b3e-fc8ce374a09a" name="Omar Almojahid@DESKTOP-3Q67JPL 2026-11-08 18:22:59" runUser="DESKTOP-3Q67JPL\Omar Almojahid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-08T18:22:59.7176274+03:00" queuing="2026-11-08T18:22:59.7176278+03:00" start="2026-11-08T18:22:47.6323274+03:00" finish="2026-11-08T18:23:43.0914070+03:00" />
+  <TestSettings name="default" id="b9e31641-4a82-4cec-9f24-2392b994d55b">
+    <Deployment runDeploymentRoot="Omar_Almojahid_DESKTOP-3Q67JPL_2026-11-08_18_22_59" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="032f63c8-337a-4420-abd6-94630fd265a3" testId="2957692c-2587-f483-1fb6-ddde967ebfb1" testName="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.Revaluation_preview_compares_the_new_rate_with_the_current_carrying_value" computerName="DESKTOP-3Q67JPL" duration="00:00:00.1033197" startTime="2026-11-08T18:23:03.6666806+03:00" endTime="2026-11-08T18:23:03.7698920+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="032f63c8-337a-4420-abd6-94630fd265a3" />
+    <UnitTestResult executionId="d6717839-5cb2-4103-9626-879787059fc3" testId="98785b66-5d9a-7df7-7363-89fe257e6108" testName="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_posts_and_reverses_customer_revaluation_SQLServer" computerName="DESKTOP-3Q67JPL" duration="00:00:38.3585337" startTime="2026-11-08T18:23:04.4522532+03:00" endTime="2026-11-08T18:23:42.8171672+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d6717839-5cb2-4103-9626-879787059fc3" />
+    <UnitTestResult executionId="3cdd811b-dea4-4d9f-b24e-ebffc5927777" testId="7c2bd1c8-39d9-fc14-acce-0d7056eb1f59" testName="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.A_customer_prepayment_credits_the_configured_liability_and_leaves_the_invoice_open" computerName="DESKTOP-3Q67JPL" duration="00:00:00.2917640" startTime="2026-11-08T18:23:03.3748175+03:00" endTime="2026-11-08T18:23:03.6664772+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3cdd811b-dea4-4d9f-b24e-ebffc5927777" />
+    <UnitTestResult executionId="a5db3fd9-e621-48c0-acf8-a27679f404cd" testId="9000ffb1-b999-838d-dbea-46f3290c69a3" testName="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.Revaluation_replaces_a_gain_with_a_loss_then_reverses" computerName="DESKTOP-3Q67JPL" duration="00:00:00.4625195" startTime="2026-11-08T18:23:02.6733873+03:00" endTime="2026-11-08T18:23:03.1358205+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a5db3fd9-e621-48c0-acf8-a27679f404cd" />
+    <UnitTestResult executionId="84e82d4e-b7d6-44cd-bd08-1793ee509e39" testId="6a79e897-6c1e-5183-53b8-52fcb37859fc" testName="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.A_vendor_payment_at_a_weaker_rate_posts_a_realized_gain_and_the_voucher_balances" computerName="DESKTOP-3Q67JPL" duration="00:00:00.1346007" startTime="2026-11-08T18:23:03.7700871+03:00" endTime="2026-11-08T18:23:03.9045743+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="84e82d4e-b7d6-44cd-bd08-1793ee509e39" />
+    <UnitTestResult executionId="e0b5dec7-9bba-46af-a0cd-dc520c598f04" testId="41eb4f64-040e-943f-5580-a75471db6cf3" testName="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.A_payment_at_the_invoice_rate_realizes_nothing" computerName="DESKTOP-3Q67JPL" duration="00:00:00.1107383" startTime="2026-11-08T18:23:03.2639640+03:00" endTime="2026-11-08T18:23:03.3746104+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e0b5dec7-9bba-46af-a0cd-dc520c598f04" />
+    <UnitTestResult executionId="127127a0-e773-47c5-b9f2-de04f9b05e7b" testId="8df6ebee-c010-d253-1f1e-023093586cc5" testName="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.A_currency_specific_loss_account_overrides_the_ledger_wide_one" computerName="DESKTOP-3Q67JPL" duration="00:00:02.0267385" startTime="2026-11-08T18:22:59.6097318+03:00" endTime="2026-11-08T18:23:01.5698357+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="127127a0-e773-47c5-b9f2-de04f9b05e7b" />
+    <UnitTestResult executionId="310a3442-333e-4585-921c-5897c1b7f6fd" testId="c8fae3bd-cfda-294f-6f4a-d1a882ed30d8" testName="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.A_payment_at_a_stronger_rate_posts_a_realized_gain_and_the_voucher_balances" computerName="DESKTOP-3Q67JPL" duration="00:00:00.1149157" startTime="2026-11-08T18:23:04.0896910+03:00" endTime="2026-11-08T18:23:04.2045066+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="310a3442-333e-4585-921c-5897c1b7f6fd" />
+    <UnitTestResult executionId="a33c7863-0c95-4302-8a1e-4be51ed3e106" testId="97c6ef85-85ff-7ab0-353c-0675f944fabd" testName="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.Final_payment_clears_the_exact_accounting_remainder_after_partial_rounding" computerName="DESKTOP-3Q67JPL" duration="00:00:00.1848364" startTime="2026-11-08T18:23:03.9047697+03:00" endTime="2026-11-08T18:23:04.0894752+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a33c7863-0c95-4302-8a1e-4be51ed3e106" />
+    <UnitTestResult executionId="4579a6ab-ba45-4387-841b-1ecb97a8a800" testId="1f9c304c-1522-3fa9-5fea-5d181283794c" testName="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.A_second_partial_payment_uses_the_reporting_currency_open_balance" computerName="DESKTOP-3Q67JPL" duration="00:00:00.2294621" startTime="2026-11-08T18:23:04.2047043+03:00" endTime="2026-11-08T18:23:04.4340536+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4579a6ab-ba45-4387-841b-1ecb97a8a800" />
+    <UnitTestResult executionId="3981db31-f7eb-40a2-b695-e939cf9ec4bf" testId="59cabe95-68a4-2467-67cf-919a229a1767" testName="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.A_vendor_payment_from_a_bank_in_another_currency_is_refused" computerName="DESKTOP-3Q67JPL" duration="00:00:07.3873294" startTime="2026-11-08T18:22:52.1855245+03:00" endTime="2026-11-08T18:22:59.5414171+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3981db31-f7eb-40a2-b695-e939cf9ec4bf" />
+    <UnitTestResult executionId="f9ba75f1-9a8f-4734-bd9f-17b782e26160" testId="ca36091f-5997-95ef-6a09-bbb31b1881dc" testName="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.A_missing_loss_account_refuses_the_payment_by_name" computerName="DESKTOP-3Q67JPL" duration="00:00:00.2359621" startTime="2026-11-08T18:23:01.5716178+03:00" endTime="2026-11-08T18:23:01.8058165+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f9ba75f1-9a8f-4734-bd9f-17b782e26160" />
+    <UnitTestResult executionId="b0240d5b-fcb7-46c9-b8ec-6a018d250302" testId="b7737b45-4a7c-13c0-14ce-8a624544090e" testName="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.A_vendor_payment_at_a_stronger_rate_posts_a_realized_loss" computerName="DESKTOP-3Q67JPL" duration="00:00:00.1278920" startTime="2026-11-08T18:23:03.1360613+03:00" endTime="2026-11-08T18:23:03.2637665+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b0240d5b-fcb7-46c9-b8ec-6a018d250302" />
+    <UnitTestResult executionId="518ed8b9-c34d-459e-a054-f87b6a6c37db" testId="8ef5fe72-c767-f6c8-a21b-6e756bcc7dd9" testName="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.Reversing_a_settlement_that_realized_an_exchange_difference_is_refused_atomically" computerName="DESKTOP-3Q67JPL" duration="00:00:00.3089691" startTime="2026-11-08T18:23:02.3643296+03:00" endTime="2026-11-08T18:23:02.6731770+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="518ed8b9-c34d-459e-a054-f87b6a6c37db" />
+    <UnitTestResult executionId="bf6bce76-de65-4985-9c39-1f21f922d163" testId="3bf00d37-724f-4994-f430-1f5e2956fed2" testName="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.Payment_checks_unrealized_revaluation_only_on_invoices_it_reaches(reachesRevaluedInvoice: True)" computerName="DESKTOP-3Q67JPL" duration="00:00:00.1534075" startTime="2026-11-08T18:23:01.9832022+03:00" endTime="2026-11-08T18:23:02.1361648+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="bf6bce76-de65-4985-9c39-1f21f922d163" />
+    <UnitTestResult executionId="996bc423-2c07-41c4-aba2-83502ded1d5f" testId="c6816d7e-b5c5-226b-5072-3929f32a7ee6" testName="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.A_payment_at_a_weaker_rate_posts_a_realized_loss_and_the_voucher_balances" computerName="DESKTOP-3Q67JPL" duration="00:00:00.2278672" startTime="2026-11-08T18:23:02.1363579+03:00" endTime="2026-11-08T18:23:02.3641301+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="996bc423-2c07-41c4-aba2-83502ded1d5f" />
+    <UnitTestResult executionId="e54511a6-d089-45f0-898b-1c8140bd2d84" testId="c3ecfa6d-db39-0a62-addd-0954951170db" testName="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.Payment_checks_unrealized_revaluation_only_on_invoices_it_reaches(reachesRevaluedInvoice: False)" computerName="DESKTOP-3Q67JPL" duration="00:00:00.1767484" startTime="2026-11-08T18:23:01.8060376+03:00" endTime="2026-11-08T18:23:01.9826634+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e54511a6-d089-45f0-898b-1c8140bd2d84" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.Final_payment_clears_the_exact_accounting_remainder_after_partial_rounding" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="97c6ef85-85ff-7ab0-353c-0675f944fabd">
+      <Execution id="a33c7863-0c95-4302-8a1e-4be51ed3e106" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.RealizedExchangeDifferenceTests" name="Final_payment_clears_the_exact_accounting_remainder_after_partial_rounding" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.A_payment_at_a_stronger_rate_posts_a_realized_gain_and_the_voucher_balances" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="c8fae3bd-cfda-294f-6f4a-d1a882ed30d8">
+      <Execution id="310a3442-333e-4585-921c-5897c1b7f6fd" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.RealizedExchangeDifferenceTests" name="A_payment_at_a_stronger_rate_posts_a_realized_gain_and_the_voucher_balances" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.Reversing_a_settlement_that_realized_an_exchange_difference_is_refused_atomically" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="8ef5fe72-c767-f6c8-a21b-6e756bcc7dd9">
+      <Execution id="518ed8b9-c34d-459e-a054-f87b6a6c37db" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.RealizedExchangeDifferenceTests" name="Reversing_a_settlement_that_realized_an_exchange_difference_is_refused_atomically" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.A_payment_at_the_invoice_rate_realizes_nothing" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="41eb4f64-040e-943f-5580-a75471db6cf3">
+      <Execution id="e0b5dec7-9bba-46af-a0cd-dc520c598f04" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.RealizedExchangeDifferenceTests" name="A_payment_at_the_invoice_rate_realizes_nothing" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.A_second_partial_payment_uses_the_reporting_currency_open_balance" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="1f9c304c-1522-3fa9-5fea-5d181283794c">
+      <Execution id="4579a6ab-ba45-4387-841b-1ecb97a8a800" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.RealizedExchangeDifferenceTests" name="A_second_partial_payment_uses_the_reporting_currency_open_balance" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.A_customer_prepayment_credits_the_configured_liability_and_leaves_the_invoice_open" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="7c2bd1c8-39d9-fc14-acce-0d7056eb1f59">
+      <Execution id="3cdd811b-dea4-4d9f-b24e-ebffc5927777" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.RealizedExchangeDifferenceTests" name="A_customer_prepayment_credits_the_configured_liability_and_leaves_the_invoice_open" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.A_vendor_payment_at_a_stronger_rate_posts_a_realized_loss" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="b7737b45-4a7c-13c0-14ce-8a624544090e">
+      <Execution id="b0240d5b-fcb7-46c9-b8ec-6a018d250302" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.RealizedExchangeDifferenceTests" name="A_vendor_payment_at_a_stronger_rate_posts_a_realized_loss" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.Revaluation_replaces_a_gain_with_a_loss_then_reverses" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="9000ffb1-b999-838d-dbea-46f3290c69a3">
+      <Execution id="a5db3fd9-e621-48c0-acf8-a27679f404cd" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.RealizedExchangeDifferenceTests" name="Revaluation_replaces_a_gain_with_a_loss_then_reverses" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.Payment_checks_unrealized_revaluation_only_on_invoices_it_reaches(reachesRevaluedInvoice: True)" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="3bf00d37-724f-4994-f430-1f5e2956fed2">
+      <Execution id="bf6bce76-de65-4985-9c39-1f21f922d163" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.RealizedExchangeDifferenceTests" name="Payment_checks_unrealized_revaluation_only_on_invoices_it_reaches" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.A_currency_specific_loss_account_overrides_the_ledger_wide_one" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="8df6ebee-c010-d253-1f1e-023093586cc5">
+      <Execution id="127127a0-e773-47c5-b9f2-de04f9b05e7b" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.RealizedExchangeDifferenceTests" name="A_currency_specific_loss_account_overrides_the_ledger_wide_one" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.A_vendor_payment_from_a_bank_in_another_currency_is_refused" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="59cabe95-68a4-2467-67cf-919a229a1767">
+      <Execution id="3981db31-f7eb-40a2-b695-e939cf9ec4bf" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.RealizedExchangeDifferenceTests" name="A_vendor_payment_from_a_bank_in_another_currency_is_refused" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_posts_and_reverses_customer_revaluation_SQLServer" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="98785b66-5d9a-7df7-7363-89fe257e6108">
+      <Execution id="d6717839-5cb2-4103-9626-879787059fc3" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableCycleStageTests" name="Order_to_cash_posts_and_reverses_customer_revaluation_SQLServer" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.Revaluation_preview_compares_the_new_rate_with_the_current_carrying_value" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="2957692c-2587-f483-1fb6-ddde967ebfb1">
+      <Execution id="032f63c8-337a-4420-abd6-94630fd265a3" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.RealizedExchangeDifferenceTests" name="Revaluation_preview_compares_the_new_rate_with_the_current_carrying_value" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.A_missing_loss_account_refuses_the_payment_by_name" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="ca36091f-5997-95ef-6a09-bbb31b1881dc">
+      <Execution id="f9ba75f1-9a8f-4734-bd9f-17b782e26160" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.RealizedExchangeDifferenceTests" name="A_missing_loss_account_refuses_the_payment_by_name" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.Payment_checks_unrealized_revaluation_only_on_invoices_it_reaches(reachesRevaluedInvoice: False)" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="c3ecfa6d-db39-0a62-addd-0954951170db">
+      <Execution id="e54511a6-d089-45f0-898b-1c8140bd2d84" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.RealizedExchangeDifferenceTests" name="Payment_checks_unrealized_revaluation_only_on_invoices_it_reaches" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.A_vendor_payment_at_a_weaker_rate_posts_a_realized_gain_and_the_voucher_balances" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="6a79e897-6c1e-5183-53b8-52fcb37859fc">
+      <Execution id="84e82d4e-b7d6-44cd-bd08-1793ee509e39" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.RealizedExchangeDifferenceTests" name="A_vendor_payment_at_a_weaker_rate_posts_a_realized_gain_and_the_voucher_balances" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.RealizedExchangeDifferenceTests.A_payment_at_a_weaker_rate_posts_a_realized_loss_and_the_voucher_balances" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="c6816d7e-b5c5-226b-5072-3929f32a7ee6">
+      <Execution id="996bc423-2c07-41c4-aba2-83502ded1d5f" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.RealizedExchangeDifferenceTests" name="A_payment_at_a_weaker_rate_posts_a_realized_loss_and_the_voucher_balances" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="2957692c-2587-f483-1fb6-ddde967ebfb1" executionId="032f63c8-337a-4420-abd6-94630fd265a3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="98785b66-5d9a-7df7-7363-89fe257e6108" executionId="d6717839-5cb2-4103-9626-879787059fc3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7c2bd1c8-39d9-fc14-acce-0d7056eb1f59" executionId="3cdd811b-dea4-4d9f-b24e-ebffc5927777" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9000ffb1-b999-838d-dbea-46f3290c69a3" executionId="a5db3fd9-e621-48c0-acf8-a27679f404cd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6a79e897-6c1e-5183-53b8-52fcb37859fc" executionId="84e82d4e-b7d6-44cd-bd08-1793ee509e39" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="41eb4f64-040e-943f-5580-a75471db6cf3" executionId="e0b5dec7-9bba-46af-a0cd-dc520c598f04" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8df6ebee-c010-d253-1f1e-023093586cc5" executionId="127127a0-e773-47c5-b9f2-de04f9b05e7b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c8fae3bd-cfda-294f-6f4a-d1a882ed30d8" executionId="310a3442-333e-4585-921c-5897c1b7f6fd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="97c6ef85-85ff-7ab0-353c-0675f944fabd" executionId="a33c7863-0c95-4302-8a1e-4be51ed3e106" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1f9c304c-1522-3fa9-5fea-5d181283794c" executionId="4579a6ab-ba45-4387-841b-1ecb97a8a800" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="59cabe95-68a4-2467-67cf-919a229a1767" executionId="3981db31-f7eb-40a2-b695-e939cf9ec4bf" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ca36091f-5997-95ef-6a09-bbb31b1881dc" executionId="f9ba75f1-9a8f-4734-bd9f-17b782e26160" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b7737b45-4a7c-13c0-14ce-8a624544090e" executionId="b0240d5b-fcb7-46c9-b8ec-6a018d250302" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8ef5fe72-c767-f6c8-a21b-6e756bcc7dd9" executionId="518ed8b9-c34d-459e-a054-f87b6a6c37db" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3bf00d37-724f-4994-f430-1f5e2956fed2" executionId="bf6bce76-de65-4985-9c39-1f21f922d163" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c6816d7e-b5c5-226b-5072-3929f32a7ee6" executionId="996bc423-2c07-41c4-aba2-83502ded1d5f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c3ecfa6d-db39-0a62-addd-0954951170db" executionId="e54511a6-d089-45f0-898b-1c8140bd2d84" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="17" executed="17" passed="17" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.01] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.53]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:00.80]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:00.93]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:00:51.69]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

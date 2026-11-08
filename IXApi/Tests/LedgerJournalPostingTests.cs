@@ -19,6 +19,97 @@ namespace IAX.IXApi.Tests;
 
 public class LedgerJournalPostingTests
 {
+    [Fact]
+    public async Task A_journal_credit_closes_the_selected_invoice()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        SeedSubledgers(db);
+        var date = new DateTime(2026, 1, 15);
+        db.Add(new CustTrans { RecId = 90, DataAreaId = "dat", AccountNum = "C-001", Invoice = "INV-90",
+            Voucher = "IV-90", CurrencyCode = "SAR", TransDate = date, AmountCur = 100m, AmountMst = 100m,
+            ReportingCurrencyAmount = 100m });
+        db.Add(new CustTransOpen { DataAreaId = "dat", AccountNum = "C-001", RefRecId = 90,
+            AmountCur = 100m, AmountMst = 100m, ReportingCurrencyAmount = 100m });
+        db.Add(new LedgerJournalTrans
+        {
+            RecId = 1, DataAreaId = "dat", JournalNum = "J1", Voucher = "V1", LineNum = 1,
+            TransDate = date, CurrencyCode = "SAR", AccountType = LedgerJournalACType.Cust,
+            LedgerDimensionName = "C-001", OffsetAccountType = LedgerJournalACType.Ledger, OffsetLedgerDimension = 2,
+            AmountCurCredit = 100m, MarkedInvoiceRecId = 90, SettleVoucher = SettleVoucher.Selection
+        });
+        await db.SaveChangesAsync();
+        await using var transaction = await db.Database.BeginTransactionAsync();
+        var header = await db.Set<LedgerJournalTable>().SingleAsync();
+        var journalName = await db.Set<LedgerJournalName>().SingleAsync();
+        journalName.WorkflowApproval = NoYes.Yes;
+        await db.SaveChangesAsync();
+
+        var posting = new LedgerJournalPosting(db);
+        // Only persisted approval can authorize posting.
+        header.WorkflowApprovalStatus = WorkflowApprovalStatus.Approved;
+        var setup = await new LedgerJournalSetupCheck(db).CheckAsync("dat", header.RecId, default);
+        Assert.Contains("Approve the journal through workflow before posting.", setup!.Errors);
+        var errorBeforeApproval = await Assert.ThrowsAsync<SubledgerPostingException>(
+            () => posting.PostAsync("dat", header, default));
+        Assert.Contains("Approve the journal", errorBeforeApproval.Message);
+        Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
+        Assert.Equal(100m, (await db.Set<CustTransOpen>().SingleAsync()).AmountCur);
+
+        await db.SaveChangesAsync();
+        await posting.PostAsync("dat", header, default);
+        await db.SaveChangesAsync();
+        await transaction.CommitAsync();
+
+        Assert.Empty(await db.Set<CustTransOpen>().ToListAsync());
+        var settlements = await db.Set<CustSettlement>().ToListAsync();
+        Assert.Equal(2, settlements.Count);
+        Assert.Contains(settlements, x => x.TransRecId == 90 && x.SettleAmountCur == 100m);
+        Assert.Contains(settlements, x => x.OffsetRecId == 90 && x.SettleAmountCur == -100m);
+        var (reversal, error) = await NewReversalService(db).ReverseAsync(1, date, default);
+        Assert.Null(reversal);
+        Assert.Contains("Reverse the customer settlement", error);
+    }
+
+    [Fact]
+    public async Task A_stale_marked_balance_rolls_back_journal_posting()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        SeedSubledgers(db);
+        var date = new DateTime(2026, 1, 15);
+        db.Add(new CustTrans { RecId = 90, DataAreaId = "dat", AccountNum = "C-001", Invoice = "INV-90",
+            Voucher = "IV-90", CurrencyCode = "SAR", TransDate = date, AmountCur = 100m, AmountMst = 100m,
+            ReportingCurrencyAmount = 100m });
+        db.Add(new CustTransOpen { DataAreaId = "dat", AccountNum = "C-001", RefRecId = 90,
+            AmountCur = 75m, AmountMst = 75m, ReportingCurrencyAmount = 75m });
+        db.Add(new LedgerJournalTrans
+        {
+            RecId = 1, DataAreaId = "dat", JournalNum = "J1", Voucher = "V1", LineNum = 1,
+            TransDate = date, CurrencyCode = "SAR", AccountType = LedgerJournalACType.Cust,
+            LedgerDimensionName = "C-001", OffsetAccountType = LedgerJournalACType.Ledger, OffsetLedgerDimension = 2,
+            AmountCurCredit = 100m, MarkedInvoiceRecId = 90, SettleVoucher = SettleVoucher.Selection
+        });
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var service = new LedgerJournalTableService(new TestUnitOfWork(db), new TestUser(),
+            DispatchProxy.Create<ISysNumberSequenceService, TestSequenceProxy>());
+        var (result, error) = await service.PostAsync(1, default);
+
+        Assert.Null(result);
+        Assert.Contains("open balance matching", error);
+        Assert.Equal(NoYes.No, (await db.Set<LedgerJournalTable>().SingleAsync()).Posted);
+        Assert.Equal(90, (await db.Set<CustTrans>().SingleAsync()).RecId);
+        Assert.Equal(75m, (await db.Set<CustTransOpen>().SingleAsync()).AmountCur);
+        Assert.Empty(await db.Set<CustSettlement>().ToListAsync());
+        Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
+    }
+
     [Theory]
     [InlineData("BU-01", true, false)]
     [InlineData("", false, false)]
@@ -612,8 +703,10 @@ public class LedgerJournalPostingTests
             Txt = bank ? "Bank ledger control" : "Share capital"
         };
 
-    [Fact]
-    public async Task A_customer_line_posts_the_summary_account_and_the_customer_transaction()
+    [Theory]
+    [InlineData("", "120100")]
+    [InlineData("ALT", "120200")]
+    public async Task A_customer_line_posts_the_summary_account_and_the_customer_transaction(string profile, string account)
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
@@ -621,13 +714,17 @@ public class LedgerJournalPostingTests
         Seed(db);
         SeedSubledgers(db);
         // Dr customer 500, Cr the ledger offset: the customer owes 500 more.
+        db.AddRange(
+            new MainAccount { RecId = 5, DataAreaId = "dat", LedgerChartOfAccounts = 10, MainAccountId = "120200" },
+            new DimensionAttributeValueCombination { RecId = 5, DataAreaId = "dat", MainAccount = 5, MainAccountValue = "120200", DisplayValue = "120200" },
+            new CustLedgerAccounts { RecId = 2, DataAreaId = "dat", AccountCode = AccountCode.All, PostingProfile = "ALT", SummaryLedgerDimension = 5 });
         db.Add(new LedgerJournalTrans
         {
             RecId = 1, DataAreaId = "dat", JournalNum = "J1", Voucher = "V1", LineNum = 1,
             TransDate = new DateTime(2026, 1, 15), CurrencyCode = "SAR",
             AccountType = LedgerJournalACType.Cust, LedgerDimensionName = "C-001",
             OffsetAccountType = LedgerJournalACType.Ledger, OffsetLedgerDimension = 2,
-            AmountCurDebit = 500m, Txt = "Customer adjustment"
+            AmountCurDebit = 500m, Txt = "Customer adjustment", PostingProfile = profile
         });
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
@@ -640,13 +737,14 @@ public class LedgerJournalPostingTests
         var lines = await db.Set<GeneralJournalAccountEntry>().AsNoTracking().ToListAsync();
         Assert.Equal(0m, lines.Sum(x => x.AccountingCurrencyAmount));
         var customerLine = lines.Single(x => x.PostingType == LedgerPostingType.CustBalance);
-        Assert.Equal("120100", customerLine.LedgerAccount);
+        Assert.Equal(account, customerLine.LedgerAccount);
         Assert.Equal(500m, customerLine.AccountingCurrencyAmount);
 
         // The subledger movement exists, which is the whole point: the balance the ledger shows is
         // also on the customer's account, with an open row settlement can find.
         var custTrans = await db.Set<CustTrans>().AsNoTracking().SingleAsync();
         Assert.Equal("C-001", custTrans.AccountNum);
+        Assert.Equal(profile, custTrans.PostingProfile);
         Assert.Equal(500m, custTrans.AmountCur);
         Assert.Equal(500m, custTrans.AmountMst);
         Assert.Equal("V1", custTrans.Voucher);
@@ -844,7 +942,7 @@ public class LedgerJournalPostingTests
                 typeof(SubledgerVoucherGeneralJournalEntry), typeof(ExchangeRateType),
                 typeof(ExchangeRateCurrencyPair), typeof(ExchangeRate),
                 typeof(Currency),
-                typeof(CustTable), typeof(CustTrans), typeof(CustTransOpen), typeof(CustParameters),
+                typeof(CustTable), typeof(CustTrans), typeof(CustTransOpen), typeof(CustParameters), typeof(CustSettlement),
                 typeof(CustLedgerAccounts), typeof(VendTable), typeof(VendTrans), typeof(VendTransOpen),
                 typeof(VendParameters), typeof(VendLedgerAccounts),
                 typeof(BankAccountTable), typeof(BankAccountTrans)];
@@ -892,7 +990,8 @@ public class LedgerJournalPostingTests
         private Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? _tx;
         public DbContext Context => context;
         public Task<int> CompleteAsync(CancellationToken ct = default) => context.SaveChangesAsync(ct);
-        public IGenericRepository<T> Repository<T>() where T : class => throw new NotSupportedException();
+        // Posting and reversal use the context directly.
+        public IGenericRepository<T> Repository<T>() where T : class => null!;
         public async Task BeginTransactionAsync(CancellationToken ct = default) => _tx = await context.Database.BeginTransactionAsync(ct);
         public async Task CommitTransactionAsync(CancellationToken ct = default) { if (_tx != null) { await _tx.CommitAsync(ct); _tx = null; } }
         public async Task RollbackTransactionAsync(CancellationToken ct = default) { if (_tx != null) { await _tx.RollbackAsync(ct); _tx = null; } }

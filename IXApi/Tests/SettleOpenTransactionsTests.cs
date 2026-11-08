@@ -39,6 +39,71 @@ public class SettleOpenTransactionsTests
     // ---------- Accounts receivable ----------
 
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Customer_prepayment_application_and_reversal_require_the_original_posting(bool hasOriginalPosting)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        SeedCustomer(db);
+        AddCustTrans(db, 1, 1000m, LedgerTransType.Sales, "INV-1");
+        AddCustTrans(db, 2, -1000m, LedgerTransType.Payment, "ADV-1");
+        db.Set<CustTrans>().Local.Single(x => x.RecId == 2).Prepayment = NoYes.Yes;
+        db.AddRange(
+            new Ledger { RecId = 1, DataAreaId = "dat", AccountingCurrency = "SAR", FiscalCalendar = 1 },
+            new FiscalCalendarPeriod { RecId = 1, FiscalCalendar = 1, Type = FiscalPeriodType.Operating,
+                StartDate = Date, EndDate = Date.AddDays(5) },
+            new LedgerFiscalCalendarPeriod { Ledger = 1, FiscalCalendarPeriod = 1, Status = FiscalPeriodStatus.Open });
+        if (hasOriginalPosting)
+        {
+            db.AddRange(
+                new MainAccount { RecId = 1, DataAreaId = "dat", MainAccountId = "130100" },
+                new MainAccount { RecId = 2, DataAreaId = "dat", MainAccountId = "220100" },
+                new DimensionAttributeValueCombination { RecId = 1, DataAreaId = "dat", MainAccount = 1, DisplayValue = "130100" },
+                new DimensionAttributeValueCombination { RecId = 2, DataAreaId = "dat", MainAccount = 2, DisplayValue = "220100" },
+                new GeneralJournalEntry { RecId = 1, DataAreaId = "dat", SubledgerVoucher = "INV-1", AccountingDate = Date },
+                new GeneralJournalEntry { RecId = 2, DataAreaId = "dat", SubledgerVoucher = "ADV-1", AccountingDate = Date },
+                new GeneralJournalAccountEntry { DataAreaId = "dat", GeneralJournalEntry = 1, LedgerDimension = 1,
+                    PostingType = LedgerPostingType.CustBalance, TransactionCurrencyCode = "SAR",
+                    AccountingCurrencyAmount = 1000m, TransactionCurrencyAmount = 1000m },
+                new GeneralJournalAccountEntry { DataAreaId = "dat", GeneralJournalEntry = 2, LedgerDimension = 2,
+                    PostingType = LedgerPostingType.CustBalance, TransactionCurrencyCode = "SAR",
+                    AccountingCurrencyAmount = -1000m, TransactionCurrencyAmount = -1000m });
+        }
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var result = await NewCustService(db).SettleAsync(new("C-001", Date, [1, 2]), default);
+
+        if (hasOriginalPosting)
+        {
+            Assert.True(result.StatusCode == 200, result.Message);
+            Assert.Empty(await db.Set<CustTransOpen>().ToListAsync());
+            var settlement = await db.Set<CustSettlement>().FirstAsync();
+            var entries = await db.Set<GeneralJournalAccountEntry>().Where(x => x.GeneralJournalEntry > 2).ToListAsync();
+            Assert.Equal(2, entries.Count);
+            Assert.Contains(entries, x => x.LedgerDimension == 2 && x.AccountingCurrencyAmount == 1000m);
+            Assert.Contains(entries, x => x.LedgerDimension == 1 && x.AccountingCurrencyAmount == -1000m);
+            var reversed = await NewCustReversal(db).ReverseAsync(settlement.SettlementVoucher, Date.AddDays(1), default);
+            Assert.True(reversed.StatusCode == 200, reversed.Message);
+            entries = await db.Set<GeneralJournalAccountEntry>().Where(x => x.GeneralJournalEntry > 3).ToListAsync();
+            Assert.Equal(2, entries.Count);
+            Assert.Contains(entries, x => x.LedgerDimension == 2 && x.AccountingCurrencyAmount == -1000m);
+            Assert.Contains(entries, x => x.LedgerDimension == 1 && x.AccountingCurrencyAmount == 1000m);
+        }
+        else
+        {
+            Assert.Equal(422, result.StatusCode);
+            Assert.Contains("original posting account", result.Message);
+            Assert.Empty(await db.Set<CustSettlement>().ToListAsync());
+            Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
+        }
+        var open = await db.Set<CustTransOpen>().OrderBy(x => x.RefRecId).ToListAsync();
+        Assert.Equal(new[] { 1000m, -1000m }, open.Select(x => x.AmountCur));
+    }
+
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public async Task Manual_settlement_checks_the_exact_remaining_accounting_amount(bool matchedRemainder)
@@ -414,7 +479,9 @@ public class SettleOpenTransactionsTests
         {
             Type[] types = [typeof(CustTrans), typeof(CustTransOpen), typeof(CustSettlement), typeof(CustTable),
                 typeof(VendTrans), typeof(VendTransOpen), typeof(VendSettlement), typeof(VendTable),
-                typeof(GeneralJournalEntry), typeof(GeneralJournalAccountEntry), typeof(LedgerJournalTrans)];
+                typeof(GeneralJournalEntry), typeof(GeneralJournalAccountEntry), typeof(LedgerJournalTrans),
+                typeof(SubledgerVoucherGeneralJournalEntry), typeof(Ledger), typeof(FiscalCalendarPeriod),
+                typeof(LedgerFiscalCalendarPeriod), typeof(MainAccount), typeof(DimensionAttributeValueCombination)];
 
             // CustTable and VendTable reach the party and address graph, so everything not named
             // here is ignored outright rather than discovered one failure at a time.

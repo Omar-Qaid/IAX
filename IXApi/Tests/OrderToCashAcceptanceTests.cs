@@ -3,6 +3,7 @@ using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsReceivable;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.GeneralLedger;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
+using IAX.IXApi.Modules.Finance.AccountsReceivable.CollectionLetters;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.Confirm;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.Invoice;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.PackingSlip;
@@ -25,6 +26,158 @@ namespace IXApi.Tests;
 public sealed partial class AccountsReceivableCycleStageTests
 {
     [SqlServerPhaseOneFact]
+    public Task Order_to_cash_posts_and_reverses_customer_revaluation_SQLServer() => VerifyCustomerRevaluationAsync(false);
+
+    [SqlServerPhaseOneFact]
+    public Task Order_to_cash_manually_settles_customer_revaluation_SQLServer() => VerifyCustomerRevaluationAsync(true);
+
+    private async Task VerifyCustomerRevaluationAsync(bool manual)
+    {
+        var connection = new SqlConnectionStringBuilder
+        {
+            DataSource = Environment.GetEnvironmentVariable("IXAPI_AP_PHASE_ONE_SQLSERVER"),
+            InitialCatalog = "IXApi_OTCRevaluation_" + Guid.NewGuid().ToString("N"),
+            IntegratedSecurity = true, TrustServerCertificate = true
+        };
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlServer(connection.ConnectionString).Options;
+        await using var db = new ApplicationDbContext(options);
+        try
+        {
+            await db.Database.EnsureCreatedAsync();
+            using var provider = CycleServices(db);
+            using var scope = provider.CreateScope();
+            var services = scope.ServiceProvider;
+            await services.GetRequiredService<AccountsReceivableCycleSeeder>().PrepareAsync(new(2026, "otc-fx"));
+            var ledger = await db.Set<Ledger>().SingleAsync(x => x.DataAreaId == Company);
+            var revenue = await db.Set<DimensionAttributeValueCombination>().SingleAsync(
+                x => x.DataAreaId == Company && x.MainAccountValue == GeneralLedgerSeedExample.SalesRevenue);
+            db.Add(new LedgerGainLossAccount { DataAreaId = Company, Ledger = ledger.RecId,
+                AccountType = CurrencyGainLossAccountType.UnrealizedGain, LedgerDimension = revenue.RecId });
+            await db.SaveChangesAsync();
+            var invoices = services.GetRequiredService<IFreeTextInvoiceService>();
+            var draft = await invoices.CreateAsync(new()
+            {
+                CustomerAccount = "ARV2-dat-USD", InvoiceDate = Date, CurrencyCode = "USD",
+                Lines = [new() { Description = "Revaluation test", Quantity = 1, UnitPrice = 1000, LedgerDimension = revenue.RecId }]
+            }, default);
+            Assert.True(draft.StatusCode is 200 or 201, draft.Message);
+            var posted = await invoices.PostAsync(draft.Invoice!.RecId, default);
+            Assert.True(posted.StatusCode == 200, posted.Message);
+            var trans = await db.Set<CustTrans>().SingleAsync(x => x.DataAreaId == Company && x.Invoice == posted.Invoice!.InvoiceId);
+            Assert.Equal(3750m, trans.AmountMst);
+            if (!manual)
+            {
+                var profile = await db.Set<CustLedger>().SingleAsync(x => x.DataAreaId == Company && x.PostingProfile == trans.PostingProfile);
+                profile.CollectionLetter = NoYes.Yes;
+                var rule = await new SubledgerPostingSupport(db).ResolveCustomerPostingRuleAsync(Company, trans.PostingProfile,
+                    await db.Set<CustTable>().SingleAsync(x => x.DataAreaId == Company && x.AccountNum == trans.AccountNum), default);
+                var trackedRule = await db.Set<CustLedgerAccounts>().SingleAsync(x => x.RecId == rule!.RecId);
+                trackedRule.CollectionLetterCourse = "OTC-FX";
+                db.AddRange(
+                    new CustCollectionLetterTable { DataAreaId = Company, CollectionLetterCourse = "OTC-FX", Name = "USD warning" },
+                    new CustCollectionLetterLine { DataAreaId = Company, CollectionLetterCourse = "OTC-FX", CurrencyCode = "USD",
+                        CollectionLetterCode = (int)CustCollectionLetterCode.CollectionLetter1, NumOfDays = 7, MinAmount = 1000m });
+                await db.SaveChangesAsync();
+                var letters = ActivatorUtilities.CreateInstance<CustCollectionLetterService>(services);
+                var due = DateOnly.FromDateTime((await db.Set<CustTransOpen>().SingleAsync(x => x.RefRecId == trans.RecId)).DueDate);
+                Assert.Empty(await letters.GenerateFirstLettersAsync(trans.AccountNum, "USD", due.AddDays(6), default));
+                Assert.Empty(await letters.GenerateFirstLettersAsync(trans.AccountNum, "SAR", due.AddDays(7), default));
+                var number = Assert.Single(await letters.GenerateFirstLettersAsync(trans.AccountNum, "USD", due.AddDays(7), default));
+                Assert.Empty(await letters.GenerateFirstLettersAsync(trans.AccountNum, "USD", due.AddDays(7), default));
+                var line = await db.Set<CustCollectionLetterTrans>().SingleAsync(x => x.CollectionLetterNum == number);
+                Assert.Equal(trans.RecId, line.CustTransId);
+                Assert.Equal(1000m, line.RemainAmount);
+                var openInvoice = await db.Set<CustTransOpen>().SingleAsync(x => x.RefRecId == trans.RecId);
+                var originalDueDate = openInvoice.DueDate;
+                openInvoice.DueDate = originalDueDate.AddDays(1);
+                await db.SaveChangesAsync();
+                var journalCount = await db.Set<GeneralJournalEntry>().CountAsync();
+                await Assert.ThrowsAsync<SubledgerPostingException>(
+                    () => letters.PostWarningAsync(number, due.AddDays(7), default));
+                Assert.Null((await db.Set<CustCollectionLetterJour>().AsNoTracking()
+                    .SingleAsync(x => x.CollectionLetterNum == number)).Updated);
+                openInvoice = await db.Set<CustTransOpen>().SingleAsync(x => x.RefRecId == trans.RecId);
+                openInvoice.DueDate = originalDueDate;
+                await db.SaveChangesAsync();
+                Assert.True(await letters.PostWarningAsync(number, due.AddDays(7), default));
+                Assert.False(await letters.PostWarningAsync(number, due.AddDays(7), default));
+                Assert.Equal(due.AddDays(7).ToDateTime(TimeOnly.MinValue), (await db.Set<CustCollectionLetterJour>()
+                    .AsNoTracking().SingleAsync(x => x.CollectionLetterNum == number)).Updated);
+                Assert.Equal(CustCollectionLetterCode.CollectionLetter1, (await db.Set<CustTransOpen>()
+                    .AsNoTracking().SingleAsync(x => x.RefRecId == trans.RecId)).CollectionLetterCode);
+                Assert.Equal(journalCount, await db.Set<GeneralJournalEntry>().CountAsync());
+            }
+
+            var service = ActivatorUtilities.CreateInstance<IAX.IXApi.Modules.Finance.AccountsReceivable.CurrencyRevaluation.CustCurrencyRevaluationService>(services);
+            var rateDate = new DateOnly(2026, 5, 20);
+            var voucher = await service.PostAsync(trans.RecId, rateDate, rateDate, default);
+            Assert.NotNull(voucher);
+            Assert.Null(await service.PostAsync(trans.RecId, rateDate, rateDate, default));
+            var reversal = await service.ReverseAsync(trans.RecId, rateDate.AddDays(1), default);
+            Assert.NotNull(reversal);
+            foreach (var (number, delta) in new[] { (voucher, 50m), (reversal, -50m) })
+            {
+                var link = await db.Set<SubledgerVoucherGeneralJournalEntry>().SingleAsync(
+                    x => x.Voucher == number && x.VoucherDataAreaId == Company);
+                var lines = await db.Set<GeneralJournalAccountEntry>().Where(x => x.GeneralJournalEntry == link.GeneralJournalEntry).ToListAsync();
+                Assert.Equal(2, lines.Count);
+                Assert.Equal(delta, lines.Single(x => x.PostingType == LedgerPostingType.CustBalance).AccountingCurrencyAmount);
+                Assert.Equal(-delta, lines.Single(x => x.LedgerDimension == revenue.RecId).AccountingCurrencyAmount);
+            }
+            Assert.Equal(2, await db.Set<IAX.IXApi.Modules.Finance.AccountsReceivable.CurrencyRevaluation.CustExchRateAdjustment>().CountAsync());
+            var open = await db.Set<CustTransOpen>().SingleAsync(x => x.RefRecId == trans.RecId);
+            Assert.Equal(1000m, open.AmountCur);
+            Assert.Equal(3750m, open.AmountMst);
+            db.Add(new LedgerGainLossAccount { DataAreaId = Company, Ledger = ledger.RecId,
+                AccountType = CurrencyGainLossAccountType.RealizedGain, LedgerDimension = revenue.RecId });
+            await db.SaveChangesAsync();
+            var settlementDate = rateDate.AddDays(2);
+            long? creditRecId = null;
+            var payments = services.GetRequiredService<ICustPaymentService>();
+            if (manual)
+            {
+                var credit = await payments.PostAsync(new("ARV2-dat-USD", "APV2-USD", 400m, Date,
+                    RequestId: "OTC-FX-MANUAL", SettleAutomatically: false), default);
+                Assert.True(credit.StatusCode == 200, credit.Message);
+                creditRecId = await db.Set<CustTrans>().Where(x => x.DataAreaId == Company && x.PaymReference == "OTC-FX-MANUAL")
+                    .Select(x => x.RecId).SingleAsync();
+            }
+            Assert.NotNull(await service.PostAsync(trans.RecId, settlementDate, rateDate, default));
+            var payment = creditRecId.HasValue
+                ? await services.GetRequiredService<ICustSettleOpenTransactionsService>().SettleAsync(
+                    new("ARV2-dat-USD", settlementDate.ToDateTime(TimeOnly.MinValue), [trans.RecId, creditRecId.Value]), default)
+                : await payments.PostAsync(
+                new("ARV2-dat-USD", "APV2-USD", 400m, settlementDate.ToDateTime(TimeOnly.MinValue),
+                    SettleInvoiceId: trans.Invoice, RequestId: "OTC-FX-SETTLE"), default);
+            Assert.True(payment.StatusCode == 200, payment.Message);
+            db.ChangeTracker.Clear();
+            var settled = await db.Set<CustTrans>().SingleAsync(x => x.RecId == trans.RecId);
+            Assert.Equal(0m, settled.CustExchAdjustmentUnrealized);
+            Assert.Equal(manual ? 0m : -20m, settled.CustExchAdjustmentRealized);
+            Assert.Equal(400m, settled.SettleAmountCur);
+            var remainder = await db.Set<CustTransOpen>().SingleAsync(x => x.RefRecId == trans.RecId);
+            Assert.Equal(600m, remainder.AmountCur);
+            Assert.Equal(2250m, remainder.AmountMst);
+            var automaticReversal = await db.Set<SubledgerVoucherGeneralJournalEntry>().SingleAsync(
+                x => x.Voucher == settled.LastExchAdjVoucher && x.VoucherDataAreaId == Company);
+            var reversalLines = await db.Set<GeneralJournalAccountEntry>()
+                .Where(x => x.GeneralJournalEntry == automaticReversal.GeneralJournalEntry).ToListAsync();
+            Assert.Equal(-50m, reversalLines.Single(x => x.PostingType == LedgerPostingType.CustBalance).AccountingCurrencyAmount);
+            Assert.Equal(50m, reversalLines.Single(x => x.PostingType == LedgerPostingType.ExchRateGain).AccountingCurrencyAmount);
+            var remainingPayment = await services.GetRequiredService<ICustPaymentService>().PostAsync(
+                new("ARV2-dat-USD", "APV2-USD", 600m, settlementDate.ToDateTime(TimeOnly.MinValue),
+                    SettleInvoiceId: trans.Invoice, RequestId: "OTC-FX-SETTLE-REMAINDER"), default);
+            Assert.True(remainingPayment.StatusCode == 200, remainingPayment.Message);
+            Assert.False(await db.Set<CustTransOpen>().AnyAsync(x => x.RefRecId == trans.RecId));
+        }
+        finally
+        {
+            await using var cleanup = new ApplicationDbContext(options);
+            await cleanup.Database.EnsureDeletedAsync();
+        }
+    }
+
+    [SqlServerPhaseOneFact]
     public Task Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer() => RunOrderToCashAttachmentAsync(false);
 
     [SqlServerPhaseOneFact]
@@ -46,16 +199,35 @@ public sealed partial class AccountsReceivableCycleStageTests
             await db.Database.EnsureCreatedAsync();
             if (corrections)
             {
-                // Exercise the upgrade from a schema that already has the invoice table.
+                // Exercise upgrades from an existing database before running the cycle.
                 var migrations = db.GetService<IMigrationsAssembly>();
-                const string migrationId = "20261108025900_AddCustRelatedInvoice";
-                var migration = migrations.CreateMigration(migrations.Migrations[migrationId], db.Database.ProviderName!);
                 var generator = db.GetService<IMigrationsSqlGenerator>();
-                foreach (var command in generator.Generate(migration.DownOperations))
-                    await db.Database.ExecuteSqlRawAsync(command.CommandText);
-                foreach (var command in generator.Generate(migration.UpOperations))
-                    await db.Database.ExecuteSqlRawAsync(command.CommandText);
+                foreach (var migrationId in new[] { "20261108025900_AddCustRelatedInvoice", "20261108105900_AddCustomerPrepaymentParameters", "20261108135900_AddCustExchRateAdjustment", "20261108162900_AddCustomerCollectionLetters" })
+                {
+                    var migration = migrations.CreateMigration(migrations.Migrations[migrationId], db.Database.ProviderName!);
+                    foreach (var command in generator.Generate(migration.DownOperations))
+                        await db.Database.ExecuteSqlRawAsync(command.CommandText);
+                    foreach (var command in generator.Generate(migration.UpOperations))
+                        await db.Database.ExecuteSqlRawAsync(command.CommandText);
+                }
                 Assert.Empty(await db.Set<CustRelatedInvoice>().ToListAsync());
+                Assert.Empty(await db.Set<IAX.IXApi.Modules.Finance.AccountsReceivable.CurrencyRevaluation.CustExchRateAdjustment>().ToListAsync());
+                Assert.Empty(await db.Set<CustCollectionLetterTable>().ToListAsync());
+                Assert.Empty(await db.Set<CustCollectionLetterLine>().ToListAsync());
+                Assert.Empty(await db.Set<CustCollectionLetterJour>().ToListAsync());
+                Assert.Empty(await db.Set<CustCollectionLetterTrans>().ToListAsync());
+                db.AddRange(
+                    new CustCollectionLetterTable { DataAreaId = Company, CollectionLetterCourse = "OTC-LETTER", Name = "Test sequence" },
+                    new CustCollectionLetterLine { DataAreaId = Company, CollectionLetterCourse = "OTC-LETTER",
+                        CollectionLetterCode = (int)CustCollectionLetterCode.CollectionLetter1, CurrencyCode = "SAR",
+                        NumOfDays = 7, MinAmount = 100m, Fee = 15.50m },
+                    new CustCollectionLetterJour { DataAreaId = Company, CollectionLetterNum = "OTC-LETTER-01",
+                        AccountNum = Customer, CurrencyCode = "SAR", CollectionLetterDate = Date, Updated = Date.AddDays(1) });
+                await db.SaveChangesAsync();
+                db.ChangeTracker.Clear();
+                Assert.Equal(15.50m, (await db.Set<CustCollectionLetterLine>().SingleAsync()).Fee);
+                Assert.Equal(Date.AddDays(1), (await db.Set<CustCollectionLetterJour>().SingleAsync()).Updated);
+                db.ChangeTracker.Clear();
             }
             using var provider = CycleServices(db);
             using var scope = provider.CreateScope();
@@ -623,6 +795,17 @@ public sealed partial class AccountsReceivableCycleStageTests
                     var refused = await payment.RefundAsync(request with { BankAccountId = "NO-BANK" }, default);
                     Assert.Equal(422, refused.StatusCode);
                     Assert.Equal(before, await CountsAsync(db));
+                    var creditTransaction = await db.Set<CustTrans>().SingleAsync(x => x.RecId == credit.RefRecId);
+                    creditTransaction.ReportingExchAdjustmentUnrealized = 10m;
+                    await db.SaveChangesAsync();
+                    var revaluedRefund = await payment.RefundAsync(request, default);
+                    Assert.Equal(422, revaluedRefund.StatusCode);
+                    Assert.Contains("unrealized currency revaluation", revaluedRefund.Message);
+                    Assert.Equal(before, await CountsAsync(db));
+                    await AssertOpen(0, -165);
+                    creditTransaction = await db.Set<CustTrans>().SingleAsync(x => x.RecId == credit.RefRecId);
+                    creditTransaction.ReportingExchAdjustmentUnrealized = 0m;
+                    await db.SaveChangesAsync();
                     var posted = await payment.RefundAsync(request, default);
                     Assert.True(posted.StatusCode == 200, posted.Message);
                     await AssertOpen(0, 0);
@@ -736,19 +919,81 @@ public sealed partial class AccountsReceivableCycleStageTests
                 {
                     var revenue = await db.Set<DimensionAttributeValueCombination>().SingleAsync(x => x.MainAccountValue == GeneralLedgerSeedExample.SalesRevenue);
                     var freeText = services.GetRequiredService<IFreeTextInvoiceService>();
+                    var taxMembership = await db.Set<TaxOnItem>().AsNoTracking().SingleAsync(
+                        x => x.DataAreaId == Company && x.TaxItemGroup == "APV2" && x.TaxCode == "ARV2-15");
+                    db.Add(new TaxItemGroupHeading { DataAreaId = Company, TaxItemGroup = "OTC-FT", Name = "Free text VAT" });
+                    await db.SaveChangesAsync();
+                    db.Add(new TaxOnItem { DataAreaId = Company, TaxItemGroup = "OTC-FT", TaxCode = taxMembership.TaxCode,
+                        TaxExemptCode = taxMembership.TaxExemptCode });
+                    await db.SaveChangesAsync();
                     var created = await freeText.CreateAsync(new() {CustomerAccount="ARV2-dat-USD",InvoiceDate=Date.AddDays(9),CurrencyCode="SAR",TaxGroup="ARV2",
-                        Description="OTC rounding",Lines=[new() {Description="Fractional service",Quantity=3,UnitPrice=0.335m,LedgerDimension=revenue.RecId,TaxGroup="ARV2",TaxItemGroup="APV2"}]},default);
+                        Description="OTC rounding",Lines=[
+                            new() {Description="Fractional service",Quantity=3,UnitPrice=0.335m,LedgerDimension=revenue.RecId,TaxGroup="ARV2",TaxItemGroup="APV2"},
+                            new() {Description="Service with another item tax group",Quantity=1,UnitPrice=100m,LedgerDimension=revenue.RecId,TaxGroup="ARV2",TaxItemGroup="OTC-FT"}]},default);
                     Assert.True(created.StatusCode is 200 or 201,created.Message);
                     var posted = await freeText.PostAsync(created.Invoice!.RecId,default);
                     Assert.True(posted.StatusCode == 200,posted.Message);
-                    Assert.Equal(1.01m,posted.Invoice!.NetAmount);
-                    Assert.Equal(0.15m,posted.Invoice.TaxAmount);
-                    Assert.Equal(1.16m,posted.Invoice.InvoiceAmount);
+                    Assert.Equal(101.01m,posted.Invoice!.NetAmount);
+                    Assert.Equal(15.15m,posted.Invoice.TaxAmount);
+                    Assert.Equal(116.16m,posted.Invoice.InvoiceAmount);
                     var debt = await db.Set<CustTrans>().SingleAsync(x => x.Invoice == posted.Invoice.InvoiceId);
-                    Assert.Equal(1.16m,debt.AmountCur);
+                    Assert.Equal(116.16m,debt.AmountCur);
+                    var taxes = await db.Set<TaxTrans>().Where(x => x.DataAreaId == Company && x.Voucher == debt.Voucher
+                        && x.TaxCode == taxMembership.TaxCode).ToDictionaryAsync(x => x.TaxItemGroup);
+                    Assert.Equal(2, taxes.Count);
+                    Assert.Equal(-0.15m, taxes["APV2"].TaxAmountCur);
+                    Assert.Equal(-15m, taxes["OTC-FT"].TaxAmountCur);
                     var voucher = await db.Set<GeneralJournalAccountEntry>().Where(x => x.GeneralJournalEntry ==
                         db.Set<SubledgerVoucherGeneralJournalEntry>().Where(y => y.Voucher == debt.Voucher && y.VoucherDataAreaId == Company).Select(y => y.GeneralJournalEntry).Single()).ToListAsync();
                     Assert.Equal(0m,voucher.Sum(x => x.AccountingCurrencyAmount));
+                });
+                await Stage(["PAY-04"], "Post, apply and reverse a customer advance", async () =>
+                {
+                    var date = Date.AddDays(10);
+                    var liability = await db.Set<DimensionAttributeValueCombination>().SingleAsync(x => x.DataAreaId == Company && x.MainAccountValue == GeneralLedgerSeedExample.CustomerAdvance);
+                    db.Add(new CustLedger { DataAreaId = Company, PostingProfile = "OTCADV" });
+                    db.Add(new CustLedgerAccounts { DataAreaId = Company, PostingProfile = "OTCADV", AccountCode = AccountCode.All, SummaryLedgerDimension = liability.RecId });
+                    (await db.Set<CustParameters>().SingleAsync(x => x.DataAreaId == Company)).PrepaymentPostingProfile = "OTCADV";
+                    await db.SaveChangesAsync();
+
+                    var liabilityBefore = await LedgerAsync(db, GeneralLedgerSeedExample.CustomerAdvance);
+                    var bankBefore = await LedgerAsync(db, GeneralLedgerSeedExample.Bank);
+                    var receivableBefore = await LedgerAsync(db, GeneralLedgerSeedExample.CustomerControl);
+                    var receipt = await payment.PostAsync(new(Customer, Bank, 115m, date, "ARV2", RequestId: "OTC-ADVANCE", Prepayment: true), default);
+                    Assert.True(receipt.StatusCode == 200, receipt.Message);
+                    var advance = await db.Set<CustTrans>().SingleAsync(x => x.DataAreaId == Company && x.PaymReference == "OTC-ADVANCE");
+                    Assert.Equal(-115m, (await db.Set<CustTransOpen>().SingleAsync(x => x.RefRecId == advance.RecId)).AmountCur);
+                    Assert.Equal(liabilityBefore - 115m, await LedgerAsync(db, GeneralLedgerSeedExample.CustomerAdvance));
+
+                    var revenue = await db.Set<DimensionAttributeValueCombination>().SingleAsync(x => x.DataAreaId == Company && x.MainAccountValue == GeneralLedgerSeedExample.SalesRevenue);
+                    var freeText = services.GetRequiredService<IFreeTextInvoiceService>();
+                    var draft = await freeText.CreateAsync(new()
+                    {
+                        CustomerAccount = Customer, InvoiceDate = date, CurrencyCode = "SAR", TaxGroup = "ARV2",
+                        Lines = [new() { Description = "Advance application", Quantity = 1, UnitPrice = 100m,
+                            LedgerDimension = revenue.RecId, TaxGroup = "ARV2", TaxItemGroup = "APV2" }]
+                    }, default);
+                    Assert.True(draft.StatusCode is 200 or 201, draft.Message);
+                    var invoice = await freeText.PostAsync(draft.Invoice!.RecId, default);
+                    Assert.True(invoice.StatusCode == 200, invoice.Message);
+                    var debt = await db.Set<CustTrans>().SingleAsync(x => x.DataAreaId == Company && x.Invoice == invoice.Invoice!.InvoiceId);
+                    Assert.Equal(115m, debt.AmountCur);
+
+                    var settlement = await services.GetRequiredService<ICustSettleOpenTransactionsService>()
+                        .SettleAsync(new(Customer, date, [debt.RecId, advance.RecId]), default);
+                    Assert.True(settlement.StatusCode == 200, settlement.Message);
+                    Assert.False(await db.Set<CustTransOpen>().AnyAsync(x => x.RefRecId == debt.RecId || x.RefRecId == advance.RecId));
+                    Assert.Equal(liabilityBefore, await LedgerAsync(db, GeneralLedgerSeedExample.CustomerAdvance));
+                    Assert.Equal(receivableBefore, await LedgerAsync(db, GeneralLedgerSeedExample.CustomerControl));
+
+                    var voucher = await db.Set<CustSettlement>().Where(x => x.TransRecId == advance.RecId).Select(x => x.SettlementVoucher).SingleAsync();
+                    var reversed = await services.GetRequiredService<ICustSettlementReversalService>().ReverseAsync(voucher, date.AddDays(1), default);
+                    Assert.True(reversed.StatusCode == 200, reversed.Message);
+                    Assert.Equal(115m, (await db.Set<CustTransOpen>().SingleAsync(x => x.RefRecId == debt.RecId)).AmountCur);
+                    Assert.Equal(-115m, (await db.Set<CustTransOpen>().SingleAsync(x => x.RefRecId == advance.RecId)).AmountCur);
+                    Assert.Equal(liabilityBefore - 115m, await LedgerAsync(db, GeneralLedgerSeedExample.CustomerAdvance));
+                    Assert.Equal(receivableBefore + 115m, await LedgerAsync(db, GeneralLedgerSeedExample.CustomerControl));
+                    Assert.Equal(bankBefore + 115m, await LedgerAsync(db, GeneralLedgerSeedExample.Bank));
                 });
             }
             else

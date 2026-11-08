@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="3c9682de-3edf-4f93-81ac-d9f77d765068" name="Omar Almojahid@DESKTOP-3Q67JPL 2026-11-08 14:31:14" runUser="DESKTOP-3Q67JPL\Omar Almojahid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-08T14:31:14.5093786+03:00" queuing="2026-11-08T14:31:14.5093789+03:00" start="2026-11-08T14:31:01.9292260+03:00" finish="2026-11-08T14:31:16.4373957+03:00" />
+  <TestSettings name="default" id="5cc8ff82-92ae-4e1a-ac1d-5cf6f0c8efbf">
+    <Deployment runDeploymentRoot="Omar_Almojahid_DESKTOP-3Q67JPL_2026-11-08_14_31_14" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="21c5f403-23c2-40b7-8fc4-c992ce4b3bbf" testId="0625fb41-5d04-7d2b-868e-d0814a9139f8" testName="IAX.IXApi.Tests.PaymentReversalTests.The_payment_and_its_reversal_are_left_settled_against_each_other" computerName="DESKTOP-3Q67JPL" duration="00:00:00.1256542" startTime="2026-11-08T14:31:15.2069766+03:00" endTime="2026-11-08T14:31:15.3325274+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="21c5f403-23c2-40b7-8fc4-c992ce4b3bbf" />
+    <UnitTestResult executionId="e93db3e6-05c9-4825-9d23-8084b9950c4b" testId="3e29cf0f-0353-72be-c3de-d3a79bf6908c" testName="IAX.IXApi.Tests.PaymentReversalTests.A_reversal_into_a_closed_period_is_refused_and_nothing_is_written" computerName="DESKTOP-3Q67JPL" duration="00:00:00.1531503" startTime="2026-11-08T14:31:14.7428478+03:00" endTime="2026-11-08T14:31:14.8953797+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e93db3e6-05c9-4825-9d23-8084b9950c4b" />
+    <UnitTestResult executionId="22ebc054-23ae-4296-8f0a-08b295ab82de" testId="85c7459c-65de-fcd3-b065-2ef4688f0ac9" testName="IAX.IXApi.Tests.PaymentReversalTests.Reversing_a_customer_payment_posts_the_counter_voucher(prepayment: False, expectedAccount: &quot;130100&quot;)" computerName="DESKTOP-3Q67JPL" duration="00:00:08.0070043" startTime="2026-11-08T14:31:06.3777384+03:00" endTime="2026-11-08T14:31:14.3445327+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="22ebc054-23ae-4296-8f0a-08b295ab82de" />
+    <UnitTestResult executionId="cf619daf-8ed9-4376-ac4a-92cff7d40b9e" testId="0000efde-f683-22e5-94bf-54ca4d0ab560" testName="IAX.IXApi.Tests.PaymentReversalTests.A_reversal_journal_cannot_itself_be_reversed" computerName="DESKTOP-3Q67JPL" duration="00:00:00.1163138" startTime="2026-11-08T14:31:15.3327337+03:00" endTime="2026-11-08T14:31:15.4489294+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cf619daf-8ed9-4376-ac4a-92cff7d40b9e" />
+    <UnitTestResult executionId="3fea08e2-42b5-479f-b2c0-6bfb651218be" testId="d23a4418-64de-07fa-d37c-dd3ce039f79a" testName="IAX.IXApi.Tests.PaymentReversalTests.A_customer_payment_cannot_be_reversed_twice" computerName="DESKTOP-3Q67JPL" duration="00:00:00.0949320" startTime="2026-11-08T14:31:16.0991565+03:00" endTime="2026-11-08T14:31:16.1939909+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3fea08e2-42b5-479f-b2c0-6bfb651218be" />
+    <UnitTestResult executionId="0e57f4c5-27c0-4112-a8ec-b236071fbe06" testId="3e3ecd09-c94d-a677-7cae-ba1a6b2358b7" testName="IAX.IXApi.Tests.PaymentReversalTests.An_unallocated_customer_payment_cannot_be_reversed_before_its_posting_date" computerName="DESKTOP-3Q67JPL" duration="00:00:00.2414442" startTime="2026-11-08T14:31:14.5028190+03:00" endTime="2026-11-08T14:31:14.7421151+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0e57f4c5-27c0-4112-a8ec-b236071fbe06" />
+    <UnitTestResult executionId="87a27664-0aa4-42cf-b263-5d97d952c779" testId="de8d9adf-fdcf-655f-0450-60026bb41556" testName="IAX.IXApi.Tests.PaymentReversalTests.Reversing_a_customer_payment_posts_the_counter_voucher(prepayment: True, expectedAccount: &quot;210100&quot;)" computerName="DESKTOP-3Q67JPL" duration="00:00:00.1564500" startTime="2026-11-08T14:31:14.4027908+03:00" endTime="2026-11-08T14:31:14.5005469+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="87a27664-0aa4-42cf-b263-5d97d952c779" />
+    <UnitTestResult executionId="07fb3f10-11fd-4f39-8e25-edddefa8163c" testId="c35b2374-5e7e-b985-9731-9700ba52ca7b" testName="IAX.IXApi.Tests.PaymentReversalTests.An_unknown_journal_and_a_non_payment_journal_are_rejected" computerName="DESKTOP-3Q67JPL" duration="00:00:00.0747326" startTime="2026-11-08T14:31:15.4491263+03:00" endTime="2026-11-08T14:31:15.5237748+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="07fb3f10-11fd-4f39-8e25-edddefa8163c" />
+    <UnitTestResult executionId="b0babcfc-f4dd-4244-8202-08d9919e7d5c" testId="e7e3f23e-e260-ed96-a48d-13968d940ce1" testName="IAX.IXApi.Tests.PaymentReversalTests.Reversing_a_payment_reopens_the_invoice_it_had_settled" computerName="DESKTOP-3Q67JPL" duration="00:00:00.1029954" startTime="2026-11-08T14:31:15.5239878+03:00" endTime="2026-11-08T14:31:15.6268510+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b0babcfc-f4dd-4244-8202-08d9919e7d5c" />
+    <UnitTestResult executionId="2b4af978-17b1-429c-8384-38edc3cc71cb" testId="ec2160b2-90cb-1ae3-ff41-d52f5d893f4b" testName="IAX.IXApi.Tests.PaymentReversalTests.Reversing_a_vendor_payment_reopens_the_invoice_it_had_settled" computerName="DESKTOP-3Q67JPL" duration="00:00:00.1285317" startTime="2026-11-08T14:31:15.9705295+03:00" endTime="2026-11-08T14:31:16.0989548+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2b4af978-17b1-429c-8384-38edc3cc71cb" />
+    <UnitTestResult executionId="36646ef8-9c2e-4930-9dad-f94021737bf3" testId="cac9ea74-d6df-32b1-f578-d4f20f99cd8c" testName="IAX.IXApi.Tests.PaymentReversalTests.The_vendor_payment_and_its_reversal_are_left_settled_against_each_other" computerName="DESKTOP-3Q67JPL" duration="00:00:00.1179022" startTime="2026-11-08T14:31:15.7697952+03:00" endTime="2026-11-08T14:31:15.8848635+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="36646ef8-9c2e-4930-9dad-f94021737bf3" />
+    <UnitTestResult executionId="d3eea928-28e4-4123-973d-2c532e55bb26" testId="da15e57f-78ec-0edc-5d66-c40264713fc3" testName="IAX.IXApi.Tests.PaymentReversalTests.The_reversal_is_its_own_journal_pointing_at_the_one_it_reverses" computerName="DESKTOP-3Q67JPL" duration="00:00:00.1399023" startTime="2026-11-08T14:31:15.6270563+03:00" endTime="2026-11-08T14:31:15.7668088+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d3eea928-28e4-4123-973d-2c532e55bb26" />
+    <UnitTestResult executionId="657df550-1948-478a-9473-6e685be1bf8a" testId="34ba3e83-1590-4696-6449-f9ec6eee73c8" testName="IAX.IXApi.Tests.PaymentReversalTests.Reversing_a_vendor_payment_posts_the_counter_voucher" computerName="DESKTOP-3Q67JPL" duration="00:00:00.0853910" startTime="2026-11-08T14:31:15.8850580+03:00" endTime="2026-11-08T14:31:15.9703388+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="657df550-1948-478a-9473-6e685be1bf8a" />
+    <UnitTestResult executionId="7db3f53e-ee18-4f3d-8073-1f58a8f317a3" testId="6b3fad96-4af6-be18-941f-21efbb7d867d" testName="IAX.IXApi.Tests.PaymentReversalTests.A_vendor_payment_cannot_be_reversed_twice" computerName="DESKTOP-3Q67JPL" duration="00:00:00.3111817" startTime="2026-11-08T14:31:14.8955794+03:00" endTime="2026-11-08T14:31:15.2067578+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7db3f53e-ee18-4f3d-8073-1f58a8f317a3" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IAX.IXApi.Tests.PaymentReversalTests.A_reversal_into_a_closed_period_is_refused_and_nothing_is_written" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="3e29cf0f-0353-72be-c3de-d3a79bf6908c">
+      <Execution id="e93db3e6-05c9-4825-9d23-8084b9950c4b" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.PaymentReversalTests" name="A_reversal_into_a_closed_period_is_refused_and_nothing_is_written" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.PaymentReversalTests.Reversing_a_customer_payment_posts_the_counter_voucher(prepayment: True, expectedAccount: &quot;210100&quot;)" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="de8d9adf-fdcf-655f-0450-60026bb41556">
+      <Execution id="87a27664-0aa4-42cf-b263-5d97d952c779" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.PaymentReversalTests" name="Reversing_a_customer_payment_posts_the_counter_voucher" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.PaymentReversalTests.Reversing_a_payment_reopens_the_invoice_it_had_settled" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="e7e3f23e-e260-ed96-a48d-13968d940ce1">
+      <Execution id="b0babcfc-f4dd-4244-8202-08d9919e7d5c" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.PaymentReversalTests" name="Reversing_a_payment_reopens_the_invoice_it_had_settled" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.PaymentReversalTests.An_unallocated_customer_payment_cannot_be_reversed_before_its_posting_date" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="3e3ecd09-c94d-a677-7cae-ba1a6b2358b7">
+      <Execution id="0e57f4c5-27c0-4112-a8ec-b236071fbe06" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.PaymentReversalTests" name="An_unallocated_customer_payment_cannot_be_reversed_before_its_posting_date" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.PaymentReversalTests.The_vendor_payment_and_its_reversal_are_left_settled_against_each_other" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="cac9ea74-d6df-32b1-f578-d4f20f99cd8c">
+      <Execution id="36646ef8-9c2e-4930-9dad-f94021737bf3" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.PaymentReversalTests" name="The_vendor_payment_and_its_reversal_are_left_settled_against_each_other" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.PaymentReversalTests.The_reversal_is_its_own_journal_pointing_at_the_one_it_reverses" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="da15e57f-78ec-0edc-5d66-c40264713fc3">
+      <Execution id="d3eea928-28e4-4123-973d-2c532e55bb26" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.PaymentReversalTests" name="The_reversal_is_its_own_journal_pointing_at_the_one_it_reverses" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.PaymentReversalTests.A_reversal_journal_cannot_itself_be_reversed" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="0000efde-f683-22e5-94bf-54ca4d0ab560">
+      <Execution id="cf619daf-8ed9-4376-ac4a-92cff7d40b9e" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.PaymentReversalTests" name="A_reversal_journal_cannot_itself_be_reversed" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.PaymentReversalTests.A_customer_payment_cannot_be_reversed_twice" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="d23a4418-64de-07fa-d37c-dd3ce039f79a">
+      <Execution id="3fea08e2-42b5-479f-b2c0-6bfb651218be" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.PaymentReversalTests" name="A_customer_payment_cannot_be_reversed_twice" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.PaymentReversalTests.The_payment_and_its_reversal_are_left_settled_against_each_other" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="0625fb41-5d04-7d2b-868e-d0814a9139f8">
+      <Execution id="21c5f403-23c2-40b7-8fc4-c992ce4b3bbf" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.PaymentReversalTests" name="The_payment_and_its_reversal_are_left_settled_against_each_other" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.PaymentReversalTests.Reversing_a_vendor_payment_reopens_the_invoice_it_had_settled" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="ec2160b2-90cb-1ae3-ff41-d52f5d893f4b">
+      <Execution id="2b4af978-17b1-429c-8384-38edc3cc71cb" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.PaymentReversalTests" name="Reversing_a_vendor_payment_reopens_the_invoice_it_had_settled" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.PaymentReversalTests.A_vendor_payment_cannot_be_reversed_twice" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="6b3fad96-4af6-be18-941f-21efbb7d867d">
+      <Execution id="7db3f53e-ee18-4f3d-8073-1f58a8f317a3" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.PaymentReversalTests" name="A_vendor_payment_cannot_be_reversed_twice" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.PaymentReversalTests.An_unknown_journal_and_a_non_payment_journal_are_rejected" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="c35b2374-5e7e-b985-9731-9700ba52ca7b">
+      <Execution id="07fb3f10-11fd-4f39-8e25-edddefa8163c" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.PaymentReversalTests" name="An_unknown_journal_and_a_non_payment_journal_are_rejected" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.PaymentReversalTests.Reversing_a_customer_payment_posts_the_counter_voucher(prepayment: False, expectedAccount: &quot;130100&quot;)" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="85c7459c-65de-fcd3-b065-2ef4688f0ac9">
+      <Execution id="22ebc054-23ae-4296-8f0a-08b295ab82de" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.PaymentReversalTests" name="Reversing_a_customer_payment_posts_the_counter_voucher" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.PaymentReversalTests.Reversing_a_vendor_payment_posts_the_counter_voucher" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="34ba3e83-1590-4696-6449-f9ec6eee73c8">
+      <Execution id="657df550-1948-478a-9473-6e685be1bf8a" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.PaymentReversalTests" name="Reversing_a_vendor_payment_posts_the_counter_voucher" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="0625fb41-5d04-7d2b-868e-d0814a9139f8" executionId="21c5f403-23c2-40b7-8fc4-c992ce4b3bbf" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3e29cf0f-0353-72be-c3de-d3a79bf6908c" executionId="e93db3e6-05c9-4825-9d23-8084b9950c4b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="85c7459c-65de-fcd3-b065-2ef4688f0ac9" executionId="22ebc054-23ae-4296-8f0a-08b295ab82de" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0000efde-f683-22e5-94bf-54ca4d0ab560" executionId="cf619daf-8ed9-4376-ac4a-92cff7d40b9e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d23a4418-64de-07fa-d37c-dd3ce039f79a" executionId="3fea08e2-42b5-479f-b2c0-6bfb651218be" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3e3ecd09-c94d-a677-7cae-ba1a6b2358b7" executionId="0e57f4c5-27c0-4112-a8ec-b236071fbe06" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="de8d9adf-fdcf-655f-0450-60026bb41556" executionId="87a27664-0aa4-42cf-b263-5d97d952c779" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c35b2374-5e7e-b985-9731-9700ba52ca7b" executionId="07fb3f10-11fd-4f39-8e25-edddefa8163c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e7e3f23e-e260-ed96-a48d-13968d940ce1" executionId="b0babcfc-f4dd-4244-8202-08d9919e7d5c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ec2160b2-90cb-1ae3-ff41-d52f5d893f4b" executionId="2b4af978-17b1-429c-8384-38edc3cc71cb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="cac9ea74-d6df-32b1-f578-d4f20f99cd8c" executionId="36646ef8-9c2e-4930-9dad-f94021737bf3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="da15e57f-78ec-0edc-5d66-c40264713fc3" executionId="d3eea928-28e4-4123-973d-2c532e55bb26" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="34ba3e83-1590-4696-6449-f9ec6eee73c8" executionId="657df550-1948-478a-9473-6e685be1bf8a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6b3fad96-4af6-be18-941f-21efbb7d867d" executionId="7db3f53e-ee18-4f3d-8073-1f58a8f317a3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="14" executed="14" passed="14" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.01] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.59]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:00.89]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:01.04]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:00:11.01]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

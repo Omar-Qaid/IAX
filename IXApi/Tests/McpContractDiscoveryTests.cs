@@ -57,6 +57,16 @@ public sealed class McpContractDiscoveryTests
         Assert.Contains("CanAccessRequestAsync", workflow.RecordAuthorization);
         Assert.All(result.Operations.Where(operation => operation.Method != "GET"), operation =>
             Assert.Equal("excluded", operation.Status));
+        var revaluation = result.Operations.Where(operation => operation.Controller == "CustCurrencyRevaluation").ToArray();
+        Assert.Equal(3, revaluation.Length);
+        Assert.Equal("AccountsReceivable.Transactions.View",
+            Assert.Single(Assert.Single(revaluation, operation => operation.Method == "GET").DomainPermissions));
+        foreach (var action in new[] { "Post", "Reverse" })
+        {
+            var operation = Assert.Single(revaluation, candidate => candidate.Action == action);
+            Assert.Equal("POST", operation.Method);
+            Assert.Equal("AccountsReceivable.CurrencyRevaluation.Post", Assert.Single(operation.DomainPermissions));
+        }
 
         using var document = JsonDocument.Parse(result.OpenApi);
         var paths = document.RootElement.GetProperty("paths");

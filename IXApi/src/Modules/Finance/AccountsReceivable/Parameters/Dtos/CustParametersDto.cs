@@ -12,6 +12,11 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         [StringLength(10)]
         public string CustPostingProfile { get; set; } = string.Empty;
 
+        [StringLength(10)]
+        public string PrepaymentPostingProfile { get; set; } = string.Empty;
+
+        public NoYes TaxOnPrepayment { get; set; }
+
         public decimal CreditLimit { get; set; }
 
         public int CreditLimitCheck { get; set; }

@@ -17,7 +17,7 @@ public sealed class LedgerJournalSetupCheck(DbContext db)
         var unverified = new HashSet<string>(StringComparer.Ordinal)
         {
             "Account structures, dimension defaults and legal-entity account overrides.",
-            "Workflow approval, posting permissions and module-level period access.",
+            "Posting permissions and module-level period access.",
             "Tax, reversal, posting layer and rounding rules."
         };
         var ledgers = await db.Set<Entities.Ledger>().AsNoTracking().Where(x => x.DataAreaId == area).ToListAsync(ct);
@@ -28,6 +28,8 @@ public sealed class LedgerJournalSetupCheck(DbContext db)
             .Where(x => x.DataAreaId == area && x.JournalName == header.JournalName).ToListAsync(ct);
         if (names.Count != 1) errors.Add("The journal name must resolve uniquely in the selected company.");
         else if (names[0].JournalType != header.JournalType) errors.Add("Journal type differs from the journal name setup.");
+        else if (names[0].WorkflowApproval == NoYes.Yes && header.WorkflowApprovalStatus != WorkflowApprovalStatus.Approved)
+            errors.Add("Approve the journal through workflow before posting.");
         if (string.IsNullOrWhiteSpace(ledger.AccountingCurrency)) errors.Add("Ledger accounting currency is required.");
         if (header.Posted == NoYes.Yes) errors.Add("The journal is already posted.");
         if (header.SystemBlocked == NoYes.Yes) errors.Add("The journal is system blocked.");

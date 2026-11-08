@@ -1,5 +1,6 @@
 using IAX.IXApi.Modules.Finance.AccountsPayable;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
+using IAX.IXApi.Modules.Finance.AccountsReceivable.Settlement;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -98,7 +99,7 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                     line.Txt, 0m, line.CurrencyCode, line.PaymReference));
                 // A customer, vendor or bank line owes a subledger movement as well as the ledger
                 // entry, or the balance the ledger shows would exist nowhere else.
-                await WriteSubledgerAsync(area, header, line, side, amount, accountingAmount,
+                await WriteSubledgerAsync(area, header, line, side, amount, accountingAmount, reportingAmount,
                     voucher.Key.Voucher, ct);
                 if (line.OffsetLedgerDimension != 0)
                 {
@@ -228,8 +229,7 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                 var customer = await db.Set<CustTable>().AsNoTracking()
                     .FirstOrDefaultAsync(x => x.DataAreaId == area && x.AccountNum == accountNum, ct)
                     ?? throw new SubledgerPostingException($"Customer '{accountNum}' was not found for {what}.");
-                // No profile on the line, so the company default from CustParameters applies.
-                var dimension = await support.ResolveCustomerSummaryAsync(area, null, customer, ct, applyDefaults);
+                var dimension = await support.ResolveCustomerSummaryAsync(area, line.PostingProfile, customer, ct, applyDefaults);
                 return new PostingSide(dimension, LedgerPostingType.CustBalance, line.AccountType, customer.AccountNum, null);
             }
             case LedgerJournalACType.Vend:
@@ -267,7 +267,7 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
     /// so a customer debit raises what the customer owes and a vendor debit reduces what is owed.
     /// </summary>
     private async Task WriteSubledgerAsync(string area, JournalHeader header, LedgerJournalTrans line,
-        PostingSide side, decimal amount, decimal accountingAmount, string voucher, CancellationToken ct)
+        PostingSide side, decimal amount, decimal accountingAmount, decimal reportingAmount, string voucher, CancellationToken ct)
     {
         if (side.AccountType == LedgerJournalACType.Ledger || amount == 0m) return;
         var date = line.TransDate.Date;
@@ -281,18 +281,21 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                     DataAreaId = area, AccountNum = side.AccountNum, OrderAccount = side.AccountNum,
                     TransDate = date, Voucher = voucher, DocumentNum = header.JournalNum, DocumentDate = date,
                     Txt = line.Txt, TransType = LedgerTransType.Cust, CurrencyCode = line.CurrencyCode,
-                    AmountCur = amount, AmountMst = accountingAmount, ReportingCurrencyAmount = accountingAmount,
+                    AmountCur = amount, AmountMst = accountingAmount, ReportingCurrencyAmount = reportingAmount,
                     DueDate = due, PaymTermId = line.Payment, PaymMode = line.PaymMode,
-                    DefaultDimension = line.DefaultDimension
+                    DefaultDimension = line.DefaultDimension, PostingProfile = line.PostingProfile
                 };
                 db.Add(custTrans);
                 await db.SaveChangesAsync(ct); // The open row references the transaction key.
-                db.Add(new CustTransOpen
+                var open = new CustTransOpen
                 {
                     DataAreaId = area, AccountNum = side.AccountNum, RefRecId = custTrans.RecId,
                     TransDate = date, DueDate = due,
-                    AmountCur = amount, AmountMst = accountingAmount, ReportingCurrencyAmount = accountingAmount
-                });
+                    AmountCur = amount, AmountMst = accountingAmount, ReportingCurrencyAmount = reportingAmount
+                };
+                db.Add(open);
+                if (line.SettleVoucher == SettleVoucher.Selection)
+                    await SettleMarkedInvoiceAsync(area, line, custTrans, open, ct);
                 return;
             }
             case LedgerJournalACType.Vend:
@@ -336,6 +339,30 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                 return;
             }
         }
+    }
+
+    private async Task SettleMarkedInvoiceAsync(string area, LedgerJournalTrans line, CustTrans credit,
+        CustTransOpen creditOpen, CancellationToken ct)
+    {
+        if (line.MarkedInvoiceRecId <= 0 || credit.AmountCur >= 0
+            || (line.MarkedInvoiceCompany.Length > 0 && line.MarkedInvoiceCompany != area))
+            throw new SubledgerPostingException("Selected settlement requires a customer credit and a marked invoice in this company.");
+
+        await new SubledgerPostingSupport(db).LockCustomerSettlementAsync(area, credit.AccountNum, ct);
+        var marked = await (
+            from debit in db.Set<CustTrans>()
+            join open in db.Set<CustTransOpen>() on debit.RecId equals open.RefRecId
+            where debit.RecId == line.MarkedInvoiceRecId && debit.DataAreaId == area && open.DataAreaId == area
+                && debit.AccountNum == credit.AccountNum && open.AccountNum == credit.AccountNum
+            select new { Debit = debit, Open = open }).SingleOrDefaultAsync(ct);
+        if (marked == null || string.IsNullOrWhiteSpace(marked.Debit.Invoice)
+            || marked.Debit.CurrencyCode != credit.CurrencyCode || marked.Debit.TransDate.Date > credit.TransDate
+            || marked.Open.AmountCur != -creditOpen.AmountCur)
+            throw new SubledgerPostingException("The marked invoice must have an open balance matching the credit amount and currency.");
+
+        await db.SaveChangesAsync(ct);
+        CustSettleOpenTransactionsService.ApplyPair(db, area, credit.AccountNum, credit.TransDate,
+            credit.Voucher, marked.Debit, marked.Open, credit, creditOpen, marked.Open.AmountCur);
     }
 
     private static void EnsureInScope(string area, JournalHeader header, LedgerJournalTrans line)

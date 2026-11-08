@@ -69,6 +69,8 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<AccountsReceivable.PackingSlip.IPackingSlipJournalService, AccountsReceivable.PackingSlip.PackingSlipJournalService>();
             services.AddScoped<AccountsReceivable.Invoice.ISalesInvoiceService, AccountsReceivable.Invoice.SalesInvoiceService>();
             services.AddScoped<AccountsReceivable.Invoice.IFreeTextInvoiceService, AccountsReceivable.Invoice.FreeTextInvoiceService>();
+            services.AddScoped<AccountsReceivable.CurrencyRevaluation.ICustCurrencyRevaluationService, AccountsReceivable.CurrencyRevaluation.CustCurrencyRevaluationService>();
+            services.AddScoped<AccountsReceivable.CollectionLetters.ICustCollectionLetterService, AccountsReceivable.CollectionLetters.CustCollectionLetterService>();
             services.AddScoped<AccountsReceivable.ICustTransService, AccountsReceivable.CustTransService>();
             services.AddScoped<AccountsReceivable.Payment.ICustPaymentService, AccountsReceivable.Payment.CustPaymentService>();
             services.AddScoped<AccountsPayable.IVendPaymentService, AccountsPayable.VendPaymentService>();

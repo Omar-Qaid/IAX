@@ -15,6 +15,11 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         [StringLength(10)]
         public string CustPostingProfile { get; set; } = string.Empty;
 
+        [StringLength(10)]
+        public string PrepaymentPostingProfile { get; set; } = string.Empty;
+
+        public NoYes TaxOnPrepayment { get; set; }
+
         [Column(TypeName = "decimal(32, 6)")]
         public decimal CreditLimit { get; set; }
 

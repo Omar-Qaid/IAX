@@ -90,7 +90,8 @@ public sealed class CustSettlementReversalService : BaseService<CustSettlement>,
 
             var date = (reversalDate ?? DateTime.UtcNow).Date;
             var reversalVoucher = (await _numbers.NextAsync("CustSettlement", area, ct)).Code;
-            var error = await CustSettlementRestore.ApplyAsync(Db, area, voucher, date, reversalVoucher, ct);
+            var error = await CustSettlementRestore.ApplyAsync(Db, area, voucher, date, reversalVoucher, ct,
+                _currentUser.GetCurrentUserId());
             if (error != null) return await Fail(422, error, ct);
 
             await _unitOfWork.CompleteAsync(ct);

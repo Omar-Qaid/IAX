@@ -124,7 +124,8 @@ public sealed class CustPaymentReversalService : BaseService<CustTrans>, ICustPa
             foreach (var settlementVoucher in settlementVouchers)
             {
                 var reversalSettlement = (await _numbers.NextAsync("CustSettlement", area, ct)).Code;
-                var error = await CustSettlementRestore.ApplyAsync(Db, area, settlementVoucher, date, reversalSettlement, ct);
+                var error = await CustSettlementRestore.ApplyAsync(Db, area, settlementVoucher, date, reversalSettlement, ct,
+                    _currentUser.GetCurrentUserId());
                 if (error != null) return await Fail(422, error, ct);
             }
             await _unitOfWork.CompleteAsync(ct);
@@ -145,7 +146,9 @@ public sealed class CustPaymentReversalService : BaseService<CustTrans>, ICustPa
             if (bankMovement == null)
                 return await Fail(422, "The bank movement behind the payment was not found, so the reversal cannot restore it.", ct);
 
-            var customerAccount = await support.ResolveCustomerSummaryAsync(area, null, customer, ct);
+            var customerAccount = paymentTrans.Prepayment == NoYes.Yes
+                ? await support.LoadDimensionAsync(area, line.LedgerDimension, "customer prepayment", ct)
+                : await support.ResolveCustomerSummaryAsync(area, null, customer, ct);
             var bankAccount = await support.LoadDimensionAsync(area, line.OffsetLedgerDimension, "bank", ct);
 
             var reversalJournal = (await _numbers.NextAsync("LedgerJournalTable", area, ct)).Code;

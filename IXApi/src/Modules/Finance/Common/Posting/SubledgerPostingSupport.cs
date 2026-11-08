@@ -112,21 +112,28 @@ internal sealed class SubledgerPostingSupport(DbContext db)
         CustTable customer, CancellationToken ct,
         Func<DimensionAttributeValueCombination, Task<DimensionAttributeValueCombination>>? applyDefaults = null)
     {
+        var rule = await ResolveCustomerPostingRuleAsync(area, postingProfile, customer, ct);
+        if (rule == null || rule.SummaryLedgerDimension == 0)
+            throw new SubledgerPostingException($"Customer posting profile summary account is missing for customer '{customer.AccountNum}'.");
+        return await LoadDimensionAsync(area, rule.SummaryLedgerDimension, "customer summary", ct, applyDefaults);
+    }
+
+    public async Task<CustLedgerAccounts?> ResolveCustomerPostingRuleAsync(string area, string? postingProfile,
+        CustTable customer, CancellationToken ct)
+    {
         var profile = postingProfile;
         if (string.IsNullOrWhiteSpace(profile))
             profile = await db.Set<CustParameters>().AsNoTracking().Where(x => x.DataAreaId == area)
                 .Select(x => x.CustPostingProfile).FirstOrDefaultAsync(ct) ?? string.Empty;
-        var rules = await db.Set<CustLedgerAccounts>().AsNoTracking().Where(x => x.DataAreaId == area).ToListAsync(ct);
-        if (!string.IsNullOrWhiteSpace(postingProfile) && !rules.Any(x => x.PostingProfile == postingProfile))
-            throw new SubledgerPostingException($"Customer posting profile '{postingProfile}' was not found in this company.");
-        if (!string.IsNullOrWhiteSpace(profile) && rules.Any(x => x.PostingProfile == profile))
-            rules = rules.Where(x => x.PostingProfile == profile).ToList();
-        var rule = rules.Where(x => x.AccountCode == AccountCode.Table && x.Num == customer.AccountNum).OrderBy(x => x.RecId).FirstOrDefault()
+        var query = db.Set<CustLedgerAccounts>().AsNoTracking().Where(x => x.DataAreaId == area);
+        if (!string.IsNullOrWhiteSpace(profile))
+            query = query.Where(x => x.PostingProfile == profile);
+        var rules = await query.ToListAsync(ct);
+        if (!string.IsNullOrWhiteSpace(profile) && rules.Count == 0)
+            throw new SubledgerPostingException($"Customer posting profile '{profile}' was not found in this company.");
+        return rules.Where(x => x.AccountCode == AccountCode.Table && x.Num == customer.AccountNum).OrderBy(x => x.RecId).FirstOrDefault()
             ?? rules.Where(x => x.AccountCode == AccountCode.Group && x.Num == customer.CustGroupId).OrderBy(x => x.RecId).FirstOrDefault()
             ?? rules.Where(x => x.AccountCode == AccountCode.All).OrderBy(x => x.RecId).FirstOrDefault();
-        if (rule == null || rule.SummaryLedgerDimension == 0)
-            throw new SubledgerPostingException($"Customer posting profile summary account is missing for customer '{customer.AccountNum}'.");
-        return await LoadDimensionAsync(area, rule.SummaryLedgerDimension, "customer summary", ct, applyDefaults);
     }
 
     /// <summary>Vendor posting profile: Table (vendor) -> Group (vendor group) -> All, within the profile.</summary>
@@ -358,10 +365,21 @@ internal sealed class SubledgerPostingSupport(DbContext db)
     /// currency-specific `CurrencyLedgerGainLossAccount` row first and falls back to the ledger's
     /// own `LedgerGainLossAccount` row. A missing account is refused, never defaulted.
     /// </summary>
-    public async Task<DimensionAttributeValueCombination> ResolveRealizedGainLossAsync(string area,
-        long ledgerRecId, string currencyCode, bool isGain, CancellationToken ct)
+    public Task<DimensionAttributeValueCombination> ResolveRealizedGainLossAsync(string area,
+        long ledgerRecId, string currencyCode, bool isGain, CancellationToken ct) =>
+        ResolveExchangeGainLossAsync(area, ledgerRecId, currencyCode,
+            isGain ? CurrencyGainLossAccountType.RealizedGain : CurrencyGainLossAccountType.RealizedLoss,
+            $"realized exchange {(isGain ? "gain" : "loss")}", ct);
+
+    internal Task<DimensionAttributeValueCombination> ResolveUnrealizedGainLossAsync(string area,
+        long ledgerRecId, string currencyCode, bool isGain, CancellationToken ct) =>
+        ResolveExchangeGainLossAsync(area, ledgerRecId, currencyCode,
+            isGain ? CurrencyGainLossAccountType.UnrealizedGain : CurrencyGainLossAccountType.UnrealizedLoss,
+            $"unrealized exchange {(isGain ? "gain" : "loss")}", ct);
+
+    private async Task<DimensionAttributeValueCombination> ResolveExchangeGainLossAsync(string area,
+        long ledgerRecId, string currencyCode, CurrencyGainLossAccountType type, string purpose, CancellationToken ct)
     {
-        var type = isGain ? CurrencyGainLossAccountType.RealizedGain : CurrencyGainLossAccountType.RealizedLoss;
         var dimension = await db.Set<CurrencyLedgerGainLossAccount>().AsNoTracking()
             .Where(x => x.DataAreaId == area && x.Ledger == ledgerRecId
                 && x.CurrencyCode == currencyCode && x.AccountType == type && x.LedgerDimension != 0)
@@ -373,9 +391,9 @@ internal sealed class SubledgerPostingSupport(DbContext db)
                 .Select(x => x.LedgerDimension).FirstOrDefaultAsync(ct);
         if (dimension == 0)
             throw new SubledgerPostingException(
-                $"No realized exchange {(isGain ? "gain" : "loss")} account is configured for currency " +
+                $"No {purpose} account is configured for currency " +
                 $"'{currencyCode}'. Configure it on the currency gain/loss accounts or on the ledger.");
-        return await LoadDimensionAsync(area, dimension, $"realized exchange {(isGain ? "gain" : "loss")}", ct);
+        return await LoadDimensionAsync(area, dimension, purpose, ct);
     }
 
     public async Task<DimensionAttributeValueCombination> LoadDimensionAsync(string area, long recId, string purpose,

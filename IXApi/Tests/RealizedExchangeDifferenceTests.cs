@@ -49,10 +49,108 @@ namespace IAX.IXApi.Tests;
 /// </summary>
 public class RealizedExchangeDifferenceTests
 {
+    [Fact]
+    public async Task Revaluation_preview_compares_the_new_rate_with_the_current_carrying_value()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection, paymentRate: 3.90m);
+        var invoice = await db.Set<CustTrans>().SingleAsync(x => x.RecId == 10);
+        invoice.CustExchAdjustmentUnrealized = 100m;
+        invoice.ReportingExchAdjustmentUnrealized = 100m;
+        await db.SaveChangesAsync();
+        var service = new IAX.IXApi.Modules.Finance.AccountsReceivable.CurrencyRevaluation.CustCurrencyRevaluationService(
+            new TestUnitOfWork(db), new TestUser(),
+            DispatchProxy.Create<ISysNumberSequenceService, ExchangeSequenceProxy>());
+
+        var result = await service.PreviewAsync(10, DateOnly.FromDateTime(PaymentDate), default);
+
+        Assert.NotNull(result);
+        Assert.Equal(1000m, result.OpenAmount);
+        Assert.Equal(3850m, result.PreviousAccountingValue);
+        Assert.Equal(3900m, result.RevaluedAccountingValue);
+        Assert.Equal(50m, result.AccountingDifference);
+        Assert.Equal(50m, result.ReportingDifference);
+        Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
+        Assert.Equal(3750m, (await db.Set<CustTransOpen>().SingleAsync()).AmountMst);
+    }
+
     private const decimal InvoiceUsd = 1000m;
     private const decimal InvoiceRate = 3.75m;
     private static readonly DateTime InvoiceDate = new(2026, 1, 1);
     private static readonly DateTime PaymentDate = new(2026, 1, 20);
+
+    [Fact]
+    public async Task Payment_rejects_an_unknown_configured_default_customer_posting_profile()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection, paymentRate: InvoiceRate);
+        db.Add(new CustParameters { DataAreaId = "dat", CustPostingProfile = "MISSING" });
+        await db.SaveChangesAsync();
+
+        var result = await NewService(db).PostAsync(new("C-001", "BANK-1", InvoiceUsd, PaymentDate), default);
+
+        Assert.Equal(422, result.StatusCode);
+        Assert.Contains("MISSING", result.Message);
+        Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
+        Assert.Equal(InvoiceUsd, (await db.Set<CustTransOpen>().SingleAsync()).AmountCur);
+    }
+
+    [Fact]
+    public async Task Revaluation_replaces_a_gain_with_a_loss_then_reverses()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection, paymentRate: 3.90m);
+        var invoice = await db.Set<CustTrans>().SingleAsync(x => x.RecId == 10);
+        db.AddRange(
+            new LedgerGainLossAccount { DataAreaId = "dat", Ledger = 1,
+                AccountType = CurrencyGainLossAccountType.UnrealizedGain, LedgerDimension = 4 },
+            new LedgerGainLossAccount { DataAreaId = "dat", Ledger = 1,
+                AccountType = CurrencyGainLossAccountType.UnrealizedLoss, LedgerDimension = 3 },
+            new ExchangeRate { RecId = 3, DataAreaId = "dat", ExchangeRateCurrencyPair = 1,
+                ExchangeRateValue = 3.65m, ValidFrom = PaymentDate.AddDays(1), IsActive = true },
+            new GeneralJournalEntry { RecId = 1, DataAreaId = "dat", AccountingDate = InvoiceDate, SubledgerVoucher = invoice.Voucher },
+            new GeneralJournalAccountEntry { DataAreaId = "dat", GeneralJournalEntry = 1, LedgerDimension = 2,
+                PostingType = LedgerPostingType.CustBalance, TransactionCurrencyCode = "USD", TransactionCurrencyAmount = InvoiceUsd });
+        await db.SaveChangesAsync();
+        var service = new IAX.IXApi.Modules.Finance.AccountsReceivable.CurrencyRevaluation.CustCurrencyRevaluationService(
+            new TestUnitOfWork(db), new TestUser(), DispatchProxy.Create<ISysNumberSequenceService, ExchangeSequenceProxy>());
+        var date = DateOnly.FromDateTime(PaymentDate);
+
+        Assert.NotNull(await service.PostAsync(10, date, date, default));
+        Assert.Equal(150m, invoice.CustExchAdjustmentUnrealized);
+        Assert.Null(await service.PostAsync(10, date, date, default));
+        var posted = await db.Set<GeneralJournalAccountEntry>().Where(x => x.GeneralJournalEntry > 1).ToListAsync();
+        Assert.Equal(2, posted.Count);
+        Assert.Contains(posted, x => x.LedgerDimension == 2 && x.AccountingCurrencyAmount == 150m);
+        Assert.Contains(posted, x => x.LedgerDimension == 4 && x.AccountingCurrencyAmount == -150m);
+
+        var second = await service.PostAsync(10, date.AddDays(1), date.AddDays(1), default);
+        Assert.NotNull(second);
+        Assert.Equal(-100m, invoice.CustExchAdjustmentUnrealized);
+        var secondEntry = await db.Set<GeneralJournalEntry>().SingleAsync(x => x.SubledgerVoucher == second);
+        var secondLines = await db.Set<GeneralJournalAccountEntry>().Where(x => x.GeneralJournalEntry == secondEntry.RecId).ToListAsync();
+        Assert.Equal(4, secondLines.Count);
+        Assert.Equal(0m, secondLines.Sum(x => x.AccountingCurrencyAmount));
+        Assert.Equal(0m, secondLines.Sum(x => x.ReportingCurrencyAmount));
+        Assert.Contains(secondLines, x => x.LedgerDimension == 2 && x.AccountingCurrencyAmount == -150m);
+        Assert.Contains(secondLines, x => x.LedgerDimension == 4 && x.AccountingCurrencyAmount == 150m);
+        Assert.Contains(secondLines, x => x.LedgerDimension == 2 && x.AccountingCurrencyAmount == -100m);
+        Assert.Contains(secondLines, x => x.LedgerDimension == 3 && x.AccountingCurrencyAmount == 100m);
+
+        var reversal = await service.ReverseAsync(10, date.AddDays(2), default);
+        Assert.NotNull(reversal);
+        Assert.Equal(0m, invoice.CustExchAdjustmentUnrealized);
+        Assert.Equal(3, await db.Set<IAX.IXApi.Modules.Finance.AccountsReceivable.CurrencyRevaluation.CustExchRateAdjustment>().CountAsync());
+        var reversalEntry = await db.Set<GeneralJournalEntry>().SingleAsync(x => x.SubledgerVoucher == reversal);
+        var reversed = await db.Set<GeneralJournalAccountEntry>().Where(x => x.GeneralJournalEntry == reversalEntry.RecId).ToListAsync();
+        Assert.Equal(2, reversed.Count);
+        Assert.Contains(reversed, x => x.LedgerDimension == 2 && x.AccountingCurrencyAmount == 100m);
+        Assert.Contains(reversed, x => x.LedgerDimension == 3 && x.AccountingCurrencyAmount == -100m);
+        Assert.Equal(InvoiceUsd, (await db.Set<CustTransOpen>().SingleAsync()).AmountCur);
+    }
 
     [Fact]
     public async Task Final_payment_clears_the_exact_accounting_remainder_after_partial_rounding()
@@ -119,6 +217,77 @@ public class RealizedExchangeDifferenceTests
     }
 
     /// <summary>Cash worth less than the receivable it cleared: a realized loss, posted as a debit.</summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Payment_checks_unrealized_revaluation_only_on_invoices_it_reaches(bool reachesRevaluedInvoice)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection, paymentRate: InvoiceRate);
+        var laterDueDate = new DateTime(2026, 2, 28);
+        db.AddRange(
+            new CustTrans { RecId = 11, DataAreaId = "dat", AccountNum = "C-001",
+                TransDate = InvoiceDate, DueDate = laterDueDate, CurrencyCode = "USD", Invoice = "INV-FX-LATER",
+                AmountCur = InvoiceUsd, AmountMst = InvoiceUsd * InvoiceRate,
+                ReportingCurrencyAmount = InvoiceUsd * InvoiceRate, CustExchAdjustmentUnrealized = 100m },
+            new CustTransOpen { DataAreaId = "dat", AccountNum = "C-001", RefRecId = 11,
+                TransDate = InvoiceDate, DueDate = laterDueDate, AmountCur = InvoiceUsd,
+                AmountMst = InvoiceUsd * InvoiceRate, ReportingCurrencyAmount = InvoiceUsd * InvoiceRate });
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var amount = reachesRevaluedInvoice ? InvoiceUsd * 2 : InvoiceUsd;
+        var result = await NewService(db).PostAsync(new("C-001", "BANK-1", amount, PaymentDate), default);
+
+        Assert.Equal(InvoiceUsd, (await db.Set<CustTransOpen>().SingleAsync(x => x.RefRecId == 11)).AmountCur);
+        if (!reachesRevaluedInvoice)
+        {
+            Assert.True(result.StatusCode == 200, result.Message);
+            Assert.False(await db.Set<CustTransOpen>().AnyAsync(x => x.RefRecId == 10));
+            return;
+        }
+        Assert.Equal(422, result.StatusCode);
+        Assert.Contains("unrealized currency revaluation", result.Message);
+        Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
+        Assert.Empty(await db.Set<CustSettlement>().ToListAsync());
+        Assert.Equal(InvoiceUsd, (await db.Set<CustTransOpen>().SingleAsync(x => x.RefRecId == 10)).AmountCur);
+    }
+
+    [Fact]
+    public async Task A_customer_prepayment_credits_the_configured_liability_and_leaves_the_invoice_open()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection, paymentRate: 3.60m);
+        db.AddRange(
+            new CustParameters { DataAreaId = "dat", PrepaymentPostingProfile = "ADV" },
+            new MainAccount { RecId = 7, DataAreaId = "dat", LedgerChartOfAccounts = 10, MainAccountId = "220100" },
+            new DimensionAttributeValueCombination { RecId = 7, DataAreaId = "dat", MainAccount = 7,
+                MainAccountValue = "220100", DisplayValue = "220100" },
+            new CustLedgerAccounts { RecId = 2, DataAreaId = "dat", PostingProfile = "ADV",
+                AccountCode = AccountCode.All, SummaryLedgerDimension = 7 });
+        await db.SaveChangesAsync();
+        var payment = new CustPaymentPostDto("C-001", "BANK-1", 100m, PaymentDate,
+            RequestId: "advance-1", Prepayment: true);
+        var service = NewService(db);
+
+        var result = await service.PostAsync(payment, default);
+
+        Assert.Equal(200, result.StatusCode);
+        Assert.Equal(200, (await service.PostAsync(payment, default)).StatusCode);
+        Assert.Equal(422, (await service.PostAsync(payment with { Prepayment = false }, default)).StatusCode);
+        var lines = await db.Set<GeneralJournalAccountEntry>().ToListAsync();
+        Assert.Equal(2, lines.Count);
+        Assert.Contains(lines, x => x.LedgerAccount == "220100" && x.AccountingCurrencyAmount == -360m);
+        Assert.Contains(lines, x => x.LedgerAccount == "110100" && x.AccountingCurrencyAmount == 360m);
+        var advance = await db.Set<CustTrans>().SingleAsync(x => x.Prepayment == NoYes.Yes);
+        Assert.Equal("ADV", advance.PostingProfile);
+        Assert.Equal(-100m, (await db.Set<CustTransOpen>().SingleAsync(x => x.RefRecId == advance.RecId)).AmountCur);
+        Assert.Equal(InvoiceUsd, (await db.Set<CustTransOpen>().SingleAsync(x => x.RefRecId == 10)).AmountCur);
+        Assert.Empty(await db.Set<CustSettlement>().ToListAsync());
+    }
+
     [Fact]
     public async Task A_payment_at_a_weaker_rate_posts_a_realized_loss_and_the_voucher_balances()
     {
@@ -492,6 +661,7 @@ public class RealizedExchangeDifferenceTests
                 typeof(SubledgerVoucherGeneralJournalEntry),
                 typeof(Currency), typeof(ExchangeRate), typeof(ExchangeRateType), typeof(ExchangeRateCurrencyPair),
                 typeof(LedgerGainLossAccount), typeof(CurrencyLedgerGainLossAccount),
+                typeof(IAX.IXApi.Modules.Finance.AccountsReceivable.CurrencyRevaluation.CustExchRateAdjustment),
                 .. TestAccountStructures.Types];
 
             var included = new HashSet<Type>(types);

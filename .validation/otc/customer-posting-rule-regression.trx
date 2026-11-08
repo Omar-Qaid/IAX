@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="c970f608-d4c8-4ba2-a8ce-13c8a0c787ea" name="Omar Almojahid@DESKTOP-3Q67JPL 2026-11-08 08:30:58" runUser="DESKTOP-3Q67JPL\Omar Almojahid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-08T08:30:58.1649473+03:00" queuing="2026-11-08T08:30:58.1649479+03:00" start="2026-11-08T08:30:45.5779569+03:00" finish="2026-11-08T08:31:52.4954862+03:00" />
+  <TestSettings name="default" id="0fe04d89-10ad-40a1-aa96-fa5040bd7dcb">
+    <Deployment runDeploymentRoot="Omar_Almojahid_DESKTOP-3Q67JPL_2026-11-08_08_30_58" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="c87800e2-efbb-4cce-8caf-5f8f443d8f20" testId="744bdfdc-ffcc-a06a-c671-a0dd9a8852e0" testName="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer" computerName="DESKTOP-3Q67JPL" duration="00:00:54.2003399" startTime="2026-11-08T08:30:58.1451800+03:00" endTime="2026-11-08T08:31:52.3220329+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c87800e2-efbb-4cce-8caf-5f8f443d8f20" />
+    <UnitTestResult executionId="294d1bcc-af38-440d-85dd-2eaa92d4dcb6" testId="b1d27f55-1dfb-ed33-a68d-6a87dad544bb" testName="IAX.IXApi.Tests.InventoryCycleTests.Free_text_invoice_posts_services_tax_and_receivable_without_inventory" computerName="DESKTOP-3Q67JPL" duration="00:00:10.4338227" startTime="2026-11-08T08:30:47.6677748+03:00" endTime="2026-11-08T08:30:58.1138843+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="294d1bcc-af38-440d-85dd-2eaa92d4dcb6" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IAX.IXApi.Tests.InventoryCycleTests.Free_text_invoice_posts_services_tax_and_receivable_without_inventory" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="b1d27f55-1dfb-ed33-a68d-6a87dad544bb">
+      <Execution id="294d1bcc-af38-440d-85dd-2eaa92d4dcb6" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.InventoryCycleTests" name="Free_text_invoice_posts_services_tax_and_receivable_without_inventory" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="744bdfdc-ffcc-a06a-c671-a0dd9a8852e0">
+      <Execution id="c87800e2-efbb-4cce-8caf-5f8f443d8f20" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableCycleStageTests" name="Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="744bdfdc-ffcc-a06a-c671-a0dd9a8852e0" executionId="c87800e2-efbb-4cce-8caf-5f8f443d8f20" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b1d27f55-1dfb-ed33-a68d-6a87dad544bb" executionId="294d1bcc-af38-440d-85dd-2eaa92d4dcb6" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="2" executed="2" passed="2" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.40]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:00.77]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:00.81]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:01:05.52]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

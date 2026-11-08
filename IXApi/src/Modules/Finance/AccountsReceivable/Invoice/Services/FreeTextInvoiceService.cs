@@ -1,6 +1,5 @@
 ﻿using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
-using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
@@ -331,7 +330,7 @@ public sealed class FreeTextInvoiceService(
         decimal netTotal = 0m;
         decimal taxTotal = 0m;
         decimal signedVoucherTotal = 0m;
-        var taxByCode = new Dictionary<string, (decimal Base, decimal Tax, decimal Rate, string Group, string ItemGroup)>();
+        var taxByGroup = new Dictionary<(string Code, string Group, string ItemGroup, decimal Rate), (decimal Base, decimal Tax)>();
         foreach (var line in lines)
         {
             var revenueAccount = await support.LoadDimensionAsync(area, line.LedgerDimension, "free text invoice line", ct);
@@ -345,9 +344,9 @@ public sealed class FreeTextInvoiceService(
             signedVoucherTotal -= amount;
             foreach (var (code, codeTax) in SubledgerPostingSupport.AllocateTax(codes, lineTax))
             {
-                var current = taxByCode.GetValueOrDefault(code);
-                taxByCode[code] = (current.Base + amount, current.Tax + codeTax,
-                    codes.Single(x => x.Code == code).Rate, line.TaxGroup, line.TaxItemGroup);
+                var key = (code, line.TaxGroup, line.TaxItemGroup, codes.Single(x => x.Code == code).Rate);
+                var current = taxByGroup.GetValueOrDefault(key);
+                taxByGroup[key] = (current.Base + amount, current.Tax + codeTax);
             }
             Db.Set<CustInvoiceTrans>().Add(new CustInvoiceTrans
             {
@@ -378,20 +377,20 @@ public sealed class FreeTextInvoiceService(
             taxTotal += lineTax;
         }
 
-        foreach (var (code, value) in taxByCode)
+        foreach (var (key, value) in taxByGroup)
         {
             // A zero-rated code posts no ledger line and resolves no payable account; its base
             // is still recorded so the turnover can be reported under the code.
             if (value.Tax != 0m)
             {
-                var payable = await support.ResolveTaxPayableAsync(area, code, ct);
+                var payable = await support.ResolveTaxPayableAsync(area, key.Code, ct);
                 Db.Add(translation.AccountEntry(area, entry.RecId, payable, LedgerPostingType.Tax,
-                    -value.Tax, $"Sales tax {code} on {invoiceId}", 0m));
+                    -value.Tax, $"Sales tax {key.Code} on {invoiceId}", 0m));
             }
-            Db.Set<TaxTrans>().Add(TaxTransaction(area, header.InvoiceDate.Date, invoiceId, code,
-                value.Group, value.ItemGroup, header.CurrencyCode, -value.Base, -value.Tax,
+            Db.Set<TaxTrans>().Add(TaxTransaction(area, header.InvoiceDate.Date, invoiceId, key.Code,
+                key.Group, key.ItemGroup, header.CurrencyCode, -value.Base, -value.Tax,
                 translation.ToAccounting(-value.Base), translation.ToAccounting(-value.Tax),
-                translation.ToReporting(-value.Base), translation.ToReporting(-value.Tax), value.Rate));
+                translation.ToReporting(-value.Base), translation.ToReporting(-value.Tax), key.Rate));
             signedVoucherTotal -= value.Tax;
         }
 

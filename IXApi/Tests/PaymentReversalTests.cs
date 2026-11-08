@@ -55,13 +55,22 @@ public class PaymentReversalTests
         Assert.Equal(200, (await service.ReverseAsync("LJT-PAY", Posted, default)).StatusCode);
     }
 
-    [Fact]
-    public async Task Reversing_a_customer_payment_posts_the_counter_voucher()
+    [Theory]
+    [InlineData(false, "130100")]
+    [InlineData(true, "210100")]
+    public async Task Reversing_a_customer_payment_posts_the_counter_voucher(bool prepayment, string expectedAccount)
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
         await using var db = await NewContextAsync(connection);
         SeedCustomerPayment(db, amount: 400m);
+        if (prepayment)
+        {
+            db.Set<CustTrans>().Local.Single().Prepayment = NoYes.Yes;
+            var line = db.Set<LedgerJournalTrans>().Local.Single();
+            line.Prepayment = NoYes.Yes;
+            line.LedgerDimension = 3;
+        }
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
 
@@ -72,7 +81,9 @@ public class PaymentReversalTests
         Assert.Equal(2, entries.Count);
         // Mirror of Dr Bank / Cr Customer: the customer is debited and the bank credited.
         Assert.Equal(0m, entries.Sum(x => x.AccountingCurrencyAmount));
-        Assert.Equal(400m, entries.Single(x => x.PostingType == LedgerPostingType.CustBalance).AccountingCurrencyAmount);
+        var customerEntry = entries.Single(x => x.PostingType == LedgerPostingType.CustBalance);
+        Assert.Equal(expectedAccount, customerEntry.LedgerAccount);
+        Assert.Equal(400m, customerEntry.AccountingCurrencyAmount);
         Assert.Equal(-400m, entries.Single(x => x.PostingType == LedgerPostingType.Bank).AccountingCurrencyAmount);
         // The voucher is associated, as every posting in this module must be.
         Assert.Single(await db.Set<SubledgerVoucherGeneralJournalEntry>().AsNoTracking().ToListAsync());

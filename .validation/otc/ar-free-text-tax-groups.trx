@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="25974daa-ce01-4219-8e42-377639310aae" name="Omar Almojahid@DESKTOP-3Q67JPL 2026-11-08 20:00:19" runUser="DESKTOP-3Q67JPL\Omar Almojahid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-08T20:00:19.4173516+03:00" queuing="2026-11-08T20:00:19.4173519+03:00" start="2026-11-08T19:58:39.5423980+03:00" finish="2026-11-08T20:00:19.5285868+03:00" />
+  <TestSettings name="default" id="74a252ad-ed9e-4af6-89a5-452b5d294d38">
+    <Deployment runDeploymentRoot="Omar_Almojahid_DESKTOP-3Q67JPL_2026-11-08_20_00_19" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="8d4d6653-512e-46ee-b921-af3e259e5e21" testId="2d4c8a76-3076-6297-9f0c-75fc09f3e649" testName="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_returns_credit_only_and_corrections_SQLServer" computerName="DESKTOP-3Q67JPL" duration="00:01:31.5559481" startTime="2026-11-08T19:58:47.3970245+03:00" endTime="2026-11-08T20:00:18.9186796+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8d4d6653-512e-46ee-b921-af3e259e5e21">
+      <Output>
+        <ErrorInfo>
+          <Message>Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.&#xD;
+---- Microsoft.Data.SqlClient.SqlException : The INSERT statement conflicted with the FOREIGN KEY constraint "FK_TaxOnItem_TaxExemptCodeTable_TaxExemptCode". The conflict occurred in database "IXApi_OTCAcceptance_7b7f9f7c07a0452d81a14d9df13081b4", table "dbo.TaxExemptCodeTable", column 'ExemptCode'.</Message>
+          <StackTrace>   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeResultSetAsync(Int32 startCommandIndex, RelationalDataReader reader, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeAsync(RelationalDataReader reader, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.SqlServer.Update.Internal.SqlServerModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.&lt;&gt;c__DisplayClass28_1.&lt;&lt;RunOrderToCashAttachmentAsync&gt;b__158&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs:line 927&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.&lt;&gt;c__DisplayClass28_2.&lt;&lt;RunOrderToCashAttachmentAsync&gt;b__50&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs:line 271&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.OtcAudit.Stage(String[] ids, String name, Func`1 action) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs:line 1073&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.RunOrderToCashAttachmentAsync(Boolean corrections) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs:line 918&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.RunOrderToCashAttachmentAsync(Boolean corrections) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs:line 1037&#xD;
+   at IXApi.Tests.AccountsReceivableCycleStageTests.RunOrderToCashAttachmentAsync(Boolean corrections) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs:line 1037&#xD;
+--- End of stack trace from previous location ---&#xD;
+----- Inner Stack Trace -----&#xD;
+   at Microsoft.Data.SqlClient.SqlConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)&#xD;
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)&#xD;
+   at Microsoft.Data.SqlClient.TdsParser.TryRun(RunBehavior runBehavior, SqlCommand cmdHandler, SqlDataReader dataStream, BulkCopySimpleResultSet bulkCopyHandler, TdsParserStateObject stateObj, Boolean&amp; dataReady)&#xD;
+   at Microsoft.Data.SqlClient.SqlDataReader.TryHasMoreRows(Boolean&amp; moreRows)&#xD;
+   at Microsoft.Data.SqlClient.SqlDataReader.TryReadInternal(Boolean setTimeout, Boolean&amp; more)&#xD;
+   at Microsoft.Data.SqlClient.SqlDataReader.ReadAsyncExecute(Task task, Object state)&#xD;
+   at Microsoft.Data.SqlClient.SqlDataReader.InvokeAsyncCall[T](SqlDataReaderBaseAsyncCallContext`1 context)&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeResultSetAsync(Int32 startCommandIndex, RelationalDataReader reader, CancellationToken cancellationToken)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_returns_credit_only_and_corrections_SQLServer" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="2d4c8a76-3076-6297-9f0c-75fc09f3e649">
+      <Execution id="8d4d6653-512e-46ee-b921-af3e259e5e21" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableCycleStageTests" name="Order_to_cash_attachment_returns_credit_only_and_corrections_SQLServer" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="2d4c8a76-3076-6297-9f0c-75fc09f3e649" executionId="8d4d6653-512e-46ee-b921-af3e259e5e21" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="1" executed="1" passed="0" failed="1" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.02] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.96]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:01.61]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:01.94]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:01:33.71]       Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.&#xD;
+[xUnit.net 00:01:33.71]       ---- Microsoft.Data.SqlClient.SqlException : The INSERT statement conflicted with the FOREIGN KEY constraint "FK_TaxOnItem_TaxExemptCodeTable_TaxExemptCode". The conflict occurred in database "IXApi_OTCAcceptance_7b7f9f7c07a0452d81a14d9df13081b4", table "dbo.TaxExemptCodeTable", column 'ExemptCode'.&#xD;
+[xUnit.net 00:01:33.71]       Stack Trace:&#xD;
+[xUnit.net 00:01:33.72]            at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeResultSetAsync(Int32 startCommandIndex, RelationalDataReader reader, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:01:33.72]            at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeAsync(RelationalDataReader reader, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:01:33.72]            at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:01:33.72]            at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:01:33.72]            at Microsoft.EntityFrameworkCore.SqlServer.Update.Internal.SqlServerModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:01:33.72]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:01:33.72]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:01:33.72]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:01:33.72]            at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:01:33.72]            at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:01:33.72]            at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:01:33.72]            at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:01:33.72]            at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:01:33.72]            at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:01:33.72]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs(927,0): at IXApi.Tests.AccountsReceivableCycleStageTests.&lt;&gt;c__DisplayClass28_1.&lt;&lt;RunOrderToCashAttachmentAsync&gt;b__158&gt;d.MoveNext()&#xD;
+[xUnit.net 00:01:33.72]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:01:33.72]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs(271,0): at IXApi.Tests.AccountsReceivableCycleStageTests.&lt;&gt;c__DisplayClass28_2.&lt;&lt;RunOrderToCashAttachmentAsync&gt;b__50&gt;d.MoveNext()&#xD;
+[xUnit.net 00:01:33.72]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:01:33.72]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs(1073,0): at IXApi.Tests.AccountsReceivableCycleStageTests.OtcAudit.Stage(String[] ids, String name, Func`1 action)&#xD;
+[xUnit.net 00:01:33.72]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs(918,0): at IXApi.Tests.AccountsReceivableCycleStageTests.RunOrderToCashAttachmentAsync(Boolean corrections)&#xD;
+[xUnit.net 00:01:33.72]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs(1037,0): at IXApi.Tests.AccountsReceivableCycleStageTests.RunOrderToCashAttachmentAsync(Boolean corrections)&#xD;
+[xUnit.net 00:01:33.72]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\OrderToCashAcceptanceTests.cs(1037,0): at IXApi.Tests.AccountsReceivableCycleStageTests.RunOrderToCashAttachmentAsync(Boolean corrections)&#xD;
+[xUnit.net 00:01:33.72]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:01:33.72]         ----- Inner Stack Trace -----&#xD;
+[xUnit.net 00:01:33.72]            at Microsoft.Data.SqlClient.SqlConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)&#xD;
+[xUnit.net 00:01:33.72]            at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)&#xD;
+[xUnit.net 00:01:33.72]            at Microsoft.Data.SqlClient.TdsParser.TryRun(RunBehavior runBehavior, SqlCommand cmdHandler, SqlDataReader dataStream, BulkCopySimpleResultSet bulkCopyHandler, TdsParserStateObject stateObj, Boolean&amp; dataReady)&#xD;
+[xUnit.net 00:01:33.72]            at Microsoft.Data.SqlClient.SqlDataReader.TryHasMoreRows(Boolean&amp; moreRows)&#xD;
+[xUnit.net 00:01:33.72]            at Microsoft.Data.SqlClient.SqlDataReader.TryReadInternal(Boolean setTimeout, Boolean&amp; more)&#xD;
+[xUnit.net 00:01:33.72]            at Microsoft.Data.SqlClient.SqlDataReader.ReadAsyncExecute(Task task, Object state)&#xD;
+[xUnit.net 00:01:33.72]            at Microsoft.Data.SqlClient.SqlDataReader.InvokeAsyncCall[T](SqlDataReaderBaseAsyncCallContext`1 context)&#xD;
+[xUnit.net 00:01:33.72]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:01:33.72]            at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeResultSetAsync(Int32 startCommandIndex, RelationalDataReader reader, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:01:33.76]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="DESKTOP-3Q67JPL" outcome="Error" timestamp="2026-11-08T20:00:18.9532812+03:00">
+        <Text>[xUnit.net 00:01:33.71]     IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_returns_credit_only_and_corrections_SQLServer [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

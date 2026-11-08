@@ -1,4 +1,5 @@
 using IAX.IXApi.Modules.Administration.NumberSequences;
+using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Infrastructure.Identity;
@@ -96,6 +97,18 @@ public sealed class LedgerJournalReversalService(
         var lines = await Db.Set<LedgerJournalTrans>().AsNoTracking()
             .Where(x => x.DataAreaId == area && x.JournalNum == original.JournalNum).ToListAsync(ct);
         if (lines.Count == 0) throw new SubledgerPostingException("The posted journal has no lines to reverse.");
+        var selectedCredits = lines.Where(x => x.AccountType == LedgerJournalACType.Cust
+            && x.SettleVoucher == SettleVoucher.Selection).ToList();
+        foreach (var account in selectedCredits.Select(x => x.LedgerDimensionName).Distinct().Order())
+            await support.LockCustomerSettlementAsync(area, account, ct);
+        if (selectedCredits.Count > 0)
+        {
+            var vouchers = selectedCredits.Select(x => x.Voucher).Distinct().ToList();
+            if (await Db.Set<CustTrans>().AnyAsync(x => x.DataAreaId == area
+                    && x.DocumentNum == original.JournalNum && vouchers.Contains(x.Voucher)
+                    && x.SettleAmountCur != 0m, ct))
+                throw new SubledgerPostingException("Reverse the customer settlement before reversing this journal.");
+        }
         var journalName = await Db.Set<LedgerJournalName>().AsNoTracking()
             .SingleOrDefaultAsync(x => x.DataAreaId == area && x.JournalName == original.JournalName, ct)
             ?? throw new SubledgerPostingException($"Journal name '{original.JournalName}' is not configured.");
@@ -147,6 +160,7 @@ public sealed class LedgerJournalReversalService(
         AccountType = source.AccountType,
         LedgerDimension = source.LedgerDimension,
         LedgerDimensionName = source.LedgerDimensionName,
+        PostingProfile = source.PostingProfile,
         DefaultDimension = source.DefaultDimension,
         OffsetAccountType = source.OffsetAccountType,
         OffsetLedgerDimension = source.OffsetLedgerDimension,

@@ -62,6 +62,8 @@ public sealed partial class CustPaymentService : BaseService<CustTrans>, ICustPa
         var area = company.GetDataAreaId();
         if (string.IsNullOrWhiteSpace(area)) return new(400, null, "A company must be selected.");
         if (input.Amount <= 0 || decimal.Round(input.Amount, 4) != input.Amount) return new(400, null, "The payment amount must be positive with at most four decimals.");
+        if (input.Prepayment && !string.IsNullOrWhiteSpace(input.SettleInvoiceId))
+            return new(422, null, "Post the customer prepayment before selecting an invoice to settle.");
         if (input.RequestId?.Length > FieldLengths.PaymReference)
             return new(400, null, $"The payment request ID must not exceed {FieldLengths.PaymReference} characters.");
         var date = (input.PaymentDate ?? DateTime.UtcNow).Date;
@@ -84,6 +86,7 @@ public sealed partial class CustPaymentService : BaseService<CustTrans>, ICustPa
                     var priorMovement = await Db.Set<BankAccountTrans>().AsNoTracking().SingleOrDefaultAsync(x => x.DataAreaId == area
                         && x.SourceTableId == FinanceTableNumbers.LedgerJournalTrans && x.SourceRecId == previous.RecId, ct);
                     if (previous.LedgerDimensionName != input.CustAccount || previous.AmountCurCredit != input.Amount
+                        || previous.Prepayment != (input.Prepayment ? NoYes.Yes : NoYes.No)
                         || priorBank == null || previous.OffsetLedgerDimension != priorBank.LedgerDimension
                         || priorMovement?.AccountId != input.BankAccountId
                         || (input.PaymentDate.HasValue && previous.TransDate.Date != input.PaymentDate.Value.Date)
@@ -108,7 +111,18 @@ public sealed partial class CustPaymentService : BaseService<CustTrans>, ICustPa
 
             var ledger = await support.LoadLedgerContextAsync(area, date,
                 LedgerPostingModule.Customer, _currentUser.GetCurrentUserId(), ct);
-            var customerAccount = await support.ResolveCustomerSummaryAsync(area, null, customer, ct);
+            string? postingProfile = null;
+            if (input.Prepayment)
+            {
+                var parameters = await Db.Set<CustParameters>().AsNoTracking()
+                    .SingleOrDefaultAsync(x => x.DataAreaId == area, ct);
+                postingProfile = parameters?.PrepaymentPostingProfile;
+                if (string.IsNullOrWhiteSpace(postingProfile))
+                    return await Fail(422, "Configure a customer prepayment posting profile before posting.", ct);
+                if (parameters!.TaxOnPrepayment == NoYes.Yes)
+                    return await Fail(422, "Customer prepayment tax posting is not supported.", ct);
+            }
+            var customerAccount = await support.ResolveCustomerSummaryAsync(area, postingProfile, customer, ct);
             var bankAccount = await support.LoadDimensionAsync(area, bank.LedgerDimension, "bank", ct);
             var currency = string.IsNullOrWhiteSpace(customer.CurrencyCode) ? ledger.Ledger.AccountingCurrency : customer.CurrencyCode;
             // The bank account must hold the payment currency: translating the bank side as well
@@ -129,7 +143,8 @@ public sealed partial class CustPaymentService : BaseService<CustTrans>, ICustPa
                 TransType = LedgerTransType.Payment, CurrencyCode = currency, AmountCur = -input.Amount,
                 AmountMst = translation.ToAccounting(-input.Amount),
                 ReportingCurrencyAmount = translation.ToReporting(-input.Amount), DueDate = date,
-                PaymMode = input.PaymMode ?? string.Empty, PaymReference = input.RequestId ?? string.Empty
+                PaymMode = input.PaymMode ?? string.Empty, PaymReference = input.RequestId ?? string.Empty,
+                PostingProfile = postingProfile ?? string.Empty, Prepayment = input.Prepayment ? NoYes.Yes : NoYes.No
             };
             Db.Set<CustTrans>().Add(paymentTrans);
             await unitOfWork.CompleteAsync(ct);
@@ -139,7 +154,7 @@ public sealed partial class CustPaymentService : BaseService<CustTrans>, ICustPa
                                       join trans in Db.Set<CustTrans>() on open.RefRecId equals trans.RecId
                                       where open.DataAreaId == area && open.AccountNum == customer.AccountNum
                                           && trans.DataAreaId == area && trans.AccountNum == customer.AccountNum
-                                          && open.AmountCur > 0
+                                          && !input.Prepayment && trans.Prepayment == NoYes.No && open.AmountCur > 0
                                           && trans.CurrencyCode == currency
                                       select new { Open = open, Trans = trans }).ToListAsync(ct);
             if (!input.SettleAutomatically) openInvoices.Clear();
@@ -192,6 +207,9 @@ public sealed partial class CustPaymentService : BaseService<CustTrans>, ICustPa
                 // The invoice is cleared by the full open amount; only the cash reduces what the
                 // payment has left to apply.
                 var settle = discount > 0m ? invoice.Open.AmountCur : Math.Min(remaining, invoice.Open.AmountCur);
+                if (invoice.Trans.CustExchAdjustmentUnrealized != 0m || invoice.Trans.ReportingExchAdjustmentUnrealized != 0m)
+                    await new CurrencyRevaluation.CustCurrencyRevaluationService(_unitOfWork, _currentUser, _numbers)
+                        .ReverseForSettlementAsync(area, invoice.Trans, invoice.Open, date, ct);
                 var cash = settle - discount;
                 if (settlementVoucher.Length == 0)
                     settlementVoucher = (await numbers.NextAsync("CustSettlement", area, ct)).Code;
@@ -287,6 +305,7 @@ public sealed partial class CustPaymentService : BaseService<CustTrans>, ICustPa
                 OffsetAccountType = LedgerJournalACType.Bank, OffsetLedgerDimension = bank.LedgerDimension, OffsetCompany = area,
                 Txt = $"Payment from {customer.AccountNum}", DocumentNum = journalNum, DocumentDate = date,
                 CustTransId = paymentTrans.RecId, MarkedInvoice = input.SettleInvoiceId ?? string.Empty,
+                PostingProfile = paymentTrans.PostingProfile, Prepayment = paymentTrans.Prepayment,
                 PaymMode = input.PaymMode ?? string.Empty, PaymReference = input.RequestId ?? string.Empty,
                 RemainAmount = remaining
             };

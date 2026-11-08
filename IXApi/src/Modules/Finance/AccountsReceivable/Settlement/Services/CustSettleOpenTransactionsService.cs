@@ -104,6 +104,13 @@ public sealed class CustSettleOpenTransactionsService : BaseService<CustSettleme
                 return await Fail(422, $"Transaction {missing[0]} is not an open transaction of customer '{account}'.", ct);
 
             var date = (input.SettleDate ?? DateTime.UtcNow).Date;
+            var hasPrepayment = marked.Any(x => x.Trans.Prepayment == NoYes.Yes);
+            if (hasPrepayment && (marked.Count != 2
+                || marked.Count(x => x.Trans.Prepayment == NoYes.Yes && x.Open.AmountCur < 0m) != 1
+                || marked.Count(x => x.Trans.Prepayment == NoYes.No && x.Open.AmountCur > 0m
+                    && !string.IsNullOrWhiteSpace(x.Trans.Invoice)) != 1
+                || marked.Any(x => x.Trans.TransDate.Date > date)))
+                return await Fail(422, "Applying a customer prepayment requires a single advance liability and one posted invoice on or before the settlement date.", ct);
             var currencies = marked.Select(x => x.Trans.CurrencyCode).Distinct().ToList();
             if (currencies.Count > 1)
                 return await Fail(422,
@@ -147,17 +154,14 @@ public sealed class CustSettleOpenTransactionsService : BaseService<CustSettleme
                     // The settlement row has to carry the same accounting and reporting amounts that
                     // are taken off the transaction, because the reversal restores
                     // CustTrans.SettleAmountMst from the row - not by recomputing it.
-                    var debitApplied = ApplyToTransaction(Db, debit.Trans, debit.Open, amount, date, settlementVoucher, account);
-                    var creditApplied = ApplyToTransaction(Db, credit.Trans, credit.Open, -amount, date, settlementVoucher, account);
-                    if (debitApplied.Accounting + creditApplied.Accounting != 0m
-                        || debitApplied.Reporting + creditApplied.Reporting != 0m)
-                        return await Fail(422,
-                            "The remaining balances have a rounding difference that requires a ledger voucher.", ct);
-                    Db.Set<CustSettlement>().AddRange(
-                        Settlement(area, account, date, settlementVoucher, debit.Trans.RecId, debit.Open.RecId,
-                            credit.Trans.RecId, credit.Trans.Voucher, debitApplied, debit.Trans.TransType),
-                        Settlement(area, account, date, settlementVoucher, credit.Trans.RecId, credit.Open.RecId,
-                            debit.Trans.RecId, debit.Trans.Voucher, creditApplied, credit.Trans.TransType));
+                    if (debit.Trans.CustExchAdjustmentUnrealized != 0m || debit.Trans.ReportingExchAdjustmentUnrealized != 0m)
+                        await new CurrencyRevaluation.CustCurrencyRevaluationService(_unitOfWork, _currentUser, _numbers)
+                            .ReverseForSettlementAsync(area, debit.Trans, debit.Open, date, ct);
+                    if (hasPrepayment)
+                        await CustPrepaymentSettlementPosting.ApplyAsync(Db, area, settlementVoucher, date,
+                            _currentUser.GetCurrentUserId(), debit.Trans, credit.Trans, amount, ct);
+                    ApplyPair(Db, area, account, date, settlementVoucher,
+                        debit.Trans, debit.Open, credit.Trans, credit.Open, amount, hasPrepayment);
                     totalSettled += amount;
                     applied.Add(new
                     {
@@ -189,6 +193,31 @@ public sealed class CustSettleOpenTransactionsService : BaseService<CustSettleme
             Db.ChangeTracker.Clear();
             throw;
         }
+    }
+
+    // The caller owns the transaction and customer settlement lock.
+    internal static void ApplyPair(DbContext db, string area, string account, DateTime date, string settlementVoucher,
+        CustTrans debit, CustTransOpen debitOpen, CustTrans credit, CustTransOpen creditOpen, decimal amount,
+        bool prepaymentLedgerPosted = false)
+    {
+        if (debit.CustExchAdjustmentUnrealized != 0m || debit.ReportingExchAdjustmentUnrealized != 0m
+            || credit.CustExchAdjustmentUnrealized != 0m || credit.ReportingExchAdjustmentUnrealized != 0m)
+            throw new SubledgerPostingException("Reverse the unrealized currency revaluation before settling these transactions.");
+
+        if (!prepaymentLedgerPosted && (debit.Prepayment == NoYes.Yes || credit.Prepayment == NoYes.Yes))
+            throw new SubledgerPostingException("Customer prepayments require a settlement that releases the advance liability.");
+
+        var debitApplied = ApplyToTransaction(db, debit, debitOpen, amount, date, settlementVoucher, account);
+        var creditApplied = ApplyToTransaction(db, credit, creditOpen, -amount, date, settlementVoucher, account);
+        if (debitApplied.Accounting + creditApplied.Accounting != 0m
+            || debitApplied.Reporting + creditApplied.Reporting != 0m)
+            throw new SubledgerPostingException(
+                "The remaining balances have a rounding difference that requires a ledger voucher.");
+        db.Set<CustSettlement>().AddRange(
+            Settlement(area, account, date, settlementVoucher, debit.RecId, debitOpen.RecId,
+                credit.RecId, credit.Voucher, debitApplied, debit.TransType),
+            Settlement(area, account, date, settlementVoucher, credit.RecId, creditOpen.RecId,
+                debit.RecId, debit.Voucher, creditApplied, credit.TransType));
     }
 
     /// <summary>

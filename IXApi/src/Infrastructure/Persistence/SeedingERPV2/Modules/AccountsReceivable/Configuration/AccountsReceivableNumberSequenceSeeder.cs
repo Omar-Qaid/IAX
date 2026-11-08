@@ -4,6 +4,7 @@ using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.AccountsPayable;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
+using IAX.IXApi.Modules.Finance.AccountsReceivable.CollectionLetters;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.Inventory.InventTable;
 using IAX.IXApi.Modules.Finance.Inventory.ProductCategories.Entities;
@@ -20,10 +21,11 @@ public sealed class AccountsReceivableNumberSequenceSeeder : IDataSeeder
         // Voucher, LedgerJournalTable, InventDim and InventTransId are shared with the purchase
         // example and stay owned by its sequence seeder; only the sales documents are added here.
         foreach (var key in new[] { "ARV2-CUST", "ARV2-VOUCH", "ARV2-PAY", "SalesTable", "CustConfirmJour",
-            "CustPackingSlipJour", "CustInvoiceTable", "CustInvoiceJour", "CustSettlement" })
+            "CustPackingSlipJour", "CustInvoiceTable", "CustInvoiceJour", "CustSettlement", CustCollectionLetterService.NumberSequence })
         {
             var prefix = key switch { "SalesTable" => "AR2SO", "CustConfirmJour" => "AR2CF", "CustPackingSlipJour" => "AR2PS",
-                "CustInvoiceTable" => "AR2FT", "CustInvoiceJour" => "AR2IV", "CustSettlement" => "AR2ST", _ => key };
+                "CustInvoiceTable" => "AR2FT", "CustInvoiceJour" => "AR2IV", "CustSettlement" => "AR2ST",
+                CustCollectionLetterService.NumberSequence => "AR2CL", _ => key };
             var sequence = await c.EnsureAsync<SysNumberSequence>(x => x.NumberSequence == key,
                 new() { NumberSequence = key, Txt = "AR example vouchers", Format = prefix + "-######", AnnotatedFormat = prefix + "-{SEQ}",
                     Lowest = 1, Highest = 999999, NextRec = 1, InUse = 1, Blocked = 0, Manual = 0, NoIncrement = 0 }, ct,

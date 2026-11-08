@@ -62,6 +62,10 @@ public sealed partial class CustPaymentService
                                     && transaction.RecId == input.CreditRecId && open.AmountCur < 0m
                                 select new { Open = open, Trans = transaction }).SingleOrDefaultAsync(ct);
             if (credit == null) return await Fail(422, "Select an open credit for this customer.", ct);
+            if (credit.Trans.CustExchAdjustmentUnrealized != 0m || credit.Trans.ReportingExchAdjustmentUnrealized != 0m)
+                return await Fail(422, "Reverse the unrealized currency revaluation before refunding this credit.", ct);
+            if (credit.Trans.Prepayment == NoYes.Yes)
+                return await Fail(422, "Customer prepayment refunds require reversal of the advance liability.", ct);
             if (date < credit.Trans.TransDate.Date)
                 return await Fail(422, "The refund date precedes the original credit date.", ct);
             if (credit.Open.AmountCur != credit.Trans.AmountCur - credit.Trans.SettleAmountCur
