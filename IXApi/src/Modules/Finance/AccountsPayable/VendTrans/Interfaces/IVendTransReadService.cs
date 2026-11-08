@@ -1,4 +1,4 @@
-namespace IAX.IXApi.Modules.Finance.AccountsPayable;
+﻿namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 
 public interface IVendTransReadService
 {
@@ -11,4 +11,15 @@ public interface IVendTransReadService
     /// <param name="accountNum">The vendor, or null for every vendor in the company.</param>
     /// <param name="asOfDate">Excludes transactions dated after this date; defaults to today.</param>
     Task<VendOpenBalanceDto> GetOpenBalanceAsync(string? accountNum, DateTime? asOfDate, CancellationToken ct);
+
+    /// <summary>
+    /// Ages the open vendor balance into buckets by days overdue, for one vendor or for all of
+    /// them, and breaks the result down per vendor.
+    /// </summary>
+    /// <param name="accountNum">The vendor, or null for every vendor in the company.</param>
+    /// <param name="asOfDate">
+    /// Excludes transactions dated after this date and is the date overdue days are measured from;
+    /// defaults to today.
+    /// </param>
+    Task<VendAgingDto> GetAgingAsync(string? accountNum, DateTime? asOfDate, CancellationToken ct);
 }

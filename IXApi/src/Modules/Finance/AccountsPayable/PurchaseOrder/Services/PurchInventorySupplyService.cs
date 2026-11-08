@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Persistence.Repositories;
+﻿using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
@@ -69,10 +69,14 @@ public sealed class PurchInventorySupplyService(IUnitOfWork unitOfWork, ISalesIn
     /// cancelling it has no accounting effect and needs no voucher or fiscal period check.
     /// </para>
     /// </summary>
-    public async Task<decimal> CancelRemainingAsync(PurchTable order, PurchLine line, CancellationToken ct = default)
+    public async Task<decimal> CancelRemainingAsync(PurchTable order, PurchLine line,
+        decimal? inventQty = null, CancellationToken ct = default)
     {
         var remaining = Math.Max(0m, line.RemainInventPhysical);
-        if (remaining == 0m || string.IsNullOrWhiteSpace(line.InventTransId)) return 0m;
+        // An omitted quantity releases the whole remainder, which is what order-level cancellation
+        // does; a supplied one releases that part of it and leaves the rest expected.
+        var requested = inventQty.HasValue ? Math.Min(Math.Max(0m, inventQty.Value), remaining) : remaining;
+        if (requested == 0m || string.IsNullOrWhiteSpace(line.InventTransId)) return 0m;
 
         var origin = await Db.Set<InventTransOrigin>().FirstOrDefaultAsync(x => x.DataAreaId == order.DataAreaId
             && x.InventTransId == line.InventTransId, ct)
@@ -97,18 +101,25 @@ public sealed class PurchInventorySupplyService(IUnitOfWork unitOfWork, ISalesIn
         var summary = await Db.Set<InventSum>().SingleOrDefaultAsync(x => x.DataAreaId == order.DataAreaId
             && x.ItemId == line.ItemId && x.InventDimId == line.InventDimId, ct)
             ?? throw new InvalidOperationException($"Inventory summary is missing for item {line.ItemId}.");
-        if (summary.Ordered < remaining)
+        if (summary.Ordered < requested)
             throw new InvalidOperationException(
                 $"On-hand ordered quantity for item {line.ItemId} is less than this purchase line expects; the purchase line cannot be cancelled.");
-        summary.Ordered -= remaining;
+        summary.Ordered -= requested;
         summary.AvailOrdered = summary.AvailPhysical + summary.Ordered - summary.OnOrder - summary.ReservOrdered;
 
+        // Released quantity is taken from the ordered transactions in turn. A transaction that keeps
+        // part of its quantity stays Ordered, because that part is still expected to arrive.
+        var release = requested;
         foreach (var transaction in ordered)
         {
-            transaction.Qty = 0;
+            if (release <= 0m) break;
+            var taken = Math.Min(transaction.Qty, release);
+            transaction.Qty -= taken;
+            release -= taken;
+            if (transaction.Qty != 0m) continue;
             transaction.StatusReceipt = StatusReceipt.None;
             transaction.ValueOpen = InventTransOpen.No;
         }
-        return remaining;
+        return requested;
     }
 }

@@ -71,6 +71,16 @@ public sealed class PurchTableController : BaseController<PurchTable, PurchTable
     public async Task<IActionResult> Cancel(long recId, CancellationToken ct) =>
         Present(await _orders.CancelRemainderAsync(recId, ct));
 
+    /// <summary>
+    /// Cancels one line's unreceived quantity. A <paramref name="quantity"/> reduces the line's open
+    /// quantity by that much and leaves the rest expected; omitting it cancels the whole remainder of
+    /// that line. Anything already received stays invoiceable.
+    /// </summary>
+    [HttpPost("lines/{purchLineRecId:long}/cancel")]
+    [DomainPermission("AccountsPayable", "PurchaseOrders", "Edit")]
+    public async Task<IActionResult> CancelLine(long purchLineRecId, CancellationToken ct, [FromQuery] decimal? quantity = null) =>
+        Present(await _orders.CancelLineRemainderAsync(purchLineRecId, quantity, ct));
+
     [HttpPost("{recId:long}/confirm")]
     [DomainPermission("AccountsPayable", "PurchaseOrders", "Confirm")]
     public async Task<IActionResult> Confirm(long recId, CancellationToken ct) =>

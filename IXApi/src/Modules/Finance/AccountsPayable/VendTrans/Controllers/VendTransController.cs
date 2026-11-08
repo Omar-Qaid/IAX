@@ -55,6 +55,15 @@ public sealed class VendTransController : BaseController<VendTrans, VendTransDto
         [FromQuery] string? accountNum, [FromQuery] DateTime? asOfDate, CancellationToken ct) =>
         Ok(APIResponse<VendOpenBalanceDto>.Ok(await _vendTransService.GetOpenBalanceAsync(accountNum, asOfDate, ct)));
 
+    /// <summary>
+    /// The vendor aging report: the open balance split into buckets by days overdue, totalled and
+    /// broken down per vendor. Omit <paramref name="accountNum"/> to age every vendor.
+    /// </summary>
+    [HttpGet("aging")]
+    public async Task<ActionResult<APIResponse<VendAgingDto>>> Aging(
+        [FromQuery] string? accountNum, [FromQuery] DateTime? asOfDate, CancellationToken ct) =>
+        Ok(APIResponse<VendAgingDto>.Ok(await _vendTransService.GetAgingAsync(accountNum, asOfDate, ct)));
+
     [NonAction]
     public override Task<ActionResult<APIResponse<VendTransDto>>> Create(
         VendTransDto dto,

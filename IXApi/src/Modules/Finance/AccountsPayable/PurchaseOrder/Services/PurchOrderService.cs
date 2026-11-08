@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Identity;
+﻿using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Administration.NumberSequences;
@@ -269,42 +269,17 @@ public sealed class PurchOrderService : BaseService<PurchTable>, IPurchOrderServ
             foreach (var line in lines)
             {
                 if (line.RemainPurchPhysical <= 0) continue;
-                var purchQty = line.RemainPurchPhysical;
-                decimal inventQty;
                 try
                 {
-                    inventQty = await _supply.CancelRemainingAsync(order, line, ct);
+                    cancelled.Add(await CancelLineQuantityAsync(order, line, null, ct));
                 }
                 catch (InvalidOperationException error)
                 {
                     return await Fail(422, error.Message, ct);
                 }
-
-                var receivedNothing = line.RemainPurchPhysical >= line.PurchQty;
-                // Units that will never arrive can never be invoiced, so the financial remainder
-                // loses the same quantity the physical one does and keeps only what was received.
-                line.RemainPurchFinancial = Math.Max(0m, line.RemainPurchFinancial - purchQty);
-                line.RemainInventFinancial = Math.Max(0m, line.RemainInventFinancial - inventQty);
-                line.RemainPurchPhysical = 0;
-                line.RemainInventPhysical = 0;
-                line.PurchStatus = receivedNothing ? PurchStatus.Canceled
-                    : line.RemainPurchFinancial <= 0 ? PurchStatus.Invoiced
-                    : PurchStatus.Received;
-                cancelled.Add(new
-                {
-                    lineNumber = line.LineNumber, itemId = line.ItemId, purchQty, inventQty,
-                    status = line.PurchStatus, remainToInvoice = line.RemainPurchFinancial
-                });
             }
 
-            // Derived from the lines that still mean something, matching how the receipt and invoice
-            // flows derive it: a wholly cancelled order is Canceled, otherwise the order follows
-            // whatever its surviving lines still owe.
-            var surviving = lines.Where(x => x.PurchStatus != PurchStatus.Canceled).ToList();
-            order.PurchStatus = surviving.Count == 0 ? PurchStatus.Canceled
-                : surviving.All(x => x.RemainPurchFinancial <= 0 && x.RemainPurchPhysical <= 0) ? PurchStatus.Invoiced
-                : PurchStatus.Received;
-
+            DeriveStatusFromLines(order, lines);
             await _unitOfWork.CompleteAsync(ct);
             await _unitOfWork.CommitTransactionAsync(ct);
             return new(200, new { purchId = order.PurchId, status = order.PurchStatus, lines = cancelled },
@@ -316,6 +291,127 @@ public sealed class PurchOrderService : BaseService<PurchTable>, IPurchOrderServ
             Db.ChangeTracker.Clear();
             throw;
         }
+    }
+
+    public Task<PurchResult> CancelLineRemainderAsync(long purchLineRecId, decimal? quantity, CancellationToken ct) =>
+        Db.Database.CreateExecutionStrategy().ExecuteAsync(() => CancelLineRemainderCoreAsync(purchLineRecId, quantity, ct));
+
+    /// <summary>
+    /// Cancels one line's unreceived quantity, which is the line-level counterpart of
+    /// <see cref="CancelRemainderAsync"/>. A supplied quantity reduces the open quantity by that
+    /// much and leaves the rest expected, which is how an order line is trimmed instead of
+    /// cancelled; omitting it cancels the line's whole remainder. The received part stays
+    /// invoiceable either way, and a cancelled quantity is not reinstated.
+    /// </summary>
+    private async Task<PurchResult> CancelLineRemainderCoreAsync(long purchLineRecId, decimal? quantity, CancellationToken ct)
+    {
+        var area = _company.GetDataAreaId();
+        await _unitOfWork.BeginTransactionAsync(ct);
+        try
+        {
+            var line = await Db.Set<PurchLine>().FirstOrDefaultAsync(x => x.RecId == purchLineRecId && x.DataAreaId == area, ct);
+            if (line == null) return await Fail(404, "Purchase line was not found in the selected company.", ct);
+            if (line.PurchStatus == PurchStatus.Canceled)
+                return await Fail(422, "The purchase line is already canceled.", ct);
+            if (line.RemainPurchPhysical <= 0)
+                return await Fail(422, "The purchase line has no unreceived quantity left to cancel.", ct);
+
+            var order = await Db.Set<PurchTable>().FirstOrDefaultAsync(x => x.DataAreaId == area && x.PurchId == line.PurchId, ct);
+            if (order == null) return await Fail(404, "Purchase order was not found in the selected company.", ct);
+
+            object cancelled;
+            try
+            {
+                cancelled = await CancelLineQuantityAsync(order, line, quantity, ct);
+            }
+            catch (InvalidOperationException error)
+            {
+                return await Fail(422, error.Message, ct);
+            }
+
+            // The header follows every surviving line, not just the one that changed, so a reduced
+            // line that still expects goods keeps the order open.
+            var lines = await Db.Set<PurchLine>()
+                .Where(x => x.DataAreaId == area && x.PurchId == order.PurchId
+                    && x.PurchStatus != PurchStatus.Canceled).ToListAsync(ct);
+            DeriveStatusFromLines(order, lines);
+
+            await _unitOfWork.CompleteAsync(ct);
+            await _unitOfWork.CommitTransactionAsync(ct);
+            return new(200, new { purchId = order.PurchId, status = order.PurchStatus, line = cancelled },
+                quantity.HasValue ? "Purchase line quantity reduced." : "Purchase line remainder canceled.");
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync(ct);
+            Db.ChangeTracker.Clear();
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Releases <paramref name="quantity"/> of one line's unreceived quantity, or the whole
+    /// remainder when it is omitted, and reports what was released. The line is mutated in place;
+    /// the caller owns the transaction and the header status.
+    /// </summary>
+    private async Task<object> CancelLineQuantityAsync(PurchTable order, PurchLine line, decimal? quantity, CancellationToken ct)
+    {
+        var remainder = line.RemainPurchPhysical;
+        var purchQty = quantity ?? remainder;
+        if (purchQty <= 0m)
+            throw new InvalidOperationException("The quantity to cancel must be greater than zero.");
+        if (purchQty > remainder)
+            throw new InvalidOperationException(
+                $"Purchase line {line.LineNumber} has {remainder} unreceived, which is less than the {purchQty} requested for cancellation.");
+
+        // The supply is held in the inventory unit, so a partial purchase quantity is converted at
+        // the line's own remaining ratio; cancelling the whole remainder releases it exactly.
+        var whole = purchQty == remainder;
+        var inventRequest = whole ? line.RemainInventPhysical
+            : decimal.Round(line.RemainInventPhysical * purchQty / remainder, 6, MidpointRounding.AwayFromZero);
+        var inventQty = await _supply.CancelRemainingAsync(order, line, inventRequest, ct);
+
+        var receivedNothing = whole && remainder >= line.PurchQty;
+        // Units that will never arrive can never be invoiced, so the financial remainder loses the
+        // same quantity the physical one does and keeps only what was received.
+        line.RemainPurchFinancial = Math.Max(0m, line.RemainPurchFinancial - purchQty);
+        line.RemainInventFinancial = Math.Max(0m, line.RemainInventFinancial - inventQty);
+        line.RemainPurchPhysical = Math.Max(0m, remainder - purchQty);
+        line.RemainInventPhysical = Math.Max(0m, line.RemainInventPhysical - inventQty);
+        // A line that still expects goods keeps the status it had: only the quantity was trimmed.
+        if (line.RemainPurchPhysical <= 0)
+            line.PurchStatus = receivedNothing ? PurchStatus.Canceled
+                : line.RemainPurchFinancial <= 0 ? PurchStatus.Invoiced
+                : PurchStatus.Received;
+        return new
+        {
+            lineNumber = line.LineNumber, itemId = line.ItemId, purchQty, inventQty,
+            status = line.PurchStatus, remainToInvoice = line.RemainPurchFinancial,
+            remainToReceive = line.RemainPurchPhysical
+        };
+    }
+
+    /// <summary>
+    /// Derives the header status from the lines that still mean something, matching how the receipt
+    /// and invoice flows derive it: a wholly cancelled order is Canceled, otherwise the order
+    /// follows whatever its surviving lines still owe.
+    /// </summary>
+    private static void DeriveStatusFromLines(PurchTable order, List<PurchLine> lines)
+    {
+        var surviving = lines.Where(x => x.PurchStatus != PurchStatus.Canceled).ToList();
+        if (surviving.Count == 0)
+        {
+            order.PurchStatus = PurchStatus.Canceled;
+            return;
+        }
+        // Matching `ProductReceiptService` and `VendorInvoiceService`, which promote the header only
+        // once every line has nothing left to receive: an order still expecting goods keeps the
+        // status it had. Order-level cancellation leaves no physical remainder anywhere, so it
+        // reaches the same result as before; only a reduced line can land here still expecting.
+        if (surviving.Any(x => x.RemainPurchPhysical > 0)) return;
+        order.PurchStatus = surviving.All(x => x.RemainPurchFinancial <= 0)
+            ? PurchStatus.Invoiced
+            : PurchStatus.Received;
     }
 
     public async Task<PurchResult> GetAsync(long recId, CancellationToken ct)

@@ -1,4 +1,4 @@
-namespace IAX.IXApi.Modules.Finance.AccountsPayable;
+﻿namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 
 public interface IPurchInventorySupplyService
 {
@@ -8,6 +8,12 @@ public interface IPurchInventorySupplyService
     /// <summary>
     /// Releases the ordered supply a purchase line is still expecting, leaving everything already
     /// received untouched. Returns the inventory quantity cancelled.
+    /// <para>
+    /// <paramref name="inventQty"/> releases only that part of the remainder, which is how a line's
+    /// open quantity is reduced rather than cancelled outright; omitting it releases the whole
+    /// remainder.
+    /// </para>
     /// </summary>
-    Task<decimal> CancelRemainingAsync(PurchTable order, PurchLine line, CancellationToken ct = default);
+    Task<decimal> CancelRemainingAsync(PurchTable order, PurchLine line,
+        decimal? inventQty = null, CancellationToken ct = default);
 }

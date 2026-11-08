@@ -626,6 +626,131 @@ public sealed class InventoryCycleTests
         Assert.Equal(PurchStatus.Backorder, (await db.Set<PurchTable>().SingleAsync()).PurchStatus);
     }
 
+    // ---- Line-level cancellation and open-quantity reduction ----
+
+    /// <summary>
+    /// Reducing an open quantity is not cancelling the line: order 100, reduce by 40, and 60 stays
+    /// expected and invoiceable. The released 40 leaves ordered supply, the line keeps the status it
+    /// had because it is still waiting for goods, and the ordered inventory transaction keeps its
+    /// remaining 60 as Ordered rather than being closed.
+    /// </summary>
+    [Fact]
+    public async Task Reducing_a_line_quantity_releases_only_that_part_and_keeps_the_rest_expected()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        await db.SaveChangesAsync();
+        var (orders, _, receipts, invoices) = PurchaseServices(db);
+
+        Assert.Equal(200, (await orders.CreateAsync(new PurchOrderCreateDto("V-0001", null, "SAR", new DateTime(2026, 10, 28), "S01", "WH-01", null), default)).StatusCode);
+        var po = await db.Set<PurchTable>().SingleAsync();
+        Assert.Equal(200, (await orders.AddLineAsync(po.RecId, new PurchLineInputDto("ITEM-001", 100, "PCS", 50, 1, null, null, null, null), default)).StatusCode);
+        var line = await db.Set<PurchLine>().SingleAsync();
+        var ledgerBefore = (await db.Set<GeneralJournalAccountEntry>().ToListAsync()).Count;
+
+        var reduced = await orders.CancelLineRemainderAsync(line.RecId, 40m, default);
+
+        Assert.Equal(200, reduced.StatusCode);
+        Assert.Contains("quantity reduced", reduced.Message);
+        line = await db.Set<PurchLine>().SingleAsync();
+        // 60 is still coming and still invoiceable; only the 40 was released.
+        Assert.Equal(60m, line.RemainPurchPhysical);
+        Assert.Equal(60m, line.RemainPurchFinancial);
+        Assert.Equal(60m, (await db.Set<InventSum>().SingleAsync()).Ordered);
+        // A line still expecting goods keeps the status it had: only the quantity was trimmed.
+        Assert.Equal(PurchStatus.Backorder, line.PurchStatus);
+        Assert.Equal(PurchStatus.Backorder, (await db.Set<PurchTable>().SingleAsync()).PurchStatus);
+        // The part still expected stays Ordered rather than being closed out.
+        var ordered = await db.Set<InventTrans>().SingleAsync(x => x.StatusReceipt == StatusReceipt.Ordered);
+        Assert.Equal(60m, ordered.Qty);
+        // Releasing ordered supply has no accounting effect.
+        Assert.Equal(ledgerBefore, (await db.Set<GeneralJournalAccountEntry>().ToListAsync()).Count);
+
+        // The reduced quantity still receives and invoices normally, closing the order at 60.
+        Assert.Equal(200, (await receipts.PostAsync(po.RecId, new ProductReceiptPostDto("PR-0001", new DateTime(2026, 10, 29), [new(line.RecId, 60)]), default)).StatusCode);
+        Assert.Equal(200, (await invoices.PostAsync(po.RecId, new VendorInvoicePostDto("INV-0001", new DateTime(2026, 10, 30), [new(line.RecId, 60)]), default)).StatusCode);
+        Assert.Equal(PurchStatus.Invoiced, (await db.Set<PurchTable>().SingleAsync()).PurchStatus);
+        Assert.Equal(3000m, (await db.Set<InventSum>().SingleAsync()).PostedValue);
+    }
+
+    /// <summary>
+    /// Cancelling one line of a two-line order leaves the other line untouched and the order open,
+    /// which is what order-level cancellation could not express.
+    /// </summary>
+    [Fact]
+    public async Task Cancelling_one_line_leaves_the_other_line_and_the_order_open()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        await db.SaveChangesAsync();
+        var (orders, _, _, _) = PurchaseServices(db);
+
+        Assert.Equal(200, (await orders.CreateAsync(new PurchOrderCreateDto("V-0001", null, "SAR", new DateTime(2026, 10, 28), "S01", "WH-01", null), default)).StatusCode);
+        var po = await db.Set<PurchTable>().SingleAsync();
+        Assert.Equal(200, (await orders.AddLineAsync(po.RecId, new PurchLineInputDto("ITEM-001", 100, "PCS", 50, 1, null, null, null, null), default)).StatusCode);
+        Assert.Equal(200, (await orders.AddLineAsync(po.RecId, new PurchLineInputDto("ITEM-001", 20, "PCS", 50, 1, null, null, null, null), default)).StatusCode);
+        var lines = (await db.Set<PurchLine>().ToListAsync()).OrderBy(x => x.LineNumber).ToList();
+        var first = lines[0];
+        // Both lines are the same item, so they share one InventSum: 100 + 20 ordered.
+        Assert.Equal(120m, (await db.Set<InventSum>().SingleAsync()).Ordered);
+
+        Assert.Equal(200, (await orders.CancelLineRemainderAsync(first.RecId, null, default)).StatusCode);
+
+        lines = (await db.Set<PurchLine>().ToListAsync()).OrderBy(x => x.LineNumber).ToList();
+        first = lines[0];
+        var second = lines[1];
+        Assert.Equal(PurchStatus.Canceled, first.PurchStatus);
+        // The untouched line keeps its whole quantity, and only its 20 is left on order.
+        Assert.Equal(PurchStatus.Backorder, second.PurchStatus);
+        Assert.Equal(20m, second.RemainPurchPhysical);
+        Assert.Equal(20m, second.RemainPurchFinancial);
+        Assert.Equal(20m, (await db.Set<InventSum>().SingleAsync()).Ordered);
+        // One cancelled line does not close an order that still expects the other.
+        Assert.Equal(PurchStatus.Backorder, (await db.Set<PurchTable>().SingleAsync()).PurchStatus);
+
+        // Cancelling the same line twice is refused by name.
+        var refused = await orders.CancelLineRemainderAsync(first.RecId, null, default);
+        Assert.Equal(422, refused.StatusCode);
+        Assert.Contains("already canceled", refused.Message);
+    }
+
+    /// <summary>
+    /// Asking to cancel more than the line has left, or nothing at all, is refused with the figures
+    /// named and the line left exactly as it was.
+    /// </summary>
+    [Fact]
+    public async Task Reducing_a_line_by_more_than_it_expects_is_refused()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        await db.SaveChangesAsync();
+        var (orders, _, receipts, _) = PurchaseServices(db);
+
+        Assert.Equal(200, (await orders.CreateAsync(new PurchOrderCreateDto("V-0001", null, "SAR", new DateTime(2026, 10, 28), "S01", "WH-01", null), default)).StatusCode);
+        var po = await db.Set<PurchTable>().SingleAsync();
+        Assert.Equal(200, (await orders.AddLineAsync(po.RecId, new PurchLineInputDto("ITEM-001", 100, "PCS", 50, 1, null, null, null, null), default)).StatusCode);
+        var line = await db.Set<PurchLine>().SingleAsync();
+        // 60 received leaves 40 unreceived, so 50 is more than the line can release.
+        Assert.Equal(200, (await receipts.PostAsync(po.RecId, new ProductReceiptPostDto("PR-0001", new DateTime(2026, 10, 28), [new(line.RecId, 60)]), default)).StatusCode);
+
+        var refused = await orders.CancelLineRemainderAsync(line.RecId, 50m, default);
+
+        Assert.Equal(422, refused.StatusCode);
+        Assert.Contains("which is less than the 50 requested", refused.Message);
+        Assert.Equal(422, (await orders.CancelLineRemainderAsync(line.RecId, 0m, default)).StatusCode);
+        // Rolled back on both counts: the remainder and the ordered supply are unchanged.
+        line = await db.Set<PurchLine>().SingleAsync();
+        Assert.Equal(40m, line.RemainPurchPhysical);
+        Assert.Equal(100m, line.RemainPurchFinancial);
+        Assert.Equal(40m, (await db.Set<InventSum>().SingleAsync()).Ordered);
+    }
+
     [Fact]
     public async Task Purchase_line_rejects_warehouse_from_another_site_and_blocked_vendor()
     {
