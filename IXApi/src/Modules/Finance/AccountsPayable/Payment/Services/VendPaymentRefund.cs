@@ -162,7 +162,8 @@ public sealed partial class VendPaymentService
                 DataAreaId = area, Company = area, JournalNum = journalNum, LineNum = 2, Voucher = voucher,
                 TransDate = date, AccountType = LedgerJournalACType.Bank, LedgerDimension = bank.LedgerDimension,
                 LedgerDimensionName = bank.AccountId, AmountCurDebit = amount, CurrencyCode = currency,
-                DocumentNum = journalNum, DocumentDate = date, Txt = $"Vendor refund {account}"
+                DocumentNum = journalNum, DocumentDate = date, PaymReference = requestId,
+                Txt = $"Vendor refund {account}"
             });
             await work.CompleteAsync(ct);
             await new LedgerJournalPosting(Db, user.GetCurrentUserId()).PostAsync(area, header, ct);
@@ -179,7 +180,9 @@ public sealed partial class VendPaymentService
             if (refund.AmountCur != -amount)
                 return await RefundFail(422, "The posted refund does not match the recovered amount.", ct);
 
-            var settlementVoucher = (await numbers.NextAsync("VendSettlement", area, ct)).Code;
+            // The generic "Voucher" sequence, which is what VendSettleOpenTransactionsService uses
+            // for a settlement voucher; there is no dedicated VendSettlement sequence in AP.
+            var settlementVoucher = (await numbers.NextAsync("Voucher", area, ct)).Code;
             var accounting = RefundAccounting(refund, amount);
             Db.Set<VendSettlement>().Add(new VendSettlement
             {

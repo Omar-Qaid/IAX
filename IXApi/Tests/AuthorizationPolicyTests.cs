@@ -1,4 +1,4 @@
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using IAX.IXApi.Bootstrap.Extensions;
 using IAX.IXApi.Modules.Identity.Permissions;
@@ -109,10 +109,28 @@ public sealed class AuthorizationPolicyTests
             typeof(IAX.IXApi.Modules.Finance.Common.Controllers.EnumsController),
             typeof(IAX.IXApi.Modules.Finance.Common.Controllers.ErpEnumsController),
         };
+        // A controller is protected either by a class-level permission, which every action then
+        // also requires, or by carrying one on every single action. Both are in use: most
+        // controllers take the class-level route, while CustCollectionLetterController and
+        // CustCurrencyRevaluationController are deliberately action-scoped so each operation needs
+        // only its own permission - OrderToCashAuthorizationTests pins that distinction over HTTP,
+        // and a class-level attribute there would be ANDed in and lock those callers out.
+        static bool HasClassPermission(Type type) =>
+            type.CustomAttributes.Any(attribute => attribute.AttributeType == typeof(DomainPermissionAttribute));
+        static bool EveryActionIsProtected(Type type)
+        {
+            var actions = type.GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+                .Where(method => method.DeclaringType == type)
+                .Where(method => method.GetCustomAttributes(typeof(Microsoft.AspNetCore.Mvc.Routing.HttpMethodAttribute), true).Length > 0)
+                .Where(method => method.GetCustomAttributes(typeof(Microsoft.AspNetCore.Mvc.NonActionAttribute), true).Length == 0)
+                .ToList();
+            return actions.Count > 0 && actions.All(method =>
+                method.GetCustomAttributes(typeof(DomainPermissionAttribute), true).Length > 0);
+        }
         var unprotected = financeAssembly.GetTypes()
             .Where(type => !type.IsAbstract && typeof(Microsoft.AspNetCore.Mvc.ControllerBase).IsAssignableFrom(type))
             .Where(type => !intentionallySharedReferenceControllers.Contains(type))
-            .Where(type => type.CustomAttributes.All(attribute => attribute.AttributeType != typeof(DomainPermissionAttribute)))
+            .Where(type => !HasClassPermission(type) && !EveryActionIsProtected(type))
             .Select(type => type.FullName)
             .ToList();
 

@@ -1,4 +1,4 @@
-# Accounts Payable examples
+﻿# Accounts Payable examples
 
 This package has two explicit entry points. `AccountsPayableCycleSeeder.PrepareAsync` prepares configuration and master data only. `AccountsPayableTransactionExamples.RunAsync` prepares those prerequisites and executes the selected transaction examples through the owning business services. Neither entry point runs at application startup.
 
@@ -56,6 +56,6 @@ Bank numbers and supplier identities are fictional demonstration data.
 
 ## Scenario documentation
 
-The transaction runner currently implements IDs 01-09, 11-16 and 18-20. IDs 10 (PO prepayment invoice) and 17 (receipt correction) remain outside the executable catalog. Older scenario specifications describe intended behavior; the executable catalog and phase-two guide identify the current implementation. Phase-one manifests remain configuration/master data only.
+The transaction runner currently implements IDs 01-09, 11-16, 18-20 and 21. IDs 10 (PO prepayment invoice) and 17 (receipt correction) remain outside the executable catalog. Older scenario specifications describe intended behavior; the executable catalog and phase-two guide identify the current implementation. Phase-one manifests remain configuration/master data only.
 
 Historical validation results are recorded in PHASE-ONE.md. They do not certify transaction changes; use the transaction integration tests for current results.

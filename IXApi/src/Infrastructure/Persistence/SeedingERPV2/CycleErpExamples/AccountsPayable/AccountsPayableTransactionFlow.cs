@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsPayable.Validation;
+﻿using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsPayable.Validation;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsPayable.Data;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsPayable.Reports;
@@ -22,7 +22,8 @@ public sealed class AccountsPayableTransactionFlow(ApplicationDbContext db, IPur
         ["15"] = "Financial credit note without inventory", ["05"] = "Invoice across multiple receipts",
         ["06"] = "Price and quantity matching", ["08"] = "Partial payment", ["09"] = "On-account payment and later settlement",
         ["14"] = "Purchase return and vendor credit", ["16"] = "Cancel unreceived remainder",
-        ["18"] = "Settlement reversal", ["19"] = "Payment reversal", ["20"] = "Validation failures and rollback"
+        ["18"] = "Settlement reversal", ["19"] = "Payment reversal", ["20"] = "Validation failures and rollback",
+        ["21"] = "Vendor refund of a financial credit note"
     };
     private string Area => db.GetDataAreaId();
     private readonly List<AccountsPayableStageReport> steps = [];
@@ -51,6 +52,18 @@ public sealed class AccountsPayableTransactionFlow(ApplicationDbContext db, IPur
             }
             Success(await payments.PostAsync(new(account, "APV2-BANK", id == "15" ? 287.50m : 402.50m, key + "-PAY", date.AddDays(35), SettleInvoiceId: key + "-I1"), ct), "direct-invoice payment");
             steps.Add(new("Direct expense / financial credit", key, "Posted through invoice journals; no inventory movement"));
+            return await Reconcile(key, id, 0m, 0m, 0m, ct);
+        }
+        if (id == "21")
+        {
+            // The vendor owes us: a financial credit note with no goods going back. The refund
+            // recovers it into the bank and settles the two rows, so nothing is left to recover.
+            await journals.InvoiceAsync(key + "-CREDIT", account, key + "-CR", 115m, true, date, ct);
+            var credit = await db.Set<VendTrans>().SingleAsync(x => x.DataAreaId == Area
+                && x.AccountNum == account && x.Invoice == key + "-CR", ct);
+            Success(await payments.RefundAsync(new(account, "APV2-BANK", credit.RecId, key + "-REF", date.AddDays(3)), ct),
+                "vendor refund");
+            steps.Add(new("Vendor refund", key + "-REF", "Credit note recovered into the bank and settled"));
             return await Reconcile(key, id, 0m, 0m, 0m, ct);
         }
         if (id == "11") await journals.PrepaymentAsync(key + "-PRE", account, 1000m, date.AddDays(-13), ct);

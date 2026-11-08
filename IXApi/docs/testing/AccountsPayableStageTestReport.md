@@ -106,6 +106,11 @@ dotnet test IXApi/Tests/IXApi.Tests.csproj "/p:BaseOutputPath=$PWD/IXApi/.ap-sta
 - بقيت فاتورة الدفعة المقدمة المرتبطة بأمر الشراء (`scenario-10`) وتصحيح الاستلام التاريخي (`scenario-17`) بحالة `NOT_IMPLEMENTED` في سجل الاختبار. نجاح الاختبارين لا يثبت هاتين الحالتين.
 - النتائج في `.validation/ap-basic-handoff.trx`، وسجل المراحل في `.validation/ap-basic-handoff-stages.jsonl`.
 
+### استرداد رصيد المورد — 9 نوفمبر 2026
+
+- نجحت إعادة البناء بعد خفض توازي مترجم C#. اجتاز اختبارا المراحل على SQLite وSQL Server، بنتيجة اختبارين ناجحين وصفر فشل أو تخطٍ. تحقق السيناريو `21` على المحركين من استلام 115 ريالًا في البنك، وعكس مصروف 100 ريال وضريبة مدخلات 15 ريالًا، وتصفير صافي أثر العملية على حساب المورد. الأدلة في `.validation/ap-vendor-refund-stage-retest.trx` و`.validation/ap-vendor-refund-stage-retest.jsonl`.
+- تبقى حالتا `scenario-10` و`scenario-17` مفتوحتين. تتطلب الأولى تسجيل فاتورة مقدمة مرتبطة بأمر الشراء ودفعها ثم تطبيقها على الفاتورة النهائية. يتطلب تصحيح الاستلام خفض الكمية وعكس أثر الاستحقاق المقابل، ويتطلب الإلغاء حركة عكس مستقلة. [فاتورة الدفعة المقدمة](https://learn.microsoft.com/en-us/dynamics365/finance/accounts-payable/prepayments-invoices-vs-prepayments) · [تصحيح وإلغاء استلام المشتريات](https://learn.microsoft.com/en-us/dynamics365/supply-chain/procurement/product-receipt-against-purchase-orders)
+
 ### تحديث اختبار الخدمات المباشر — 6 نوفمبر 2026
 
 - نجح الاختباران المرحليان بعد إضافة المقارنات الحسابية المستقلة لكل السيناريوهات الـ18: SQLite وSQL Server، صفر Failed.

@@ -366,7 +366,7 @@ public sealed class AccountsPayablePhaseOneSeedTests
         using var scope = provider.CreateScope();
         var examples = scope.ServiceProvider.GetRequiredService<AccountsPayableTransactionExamples>();
         var result = await examples.RunAsync(new(2026, "cycle-test"));
-        Assert.Equal(18, result.Scenarios.Count);
+        Assert.Equal(19, result.Scenarios.Count);
         Assert.All(result.Scenarios, x => Assert.True(x.PostedVouchers > 0));
         var complete = result.Scenarios.Single(x => x.Id == "01");
         Assert.Equal(100m, complete.PhysicalQuantity);
@@ -400,7 +400,7 @@ public sealed class AccountsPayablePhaseOneSeedTests
             using var scope = provider.CreateScope();
             var examples = scope.ServiceProvider.GetRequiredService<AccountsPayableTransactionExamples>();
             var first = await examples.RunAsync(new(2026, "sql-cycle-test"));
-            Assert.Equal(18, first.Scenarios.Count);
+            Assert.Equal(19, first.Scenarios.Count);
             var counts = await CountsAsync(db);
             await examples.RunAsync(new(2026, "sql-cycle-test"));
             Assert.Equal(counts, await CountsAsync(db));
@@ -866,7 +866,8 @@ public sealed class AccountsPayablePhaseOneSeedTests
             ["07"]="مصاريف الشراء", ["08"]="دفعة جزئية", ["09"]="دفعة على الحساب ثم تسوية",
             ["11"]="دفعة مقدمة من يومية الدفع وتطبيقها", ["12"]="الخصم النقدي", ["13"]="عملة أجنبية وفروق صرف محققة",
             ["14"]="مرتجع شراء وإشعار دائن", ["15"]="إشعار دائن مالي دون مخزون", ["16"]="إلغاء الكمية المتبقية",
-            ["18"]="عكس التسوية", ["19"]="عكس الدفعة", ["20"]="رفض العمليات غير الصحيحة والتراجع عن آثارها"
+            ["18"]="عكس التسوية", ["19"]="عكس الدفعة", ["20"]="رفض العمليات غير الصحيحة والتراجع عن آثارها",
+            ["21"]="استرداد إشعار دائن من المورد"
         };
         var examples = services.GetRequiredService<AccountsPayableTransactionExamples>();
         foreach (var id in AccountsPayableTransactionFlow.Scenarios.Keys.OrderBy(x => x,StringComparer.Ordinal))
@@ -909,6 +910,10 @@ public sealed class AccountsPayablePhaseOneSeedTests
             "18" => (100m,2500m,375m,-2875m,-2875m,0m,0m,0m,0m,0m,2875m,2875m),
             "19" => (100m,2500m,375m,0m,0m,0m,0m,0m,0m,-2875m,0m,2875m),
             "02" or "05" or "06" or "09" or "11" => (100m,2500m,375m,-2875m,-2875m,0m,0m,0m,0m,0m,0m,0m),
+            // Credit note 115 inclusive of 15% VAT, recovered into the bank. The expense and the
+            // input tax reverse, the bank moves *in*, and the vendor control account nets to zero
+            // because the credit debited it and the refund credits it back.
+            "21" => (0m,0m,-15m,115m,115m,-100m,0m,0m,0m,0m,0m,0m),
             _ => throw new InvalidOperationException($"Missing independent arithmetic expectations for AP scenario {id}.")
         };
         var actual = await AccountsPayableReconciliationSnapshot.LoadAsync(db, $"APV2-2026-{id}", id,

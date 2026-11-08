@@ -1,4 +1,4 @@
-# AP transaction examples
+﻿# AP transaction examples
 
 Register `AddAccountsPayableTransactionExamples()` in a host that supplies ApplicationDbContext, the current user and the selected company execution context. Resolve `AccountsPayableTransactionExamples` in a fresh scope and call:
 
@@ -32,6 +32,7 @@ This is an explicit write operation intended for a disposable demo database. Doc
 |18|Reverse settlement; reopen invoice and payment|
 |19|Reverse payment; reopen invoice and reverse bank movement|
 |20|Reject invalid invoice price/quantity atomically, then post valid received quantity|
+|21|SAR115 financial credit note recovered from the vendor into the bank and settled|
 
 ## Integrity and boundaries
 
@@ -43,7 +44,7 @@ Reports carry bank movement in the vendor/bank transaction currency and tax in a
 
 PO, pending invoice, receipt and posted invoice source references are persisted with distributions, accounting events and subledger/GL links in the posting transaction. Distributions copy the actual GL entries without creating duplicate GL vouchers. Source-document native lifecycle enum states are not implemented; optional numeric lifecycle fields remain unset. Application polymorphic table identifiers are IXApp-compatible identifiers, not D365 AOT table IDs.
 
-PO prepayment invoices (ID10) and historical receipt correction (ID17) are not implemented. A payment-journal prepayment does not substitute for a PO prepayment invoice. Settlement reversal with cash discount or realized FX is explicitly refused because reversing its extra GL postings is not implemented. Workflow, payment export, revaluation, localization, WMS and manufacturing are outside this core demo.
+PO prepayment invoices (ID10) and historical receipt correction (ID17) are not implemented. ID21 recovers a vendor credit note through `IVendPaymentService.RefundAsync`; it posts no inventory and leaves no open balance. A payment-journal prepayment does not substitute for a PO prepayment invoice. Settlement reversal with cash discount or realized FX is explicitly refused because reversing its extra GL postings is not implemented. Workflow, payment export, revaluation, localization, WMS and manufacturing are outside this core demo.
 
 Offline EF migrations add the source references and realized-exchange audit fields. Apply reviewed migrations separately before running against an existing schema; this implementation does not migrate or seed the application database automatically.
 
