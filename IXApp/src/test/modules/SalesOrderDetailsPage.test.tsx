@@ -128,17 +128,26 @@ it('guards order cancellation while header edits are unsaved or cancellation is 
   try {
     openOrder('1');
     await screen.findByText('SO-LIVE-001 : Live customer');
+
+    // Order cancellation lives in the Maintain group of the Sales order ribbon. Unsaved header
+    // edits disable that ribbon, so the action cannot be reached at all while editing.
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
-    expect(screen.getByRole('button', { name: '' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Sales order' })).toBeDisabled();
     expect(salesOrderListApi.cancel).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: '' }));
-    fireEvent.click(screen.getByRole('button', { name: '' }));
-    fireEvent.click(screen.getByRole('button', { name: '' }));
+    // Discard the header edits; this Cancel is the edit-mode one beside Save.
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sales order' }));
+    const cancelOrder = () => screen.getByRole('button', { name: 'Cancel' });
+    fireEvent.click(cancelOrder());
+    fireEvent.click(cancelOrder());
+    fireEvent.click(cancelOrder());
     expect(salesOrderListApi.cancel).toHaveBeenCalledExactlyOnceWith('1');
-    expect(screen.getByRole('button', { name: '' })).toBeDisabled();
+    expect(cancelOrder()).toBeDisabled();
+
     rejectCancellation(new Error('Order cancellation failed'));
     expect(await screen.findByText('Order cancellation failed')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '' })).toBeEnabled();
+    expect(cancelOrder()).toBeEnabled();
   } finally {
     confirmation.mockRestore();
   }
@@ -161,7 +170,7 @@ it('keeps the entered packing slip quantity when the preview refetches', async (
   openOrder('1');
   await screen.findByText('SO-LIVE-001 : Live customer');
   fireEvent.click(screen.getByRole('button', { name: 'Sell' }));
-  fireEvent.click(screen.getByRole('button', { name: '' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Packing slip' }));
   const dialog = await screen.findByRole('dialog', { name: 'Packing slip posting' });
   const quantity = await within(dialog).findByRole('spinbutton', { name: 'Update quantity for ITEM-1' });
   expect(quantity).toHaveValue(6);

@@ -3,6 +3,7 @@ import React from 'react';
 import { Typography } from '@mui/material';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
 import type { DetailSectionConfig, DetailValues, EnterpriseListDetailsConfig } from '@patterns/list-details/types';
+import type { ActionPaneRibbonGroup } from '@shared/components/action-pane/ActionPaneRibbon';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { PERMISSIONS } from '@core/permissions/permissions';
 import { customerQuickCreateApi, type CustomerRecord } from '../api/customerQuickCreateApi';
@@ -19,6 +20,88 @@ const includingSelected = (options: CustomerLookupOption[], selected: string): C
   selected && !options.some((option) => option.value === selected)
     ? [{ value: selected, label: selected }, ...options]
     : options;
+
+const CUSTOMER_RIBBON_PINNED_KEY = 'accounts-receivable.customers.customer-ribbon-pinned';
+
+/**
+ * The Customer tab of the D365 customer action pane. Actions are disabled until the pages they
+ * open exist; the groups are kept so the pane matches the standard layout.
+ */
+const buildCustomerRibbonGroups = (
+  tr: (key: string, fallback: string) => string
+): ActionPaneRibbonGroup[] => [
+  {
+    id: 'accounts',
+    label: tr('customerRibbon.groups.accounts', 'Accounts'),
+    actions: [
+      { id: 'contacts', label: tr('customerRibbon.actions.contacts', 'Contacts'), disabled: true },
+      { id: 'change-party-association', label: tr('customerRibbon.actions.changePartyAssociation', 'Change party association'), disabled: true },
+    ],
+  },
+  {
+    id: 'transactions',
+    label: tr('customerRibbon.groups.transactions', 'Transactions'),
+    actions: [
+      { id: 'transactions', label: tr('customerRibbon.actions.transactions', 'Transactions'), disabled: true },
+      { id: 'global-transactions', label: tr('customerRibbon.actions.globalTransactions', 'Global transactions'), disabled: true },
+    ],
+  },
+  {
+    id: 'balance',
+    label: tr('customerRibbon.groups.balance', 'Balance'),
+    actions: [{ id: 'balance', label: tr('customerRibbon.actions.balance', 'Balance'), disabled: true }],
+  },
+  {
+    id: 'forecast',
+    label: tr('customerRibbon.groups.forecast', 'Forecast'),
+    actions: [{ id: 'forecast', label: tr('customerRibbon.actions.forecast', 'Forecast'), disabled: true }],
+  },
+  {
+    id: 'set-up',
+    label: tr('customerRibbon.groups.setUp', 'Set up'),
+    actions: [
+      { id: 'bank-accounts', label: tr('customerRibbon.actions.bankAccounts', 'Bank accounts'), disabled: true },
+      { id: 'summary-update', label: tr('customerRibbon.actions.summaryUpdate', 'Summary update'), disabled: true },
+      { id: 'credit-cards', label: tr('customerRibbon.actions.creditCards', 'Credit cards'), disabled: true },
+      { id: 'product-filters', label: tr('customerRibbon.actions.productFilters', 'Product filters'), disabled: true },
+      { id: 'customers-advanced-notes-setup', label: tr('customerRibbon.actions.customersAdvancedNotesSetup', 'Customers advanced notes setup'), disabled: true },
+    ],
+  },
+  {
+    id: 'attachments',
+    label: tr('customerRibbon.groups.attachments', 'Attachments'),
+    actions: [{ id: 'attachments', label: tr('customerRibbon.actions.attachments', 'Attachments'), disabled: true }],
+  },
+  {
+    id: 'catalogs',
+    label: tr('customerRibbon.groups.catalogs', 'Catalogs'),
+    actions: [{ id: 'send-catalog', label: tr('customerRibbon.actions.sendCatalog', 'Send catalog'), disabled: true }],
+  },
+  {
+    id: 'customer-service',
+    label: tr('customerRibbon.groups.customerService', 'Customer service'),
+    actions: [{ id: 'customer-service', label: tr('customerRibbon.actions.customerService', 'Customer service'), disabled: true }],
+  },
+  {
+    id: 'registration',
+    label: tr('customerRibbon.groups.registration', 'Registration'),
+    actions: [
+      { id: 'registration-ids', label: tr('customerRibbon.actions.registrationIds', 'Registration IDs'), disabled: true },
+      { id: 'registration-id-search', label: tr('customerRibbon.actions.registrationIdSearch', 'Registration ID search'), disabled: true },
+      { id: 'tax-exempt-number-search', label: tr('customerRibbon.actions.taxExemptNumberSearch', 'Tax exempt number search'), disabled: true },
+    ],
+  },
+  {
+    id: 'properties',
+    label: tr('customerRibbon.groups.properties', 'Properties'),
+    actions: [{ id: 'electronic-document-properties', label: tr('customerRibbon.actions.electronicDocumentProperties', 'Electronic document properties'), disabled: true }],
+  },
+  {
+    id: 'rebate-management',
+    label: tr('customerRibbon.groups.rebateManagement', 'Rebate management'),
+    actions: [{ id: 'rebate-management-groups', label: tr('customerRibbon.actions.rebateManagementGroups', 'Rebate management groups'), disabled: true }],
+  },
+];
 
 const emptyCustomer = (): CustomerRecord => ({
   id: `new-${crypto.randomUUID()}`,
@@ -73,6 +156,10 @@ const createCustomer = (record: CustomerRecord) => customerQuickCreateApi.create
 
 export function CustTablePage(): React.ReactElement {
   const { t, isRtl } = useAppTranslation();
+  const customerRibbonGroups = React.useMemo(
+    () => buildCustomerRibbonGroups((key, fallback) => t(key, fallback)),
+    [t]
+  );
   const { customerId } = useParams<{ customerId: string }>();
   const queryClient = useQueryClient();
   const lookupsQuery = useQuery({
@@ -233,7 +320,13 @@ export function CustTablePage(): React.ReactElement {
       setValue: (record) => record,
     }],
     sections,
-    commands: ['customer', 'sell', 'invoice', 'collect', 'service', 'market', 'commerce', 'general', 'creditManagement', 'options'].map((id) => ({ id, label: t(`customerCommands.${id}`) })),
+    commands: ['customer', 'sell', 'invoice', 'collect', 'service', 'market', 'commerce', 'general', 'creditManagement', 'options'].map((id) => ({
+      id,
+      label: t(`customerCommands.${id}`),
+      ...(id === 'customer'
+        ? { groups: customerRibbonGroups, ribbonPersistenceKey: CUSTOMER_RIBBON_PINNED_KEY }
+        : {}),
+    })),
     permissions: { view: PERMISSIONS.CUSTOMER_VIEW, create: PERMISSIONS.CUSTOMER_CREATE, edit: PERMISSIONS.CUSTOMER_UPDATE, delete: PERMISSIONS.CUSTOMER_DELETE },
     validate: (record) => ({
       ...(!record.name.trim() ? { name: t('validation.required', { field: t('fields.customerName') }) } : {}),

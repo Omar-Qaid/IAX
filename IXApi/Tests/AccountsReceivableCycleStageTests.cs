@@ -53,7 +53,7 @@ public sealed partial class AccountsReceivableCycleStageTests
     private const decimal SalesPrice = 40m;
     private const decimal PurchasePrice = 25m;
 
-    [Fact(Skip = "The production sales-line service uses decimal SQL Max/ordering unsupported by SQLite; the complete exact-decimal cycle is verified on SQL Server.")]
+    [Fact]
     public async Task Detailed_AR_stages_SQLite()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:;Foreign Keys=True");

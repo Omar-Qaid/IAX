@@ -68,7 +68,7 @@ function mergeColumns<T>(
         const hasWidth = saved.width !== undefined;
         result.push({
             ...col,
-            hidden:  saved.hidden,
+            hidden:  saved.hidden ?? col.hidden,
             width:   hasWidth ? saved.width : col.width,
             flex:    hasWidth ? saved.flex : (saved.flex ?? col.flex),
             pinned:  saved.pinned !== undefined ? saved.pinned : col.pinned,

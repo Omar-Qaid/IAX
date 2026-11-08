@@ -1,7 +1,12 @@
 import React from 'react';
-import { Controller, useFormContext, type FieldValues } from 'react-hook-form';
+import { Controller, useFormContext, type FieldPath, type FieldValues } from 'react-hook-form';
 import { LookupField } from '../lookups/LookupField';
 import type { LookupFieldProps } from '../lookups/types';
+
+type AppLookupFieldProps<TFieldValues extends FieldValues> = Omit<
+  LookupFieldProps<TFieldValues>,
+  'name'
+> & { name: FieldPath<TFieldValues> };
 
 export function AppLookupField<TFieldValues extends FieldValues = FieldValues>({
   name,
@@ -18,7 +23,7 @@ export function AppLookupField<TFieldValues extends FieldValues = FieldValues>({
   displayMode = 'dialog',
   onChange: onChangeProp,
   ...lookupBehavior
-}: LookupFieldProps<TFieldValues>): React.ReactElement {
+}: AppLookupFieldProps<TFieldValues>): React.ReactElement {
   const formContext = useFormContext<TFieldValues>();
   const control = controlProp || formContext?.control;
 

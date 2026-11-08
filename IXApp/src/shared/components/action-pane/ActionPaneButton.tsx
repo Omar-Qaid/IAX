@@ -18,12 +18,15 @@ export const ActionPaneButton: React.FC<ActionPaneButtonProps> = ({
   loading = false,
   permission,
   tooltip,
+  hidden = false,
   selected = false,
   controlsId,
 }) => {
   const { hasPermission } = usePermission(permission);
 
-  if (!hasPermission) return null;
+  // `hidden` is part of the ActionDefinition contract these props extend, and ActionPaneMenu
+  // already filters on it; without this the same action object renders when passed to a button.
+  if (hidden || !hasPermission) return null;
 
   const buttonElement = (
     <Button

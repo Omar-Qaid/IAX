@@ -1,5 +1,5 @@
 import React from 'react';
-import { PriceDiscSetupListPage } from './priceDiscSetupListPage';
+import { PriceDiscSetupListPage } from '../components/PriceDiscSetupListPage';
 
 export function TradeAgreementJournalPage(): React.ReactElement {
   return <PriceDiscSetupListPage kind="journals" />;

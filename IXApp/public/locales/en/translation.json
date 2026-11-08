@@ -662,7 +662,9 @@
     "toggleList": "Toggle record list",
     "download": "Download",
     "archive": "Archive",
-    "change": "Change"
+     "change": "Change",
+     "pinActionPane": "Pin action pane",
+     "unpinActionPane": "Collapse action pane"
   },
   "common": {
     "general": "General",
@@ -952,6 +954,9 @@
     "state": "State",
     "city": "City",
     "county": "County",
+    "address": "Address",
+    "countryRegion": "Country/region",
+    "district": "District",
     "street": "Street",
     "building": "Building",
     "zipCode": "ZIP/postal code",
@@ -1839,6 +1844,42 @@
     "insuranceGuarantees": "Insurance and guarantees",
     "selectCustomer": "Select a customer to view related information.",
     "noAddressFor": "No primary address is available for {{customer}}."
+  },
+  "customerRibbon": {
+    "groups": {
+      "accounts": "Accounts",
+      "transactions": "Transactions",
+      "balance": "Balance",
+      "forecast": "Forecast",
+      "setUp": "Set up",
+      "attachments": "Attachments",
+      "catalogs": "Catalogs",
+      "customerService": "Customer service",
+      "registration": "Registration",
+      "properties": "Properties",
+      "rebateManagement": "Rebate management"
+    },
+    "actions": {
+      "contacts": "Contacts",
+      "changePartyAssociation": "Change party association",
+      "transactions": "Transactions",
+      "globalTransactions": "Global transactions",
+      "balance": "Balance",
+      "forecast": "Forecast",
+      "bankAccounts": "Bank accounts",
+      "summaryUpdate": "Summary update",
+      "creditCards": "Credit cards",
+      "productFilters": "Product filters",
+      "customersAdvancedNotesSetup": "Customers advanced notes setup",
+      "attachments": "Attachments",
+      "sendCatalog": "Send catalog",
+      "customerService": "Customer service",
+      "registrationIds": "Registration IDs",
+      "registrationIdSearch": "Registration ID search",
+      "taxExemptNumberSearch": "Tax exempt number search",
+      "electronicDocumentProperties": "Electronic document properties",
+      "rebateManagementGroups": "Rebate management groups"
+    }
   },
   "customerCommands": {
     "customer": "Customer",

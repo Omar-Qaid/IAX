@@ -81,12 +81,13 @@ public sealed partial class PackingSlipJournalService : BaseService<CustPackingS
             ct);
         if (journal is null) return new(404, null, "Packing slip was not found.");
 
-        var lines = await Db.Set<CustPackingSlipTrans>().AsNoTracking()
+        // LineNum is decimal, which SQLite cannot ORDER BY, so it is ordered client-side.
+        var lines = (await Db.Set<CustPackingSlipTrans>().AsNoTracking()
             .Where(row => row.DataAreaId == journal.DataAreaId
                 && row.SalesId == journal.SalesId
                 && row.PackingSlipId == journal.PackingSlipId)
-            .OrderBy(row => row.LineNum)
-            .ToListAsync(ct);
+            .ToListAsync(ct))
+            .OrderBy(row => row.LineNum).ToList();
         var dimensionIds = lines.Select(row => row.InventDimId)
             .Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
         var dimensions = await Db.Set<InventDim>().AsNoTracking()
@@ -121,10 +122,11 @@ public sealed partial class PackingSlipJournalService : BaseService<CustPackingS
         if (order.SalesStatus != SalesStatus.Backorder)
             return new(422, null, "Only an open sales order can be shipped.");
 
-        var salesLines = await Db.Set<SalesLine>().AsNoTracking()
+        var salesLines = (await Db.Set<SalesLine>().AsNoTracking()
             .Where(line => line.DataAreaId == order.DataAreaId && line.SalesId == order.SalesId
                 && line.RemainSalesPhysical > 0)
-            .OrderBy(line => line.LineNum).ToListAsync(ct);
+            .ToListAsync(ct))
+            .OrderBy(line => line.LineNum).ToList();
         var mode = NormalizeQuantityMode(quantityMode);
         var proposedQuantities = await ProposedQuantitiesAsync(order, salesLines, mode, ct);
         var dimensionsById = await GetDimensionsAsync(order.DataAreaId, salesLines.Select(line => line.InventDimId), ct);

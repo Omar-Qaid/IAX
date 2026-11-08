@@ -3,7 +3,6 @@
 | Subsystem | Purpose | Documentation |
 | --- | --- | --- |
 | `action-pane` | Permission-aware commands and enterprise CRUD actions | [README](action-pane/README.md) |
-| `common` | Small generic wrappers and responsive helpers | [README](common/README.md) |
 | `data-grid` | Custom virtualized responsive grid | [README](data-grid/README.md) |
 | `dialogs` | Dialog, confirmation, form, process, and history surfaces | [README](dialogs/README.md) |
 | `fast-tabs` | Collapsible form sections | [README](fast-tabs/README.md) |

@@ -43,7 +43,10 @@ it('opens the linked record from its key cell without triggering the row action'
 });
 
 it('preserves reordered columns and reads storage only once as editor callbacks change', () => {
-  const getItem = vi.spyOn(Storage.prototype, 'getItem');
+  // Spied on the instance, not Storage.prototype: under Node's experimental localStorage
+  // global, setupTests substitutes an in-memory Storage that does not inherit from
+  // Storage.prototype, so a prototype spy would record nothing.
+  const getItem = vi.spyOn(globalThis.localStorage, 'getItem');
   const committed = vi.fn();
   const { result, rerender } = renderHook(
     ({ input }) => {

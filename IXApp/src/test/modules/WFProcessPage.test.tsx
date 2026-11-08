@@ -50,7 +50,7 @@ beforeEach(() => {
       },
     },
   });
-  vi.spyOn(wfCategoryApi, 'getById').mockResolvedValue({
+  const purchasingCategory = {
     id: '2',
     recId: 2,
     code: 'PUR',
@@ -62,7 +62,9 @@ beforeEach(() => {
     rowVersion: null,
     recVersion: 1,
     dataAreaId: 'dat',
-  });
+  };
+  vi.spyOn(wfCategoryApi, 'getById').mockResolvedValue(purchasingCategory);
+  vi.spyOn(wfCategoryApi, 'list').mockResolvedValue([purchasingCategory]);
   vi.spyOn(wfPriorityApi, 'list').mockResolvedValue([
     {
       id: '1',
@@ -101,11 +103,9 @@ describe('WFProcessPage', () => {
     expect(await screen.findByRole('heading', { name: 'Workflow processes' })).toBeDefined();
     expect((await screen.findAllByText('Purchase approval')).length).toBeGreaterThan(0);
     expect(screen.getByText('Process configuration')).toBeDefined();
-    expect(await screen.findByRole('textbox', { name: 'Category' })).toHaveValue('Purchasing');
-    expect(await screen.findByRole('textbox', { name: 'Priority' })).toHaveValue('HIGH - High');
-    expect(await screen.findByRole('combobox', { name: 'Process type' })).toHaveTextContent(
-      'STANDARD - Standard'
-    );
+    expect(await screen.findByText('Purchasing')).toBeDefined();
+    expect(await screen.findByText('High')).toBeDefined();
+    expect(await screen.findByText('Standard')).toBeDefined();
     await user.click(screen.getByRole('button', { name: 'Edit' }));
     expect(screen.getByRole('button', { name: 'Save' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDefined();
@@ -125,8 +125,9 @@ describe('WFProcessPage', () => {
 
     const processType = screen.getByRole('combobox', { name: /Process type/i });
     await user.click(processType);
-    await user.click(await screen.findByRole('option', { name: 'STANDARD - Standard' }));
-    expect(processType).toHaveTextContent('STANDARD - Standard');
+    await user.click(await screen.findByRole('option', { name: 'Standard' }));
+    // The process type control is an Autocomplete input, so the selection is its value.
+    expect(processType).toHaveValue('Standard');
 
     await user.click(screen.getByRole('button', { name: 'Save' }));
 

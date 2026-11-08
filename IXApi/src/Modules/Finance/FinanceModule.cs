@@ -72,6 +72,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<AccountsReceivable.ICustTransService, AccountsReceivable.CustTransService>();
             services.AddScoped<AccountsReceivable.Payment.ICustPaymentService, AccountsReceivable.Payment.CustPaymentService>();
             services.AddScoped<AccountsPayable.IVendPaymentService, AccountsPayable.VendPaymentService>();
+            services.AddScoped<AccountsPayable.IVendPaymentProposalService, AccountsPayable.VendPaymentProposalService>();
             services.AddScoped<AccountsReceivable.Settlement.ICustSettlementReversalService, AccountsReceivable.Settlement.CustSettlementReversalService>();
             services.AddScoped<AccountsReceivable.Settlement.ICustSettleOpenTransactionsService, AccountsReceivable.Settlement.CustSettleOpenTransactionsService>();
             services.AddScoped<AccountsReceivable.Payment.ICustPaymentReversalService, AccountsReceivable.Payment.CustPaymentReversalService>();

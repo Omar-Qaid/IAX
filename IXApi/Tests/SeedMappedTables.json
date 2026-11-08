@@ -43,6 +43,7 @@
   "CustPaymModeTable",
   "CustQuotationJour",
   "CustQuotationTrans",
+  "CustRelatedInvoice",
   "CustSettlement",
   "CustTable",
   "CustTrans",

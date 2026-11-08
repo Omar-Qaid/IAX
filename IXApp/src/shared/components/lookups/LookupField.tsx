@@ -167,7 +167,6 @@ function ServerLookupDialog({
 
 function SelectLookup({
   label,
-  name,
   masterRoute,
   variant = 'outlined',
   externalLabel = false,
@@ -337,7 +336,9 @@ function SelectLookup({
 }
 
 export function LookupField<TFieldValues extends FieldValues = FieldValues>({
-  name,
+  // Required by the shared props type because the form-bound wrapper LookupGridField binds
+  // it to its Controller. This unbound component holds no form state, so it does not read it.
+  name: _name,
   label,
   masterRoute,
   variant = 'outlined',
@@ -392,7 +393,6 @@ export function LookupField<TFieldValues extends FieldValues = FieldValues>({
   if (displayMode === 'select') {
     return (
       <SelectLookup
-        name={name}
         label={label}
         masterRoute={masterRoute}
         variant={variant}
@@ -407,6 +407,7 @@ export function LookupField<TFieldValues extends FieldValues = FieldValues>({
         helperText={helperText}
         placeholder={placeholder ?? t('lookups.selectPlaceholder')}
         fullWidth={fullWidth}
+        compact={compact}
         searchable={searchable}
         sideMode={sideMode}
         lazyLoading={lazyLoading}

@@ -664,7 +664,9 @@
     "toggleList": "إظهار قائمة السجلات أو إخفاؤها",
     "download": "تنزيل",
     "archive": "أرشفة",
-    "change": "تغيير"
+     "change": "تغيير",
+     "pinActionPane": "تثبيت جزء الإجراءات",
+     "unpinActionPane": "طي جزء الإجراءات"
   },
   "common": {
     "general": "عام",
@@ -954,6 +956,9 @@
     "state": "المنطقة",
     "city": "المدينة",
     "county": "المقاطعة",
+    "address": "العنوان",
+    "countryRegion": "الدولة/المنطقة",
+    "district": "الحي",
     "street": "الشارع",
     "building": "المبنى",
     "zipCode": "الرمز البريدي",
@@ -1841,6 +1846,42 @@
     "insuranceGuarantees": "التأمين والضمانات",
     "selectCustomer": "اختر عميلاً لعرض المعلومات ذات الصلة.",
     "noAddressFor": "لا يتوفر عنوان أساسي للعميل {{customer}}."
+  },
+  "customerRibbon": {
+    "groups": {
+      "accounts": "الحسابات",
+      "transactions": "الحركات",
+      "balance": "الرصيد",
+      "forecast": "التنبؤ",
+      "setUp": "الإعداد",
+      "attachments": "المرفقات",
+      "catalogs": "الكتالوجات",
+      "customerService": "خدمة العملاء",
+      "registration": "التسجيل",
+      "properties": "الخصائص",
+      "rebateManagement": "إدارة الحسومات"
+    },
+    "actions": {
+      "contacts": "جهات الاتصال",
+      "changePartyAssociation": "تغيير ارتباط الطرف",
+      "transactions": "الحركات",
+      "globalTransactions": "الحركات العامة",
+      "balance": "الرصيد",
+      "forecast": "التنبؤ",
+      "bankAccounts": "الحسابات البنكية",
+      "summaryUpdate": "تحديث الملخص",
+      "creditCards": "بطاقات الائتمان",
+      "productFilters": "عوامل تصفية المنتجات",
+      "customersAdvancedNotesSetup": "إعداد ملاحظات العملاء المتقدمة",
+      "attachments": "المرفقات",
+      "sendCatalog": "إرسال كتالوج",
+      "customerService": "خدمة العملاء",
+      "registrationIds": "معرفات التسجيل",
+      "registrationIdSearch": "بحث عن معرف التسجيل",
+      "taxExemptNumberSearch": "بحث عن رقم الإعفاء الضريبي",
+      "electronicDocumentProperties": "خصائص المستند الإلكتروني",
+      "rebateManagementGroups": "مجموعات إدارة الحسومات"
+    }
   },
   "customerCommands": {
     "customer": "العميل",

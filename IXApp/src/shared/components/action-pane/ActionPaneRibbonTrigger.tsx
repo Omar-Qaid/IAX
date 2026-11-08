@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { ActionPaneButton } from './ActionPaneButton';
 import { ActionPaneRibbon, type ActionPaneRibbonGroup } from './ActionPaneRibbon';
 import { useActionPaneRibbon, type ActionPaneRibbonDescriptor } from './ActionPane';
@@ -20,9 +21,14 @@ export function ActionPaneRibbonTrigger({
   persistenceKey,
   controlsId = `${id}-action-ribbon`,
 }: ActionPaneRibbonTriggerProps): React.ReactElement {
+  const { t } = useAppTranslation();
   const pane = useActionPaneRibbon();
   const updateRibbon = pane?.updateRibbon;
   const restored = useRef(false);
+  // Both pin labels are passed: they are screen-reader names, so leaving either to the
+  // ribbon's English default would keep it English in Arabic.
+  const pinLabel = t('actions.pinActionPane');
+  const unpinLabel = t('actions.unpinActionPane');
   const descriptor = useMemo<ActionPaneRibbonDescriptor>(
     () => ({
       id,
@@ -33,12 +39,13 @@ export function ActionPaneRibbonTrigger({
             groups={groups}
             pinned={pinned}
             onPinnedChange={onPinnedChange}
-            unpinLabel="Collapse action pane"
+            pinLabel={pinLabel}
+            unpinLabel={unpinLabel}
           />
         </div>
       ),
     }),
-    [controlsId, groups, id, persistenceKey]
+    [controlsId, groups, id, persistenceKey, pinLabel, unpinLabel]
   );
 
   useEffect(() => {

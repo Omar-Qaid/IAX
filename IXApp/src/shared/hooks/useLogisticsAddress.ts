@@ -10,7 +10,8 @@ const unwrap = <T,>(response: ApiResponse<T[]>, lookup: string): T[] => {
   return response.data;
 };
 
-export const useCountryRegions = () => {
+/** `enabled` lets a closed dialog hold the lookup back; it defaults to the previous behavior. */
+export const useCountryRegions = (enabled = true) => {
   return useQuery({
     queryKey: ['CountryRegions'],
     queryFn: async (): Promise<CountryRegion[]> => {
@@ -19,6 +20,7 @@ export const useCountryRegions = () => {
       );
       return unwrap(data, 'country/region');
     },
+    enabled,
     staleTime: 1000 * 60 * 10,
   });
 };

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { ColumnDef } from '@shared/components/data-grid/types';
 import type { RelatedInformationSection } from '@shared/components/page/RelatedInformationPanel';
+import type { ActionPaneRibbonGroup } from '@shared/components/action-pane/ActionPaneRibbon';
 
 export type DetailValue = string | number | boolean;
 export type DetailValues = Record<string, DetailValue>;
@@ -83,6 +84,13 @@ export interface ListDetailsCommand<T extends ListDetailRecord = ListDetailRecor
   disabled?: boolean;
   requiresSelection?: boolean;
   onClick?: (record: T | null) => void;
+  /**
+   * Renders the command as an action-pane ribbon trigger instead of a plain button, the way
+   * D365 expands a tab into grouped actions. Ignored when `menuLabel` puts it in a dropdown.
+   */
+  groups?: readonly ActionPaneRibbonGroup[];
+  /** localStorage key that remembers whether this command's ribbon is pinned open. */
+  ribbonPersistenceKey?: string;
 }
 
 export interface ListDetailsHeaderField<T> extends Omit<DetailFieldConfig, 'name'> {

@@ -21,7 +21,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
             migrationBuilder.AddColumn<decimal>(
                 name: "ExchAdjustment",
-                table: "",
+                table: "VendSettlement",
                 type: "decimal(18,4)",
                 precision: 18,
                 scale: 4,

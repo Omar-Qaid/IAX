@@ -1,6 +1,7 @@
 
 export { useGridAutosize } from './useGridAutosize';
 export { useGridDataProcessing } from './useGridDataProcessing';
+export { useGridFilterRow } from './useGridFilterRow';
 export { useGridDataSource } from './useGridDataSource';
 export type { GridDataSourceHandle } from './useGridDataSource';
 export { useGridLayout } from './useGridLayout';

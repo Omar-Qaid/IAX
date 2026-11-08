@@ -78,8 +78,10 @@ describe('ReportDesignerListPage', () => {
     expect(await screen.findByDisplayValue('Request an inventory')).toBeDefined();
     expect(screen.getByRole('button', { name: 'Open' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'Refresh' }).textContent).toBe('');
-    expect(screen.getByRole('button', { name: 'Attachments' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Options' })).toBeDisabled();
+    // SimpleListPage selects the first row on load unless initialSelection is 'none', so the
+    // record-scoped commands act on that row and are enabled.
+    expect(screen.getByRole('button', { name: 'Attachments' })).not.toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Options' })).not.toBeDisabled();
     expect(reportDesignerApi.list).toHaveBeenCalledWith(
       recordTableId('WfProcesses'),
       589,
@@ -103,19 +105,23 @@ describe('ReportDesignerListPage', () => {
     expect(searchCommand).toBeDefined();
     fireEvent.click(searchCommand!);
     expect(screen.getAllByPlaceholderText('Filter value').length).toBeGreaterThan(0);
-    expect(railFilter).toHaveAttribute('aria-pressed', 'true');
+    // Search owns the grid filter row. The rail Filter button owns the advanced filter panel,
+    // which SimpleListPage configures by default, so it does not track the filter row.
+    expect(railFilter).toHaveAttribute('aria-pressed', 'false');
+
+    fireEvent.click(searchCommand!);
+    expect(screen.queryByPlaceholderText('Filter value')).not.toBeInTheDocument();
 
     fireEvent.click(railFilter!);
-    expect(screen.queryByPlaceholderText('Filter value')).not.toBeInTheDocument();
-    expect(railFilter).toHaveAttribute('aria-pressed', 'false');
+    expect(railFilter).toHaveAttribute('aria-pressed', 'true');
 
     fireEvent.click(templateName);
     expect(screen.getByRole('button', { name: 'Options' })).not.toBeDisabled();
     expect(screen.getByRole('button', { name: 'Attachments' })).not.toBeDisabled();
 
     fireEvent.click(screen.getByRole('button', { name: 'Options' }));
-    expect(screen.getByRole('menuitem', { name: 'Record Info' })).toBeDefined();
-    expect(screen.getByRole('menuitem', { name: 'Record Audit' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Record Info' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Record Audit' })).toBeDefined();
   });
 
   it('creates direction-safe empty documents for both supported languages', () => {

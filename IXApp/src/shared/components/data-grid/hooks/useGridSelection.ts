@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import type { SelectionMode } from '../types';
 
 interface UseGridSelectionOptions<T> {
@@ -29,7 +29,13 @@ export function useGridSelection<T>({
         onSelectionChange?.(ids);
     }, [processedRows, getRowId, onSelectionChange]);
 
-    const allSelected = processedRows.length > 0 && selectedIds.length === processedRows.length;
+    // Compared as sets, not by length: selection survives filtering, so a stale id outside
+    // processedRows could make the counts agree while no visible row is actually selected.
+    const allSelected = useMemo(() => {
+        if (processedRows.length === 0) return false;
+        const selected = new Set(selectedIds);
+        return processedRows.every(row => selected.has(getRowId(row)));
+    }, [processedRows, selectedIds, getRowId]);
 
     const [prevSelectionMode, setPrevSelectionMode] = useState(selectionMode);
     if (selectionMode !== prevSelectionMode) {

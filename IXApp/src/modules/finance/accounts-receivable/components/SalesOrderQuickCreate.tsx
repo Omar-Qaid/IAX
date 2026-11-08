@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { FastTabsDrawer } from '@patterns/drawer-fast-tabs';
 import type { FastTabSection, FastTabValue } from '@patterns/dialog-fast-tabs/FastTabsDialog';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import { useCities, useCountryRegions, useStates } from '@shared/hooks/useLogisticsAddress';
 import { customerQuickCreateApi } from '../api/customerQuickCreateApi';
 import { salesOrderListApi, type SalesOrderListRecord } from '../api/salesOrderListApi';
 import { salesOrderLinesApi } from '../api/salesOrderLinesApi';
@@ -27,6 +28,13 @@ const initialValues = (): Record<string, FastTabValue> => ({
   address: '',
   deliveryAddress: '',
   deliveryPostalAddressId: '',
+  addressCountryRegionId: '',
+  addressState: '',
+  addressCity: '',
+  addressDistrict: '',
+  addressStreet: '',
+  addressBuilding: '',
+  addressZipCode: '',
   taxGroupId: '',
   customerReference: '',
   invoiceAccount: '',
@@ -62,7 +70,20 @@ export function SalesOrderQuickCreate({
   });
   const customers = React.useMemo(() => customersQuery.data ?? [], [customersQuery.data]);
   const [selectedAccount, setSelectedAccount] = React.useState('');
-  React.useEffect(() => { if (!open) setSelectedAccount(''); }, [open]);
+  // Country and state are mirrored into component state because the state and city lookups are
+  // keyed by them, and hooks cannot read the form values held inside the fast-tabs drawer.
+  const [addressCountry, setAddressCountry] = React.useState('');
+  const [addressStateId, setAddressStateId] = React.useState('');
+  React.useEffect(() => {
+    if (!open) {
+      setSelectedAccount('');
+      setAddressCountry('');
+      setAddressStateId('');
+    }
+  }, [open]);
+  const countryRegionsQuery = useCountryRegions(open);
+  const statesQuery = useStates(addressCountry || undefined);
+  const citiesQuery = useCities(addressCountry || undefined, addressStateId || undefined);
   const customerDefaultsQuery = useQuery({
     queryKey: ['accounts-receivable', 'sales-order-quick-create', 'customer-defaults', selectedAccount],
     queryFn: ({ signal }) => customerQuickCreateApi.salesOrderDefaults(selectedAccount, signal),
@@ -328,8 +349,76 @@ export function SalesOrderQuickCreate({
           },
         ],
       },
+      {
+        id: 'address',
+        title: t('logistics.address', 'Address'),
+        fields: [
+          {
+            name: 'addressCountryRegionId',
+            label: t('logistics.countryRegion'),
+            type: 'select',
+            required: true,
+            width: 140,
+            options: (countryRegionsQuery.data ?? []).map((country) => ({
+              value: country.countryRegionId,
+              label: country.name
+                ? `${country.countryRegionId} - ${country.name}`
+                : country.countryRegionId,
+            })),
+          },
+          {
+            name: 'addressStreet',
+            label: t('logistics.street'),
+            type: 'multiline',
+            rows: 4,
+            width: 190,
+          },
+          {
+            name: 'addressState',
+            label: t('logistics.state'),
+            type: 'select',
+            width: 190,
+            options: (statesQuery.data ?? []).map((state) => ({
+              value: state.stateId,
+              label: `${state.stateId} - ${state.name}`,
+            })),
+          },
+          {
+            name: 'addressBuilding',
+            label: t('logistics.building'),
+            width: 100,
+          },
+          {
+            name: 'addressCity',
+            label: t('logistics.city'),
+            type: 'select',
+            width: 190,
+            options: (citiesQuery.data ?? []).map((city) => ({
+              value: city.cityKey,
+              label: city.name,
+            })),
+          },
+          {
+            // LogisticsPostalAddressController exposes no postal-code lookup, so the options stay
+            // empty until one exists; the control matches the rest of the address block.
+            name: 'addressZipCode',
+            label: t('logistics.zipCode'),
+            type: 'select',
+            width: 140,
+            options: [],
+          },
+          {
+            // No district lookup endpoint exists either; same treatment as the postal code.
+            name: 'addressDistrict',
+            label: t('logistics.district'),
+            type: 'select',
+            width: 190,
+            options: [],
+          },
+        ],
+      },
     ],
-    [customerFor, customers, orderContacts, deliveryLookupsQuery.data, dimensionsQuery.data, primaryAddress, primaryContact, primaryDeliveryAddress, customerAddresses, t, isRtl]
+    [customerFor, customers, orderContacts, deliveryLookupsQuery.data, dimensionsQuery.data, primaryAddress, primaryContact, primaryDeliveryAddress, customerAddresses, countryRegionsQuery.data, statesQuery.data, citiesQuery.data, t, isRtl]
   );
 
   return (

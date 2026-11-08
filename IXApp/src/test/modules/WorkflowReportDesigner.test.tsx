@@ -118,7 +118,9 @@ describe('WorkflowReportDesigner', () => {
     await user.click(screen.getByRole('button', { name: 'Text' }));
 
     expect(screen.getByTestId('template-element-text')).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: 'Text' })).toHaveValue('Text');
+    // A text element's content is edited as separate English/Arabic fields; the English one
+    // holds `value`, which createDesignerElement seeds with 'Text'.
+    expect(screen.getByRole('textbox', { name: 'English text' })).toHaveValue('Text');
   });
 
   it('adds child elements to a selected structured container', async () => {

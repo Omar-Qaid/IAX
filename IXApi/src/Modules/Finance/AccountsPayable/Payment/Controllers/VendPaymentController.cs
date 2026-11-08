@@ -14,15 +14,35 @@ public sealed class VendPaymentController : BaseController<VendTrans, VendPaymen
 {
     private readonly IVendPaymentService _paymentService;
     private readonly IVendPaymentReversalService _reversalService;
+    private readonly IVendPaymentProposalService _proposalService;
 
     public VendPaymentController(
         IVendPaymentService service,
         IVendPaymentReversalService reversalService,
+        IVendPaymentProposalService proposalService,
         ILogger<VendPaymentController>? logger = null)
         : base(service, logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<VendPaymentController>.Instance)
     {
         _paymentService = service;
         _reversalService = reversalService;
+        _proposalService = proposalService;
+    }
+
+    /// <summary>
+    /// Proposes the open vendor invoices to pay. This is a selection to review: it posts nothing
+    /// and moves nothing out of the bank. The proposed lines are paid through the post action.
+    /// </summary>
+    [HttpPost("proposal")]
+    public async Task<IActionResult> Proposal([FromBody] VendPaymentProposalRequestDto? input, CancellationToken ct)
+    {
+        var result = await _proposalService.ProposeAsync(input ?? new VendPaymentProposalRequestDto(), ct);
+        return result.StatusCode switch
+        {
+            200 => Ok(APIResponse<object>.Ok(result.Data!, result.Message ?? string.Empty)),
+            400 => BadRequest(APIResponse<object>.Fail(result.Message!)),
+            404 => NotFound(APIResponse<object>.Fail(result.Message!)),
+            _ => UnprocessableEntity(APIResponse<object>.Fail(result.Message ?? "Vendor payment proposal failed."))
+        };
     }
 
     /// <summary>

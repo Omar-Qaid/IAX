@@ -6,8 +6,12 @@
 - `LookupGridField`: standalone or React Hook Form wrapper with optional `fetchById` resolution and permission metadata.
 - `LookupField`: configurable field/dialog integration for local arrays or paged server data. `searchable` controls the search box, `sideMode="client"` filters supplied `options` in memory, and `sideMode="server"` calls `fetchPage` with debounced `search`, `pageNumber`, `pageSize`, and an abort signal. Enable `lazyLoading` to fetch and append the next server page near the bottom of the list. Its defaults are `displayMode="select"`, `searchable=true`, `sideMode="server"`, and `lazyLoading=true`. Server mode falls back to supplied local `options` when no server data source is configured.
 - `LookupDialog`: full dialog selection view.
-- `LookupFilterPanel`, `LookupSearchBar`, and `LookupValueRenderer`: supporting pieces.
-- `useLookup`: local lookup state helper.
+- `LookupDisplayField`, `DataGridLookupField`, `LookupNavigationLabel` and `lookupValueStyle`:
+  supporting pieces.
+
+`LookupFilterPanel`, `LookupSearchBar`, `LookupValueRenderer` and a `useLookup` hook were listed here
+but existed only as empty files, which have been removed. Searching and filtering live in
+`LookupGrid` and `LookupDialog`.
 
 `FetchPageFn<T>` receives page number, page size, search, and abort signal and returns the lookup page contract defined in `types.ts`. Use a stable, entity-specific query key. Supply `fetchById` when an existing stored ID may not appear in the currently loaded pages.
 

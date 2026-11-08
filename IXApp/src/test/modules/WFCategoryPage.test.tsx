@@ -50,10 +50,11 @@ describe('WFCategoryPage', () => {
 
     expect(await screen.findByText('Procurement')).toBeDefined();
     fireEvent.click(screen.getByRole('button', { name: 'Options' }));
-    expect(screen.getByRole('menuitem', { name: 'Record Info' })).toBeDefined();
-    expect(screen.getByRole('menuitem', { name: 'Record Audit' })).toBeDefined();
+    // Options expands an action-pane ribbon of buttons, not a dropdown of menu items.
+    expect(screen.getByRole('button', { name: 'Record Info' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Record Audit' })).toBeDefined();
 
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Record Info' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Record Info' }));
     expect(screen.getByText('Is System Defined')).toBeDefined();
     expect(screen.getByRole('button', { name: 'Close' })).toBeDefined();
   });

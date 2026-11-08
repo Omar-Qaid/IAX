@@ -134,7 +134,7 @@ export interface LookupGridFieldBaseProps<T extends object> extends Omit<
 export interface LookupFieldProps<TFieldValues extends FieldValues = FieldValues> {
   /** The select lookup's label is rendered by its parent; retain its accessible name. */
   externalLabel?: boolean;
-  name: FieldPath<TFieldValues>;
+  name?: FieldPath<TFieldValues>;
   label: string;
   /** Optional destination for the label's master-record navigation icon. */
   masterRoute?: string;

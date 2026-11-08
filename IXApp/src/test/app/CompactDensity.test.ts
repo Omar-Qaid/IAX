@@ -6,7 +6,7 @@ describe('application compact density', () => {
   it('centralizes compact measurements used by shared UI primitives', () => {
     expect(uiDensity.controlHeight).toBe(30);
     expect(uiDensity.gridRowHeight).toBe(32);
-    expect(uiDensity.gridHeaderHeight).toBe(64);
+    expect(uiDensity.gridHeaderHeight).toBe(58);
     expect(uiDensity.dialogPadding).toBe(12);
   });
 

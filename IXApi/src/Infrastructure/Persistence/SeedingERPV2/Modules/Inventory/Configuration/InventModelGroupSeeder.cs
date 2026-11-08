@@ -18,8 +18,8 @@ public sealed class InventModelGroupSeeder : IDataSeeder
     public async Task SeedAsync(SeedContext c, CancellationToken ct)
     {
 
-        await c.EnsureAsync<InventModelGroup>(x => x.ModelGroupId == "APV2", new() { ModelGroupId = "APV2", Name = "AP example FIFO stocked", InventModel = InventModel.FIFO, StockedProduct = NoYes.Yes, PostOnHandPhysical = NoYes.Yes, PostOnHandFinancial = NoYes.Yes, PostPhysicalPurchase = NoYes.Yes }, ct);
+        await c.EnsureAsync<InventModelGroup>(x => x.ModelGroupId == "APV2", new() { ModelGroupId = "APV2", Name = "AP example weighted average stocked", InventModel = InventModel.WeightedAvg, StockedProduct = NoYes.Yes, PostOnHandPhysical = NoYes.Yes, PostOnHandFinancial = NoYes.Yes, PostPhysicalPurchase = NoYes.Yes }, ct);
         await c.EnsureAsync<InventModelGroup>(x => x.ModelGroupId == "APV2-SVC",
-            new() { ModelGroupId = "APV2-SVC", Name = "AP example nonstocked service", InventModel = InventModel.FIFO, StockedProduct = NoYes.No }, ct);
+            new() { ModelGroupId = "APV2-SVC", Name = "AP example nonstocked service", InventModel = InventModel.WeightedAvg, StockedProduct = NoYes.No }, ct);
     }
 }

@@ -23,6 +23,7 @@ import { PageContainer } from '@shared/components/page/PageContainer';
 import { PageHeader } from '@shared/components/page/PageHeader';
 import { ActionPane } from '@shared/components/action-pane/ActionPane';
 import { ActionPaneButton } from '@shared/components/action-pane/ActionPaneButton';
+import { ActionPaneRibbonTrigger } from '@shared/components/action-pane/ActionPaneRibbonTrigger';
 import { ActionPaneGroup } from '@shared/components/action-pane/ActionPaneGroup';
 import { ActionPaneMenu } from '@shared/components/action-pane/ActionPaneMenu';
 import { OptionsMenu } from '@shared/components/action-pane/OptionsMenu';
@@ -357,18 +358,29 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
         )}
         {(standaloneCommands.length > 0 || commandMenus.length > 0) && (
           <ActionPaneGroup>
-            {standaloneCommands.map((command) => (
-              <ActionPaneButton
-                key={command.id}
-                label={command.label}
-                disabled={
-                  state.editing ||
-                  command.disabled ||
-                  (command.requiresSelection && !state.selected)
-                }
-                onClick={() => command.onClick?.(state.selected)}
-              />
-            ))}
+            {standaloneCommands.map((command) => {
+              const unavailable =
+                state.editing ||
+                command.disabled ||
+                (command.requiresSelection && !state.selected);
+              return command.groups?.length ? (
+                <ActionPaneRibbonTrigger
+                  key={command.id}
+                  id={command.id}
+                  label={command.label}
+                  groups={command.groups}
+                  disabled={unavailable}
+                  persistenceKey={command.ribbonPersistenceKey}
+                />
+              ) : (
+                <ActionPaneButton
+                  key={command.id}
+                  label={command.label}
+                  disabled={unavailable}
+                  onClick={() => command.onClick?.(state.selected)}
+                />
+              );
+            })}
             {commandMenus.map((menuLabel) => (
               <ActionPaneMenu
                 key={menuLabel}

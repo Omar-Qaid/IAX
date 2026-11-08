@@ -1,6 +1,6 @@
 ﻿# Finance — gap analysis index
 
-**Last updated:** 2026-11-04
+**Last updated:** 2026-11-08
 
 Each finance module carries its own `GAPS.md`, recording where it stands against **basic (core)
 D365 F&O** functionality. Advanced and optional features are deliberately excluded and are not
@@ -9,7 +9,7 @@ counted as gaps.
 | Module | File | Highest-priority open gap |
 | --- | --- | --- |
 | General ledger | [GeneralLedger/GAPS.md](GeneralLedger/GAPS.md) | Three failing journal posting tests (reversal, voucher allocation); journal tax calculation |
-| Accounts payable | [AccountsPayable/GAPS.md](AccountsPayable/GAPS.md) | No purchase **discount** agreements (prices now resolve); payment proposal; net unit price / charges matching |
+| Accounts payable | [AccountsPayable/GAPS.md](AccountsPayable/GAPS.md) | No purchase **discount** agreements; Registration / Invoice pool (optional per spec); net unit price & charges matching |
 | Accounts receivable | [AccountsReceivable/GAPS.md](AccountsReceivable/GAPS.md) | Return dispositions; settlement priority and cash discount on the settlement path |
 | Inventory | [Inventory/GAPS.md](Inventory/GAPS.md) | SQL Server verification; four unsupported inventory models |
 | Foundation | [Foundation/GAPS.md](Foundation/GAPS.md) | Tax origins other than percentage-of-net are refused, not calculated; payment schedules |

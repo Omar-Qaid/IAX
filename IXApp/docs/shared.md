@@ -7,7 +7,6 @@ The shared layer contains domain-agnostic UI, hooks, services, validation helper
 | Family | Guide | Notable exports |
 | --- | --- | --- |
 | Action pane | [action-pane.md](shared/action-pane.md) | `ActionPane`, groups, buttons, menus, enterprise CRUD/utilities |
-| Common | this page | `AppIconButton`, `AppMenu`, `AppTooltip`, `AsyncBoundary`, `ResponsiveStack`, `VisuallyHidden` |
 | Data grid | [data-grid.md](shared/data-grid.md) | `DataGrid`/`AppDataGrid`, toolbar, mobile body, sidebar, grid hooks |
 | Dialogs | [dialogs.md](shared/dialogs.md) | base, confirmation, delete, form, process, history, lookup dialogs |
 | FastTabs | [fast-tabs.md](shared/fast-tabs.md) | `FastTabs`, `FastTab`, header and summary |

@@ -92,9 +92,12 @@ public sealed class SalesOrderLineService : ISalesOrderLineService
                     dimension.DataAreaId == order.DataAreaId
                     && dimension.RecId == input.LedgerDimension.Value, cancellationToken))
                 return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, "The selected main account was not found.");
-            var lastLine = await _dbContext.Context.Set<SalesLine>()
+            // LineNum is decimal, which SQLite cannot MAX, so the numbers are maxed client-side -
+            // the same shape PurchOrderService.AddLineCoreAsync uses for PurchLine.LineNumber.
+            var lineNumbers = await _dbContext.Context.Set<SalesLine>()
                 .Where(row => row.SalesId == order.SalesId && row.DataAreaId == order.DataAreaId)
-                .MaxAsync(row => (decimal?)row.LineNum, cancellationToken) ?? 0;
+                .Select(row => row.LineNum).ToListAsync(cancellationToken);
+            var lastLine = lineNumbers.Count == 0 ? 0m : lineNumbers.Max();
             var line = new SalesLine {
                 SalesId = order.SalesId, LineNum = lastLine + 1, ItemId = item.ItemId,
                 Name = string.IsNullOrWhiteSpace(input.Description) ? item.NameAlias : input.Description.Trim(),

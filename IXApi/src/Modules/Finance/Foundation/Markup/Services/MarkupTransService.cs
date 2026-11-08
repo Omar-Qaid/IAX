@@ -47,8 +47,9 @@ public sealed class MarkupTransService(
                 && (x.TransTableId == transTableId
                     || (transTableId == FinanceTableNumbers.SalesTable && x.TransTableId == FinanceTableNumbers.Unspecified))
                 && x.DataAreaId == dataAreaId)
-            .OrderBy(x => x.LineNum)
             .ToListAsync(cancellationToken);
+        // LineNum is decimal, which SQLite cannot ORDER BY, so it is ordered client-side.
+        entities = entities.OrderBy(x => x.LineNum).ToList();
         var records = entities.Adapt<List<MarkupTransDto>>();
 
         return new(records);

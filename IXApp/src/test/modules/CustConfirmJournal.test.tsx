@@ -8,6 +8,8 @@ const journalState = vi.hoisted(() => ({ empty: false }));
 vi.mock('react-router-dom', () => ({
   useParams: () => ({ salesOrderId: '42' }),
   useNavigate: () => vi.fn(),
+  // SimpleListPage reads pathname as the fallback grid filter-row storage key.
+  useLocation: () => ({ pathname: '/accounts-receivable/sales-orders/42/confirmations', search: '', hash: '', state: null, key: 'test' }),
 }));
 vi.mock('@core/permissions/usePermission', () => ({ usePermission: () => ({ hasPermission: true }) }));
 vi.mock('@shared/components/documents', () => ({ RecordAttachmentsButton: () => null, recordTableId: () => 1 }));
