@@ -476,6 +476,101 @@ public sealed class InventoryCycleTests
         Assert.Equal(taxable ? 5750m : 5000m, ledger.Where(x => x.AccountingCurrencyAmount > 0).Sum(x => x.AccountingCurrencyAmount));
     }
 
+    // ---- Two-step receipt: arrival registration then product receipt (Logic_Readonly.md §10) ----
+
+    /// <summary>
+    /// The rule §10 states outright: a registration and the product receipt that follows it are
+    /// <b>not</b> two receipts of the same goods. Register 60 of 100, then receive the whole 100;
+    /// physical on-hand ends at 100, not 160, and the registered bucket is emptied again.
+    /// </summary>
+    [Fact]
+    public async Task Registering_an_arrival_then_receiving_does_not_count_the_quantity_twice()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        await db.SaveChangesAsync();
+        var (orders, _, receipts, _) = PurchaseServices(db);
+        var registrations = new PurchRegistrationService(new TestUnitOfWork(db), new TestCompany());
+
+        Assert.Equal(200, (await orders.CreateAsync(new PurchOrderCreateDto("V-0001", null, "SAR", new DateTime(2026, 10, 28), "S01", "WH-01", null), default)).StatusCode);
+        var po = await db.Set<PurchTable>().SingleAsync();
+        Assert.Equal(200, (await orders.AddLineAsync(po.RecId, new PurchLineInputDto("ITEM-001", 100, "PCS", 50, 1, null, null, null, null), default)).StatusCode);
+        var line = await db.Set<PurchLine>().SingleAsync();
+        var ledgerBefore = (await db.Set<GeneralJournalAccountEntry>().ToListAsync()).Count;
+
+        var result = await registrations.RegisterAsync(po.RecId,
+            new PurchRegistrationPostDto(new DateTime(2026, 10, 28), [new(line.RecId, 60)]), default);
+
+        Assert.True(result.StatusCode == 200, result.Message);
+        var sum = await db.Set<InventSum>().SingleAsync();
+        // Registered is its own bucket: it leaves ordered and does not become physical on-hand.
+        Assert.Equal(60m, sum.Registered);
+        Assert.Equal(40m, sum.Ordered);
+        Assert.Equal(0m, sum.PhysicalInvent);
+        Assert.Equal(0m, sum.PhysicalValue);
+        // Registration posts nothing and does not consume the line's remainder.
+        Assert.Equal(ledgerBefore, (await db.Set<GeneralJournalAccountEntry>().ToListAsync()).Count);
+        Assert.Empty(await db.Set<VendTrans>().ToListAsync());
+        Assert.Empty(await db.Set<VendPackingSlipJour>().ToListAsync());
+        line = await db.Set<PurchLine>().SingleAsync();
+        Assert.Equal(100m, line.RemainPurchPhysical);
+
+        // The receipt then posts the whole 100 once, consuming the registered 60 first.
+        Assert.Equal(200, (await receipts.PostAsync(po.RecId,
+            new ProductReceiptPostDto("PR-0001", new DateTime(2026, 10, 29), [new(line.RecId, 100)]), default)).StatusCode);
+
+        sum = await db.Set<InventSum>().SingleAsync();
+        Assert.Equal(100m, sum.PhysicalInvent);          // not 160
+        Assert.Equal(0m, sum.Registered);                // the bucket is emptied, not stranded
+        Assert.Equal(0m, sum.Ordered);
+        Assert.Equal(5000m, sum.PhysicalValue);
+        Assert.Equal(0m, (await db.Set<PurchLine>().SingleAsync()).RemainPurchPhysical);
+        // Every ordered or registered row has moved on; none is left open.
+        Assert.DoesNotContain(await db.Set<InventTrans>().ToListAsync(),
+            t => t.StatusReceipt is StatusReceipt.Ordered or StatusReceipt.Registered);
+    }
+
+    /// <summary>
+    /// Registering the same goods twice runs out of ordered supply and is refused, which is what
+    /// stops a registration from inflating on-hand by repetition.
+    /// </summary>
+    [Fact]
+    public async Task Registering_more_than_the_ordered_supply_is_refused()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        await db.SaveChangesAsync();
+        var (orders, _, _, _) = PurchaseServices(db);
+        var registrations = new PurchRegistrationService(new TestUnitOfWork(db), new TestCompany());
+
+        Assert.Equal(200, (await orders.CreateAsync(new PurchOrderCreateDto("V-0001", null, "SAR", new DateTime(2026, 10, 28), "S01", "WH-01", null), default)).StatusCode);
+        var po = await db.Set<PurchTable>().SingleAsync();
+        Assert.Equal(200, (await orders.AddLineAsync(po.RecId, new PurchLineInputDto("ITEM-001", 100, "PCS", 50, 1, null, null, null, null), default)).StatusCode);
+        var line = await db.Set<PurchLine>().SingleAsync();
+
+        Assert.Equal(200, (await registrations.RegisterAsync(po.RecId,
+            new PurchRegistrationPostDto(new DateTime(2026, 10, 28), [new(line.RecId, 100)]), default)).StatusCode);
+        var refused = await registrations.RegisterAsync(po.RecId,
+            new PurchRegistrationPostDto(new DateTime(2026, 10, 28), [new(line.RecId, 100)]), default);
+
+        Assert.Equal(422, refused.StatusCode);
+        Assert.Contains("may already be registered or received", refused.Message);
+        // Rolled back: the first registration stands and nothing is doubled.
+        var sum = await db.Set<InventSum>().SingleAsync();
+        Assert.Equal(100m, sum.Registered);
+        Assert.Equal(0m, sum.Ordered);
+
+        // Over-registering against the line's remainder is refused before inventory is touched.
+        var tooMuch = await registrations.RegisterAsync(po.RecId,
+            new PurchRegistrationPostDto(null, [new(line.RecId, 101)]), default);
+        Assert.Equal(422, tooMuch.StatusCode);
+        Assert.Contains("exceeds the remaining quantity", tooMuch.Message);
+    }
+
     // ---- Purchase order cancellation: only the unreceived remainder goes away ----
 
     /// <summary>

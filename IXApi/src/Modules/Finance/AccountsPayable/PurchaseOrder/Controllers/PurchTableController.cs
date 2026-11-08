@@ -1,4 +1,4 @@
-using IAX.IXApi.Api.Controllers;
+﻿using IAX.IXApi.Api.Controllers;
 using IAX.IXApi.Modules.Identity.Permissions;
 using IAX.IXApi.Shared.Application.Contracts;
 using Microsoft.AspNetCore.Mvc;
@@ -14,6 +14,7 @@ public sealed class PurchTableController : BaseController<PurchTable, PurchTable
     private readonly IPurchOrderService _orders;
     private readonly IPurchConfirmationService _confirmations;
     private readonly IProductReceiptService _receipts;
+    private readonly IPurchRegistrationService _registrations;
     private readonly IVendorInvoiceService _invoices;
 
     public PurchTableController(
@@ -21,12 +22,14 @@ public sealed class PurchTableController : BaseController<PurchTable, PurchTable
         ILogger<PurchTableController> logger,
         IPurchConfirmationService confirmations,
         IProductReceiptService receipts,
+        IPurchRegistrationService registrations,
         IVendorInvoiceService invoices)
         : base(orders, logger)
     {
         _orders = orders;
         _confirmations = confirmations;
         _receipts = receipts;
+        _registrations = registrations;
         _invoices = invoices;
     }
 
@@ -85,6 +88,16 @@ public sealed class PurchTableController : BaseController<PurchTable, PurchTable
     [DomainPermission("AccountsPayable", "PurchaseOrders", "Confirm")]
     public async Task<IActionResult> Confirm(long recId, CancellationToken ct) =>
         Present(await _confirmations.ConfirmAsync(recId, ct));
+
+    /// <summary>
+    /// Registers arrived quantities before the product receipt, the first step of a two-step
+    /// receipt. Nothing is posted to the ledger or the vendor, and the quantity still left to
+    /// receive is unchanged; the product receipt afterwards consumes what was registered.
+    /// </summary>
+    [HttpPost("{recId:long}/registrations")]
+    [DomainPermission("AccountsPayable", "PurchaseOrders", "Post")]
+    public async Task<IActionResult> Register(long recId, [FromBody] PurchRegistrationPostDto input, CancellationToken ct) =>
+        Present(await _registrations.RegisterAsync(recId, input, ct));
 
     [HttpPost("{recId:long}/product-receipts")]
     [DomainPermission("AccountsPayable", "PurchaseOrders", "Post")]

@@ -105,6 +105,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<AccountsPayable.IPurchInventorySupplyService, AccountsPayable.PurchInventorySupplyService>();
             services.AddScoped<AccountsPayable.IPurchOrderService, AccountsPayable.PurchOrderService>();
             services.AddScoped<AccountsPayable.IPurchConfirmationService, AccountsPayable.PurchConfirmationService>();
+            services.AddScoped<AccountsPayable.IPurchRegistrationService, AccountsPayable.PurchRegistrationService>();
             services.AddScoped<AccountsPayable.IProductReceiptService, AccountsPayable.ProductReceiptService>();
             services.AddScoped<AccountsPayable.IVendorInvoiceService, AccountsPayable.VendorInvoiceService>();
             services.AddScoped<AccountsPayable.IVendInvoiceInfoService, AccountsPayable.VendInvoiceInfoService>();

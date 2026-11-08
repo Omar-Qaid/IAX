@@ -1,4 +1,4 @@
-using IAX.IXApi.Modules.Finance.Inventory;
+﻿using IAX.IXApi.Modules.Finance.Inventory;
 using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Infrastructure.Persistence.Services;
@@ -114,20 +114,29 @@ public sealed class ProductReceiptService : BaseService<VendPackingSlipJour>, IP
                     && x.InventTransId == line.InventTransId && x.ReferenceId == order.PurchId
                     && x.ReferenceCategory == InventRefType.PurchaseOrder, ct);
                 if (origin == null) return await Fail(422, $"Inventory origin is missing for item {line.ItemId}.", ct);
+                // Registered supply counts too, and is consumed first: a two-step receipt
+                // registers the arrival and then posts this receipt against the same quantity, so
+                // taking the registered rows before the merely ordered ones is what keeps
+                // Logic_Readonly.md §10's rule that the two are not two receipts of the same goods.
                 var ordered = (await Db.Set<InventTrans>().Where(x => x.DataAreaId == area && x.InventTransOrigin == origin.RecId
-                    && x.StatusReceipt == StatusReceipt.Ordered).ToListAsync(ct)).OrderBy(x => x.RecId).ToList();
+                    && (x.StatusReceipt == StatusReceipt.Ordered || x.StatusReceipt == StatusReceipt.Registered)).ToListAsync(ct))
+                    .OrderByDescending(x => x.StatusReceipt == StatusReceipt.Registered).ThenBy(x => x.RecId).ToList();
                 if (ordered.Sum(x => x.Qty) < inventQty)
                     return await Fail(422, $"Ordered inventory does not cover the receipt for item {line.ItemId}.", ct);
 
                 var left = inventQty;
                 var allocatedCost = 0m;
                 var allocatedQty = 0m;
+                var fromRegistered = 0m;
                 foreach (var source in ordered)
                 {
                     if (left <= 0) break;
                     var take = Math.Min(source.Qty, left);
+                    // The remainder keeps the status it had, so splitting a registered row does not
+                    // quietly push the rest back to ordered.
                     if (take < source.Qty)
-                        Db.Set<InventTrans>().Add(CopyOrdered(source, source.Qty - take));
+                        Db.Set<InventTrans>().Add(CopyOrdered(source, source.Qty - take, source.StatusReceipt));
+                    if (source.StatusReceipt == StatusReceipt.Registered) fromRegistered += take;
                     source.Qty = take;
                     source.StatusReceipt = StatusReceipt.Received;
                     source.DatePhysical = date;
@@ -148,7 +157,10 @@ public sealed class ProductReceiptService : BaseService<VendPackingSlipJour>, IP
                 var summary = await Db.Set<InventSum>().SingleOrDefaultAsync(x => x.DataAreaId == area
                     && x.ItemId == line.ItemId && x.InventDimId == line.InventDimId, ct);
                 if (summary == null) return await Fail(422, $"Inventory summary is missing for item {line.ItemId}.", ct);
-                summary.Ordered -= inventQty;
+                // Whatever was registered leaves the registered bucket, the rest leaves ordered;
+                // with no registration both reduce to the previous behavior.
+                summary.Ordered -= inventQty - fromRegistered;
+                summary.Registered -= fromRegistered;
                 summary.Received += inventQty;
                 summary.PhysicalInvent += inventQty;
                 summary.PhysicalValue += cost;
@@ -196,10 +208,16 @@ public sealed class ProductReceiptService : BaseService<VendPackingSlipJour>, IP
         }
     }
 
-    private static InventTrans CopyOrdered(InventTrans source, decimal qty) => new()
+    /// <summary>
+    /// The part of a source transaction this receipt is not taking. <paramref name="status"/> is the
+    /// source's own receipt status so a split leaves the remainder where it was, whether that is
+    /// ordered or already registered.
+    /// </summary>
+    private static InventTrans CopyOrdered(InventTrans source, decimal qty,
+        StatusReceipt status = StatusReceipt.Ordered) => new()
     {
         DataAreaId = source.DataAreaId, InventTransOrigin = source.InventTransOrigin, ItemId = source.ItemId,
-        InventDimId = source.InventDimId, Qty = qty, StatusReceipt = StatusReceipt.Ordered, StatusIssue = StatusIssue.None,
+        InventDimId = source.InventDimId, Qty = qty, StatusReceipt = status, StatusIssue = StatusIssue.None,
         ValueOpen = InventTransOpen.Yes, CurrencyCode = source.CurrencyCode, DateExpected = source.DateExpected
     };
 
