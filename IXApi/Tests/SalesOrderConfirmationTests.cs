@@ -479,6 +479,74 @@ public sealed class SalesOrderConfirmationTests
         }
     }
 
+    [Theory]
+    [InlineData(3, 460, true)]
+    [InlineData(3, 459, false)]
+    [InlineData(4, 820, true)]
+    [InlineData(4, 819, false)]
+    [InlineData(3, 1180, true, true)]
+    [InlineData(4, 2259, false, true)]
+    [InlineData(3, 510, true, false, true)]
+    [InlineData(4, 869, false, false, true)]
+    public async Task Credit_check_counts_only_the_quantity_included_by_the_company_policy(
+        int mode, int limit, bool allowed, bool foreignCurrency = false, bool withCharges = false)
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var customer = await fixture.Db.Set<CustTable>().SingleAsync();
+        customer.CreditMax = limit;
+        var line = await fixture.Db.Set<SalesLine>().SingleAsync();
+        line.StockedProduct = NoYes.Yes;
+        // Of ten units, two are invoiced, four delivered but unbilled, and four undelivered.
+        line.RemainSalesFinancial = 8;
+        line.RemainSalesPhysical = 4;
+        fixture.Db.Add(new Ledger { DataAreaId = "dat", AccountingCurrency = "SAR", DefaultExchangeRateType = 1 });
+        if (foreignCurrency)
+        {
+            (await fixture.Db.Set<SalesTable>().SingleAsync()).CurrencyCode = "USD";
+            line.CurrencyCode = "USD";
+            fixture.Db.Add(new ExchangeRateType { RecId = 1, DataAreaId = "dat", IsActive = true });
+            fixture.Db.Add(new ExchangeRateCurrencyPair
+            {
+                RecId = 1, DataAreaId = "dat", IsActive = true, ExchangeRateType = 1,
+                FromCurrencyCode = "USD", ToCurrencyCode = "SAR"
+            });
+            fixture.Db.Add(new ExchangeRate
+            {
+                DataAreaId = "dat", IsActive = true, ExchangeRateCurrencyPair = 1,
+                ExchangeRateValue = 3m, ValidFrom = new DateTime(2026, 1, 1)
+            });
+        }
+        fixture.Db.Add(new CustParameters { DataAreaId = "dat", CreditLimitCheck = mode });
+        fixture.Db.Add(new CustTransOpen { DataAreaId = "dat", AccountNum = "C1", AmountMst = 100 });
+        if (withCharges)
+        {
+            fixture.Db.AddRange(
+                new MarkupTable { DataAreaId = "dat", MarkupCode = "FREIGHT", CustType = 1 },
+                new MarkupTable { DataAreaId = "dat", MarkupCode = "ABSORBED" });
+            fixture.Db.AddRange(
+                new MarkupTrans { DataAreaId = "dat", TransRecId = 1, TransTableId = FinanceTableNumbers.SalesTable,
+                    ModuleType = MarkupModuleType.Sales, MarkupCode = "FREIGHT", MarkupCategory = MarkupCategory.Fixed, Value = 50 },
+                new MarkupTrans { DataAreaId = "dat", TransRecId = 1, TransTableId = FinanceTableNumbers.SalesTable,
+                    ModuleType = MarkupModuleType.Sales, MarkupCode = "FREIGHT", MarkupCategory = MarkupCategory.Fixed, Value = 75, Posted = 75 },
+                new MarkupTrans { DataAreaId = "dat", TransRecId = 1, TransTableId = FinanceTableNumbers.SalesTable,
+                    ModuleType = MarkupModuleType.Sales, MarkupCode = "ABSORBED", MarkupCategory = MarkupCategory.Fixed, Value = 100 });
+        }
+        await fixture.Db.SaveChangesAsync();
+
+        var result = await fixture.Controller.Post(1, new(), default);
+        if (allowed)
+        {
+            Assert.IsType<OkObjectResult>(result);
+            Assert.Single(await fixture.Db.Set<CustConfirmJour>().ToListAsync());
+        }
+        else
+        {
+            var denied = Assert.IsType<UnprocessableEntityObjectResult>(result);
+            Assert.Contains("exceeds", Assert.IsType<APIResponse<object>>(denied.Value).Message);
+            Assert.Empty(await fixture.Db.Set<CustConfirmJour>().ToListAsync());
+        }
+    }
+
     [Fact]
     public async Task Pro_forma_preview_calculates_document_without_posting()
     {
@@ -729,7 +797,8 @@ public sealed class SalesOrderConfirmationTests
         {
             var included = new HashSet<Type>
             {
-                typeof(SalesTable), typeof(SalesLine), typeof(CustTable), typeof(CustParameters), typeof(CustTransOpen),
+                typeof(SalesTable), typeof(SalesLine), typeof(CustTable), typeof(CustParameters), typeof(CustTransOpen), typeof(Ledger),
+                typeof(ExchangeRate), typeof(ExchangeRateCurrencyPair), typeof(ExchangeRateType), typeof(Currency), typeof(MarkupTable),
                 typeof(DirPartyTable), typeof(LogisticsPostalAddress),
                 typeof(CustConfirmJour), typeof(CustConfirmTrans), typeof(InventTrans),
                 typeof(InventDim),
@@ -745,6 +814,12 @@ public sealed class SalesOrderConfirmationTests
             Configure<SalesLine>(builder);
             Configure<CustTable>(builder);
             Configure<CustParameters>(builder);
+            Configure<Ledger>(builder);
+            Configure<ExchangeRate>(builder);
+            Configure<ExchangeRateCurrencyPair>(builder);
+            Configure<ExchangeRateType>(builder);
+            Configure<Currency>(builder);
+            Configure<MarkupTable>(builder);
             Configure<CustTransOpen>(builder);
             Configure<DirPartyTable>(builder);
             Configure<LogisticsPostalAddress>(builder);

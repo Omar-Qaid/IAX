@@ -15,6 +15,8 @@ using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Inventory;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -42,6 +44,19 @@ public sealed partial class AccountsReceivableCycleStageTests
         try
         {
             await db.Database.EnsureCreatedAsync();
+            if (corrections)
+            {
+                // Exercise the upgrade from a schema that already has the invoice table.
+                var migrations = db.GetService<IMigrationsAssembly>();
+                const string migrationId = "20261108025900_AddCustRelatedInvoice";
+                var migration = migrations.CreateMigration(migrations.Migrations[migrationId], db.Database.ProviderName!);
+                var generator = db.GetService<IMigrationsSqlGenerator>();
+                foreach (var command in generator.Generate(migration.DownOperations))
+                    await db.Database.ExecuteSqlRawAsync(command.CommandText);
+                foreach (var command in generator.Generate(migration.UpOperations))
+                    await db.Database.ExecuteSqlRawAsync(command.CommandText);
+                Assert.Empty(await db.Set<CustRelatedInvoice>().ToListAsync());
+            }
             using var provider = CycleServices(db);
             using var scope = provider.CreateScope();
             var services = scope.ServiceProvider;
@@ -150,11 +165,33 @@ public sealed partial class AccountsReceivableCycleStageTests
                 Assert.Empty(await db.Set<CustTrans>().ToListAsync());
                 Assert.Equal(0m,await LedgerAsync(db,GeneralLedgerSeedExample.SalesRevenue));
             });
-            await Stage(["SO-05"],"Confirm without customer or revenue posting",async () =>
+            await Stage(["MD-03","SO-05"],"Check open order credit exposure and confirm without posting",async () =>
             {
                 var before = await CountsAsync(db);
-                var result = await services.GetRequiredService<ISalesOrderConfirmationService>().PostAsync(orderId,new(Date,true,"OTC-CONF"),default);
+                var customer = await db.Set<CustTable>().SingleAsync(x => x.AccountNum == Customer);
+                var parameters = await db.Set<CustParameters>().SingleOrDefaultAsync(x => x.DataAreaId == customer.DataAreaId);
+                if (parameters == null)
+                {
+                    parameters = new CustParameters { DataAreaId = customer.DataAreaId };
+                    db.Add(parameters);
+                }
+                var originalLimit = customer.CreditMax;
+                var originalMode = parameters.CreditLimitCheck;
+                parameters.CreditLimitCheck = 4;
+                customer.CreditMax = 1379m;
+                await db.SaveChangesAsync();
+                var confirmation = services.GetRequiredService<ISalesOrderConfirmationService>();
+                var rejected = await confirmation.PostAsync(orderId,new(Date,true,"OTC-CONF"),default);
+                Assert.Equal(422,rejected.StatusCode);
+                Assert.Contains("exceeds",rejected.Message);
+                Assert.False(await db.Set<CustConfirmJour>().AnyAsync(x => x.SalesId == salesId));
+                customer.CreditMax = 1380m;
+                await db.SaveChangesAsync();
+                var result = await confirmation.PostAsync(orderId,new(Date,true,"OTC-CONF"),default);
                 Assert.Equal(200,result.StatusCode);
+                customer.CreditMax = originalLimit;
+                parameters.CreditLimitCheck = originalMode;
+                await db.SaveChangesAsync();
                 Assert.Equal(before,await CountsAsync(db));
                 Assert.Equal(100m,(await OnHandAsync(db)).PhysicalInvent);
             });

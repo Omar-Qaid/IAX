@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="7d7a032c-6993-4fcb-a1c0-3604c7a13dc3" name="Omar Almojahid@DESKTOP-3Q67JPL 2026-11-08 06:29:55" runUser="DESKTOP-3Q67JPL\Omar Almojahid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-08T06:29:55.8461513+03:00" queuing="2026-11-08T06:29:55.8461520+03:00" start="2026-11-08T06:29:44.9389815+03:00" finish="2026-11-08T06:31:09.5389809+03:00" />
+  <TestSettings name="default" id="4712a3de-b21d-4bc7-ac20-a3021df1b8e7">
+    <Deployment runDeploymentRoot="Omar_Almojahid_DESKTOP-3Q67JPL_2026-11-08_06_29_55" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="0e5aedb9-d5fb-40b2-9cfd-2826c27b4917" testId="2d4c8a76-3076-6297-9f0c-75fc09f3e649" testName="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_returns_credit_only_and_corrections_SQLServer" computerName="DESKTOP-3Q67JPL" duration="00:00:47.2228698" startTime="2026-11-08T06:29:55.8268412+03:00" endTime="2026-11-08T06:30:43.0337457+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0e5aedb9-d5fb-40b2-9cfd-2826c27b4917" />
+    <UnitTestResult executionId="d1980635-523b-457d-9233-802efa9ea5b5" testId="b1d27f55-1dfb-ed33-a68d-6a87dad544bb" testName="IAX.IXApi.Tests.InventoryCycleTests.Free_text_invoice_posts_services_tax_and_receivable_without_inventory" computerName="DESKTOP-3Q67JPL" duration="00:00:09.3801807" startTime="2026-11-08T06:29:46.4098012+03:00" endTime="2026-11-08T06:29:55.7998082+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d1980635-523b-457d-9233-802efa9ea5b5" />
+    <UnitTestResult executionId="6c14fe9b-dcd7-40cb-a4e8-4b026ae69559" testId="744bdfdc-ffcc-a06a-c671-a0dd9a8852e0" testName="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer" computerName="DESKTOP-3Q67JPL" duration="00:00:26.3407459" startTime="2026-11-08T06:30:43.0366968+03:00" endTime="2026-11-08T06:31:09.3784257+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6c14fe9b-dcd7-40cb-a4e8-4b026ae69559" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IAX.IXApi.Tests.InventoryCycleTests.Free_text_invoice_posts_services_tax_and_receivable_without_inventory" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="b1d27f55-1dfb-ed33-a68d-6a87dad544bb">
+      <Execution id="d1980635-523b-457d-9233-802efa9ea5b5" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.InventoryCycleTests" name="Free_text_invoice_posts_services_tax_and_receivable_without_inventory" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_returns_credit_only_and_corrections_SQLServer" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="2d4c8a76-3076-6297-9f0c-75fc09f3e649">
+      <Execution id="0e5aedb9-d5fb-40b2-9cfd-2826c27b4917" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableCycleStageTests" name="Order_to_cash_attachment_returns_credit_only_and_corrections_SQLServer" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="744bdfdc-ffcc-a06a-c671-a0dd9a8852e0">
+      <Execution id="6c14fe9b-dcd7-40cb-a4e8-4b026ae69559" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableCycleStageTests" name="Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="2d4c8a76-3076-6297-9f0c-75fc09f3e649" executionId="0e5aedb9-d5fb-40b2-9cfd-2826c27b4917" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b1d27f55-1dfb-ed33-a68d-6a87dad544bb" executionId="d1980635-523b-457d-9233-802efa9ea5b5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="744bdfdc-ffcc-a06a-c671-a0dd9a8852e0" executionId="6c14fe9b-dcd7-40cb-a4e8-4b026ae69559" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="3" executed="3" passed="3" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.29]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:00.59]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:00.63]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:01:23.63]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

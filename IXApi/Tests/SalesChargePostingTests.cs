@@ -116,14 +116,17 @@ public class SalesChargePostingTests
         Assert.Equal(0m, (await PostAsync(db)).BilledToCustomer);
     }
 
-    [Fact]
-    public async Task Tax_on_a_billed_charge_is_returned_for_the_invoices_tax_voucher()
+    [Theory]
+    [InlineData(false, 100)]
+    [InlineData(true, 115)]
+    public async Task Tax_on_a_billed_charge_is_returned_for_the_invoices_tax_voucher(bool includesTax, int amount)
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
         await using var db = await NewContextAsync(connection);
         AddCode(db, "ShipCharge", debitType: 1, creditType: 0, creditDimension: 3, taxItemGroup: "SERVICES");
-        AddOrderCharge(db, "ShipCharge", value: 100m);
+        AddOrderCharge(db, "ShipCharge", value: amount);
+        (await db.Set<SalesTable>().SingleAsync()).InclTax = includesTax;
         db.AddRange(
             new TaxGroupData { RecId = 1, DataAreaId = "dat", TaxGroup = "DOM", TaxCode = "VAT15" },
             new TaxOnItem { RecId = 1, DataAreaId = "dat", TaxItemGroup = "SERVICES", TaxCode = "VAT15" },
@@ -135,6 +138,7 @@ public class SalesChargePostingTests
 
         Assert.Equal(100m, result.BilledToCustomer);
         Assert.Equal(15m, result.Tax);
+        Assert.Equal(-100m, Assert.Single(db.Set<GeneralJournalAccountEntry>().Local).TransactionCurrencyAmount);
         var (code, chargeBase, tax, rate, _, _) = Assert.Single(result.TaxByCode);
         Assert.Equal("VAT15", code);
         Assert.Equal(100m, chargeBase);

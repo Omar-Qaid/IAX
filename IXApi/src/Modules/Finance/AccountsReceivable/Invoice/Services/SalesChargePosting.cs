@@ -48,6 +48,27 @@ internal sealed class SalesChargePosting(DbContext db)
     internal sealed record Result(decimal BilledToCustomer, decimal Tax,
         IReadOnlyList<(string Code, decimal Base, decimal Tax, decimal Rate, string Group, string ItemGroup)> TaxByCode);
 
+    public async Task<decimal> UnpostedCustomerTotalAsync(string area, SalesTable order, DateTime date,
+        CancellationToken ct)
+    {
+        var charges = await UnpostedChargesAsync(area, order, ct);
+        if (charges.Count == 0) return 0m;
+
+        var codes = await LoadCodesAsync(area, ct);
+        var support = new SubledgerPostingSupport(db);
+        decimal total = 0m;
+        foreach (var (charge, amount) in charges)
+        {
+            if (amount == 0m) continue;
+            var code = ResolveCode(codes, charge);
+            if (code.CustType != TypeCustomerVendor) continue;
+            total += amount;
+            if (!order.InclTax)
+                total += await ChargeTaxAsync(area, order, code, charge, amount, date, support, [], ct);
+        }
+        return total;
+    }
+
     public async Task<Result> PostAsync(string area, SalesTable order, long entryRecId, string invoiceId,
         DateTime date, SubledgerCurrencyTranslation translation, SubledgerPostingSupport support,
         DimensionAttributeValueCombination customerAccount, CancellationToken ct)
@@ -55,8 +76,7 @@ internal sealed class SalesChargePosting(DbContext db)
         var charges = await UnpostedChargesAsync(area, order, ct);
         if (charges.Count == 0) return new(0m, 0m, []);
 
-        var codes = await db.Set<MarkupTable>().AsNoTracking()
-            .Where(x => x.DataAreaId == area).ToListAsync(ct);
+        var codes = await LoadCodesAsync(area, ct);
         var billed = 0m;
         var totalTax = 0m;
         var taxByCode = new List<(string, decimal, decimal, decimal, string, string)>();
@@ -64,10 +84,7 @@ internal sealed class SalesChargePosting(DbContext db)
         foreach (var (charge, amount) in charges)
         {
             if (amount == 0m) continue;
-            var code = codes.FirstOrDefault(x => x.MarkupCode == charge.MarkupCode)
-                ?? throw new SubledgerPostingException(
-                    $"Charges code '{charge.MarkupCode}' does not exist in this company.");
-            EnsureInScope(code);
+            var code = ResolveCode(codes, charge);
 
             var text = charge.Txt.Length > 0 ? charge.Txt : $"Charge {charge.MarkupCode} on {invoiceId}";
 
@@ -81,18 +98,20 @@ internal sealed class SalesChargePosting(DbContext db)
                     LedgerPostingType.LedgerJournal, amount, text, 0m));
             }
 
-            // The credit side is always a ledger account on a sales charge.
-            var credit = await LedgerSideAsync(area, code, code.VendorLedgerDimension, "credit", support, ct);
-            db.Add(translation.AccountEntry(area, entryRecId, credit,
-                LedgerPostingType.LedgerJournal, -amount, text, 0m));
-
+            var netAmount = amount;
             if (code.CustType == TypeCustomerVendor)
             {
-                billed += amount;
                 var tax = await ChargeTaxAsync(area, order, code, charge, amount, date, support, taxByCode, ct);
+                if (order.InclTax) netAmount -= tax;
+                billed += netAmount;
                 totalTax += tax;
                 charge.TaxAmount = tax;
             }
+
+            // Credit charge revenue net of tax because the invoice posts tax separately.
+            var credit = await LedgerSideAsync(area, code, code.VendorLedgerDimension, "credit", support, ct);
+            db.Add(translation.AccountEntry(area, entryRecId, credit,
+                LedgerPostingType.LedgerJournal, -netAmount, text, 0m));
 
             charge.Posted = amount;
             charge.Voucher = invoiceId;
@@ -100,6 +119,18 @@ internal sealed class SalesChargePosting(DbContext db)
             charge.DocumentStatus = DocumentStatus.Invoice;
         }
         return new(billed, totalTax, taxByCode);
+    }
+
+    private Task<List<MarkupTable>> LoadCodesAsync(string area, CancellationToken ct) =>
+        db.Set<MarkupTable>().AsNoTracking().Where(x => x.DataAreaId == area).ToListAsync(ct);
+
+    private static MarkupTable ResolveCode(List<MarkupTable> codes, MarkupTrans charge)
+    {
+        var code = codes.FirstOrDefault(x => x.MarkupCode == charge.MarkupCode)
+            ?? throw new SubledgerPostingException(
+                $"Charges code '{charge.MarkupCode}' does not exist in this company.");
+        EnsureInScope(code);
+        return code;
     }
 
     /// <summary>
@@ -188,8 +219,9 @@ internal sealed class SalesChargePosting(DbContext db)
         var tax = order.InclTax
             ? decimal.Round(amount * rate / (100m + rate), 2, MidpointRounding.AwayFromZero)
             : decimal.Round(amount * rate / 100m, 2, MidpointRounding.AwayFromZero);
+        var taxBase = order.InclTax ? amount - tax : amount;
         foreach (var (taxCode, codeTax) in SubledgerPostingSupport.AllocateTax(codes, tax))
-            taxByCode.Add((taxCode, amount, codeTax, codes.Single(x => x.Code == taxCode).Rate, taxGroup, itemGroup));
+            taxByCode.Add((taxCode, taxBase, codeTax, codes.Single(x => x.Code == taxCode).Rate, taxGroup, itemGroup));
         return tax;
     }
 }

@@ -4911,6 +4911,39 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("CustInvoiceLine", (string)null);
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.Invoice.CustRelatedInvoice", b =>
+                {
+                    b.Property<long>("RecId").ValueGeneratedOnAdd().HasColumnType("bigint").HasColumnName("RECID");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+                    b.Property<DateTime?>("CreatedAt").HasColumnType("datetime2");
+                    b.Property<string>("CreatedBy").HasColumnType("nvarchar(max)");
+                    b.Property<long?>("CustInvoice").HasColumnType("bigint");
+                    b.Property<string>("DataAreaId").IsRequired().HasMaxLength(10).HasColumnType("nvarchar(10)");
+                    b.Property<int?>("InvoiceAssociationType").HasColumnType("int");
+                    b.Property<bool>("IsActive").HasColumnType("bit");
+                    b.Property<bool>("IsDeleted").HasColumnType("bit");
+                    b.Property<DateTime?>("LastModifiedAt").HasColumnType("datetime2");
+                    b.Property<string>("LastModifiedBy").HasColumnType("nvarchar(max)");
+                    b.Property<long?>("OriginalCustInvoice").HasColumnType("bigint");
+                    b.Property<string>("OwnerAccountId").HasColumnType("nvarchar(max)");
+                    b.Property<long?>("ParentCustInvoice").HasColumnType("bigint");
+                    b.Property<int>("RecVersion").HasColumnType("int");
+                    b.Property<byte[]>("RowVersion").IsConcurrencyToken().IsRequired().ValueGeneratedOnAddOrUpdate().HasColumnType("rowversion");
+                    b.HasKey("RecId");
+                    b.HasIndex("CustInvoice");
+                    b.HasIndex("OriginalCustInvoice");
+                    b.HasIndex("ParentCustInvoice");
+                    b.HasIndex("DataAreaId", "CustInvoice");
+                    b.HasIndex("DataAreaId", "ParentCustInvoice", "InvoiceAssociationType");
+                    b.ToTable("CustRelatedInvoice");
+                    b.HasOne("IAX.IXApi.Modules.Finance.AccountsReceivable.CustInvoiceTable", null)
+                        .WithMany().HasForeignKey("CustInvoice").OnDelete(DeleteBehavior.Restrict);
+                    b.HasOne("IAX.IXApi.Modules.Finance.AccountsReceivable.CustInvoiceTable", null)
+                        .WithMany().HasForeignKey("OriginalCustInvoice").OnDelete(DeleteBehavior.Restrict);
+                    b.HasOne("IAX.IXApi.Modules.Finance.AccountsReceivable.CustInvoiceTable", null)
+                        .WithMany().HasForeignKey("ParentCustInvoice").OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CustInvoiceTable", b =>
                 {
                     b.Property<long>("RecId")

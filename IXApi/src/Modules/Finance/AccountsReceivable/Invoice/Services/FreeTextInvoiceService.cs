@@ -266,186 +266,7 @@ public sealed class FreeTextInvoiceService(
             }
             if (lines.Count == 0) return await FailAsync(422, "At least one free text invoice line is required.", ct);
 
-            var customer = await Db.Set<CustTable>().AsNoTracking()
-                .FirstOrDefaultAsync(x => x.DataAreaId == area && x.AccountNum == header.InvoiceAccount, ct);
-            if (customer == null) return await FailAsync(422, "The invoice customer was not found.", ct);
-            if (customer.Blocked is CustVendorBlocked.All or CustVendorBlocked.Invoicing)
-                return await FailAsync(422, "The invoice customer is blocked for invoicing.", ct);
-            var ledger = await support.LoadLedgerContextAsync(area, header.InvoiceDate.Date,
-                LedgerPostingModule.Customer, currentUser.GetCurrentUserId(), ct);
-            if (string.IsNullOrWhiteSpace(header.CurrencyCode))
-                return await FailAsync(422, "The free text invoice has no currency.", ct);
-            // Every line of a free text invoice is in the invoice currency - there is no inventory
-            // cost on this document - so the whole voucher translates at the invoice date's rate.
-            SubledgerCurrencyTranslation translation;
-            try
-            {
-                translation = await SubledgerCurrencyTranslation.LoadAsync(Db, area, ledger.Ledger,
-                    header.CurrencyCode, header.InvoiceDate.Date, ct);
-            }
-            catch (SubledgerPostingException ex) { return await FailAsync(422, ex.Message, ct); }
-
-            var customerAccount = await support.ResolveCustomerSummaryAsync(area, header.PostingProfile, customer, ct);
-            var invoiceId = (await numbers.NextAsync("CustInvoiceJour", area, ct)).Code;
-            var entry = support.NewEntry(area, invoiceId, invoiceId, header.InvoiceDate.Date, ledger);
-            Db.Add(entry);
-            var journal = new CustInvoiceJour
-            {
-                DataAreaId = area,
-                InvoiceId = invoiceId,
-                InvoiceDate = header.InvoiceDate.Date,
-                DocumentDate = header.DocumentDate.Date,
-                OrderAccount = header.OrderAccount,
-                InvoiceAccount = header.InvoiceAccount,
-                CustGroup = header.CustGroup,
-                InvoicingName = header.Name,
-                CurrencyCode = header.CurrencyCode,
-                LedgerVoucher = invoiceId,
-                Payment = header.Payment,
-                DueDate = header.DueDate,
-                DefaultDimension = header.DefaultDimension,
-                PostingProfile = header.PostingProfile,
-                TaxGroup = header.TaxGroup,
-                DocumentStatus = DocumentStatus.FreeTextInvoice,
-                PostedState = NoYes.Yes,
-                Updated = NoYes.Yes
-            };
-            Db.Set<CustInvoiceJour>().Add(journal);
-            await unitOfWork.CompleteAsync(ct);
-
-            decimal netTotal = 0m;
-            decimal taxTotal = 0m;
-            decimal signedVoucherTotal = 0m;
-            var taxByCode = new Dictionary<string, (decimal Base, decimal Tax, decimal Rate, string Group, string ItemGroup)>();
-            foreach (var line in lines)
-            {
-                var revenueAccount = await support.LoadDimensionAsync(area, line.LedgerDimension, "free text invoice line", ct);
-                var amount = decimal.Round(line.Quantity * line.UnitPrice, 2, MidpointRounding.AwayFromZero);
-                var codes = await support.ApplicableTaxCodesAsync(area, line.TaxGroup, line.TaxItemGroup, header.InvoiceDate.Date, ct);
-                var lineTax = decimal.Round(amount * codes.Sum(x => x.Rate) / 100m, 2, MidpointRounding.AwayFromZero);
-                line.AmountCur = amount;
-                line.TaxAmount = lineTax;
-                Db.Add(translation.AccountEntry(area, entry.RecId, revenueAccount,
-                    LedgerPostingType.FreeTextInvoice, -amount, line.Description, 0m));
-                signedVoucherTotal -= amount;
-                foreach (var (code, codeTax) in SubledgerPostingSupport.AllocateTax(codes, lineTax))
-                {
-                    var current = taxByCode.GetValueOrDefault(code);
-                    taxByCode[code] = (current.Base + amount, current.Tax + codeTax,
-                        codes.Single(x => x.Code == code).Rate, line.TaxGroup, line.TaxItemGroup);
-                }
-                Db.Set<CustInvoiceTrans>().Add(new CustInvoiceTrans
-                {
-                    DataAreaId = area,
-                    ParentRecId = journal.RecId,
-                    CustInvoiceLineIdRef = line.RecId,
-                    InvoiceId = invoiceId,
-                    InvoiceDate = header.InvoiceDate.Date,
-                    LineNum = line.LineNum,
-                    LineHeader = line.Description,
-                    Name = line.Description,
-                    Qty = line.Quantity,
-                    SalesPrice = line.UnitPrice,
-                    PriceUnit = 1m,
-                    LineAmount = amount,
-                    LineAmountMst = translation.ToAccounting(amount),
-                    TaxAmount = lineTax,
-                    TaxAmountMst = translation.ToAccounting(lineTax),
-                    LineAmountTax = amount + lineTax,
-                    LineAmountTaxMst = translation.ToAccounting(amount + lineTax),
-                    LedgerDimension = line.LedgerDimension,
-                    DefaultDimension = line.DefaultDimension,
-                    TaxGroup = line.TaxGroup,
-                    TaxItemGroup = line.TaxItemGroup,
-                    CurrencyCode = header.CurrencyCode
-                });
-                netTotal += amount;
-                taxTotal += lineTax;
-            }
-
-            foreach (var (code, value) in taxByCode)
-            {
-                // A zero-rated code posts no ledger line and resolves no payable account; its base
-                // is still recorded so the turnover can be reported under the code.
-                if (value.Tax != 0m)
-                {
-                    var payable = await support.ResolveTaxPayableAsync(area, code, ct);
-                    Db.Add(translation.AccountEntry(area, entry.RecId, payable, LedgerPostingType.Tax,
-                        -value.Tax, $"Sales tax {code} on {invoiceId}", 0m));
-                }
-                Db.Set<TaxTrans>().Add(TaxTransaction(area, header.InvoiceDate.Date, invoiceId, code,
-                    value.Group, value.ItemGroup, header.CurrencyCode, -value.Base, -value.Tax,
-                    translation.ToAccounting(-value.Base), translation.ToAccounting(-value.Tax),
-                    translation.ToReporting(-value.Base), translation.ToReporting(-value.Tax), value.Rate));
-                signedVoucherTotal -= value.Tax;
-            }
-
-            var total = netTotal + taxTotal;
-            // Derived from the lines already translated, so the accounting currency balances even
-            // when each line rounded independently.
-            var customerEntry = translation.BalancingEntry(area, entry.RecId, customerAccount,
-                LedgerPostingType.CustBalance, total, $"Free text invoice {invoiceId}", 0m);
-            Db.Add(customerEntry);
-            var totalAccounting = customerEntry.AccountingCurrencyAmount;
-            var totalReporting = customerEntry.ReportingCurrencyAmount;
-            signedVoucherTotal += total;
-            if (signedVoucherTotal != 0m)
-                throw new SubledgerPostingException("The free text invoice voucher is not balanced.");
-            Db.Add(new SubledgerVoucherGeneralJournalEntry
-            {
-                DataAreaId = area,
-                GeneralJournalEntry = entry.RecId,
-                Voucher = invoiceId,
-                VoucherDataAreaId = area,
-                AccountingDate = header.InvoiceDate.Date
-            });
-
-            var custTrans = new CustTrans
-            {
-                DataAreaId = area,
-                AccountNum = header.InvoiceAccount,
-                OrderAccount = header.OrderAccount,
-                TransDate = header.InvoiceDate.Date,
-                Voucher = invoiceId,
-                Invoice = invoiceId,
-                DocumentNum = invoiceId,
-                DocumentDate = header.DocumentDate.Date,
-                Txt = header.Name,
-                TransType = LedgerTransType.Sales,
-                CurrencyCode = header.CurrencyCode,
-                AmountCur = total,
-                AmountMst = totalAccounting,
-                ReportingCurrencyAmount = totalReporting,
-                DueDate = header.DueDate,
-                PaymTermId = header.Payment,
-                PaymMode = header.PaymMode,
-                PostingProfile = header.PostingProfile,
-                DefaultDimension = header.DefaultDimension
-            };
-            Db.Set<CustTrans>().Add(custTrans);
-            await unitOfWork.CompleteAsync(ct);
-            Db.Set<CustTransOpen>().Add(new CustTransOpen
-            {
-                DataAreaId = area,
-                AccountNum = header.InvoiceAccount,
-                RefRecId = custTrans.RecId,
-                TransDate = header.InvoiceDate.Date,
-                DueDate = header.DueDate,
-                AmountCur = total,
-                AmountMst = totalAccounting,
-                ReportingCurrencyAmount = totalReporting
-            });
-
-            journal.SalesBalance = netTotal;
-            journal.SalesBalanceMst = translation.ToAccounting(netTotal);
-            journal.SumTax = taxTotal;
-            journal.SumTaxMst = translation.ToAccounting(taxTotal);
-            journal.InvoiceAmount = total;
-            journal.InvoiceAmountMst = totalAccounting;
-            journal.Qty = lines.Sum(x => x.Quantity);
-            header.InvoiceId = invoiceId;
-            header.Posted = NoYes.Yes;
-            await unitOfWork.CompleteAsync(ct);
+            await PostInvoiceAsync(area, header, lines, support, ct);
             var result = Map(header, lines);
             await unitOfWork.CommitTransactionAsync(ct);
             return new(200, result, "Free text invoice posted.");
@@ -460,6 +281,186 @@ public sealed class FreeTextInvoiceService(
             Db.ChangeTracker.Clear();
             throw;
         }
+    }
+
+    private async Task PostInvoiceAsync(string area, CustInvoiceTable header, List<CustInvoiceLine> lines,
+        SubledgerPostingSupport support, CancellationToken ct)
+    {
+        var customer = await Db.Set<CustTable>().AsNoTracking()
+            .FirstOrDefaultAsync(x => x.DataAreaId == area && x.AccountNum == header.InvoiceAccount, ct);
+        if (customer == null) throw new SubledgerPostingException("The invoice customer was not found.");
+        if (customer.Blocked is CustVendorBlocked.All or CustVendorBlocked.Invoicing)
+            throw new SubledgerPostingException("The invoice customer is blocked for invoicing.");
+        var ledger = await support.LoadLedgerContextAsync(area, header.InvoiceDate.Date,
+            LedgerPostingModule.Customer, currentUser.GetCurrentUserId(), ct);
+        if (string.IsNullOrWhiteSpace(header.CurrencyCode))
+            throw new SubledgerPostingException("The free text invoice has no currency.");
+        // Every line of a free text invoice is in the invoice currency - there is no inventory
+        // cost on this document - so the whole voucher translates at the invoice date's rate.
+        var translation = await SubledgerCurrencyTranslation.LoadAsync(Db, area, ledger.Ledger,
+            header.CurrencyCode, header.InvoiceDate.Date, ct);
+
+        var customerAccount = await support.ResolveCustomerSummaryAsync(area, header.PostingProfile, customer, ct);
+        var invoiceId = (await numbers.NextAsync("CustInvoiceJour", area, ct)).Code;
+        var entry = support.NewEntry(area, invoiceId, invoiceId, header.InvoiceDate.Date, ledger);
+        Db.Add(entry);
+        var journal = new CustInvoiceJour
+        {
+            DataAreaId = area,
+            InvoiceId = invoiceId,
+            InvoiceDate = header.InvoiceDate.Date,
+            DocumentDate = header.DocumentDate.Date,
+            OrderAccount = header.OrderAccount,
+            InvoiceAccount = header.InvoiceAccount,
+            CustGroup = header.CustGroup,
+            InvoicingName = header.Name,
+            CurrencyCode = header.CurrencyCode,
+            LedgerVoucher = invoiceId,
+            Payment = header.Payment,
+            DueDate = header.DueDate,
+            DefaultDimension = header.DefaultDimension,
+            PostingProfile = header.PostingProfile,
+            TaxGroup = header.TaxGroup,
+            DocumentStatus = DocumentStatus.FreeTextInvoice,
+            PostedState = NoYes.Yes,
+            Updated = NoYes.Yes
+        };
+        Db.Set<CustInvoiceJour>().Add(journal);
+        await unitOfWork.CompleteAsync(ct);
+
+        decimal netTotal = 0m;
+        decimal taxTotal = 0m;
+        decimal signedVoucherTotal = 0m;
+        var taxByCode = new Dictionary<string, (decimal Base, decimal Tax, decimal Rate, string Group, string ItemGroup)>();
+        foreach (var line in lines)
+        {
+            var revenueAccount = await support.LoadDimensionAsync(area, line.LedgerDimension, "free text invoice line", ct);
+            var amount = decimal.Round(line.Quantity * line.UnitPrice, 2, MidpointRounding.AwayFromZero);
+            var codes = await support.ApplicableTaxCodesAsync(area, line.TaxGroup, line.TaxItemGroup, header.InvoiceDate.Date, ct);
+            var lineTax = decimal.Round(amount * codes.Sum(x => x.Rate) / 100m, 2, MidpointRounding.AwayFromZero);
+            line.AmountCur = amount;
+            line.TaxAmount = lineTax;
+            Db.Add(translation.AccountEntry(area, entry.RecId, revenueAccount,
+                LedgerPostingType.FreeTextInvoice, -amount, line.Description, 0m));
+            signedVoucherTotal -= amount;
+            foreach (var (code, codeTax) in SubledgerPostingSupport.AllocateTax(codes, lineTax))
+            {
+                var current = taxByCode.GetValueOrDefault(code);
+                taxByCode[code] = (current.Base + amount, current.Tax + codeTax,
+                    codes.Single(x => x.Code == code).Rate, line.TaxGroup, line.TaxItemGroup);
+            }
+            Db.Set<CustInvoiceTrans>().Add(new CustInvoiceTrans
+            {
+                DataAreaId = area,
+                ParentRecId = journal.RecId,
+                CustInvoiceLineIdRef = line.RecId,
+                InvoiceId = invoiceId,
+                InvoiceDate = header.InvoiceDate.Date,
+                LineNum = line.LineNum,
+                LineHeader = line.Description,
+                Name = line.Description,
+                Qty = line.Quantity,
+                SalesPrice = line.UnitPrice,
+                PriceUnit = 1m,
+                LineAmount = amount,
+                LineAmountMst = translation.ToAccounting(amount),
+                TaxAmount = lineTax,
+                TaxAmountMst = translation.ToAccounting(lineTax),
+                LineAmountTax = amount + lineTax,
+                LineAmountTaxMst = translation.ToAccounting(amount + lineTax),
+                LedgerDimension = line.LedgerDimension,
+                DefaultDimension = line.DefaultDimension,
+                TaxGroup = line.TaxGroup,
+                TaxItemGroup = line.TaxItemGroup,
+                CurrencyCode = header.CurrencyCode
+            });
+            netTotal += amount;
+            taxTotal += lineTax;
+        }
+
+        foreach (var (code, value) in taxByCode)
+        {
+            // A zero-rated code posts no ledger line and resolves no payable account; its base
+            // is still recorded so the turnover can be reported under the code.
+            if (value.Tax != 0m)
+            {
+                var payable = await support.ResolveTaxPayableAsync(area, code, ct);
+                Db.Add(translation.AccountEntry(area, entry.RecId, payable, LedgerPostingType.Tax,
+                    -value.Tax, $"Sales tax {code} on {invoiceId}", 0m));
+            }
+            Db.Set<TaxTrans>().Add(TaxTransaction(area, header.InvoiceDate.Date, invoiceId, code,
+                value.Group, value.ItemGroup, header.CurrencyCode, -value.Base, -value.Tax,
+                translation.ToAccounting(-value.Base), translation.ToAccounting(-value.Tax),
+                translation.ToReporting(-value.Base), translation.ToReporting(-value.Tax), value.Rate));
+            signedVoucherTotal -= value.Tax;
+        }
+
+        var total = netTotal + taxTotal;
+        // Derived from the lines already translated, so the accounting currency balances even
+        // when each line rounded independently.
+        var customerEntry = translation.BalancingEntry(area, entry.RecId, customerAccount,
+            LedgerPostingType.CustBalance, total, $"Free text invoice {invoiceId}", 0m);
+        Db.Add(customerEntry);
+        var totalAccounting = customerEntry.AccountingCurrencyAmount;
+        var totalReporting = customerEntry.ReportingCurrencyAmount;
+        signedVoucherTotal += total;
+        if (signedVoucherTotal != 0m)
+            throw new SubledgerPostingException("The free text invoice voucher is not balanced.");
+        Db.Add(new SubledgerVoucherGeneralJournalEntry
+        {
+            DataAreaId = area,
+            GeneralJournalEntry = entry.RecId,
+            Voucher = invoiceId,
+            VoucherDataAreaId = area,
+            AccountingDate = header.InvoiceDate.Date
+        });
+
+        var custTrans = new CustTrans
+        {
+            DataAreaId = area,
+            AccountNum = header.InvoiceAccount,
+            OrderAccount = header.OrderAccount,
+            TransDate = header.InvoiceDate.Date,
+            Voucher = invoiceId,
+            Invoice = invoiceId,
+            DocumentNum = invoiceId,
+            DocumentDate = header.DocumentDate.Date,
+            Txt = header.Name,
+            TransType = LedgerTransType.Sales,
+            CurrencyCode = header.CurrencyCode,
+            AmountCur = total,
+            AmountMst = totalAccounting,
+            ReportingCurrencyAmount = totalReporting,
+            DueDate = header.DueDate,
+            PaymTermId = header.Payment,
+            PaymMode = header.PaymMode,
+            PostingProfile = header.PostingProfile,
+            DefaultDimension = header.DefaultDimension
+        };
+        Db.Set<CustTrans>().Add(custTrans);
+        await unitOfWork.CompleteAsync(ct);
+        Db.Set<CustTransOpen>().Add(new CustTransOpen
+        {
+            DataAreaId = area,
+            AccountNum = header.InvoiceAccount,
+            RefRecId = custTrans.RecId,
+            TransDate = header.InvoiceDate.Date,
+            DueDate = header.DueDate,
+            AmountCur = total,
+            AmountMst = totalAccounting,
+            ReportingCurrencyAmount = totalReporting
+        });
+
+        journal.SalesBalance = netTotal;
+        journal.SalesBalanceMst = translation.ToAccounting(netTotal);
+        journal.SumTax = taxTotal;
+        journal.SumTaxMst = translation.ToAccounting(taxTotal);
+        journal.InvoiceAmount = total;
+        journal.InvoiceAmountMst = totalAccounting;
+        journal.Qty = lines.Sum(x => x.Quantity);
+        header.InvoiceId = invoiceId;
+        header.Posted = NoYes.Yes;
+        await unitOfWork.CompleteAsync(ct);
     }
 
     private async Task<string> ResolveDescriptionAsync(string? description, CustTable customer, CancellationToken ct)

@@ -4,7 +4,9 @@ using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.Common;
+using IAX.IXApi.Modules.Finance.AccountsReceivable.Invoice;
 using IAX.IXApi.Modules.Finance.Entities;
+using IAX.IXApi.Modules.Finance.Foundation.Currency;
 using IAX.IXApi.Shared.Application.Identity;
 using FluentValidation;
 using Mapster;
@@ -156,18 +158,32 @@ public sealed class SalesOrderConfirmationService : BaseService<CustConfirmJour>
             var parameters = await db.Set<CustParameters>().AsNoTracking()
                 .Where(x => x.DataAreaId == order.DataAreaId).OrderBy(x => x.Key).FirstOrDefaultAsync(ct);
             const int balanceCreditLimitMode = 2;
+            const int packingSlipCreditLimitMode = 3;
+            const int allCreditLimitMode = 4;
             var creditLimitMode = parameters?.CreditLimitCheck ?? 0;
-            if (creditLimitMode != 0 && creditLimitMode != balanceCreditLimitMode)
+            if (creditLimitMode != 0 && (creditLimitMode < balanceCreditLimitMode || creditLimitMode > allCreditLimitMode))
                 return new ConfirmationResult(422, null,
                     "The configured company credit-limit mode is not supported for confirmation.");
             foreach (var account in new[] { customer, invoiceCustomer }.DistinctBy(x => x.RecId)
-                .Where(x => creditLimitMode == balanceCreditLimitMode || x.MandatoryCreditLimit == NoYes.Yes))
+                .Where(x => creditLimitMode != 0 || x.MandatoryCreditLimit == NoYes.Yes))
             {
                 if (account.CreditMax <= 0m)
                     return new ConfirmationResult(422, null, $"Customer '{account.AccountNum}' requires a positive credit limit.");
                 var balance = await db.Set<CustTransOpen>().AsNoTracking()
                     .Where(x => x.DataAreaId == order.DataAreaId && x.AccountNum == account.AccountNum)
                     .SumAsync(x => x.AmountMst, ct);
+                if (creditLimitMode >= packingSlipCreditLimitMode)
+                {
+                    try
+                    {
+                        balance += await CalculateUnbilledExposureAsync(order.DataAreaId, account.AccountNum,
+                            creditLimitMode == allCreditLimitMode, confirmationDate, ct);
+                    }
+                    catch (SubledgerPostingException ex)
+                    {
+                        return new ConfirmationResult(422, null, ex.Message);
+                    }
+                }
                 if (balance > account.CreditMax)
                     return new ConfirmationResult(422, null,
                         $"Customer '{account.AccountNum}' balance {balance} exceeds the credit limit {account.CreditMax}.");
@@ -196,6 +212,69 @@ public sealed class SalesOrderConfirmationService : BaseService<CustConfirmJour>
             await transaction.CommitAsync(ct);
             return new ConfirmationResult(200, Present(journal), "Sales order confirmed.");
         });
+    }
+
+    private async Task<decimal> CalculateUnbilledExposureAsync(string area, string account, bool includeOpenOrders,
+        DateTime confirmationDate, CancellationToken ct)
+    {
+        var openLines = await (
+            from header in db.Set<SalesTable>().AsNoTracking()
+            join line in db.Set<SalesLine>().AsNoTracking()
+                on new { header.DataAreaId, header.SalesId } equals new { line.DataAreaId, line.SalesId }
+            where header.DataAreaId == area
+                && (header.CustAccount == account || header.InvoiceAccount == account)
+                && (header.SalesStatus == SalesStatus.Backorder || header.SalesStatus == SalesStatus.Delivered)
+                && (line.SalesStatus == SalesStatus.Backorder || line.SalesStatus == SalesStatus.Delivered)
+                && line.RemainSalesFinancial > 0
+                && (includeOpenOrders || (line.StockedProduct == NoYes.Yes
+                    && line.RemainSalesFinancial > line.RemainSalesPhysical))
+            select new { Order = header, Line = line }).ToListAsync(ct);
+        if (openLines.Count == 0)
+            return 0m;
+
+        var ledger = await db.Set<Ledger>().AsNoTracking().SingleOrDefaultAsync(x => x.DataAreaId == area, ct);
+        if (ledger == null || string.IsNullOrWhiteSpace(ledger.AccountingCurrency))
+            throw new SubledgerPostingException("A ledger accounting currency is required to check unbilled sales exposure.");
+
+        var converter = new LedgerCurrencyConverter(db);
+        var charges = new SalesChargePosting(db);
+        decimal exposure = 0;
+        foreach (var group in openLines.GroupBy(x => x.Order.RecId))
+        {
+            var order = group.First().Order;
+            var lines = await db.Set<SalesLine>().AsNoTracking()
+                .Where(x => x.DataAreaId == area && x.SalesId == order.SalesId && x.SalesStatus != SalesStatus.Canceled)
+                .ToListAsync(ct);
+            var totals = await CalculateAsync(order, lines, ct);
+            decimal orderExposure = await charges.UnpostedCustomerTotalAsync(area, order, confirmationDate, ct);
+            foreach (var row in group)
+            {
+                var line = row.Line;
+                if (line.SalesQty <= 0 || line.RemainSalesPhysical < 0
+                    || line.RemainSalesFinancial > line.SalesQty || line.RemainSalesPhysical > line.RemainSalesFinancial)
+                    throw new SubledgerPostingException("Unbilled sales exposure requires valid remaining sales quantities.");
+
+                var quantity = includeOpenOrders ? line.RemainSalesFinancial
+                    : line.RemainSalesFinancial - line.RemainSalesPhysical;
+                var net = line.LineAmount - line.LineDisc - line.MultiLnDisc - totals.LineOrderDiscount[line.RecId];
+                var gross = net + (order.InclTax ? 0m : totals.LineTax[line.RecId]);
+                orderExposure += gross * quantity / line.SalesQty;
+            }
+            if (!string.Equals(order.CurrencyCode, ledger.AccountingCurrency, StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    orderExposure = await converter.ConvertAsync(area, orderExposure, order.CurrencyCode,
+                        ledger.AccountingCurrency, ledger.DefaultExchangeRateType, confirmationDate, ct);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    throw new SubledgerPostingException(ex.Message);
+                }
+            }
+            exposure += orderExposure;
+        }
+        return exposure;
     }
 
     private Task<SalesTable?> FindOrderAsync(long recId, CancellationToken ct) => db.Set<SalesTable>()
