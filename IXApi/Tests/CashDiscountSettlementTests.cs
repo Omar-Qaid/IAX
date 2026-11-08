@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.AccountsPayable;
@@ -263,6 +263,113 @@ public class CashDiscountSettlementTests
         Assert.Contains("carries a cash discount", reversal.Message);
     }
 
+    // ---------- Vendor refund ----------
+
+    /// <summary>
+    /// A vendor credit note leaves the vendor owing us money: an open vendor <b>debit</b>. When the
+    /// vendor sends the cash back, the bank is debited, the payable is credited to bring it back to
+    /// zero, and the two vendor rows settle against each other so nothing is left to recover.
+    /// </summary>
+    [Fact]
+    public async Task A_vendor_refund_banks_the_money_and_settles_the_open_debit()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        SeedVendorCredit(db, 300m);
+
+        var result = await NewVendService(db).RefundAsync(
+            new VendRefundPostDto("V-001", "BANK-1", 21, "refund-1", new DateTime(2026, 1, 10)), default);
+
+        Assert.True(result.StatusCode == 200, result.Message);
+        // The credit is fully recovered, so both its open row and the refund's are gone.
+        Assert.Empty(await db.Set<VendTransOpen>().AsNoTracking().Where(x => x.RefRecId != 20).ToListAsync());
+        var credit = await db.Set<VendTrans>().AsNoTracking().SingleAsync(x => x.RecId == 21);
+        Assert.Equal(300m, credit.SettleAmountCur);
+        Assert.Equal(new DateTime(2026, 1, 10), credit.Closed);
+        // The refund itself is the negative side and is fully settled too.
+        var refund = await db.Set<VendTrans>().AsNoTracking().SingleAsync(x => x.RecId != 20 && x.RecId != 21);
+        Assert.Equal(-300m, refund.AmountCur);
+        Assert.Equal(-300m, refund.SettleAmountCur);
+        // Sign and record-id conventions match VendSettleOpenTransactionsService so the existing
+        // restore reverses this row unchanged: positive magnitude, refund as the invoice side.
+        var settlement = await db.Set<VendSettlement>().AsNoTracking().SingleAsync();
+        Assert.Equal(300m, settlement.AmountCur);
+        Assert.Equal(refund.RecId, settlement.InvoiceTransRecId);
+        Assert.Equal(21, settlement.PaymentTransRecId);
+        Assert.Equal(NoYes.Yes, settlement.CanBeReversed);
+        // The voucher balances: bank debited, payable credited back to zero.
+        var entries = await db.Set<GeneralJournalAccountEntry>().AsNoTracking().ToListAsync();
+        Assert.Equal(0m, entries.Sum(x => x.AccountingCurrencyAmount));
+        Assert.Equal(300m, entries.Where(x => x.AccountingCurrencyAmount > 0m).Sum(x => x.AccountingCurrencyAmount));
+    }
+
+    /// <summary>
+    /// The request ID is the replay key, as it is for a vendor payment: sending the same refund
+    /// twice returns the first one instead of taking the money twice.
+    /// </summary>
+    [Fact]
+    public async Task Repeating_a_vendor_refund_request_does_not_refund_twice()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        SeedVendorCredit(db, 300m);
+        var input = new VendRefundPostDto("V-001", "BANK-1", 21, "refund-1", new DateTime(2026, 1, 10));
+
+        Assert.Equal(200, (await NewVendService(db).RefundAsync(input, default)).StatusCode);
+        var again = await NewVendService(db).RefundAsync(input, default);
+
+        Assert.Equal(200, again.StatusCode);
+        Assert.Contains("already posted", again.Message);
+        Assert.Single(await db.Set<VendSettlement>().AsNoTracking().ToListAsync());
+        Assert.Equal(2, (await db.Set<GeneralJournalAccountEntry>().AsNoTracking().ToListAsync()).Count);
+    }
+
+    /// <summary>
+    /// An invoice is a vendor credit and is paid, not refunded, so selecting one is refused rather
+    /// than posting a payment under the refund's name.
+    /// </summary>
+    [Fact]
+    public async Task Refunding_an_invoice_instead_of_an_open_debit_is_refused()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+
+        // RecId 20 is the seeded vendor invoice: an open credit, not a debit.
+        var refused = await NewVendService(db).RefundAsync(
+            new VendRefundPostDto("V-001", "BANK-1", 20, "refund-1", new DateTime(2026, 1, 10)), default);
+
+        Assert.Equal(422, refused.StatusCode);
+        Assert.Contains("Select an open vendor debit", refused.Message);
+        Assert.Empty(await db.Set<VendSettlement>().AsNoTracking().ToListAsync());
+        Assert.Empty(await db.Set<GeneralJournalAccountEntry>().AsNoTracking().ToListAsync());
+    }
+
+    /// <summary>
+    /// A vendor credit note the vendor still owes us, added per test so the shared fixture's
+    /// payment scenarios keep seeing only the invoice.
+    /// </summary>
+    private static void SeedVendorCredit(DbContext db, decimal amount)
+    {
+        db.AddRange(
+            new VendTrans
+            {
+                RecId = 21, DataAreaId = "dat", AccountNum = "V-001", Invoice = "VCN-1", Voucher = "VOU-VCN",
+                TransDate = new DateTime(2026, 1, 2), DueDate = new DateTime(2026, 1, 2), CurrencyCode = "SAR",
+                AmountCur = amount, AmountMst = amount, TransType = LedgerTransType.Purch
+            },
+            new VendTransOpen
+            {
+                RecId = 21, DataAreaId = "dat", AccountNum = "V-001", RefRecId = 21,
+                TransDate = new DateTime(2026, 1, 2), DueDate = new DateTime(2026, 1, 2),
+                AmountCur = amount, AmountMst = amount
+            });
+        db.SaveChanges();
+        db.ChangeTracker.Clear();
+    }
+
     // ---------- Fixture ----------
 
     private static VendPaymentService NewVendService(DbContext db) =>
@@ -306,6 +413,10 @@ public class CashDiscountSettlementTests
                 CashDiscCode = "2PCT10", CashDiscBaseDate = new DateTime(2026, 1, 1)
             },
             new VendTable { RecId = 1, DataAreaId = "dat", AccountNum = "V-001", Currency = "SAR" },
+            // The vendor disbursement journal a refund posts into, which LedgerJournalSetupCheck
+            // requires to resolve uniquely and to match the header type.
+            new LedgerJournalName { RecId = 1, DataAreaId = "dat", JournalName = "VendPaym",
+                JournalType = LedgerJournalType.VendDisbursement },
             new VendLedgerAccounts { RecId = 1, DataAreaId = "dat", AccountCode = AccountCode.All, SummaryLedgerDimension = 2 },
             new VendTrans
             {
@@ -344,13 +455,19 @@ public class CashDiscountSettlementTests
                 typeof(VendTrans), typeof(VendTransOpen), typeof(VendSettlement), typeof(VendTable),
                 typeof(VendLedgerAccounts),
                 typeof(VendParameters),
-                typeof(LedgerJournalTable), typeof(LedgerJournalTrans),
+                typeof(LedgerJournalTable), typeof(LedgerJournalTrans), typeof(LedgerJournalName),
                 typeof(BankAccountTable), typeof(BankAccountTrans),
                 typeof(Ledger), typeof(FiscalCalendarPeriod), typeof(LedgerFiscalCalendarPeriod),
                 typeof(MainAccount), typeof(MainAccountLegalEntity), typeof(DimensionAttributeValueCombination),
                 typeof(LedgerStructure), typeof(DimensionHierarchy),
                 typeof(GeneralJournalEntry), typeof(GeneralJournalAccountEntry),
                 typeof(SubledgerVoucherGeneralJournalEntry),
+                // The wider graph LedgerJournalPosting pulls in, matching LedgerJournalPostingTests:
+                // the vendor refund posts through that path rather than hand-rolling its subledger.
+                typeof(SysNumberSequence), typeof(CompanyInfo),
+                typeof(IAX.IXApi.Modules.Finance.Entities.LedgerParameters),
+                typeof(ExchangeRateType), typeof(ExchangeRateCurrencyPair), typeof(ExchangeRate),
+                typeof(Currency),
                 .. TestAccountStructures.Types];
 
             var included = new HashSet<Type>(types);

@@ -100,4 +100,22 @@ public sealed class VendPaymentController : BaseController<VendTrans, VendPaymen
             _ => UnprocessableEntity(APIResponse<object>.Fail(result.Message ?? "Vendor payment posting failed."))
         };
     }
+
+    /// <summary>
+    /// Receives money a vendor owes us back into the bank and settles it against the selected open
+    /// vendor debit, normally a credit note or an unapplied payment.
+    /// </summary>
+    [HttpPost("refund")]
+    [DomainPermission("AccountsPayable", "VendorPayments", "Post")]
+    public async Task<IActionResult> Refund([FromBody] VendRefundPostDto request, CancellationToken ct)
+    {
+        var result = await _paymentService.RefundAsync(request, ct);
+        return result.StatusCode switch
+        {
+            200 => Ok(APIResponse<object>.Ok(result.Data!, result.Message ?? string.Empty)),
+            400 => BadRequest(APIResponse<object>.Fail(result.Message!)),
+            404 => NotFound(APIResponse<object>.Fail(result.Message!)),
+            _ => UnprocessableEntity(APIResponse<object>.Fail(result.Message ?? "Vendor refund posting failed."))
+        };
+    }
 }

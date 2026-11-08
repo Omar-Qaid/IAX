@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 
-public sealed class VendPaymentService(IUnitOfWork work, ICurrentUserService user, ICompanyExecutionContext company,
+public sealed partial class VendPaymentService(IUnitOfWork work, ICurrentUserService user, ICompanyExecutionContext company,
     ISysNumberSequenceService numbers) : BaseService<VendTrans>(work, user), IVendPaymentService
 {
     private DbContext Db => work.Context;
