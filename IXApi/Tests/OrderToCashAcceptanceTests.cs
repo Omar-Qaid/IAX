@@ -947,6 +947,74 @@ public sealed partial class AccountsReceivableCycleStageTests
                         db.Set<SubledgerVoucherGeneralJournalEntry>().Where(y => y.Voucher == debt.Voucher && y.VoucherDataAreaId == Company).Select(y => y.GeneralJournalEntry).Single()).ToListAsync();
                     Assert.Equal(0m,voucher.Sum(x => x.AccountingCurrencyAmount));
                 });
+                await Stage(["BILL-09"], "Cancel and settle the original free text invoice and post the corrected invoice atomically", async () =>
+                {
+                    var revenue = await db.Set<DimensionAttributeValueCombination>().SingleAsync(x => x.MainAccountValue == GeneralLedgerSeedExample.SalesRevenue);
+                    var freeText = services.GetRequiredService<IFreeTextInvoiceService>();
+                    var original = await db.Set<CustInvoiceTable>().SingleAsync(x => x.DataAreaId == Company && x.Name == "OTC rounding");
+                    var debt = await db.Set<CustTrans>().SingleAsync(x => x.DataAreaId == Company && x.Invoice == original.InvoiceId);
+                    var correctionInput = new FreeTextInvoiceSaveDto
+                    {
+                        CustomerAccount = "ARV2-dat-USD", InvoiceDate = Date.AddDays(10), CurrencyCode = "SAR",
+                        Lines = [new() { Description = "Corrected service", Quantity = 1, UnitPrice = 110m, LedgerDimension = revenue.RecId }]
+                    };
+                    var draft = await freeText.CreateCorrectionAsync(original.RecId, correctionInput, default);
+                    Assert.True(draft.StatusCode == 201, draft.Message);
+                    var link = await db.Set<CustRelatedInvoice>().SingleAsync(x => x.CustInvoice == draft.Invoice!.RecId);
+                    Assert.Equal(original.RecId, link.OriginalCustInvoice);
+                    Assert.Equal(original.RecId, link.ParentCustInvoice);
+                    Assert.Equal(1, link.InvoiceAssociationType);
+                    Assert.Equal(422, (await freeText.CreateCorrectionAsync(original.RecId, correctionInput, default)).StatusCode);
+                    Assert.Equal(200, (await freeText.DeleteAsync(draft.Invoice!.RecId, default)).StatusCode);
+                    Assert.False(await db.Set<CustRelatedInvoice>().AnyAsync(x => x.CustInvoice == draft.Invoice.RecId));
+                    draft = await freeText.CreateCorrectionAsync(original.RecId, correctionInput, default);
+                    Assert.True(draft.StatusCode == 201, draft.Message);
+                    var draftId = draft.Invoice!.RecId;
+                    var line = await db.Set<CustInvoiceLine>().SingleAsync(x => x.ParentRecId == draftId);
+                    line.LedgerDimension = 0;
+                    await db.SaveChangesAsync();
+                    Assert.Equal(422, (await freeText.PostAsync(draftId, default)).StatusCode);
+                    Assert.False(await db.Set<CustRelatedInvoice>().AnyAsync(x => x.OriginalCustInvoice == original.RecId && x.InvoiceAssociationType == 2));
+                    Assert.Equal(116.16m, (await db.Set<CustTransOpen>().SingleAsync(x => x.RefRecId == debt.RecId)).AmountCur);
+                    line = await db.Set<CustInvoiceLine>().SingleAsync(x => x.ParentRecId == draftId);
+                    line.LedgerDimension = revenue.RecId;
+                    await db.SaveChangesAsync();
+
+                    var posted = await freeText.PostAsync(draftId, default);
+                    Assert.True(posted.StatusCode == 200, posted.Message);
+                    var adjustingLink = await db.Set<CustRelatedInvoice>().SingleAsync(x => x.DataAreaId == Company
+                        && x.OriginalCustInvoice == original.RecId && x.InvoiceAssociationType == 2);
+                    Assert.Equal(original.RecId, adjustingLink.ParentCustInvoice);
+                    var adjusting = await db.Set<CustInvoiceTable>().SingleAsync(x => x.RecId == adjustingLink.CustInvoice);
+                    var credit = await db.Set<CustTrans>().SingleAsync(x => x.DataAreaId == Company && x.Invoice == adjusting.InvoiceId);
+                    Assert.Equal(-116.16m, credit.AmountCur);
+                    Assert.Equal(-debt.AmountMst, credit.AmountMst);
+                    Assert.Equal(-debt.ReportingCurrencyAmount, credit.ReportingCurrencyAmount);
+                    Assert.False(await db.Set<CustTransOpen>().AnyAsync(x => x.RefRecId == debt.RecId || x.RefRecId == credit.RecId));
+                    var pair = await db.Set<CustSettlement>().Where(x => x.DataAreaId == Company
+                        && ((x.TransRecId == debt.RecId && x.OffsetRecId == credit.RecId)
+                            || (x.TransRecId == credit.RecId && x.OffsetRecId == debt.RecId))).ToListAsync();
+                    Assert.Equal(new[] { -116.16m, 116.16m }, pair.Select(x => x.SettleAmountCur).OrderBy(x => x));
+                    var replacement = await db.Set<CustTrans>().SingleAsync(x => x.DataAreaId == Company && x.Invoice == posted.Invoice!.InvoiceId);
+                    Assert.Equal(110m, (await db.Set<CustTransOpen>().SingleAsync(x => x.RefRecId == replacement.RecId)).AmountCur);
+                    var creditTax = await db.Set<TaxTrans>().Where(x => x.DataAreaId == Company && x.Voucher == credit.Voucher).ToListAsync();
+                    Assert.Equal(15.15m, creditTax.Sum(x => x.TaxAmountCur));
+                    var creditEntry = await db.Set<SubledgerVoucherGeneralJournalEntry>().SingleAsync(x => x.VoucherDataAreaId == Company && x.Voucher == credit.Voucher);
+                    var originalEntry = await db.Set<SubledgerVoucherGeneralJournalEntry>().SingleAsync(x => x.VoucherDataAreaId == Company && x.Voucher == debt.Voucher);
+                    var originalLines = await db.Set<GeneralJournalAccountEntry>().Where(x => x.GeneralJournalEntry == originalEntry.GeneralJournalEntry).ToDictionaryAsync(x => x.RecId);
+                    var creditLines = await db.Set<GeneralJournalAccountEntry>().Where(x => x.GeneralJournalEntry == creditEntry.GeneralJournalEntry).ToListAsync();
+                    Assert.Equal(originalLines.Count, creditLines.Count);
+                    foreach (var creditLine in creditLines)
+                    {
+                        var originalLine = originalLines[creditLine.OriginalAccountEntry];
+                        Assert.Equal(originalLine.LedgerDimension, creditLine.LedgerDimension);
+                        Assert.Equal(-originalLine.TransactionCurrencyAmount, creditLine.TransactionCurrencyAmount);
+                        Assert.Equal(-originalLine.AccountingCurrencyAmount, creditLine.AccountingCurrencyAmount);
+                        Assert.Equal(-originalLine.ReportingCurrencyAmount, creditLine.ReportingCurrencyAmount);
+                    }
+                    Assert.Equal(posted.Invoice!.InvoiceId, (await freeText.PostAsync(draftId, default)).Invoice?.InvoiceId);
+                    Assert.Equal(1, await db.Set<CustRelatedInvoice>().CountAsync(x => x.OriginalCustInvoice == original.RecId && x.InvoiceAssociationType == 2));
+                });
                 await Stage(["PAY-04"], "Post, apply and reverse a customer advance", async () =>
                 {
                     var date = Date.AddDays(10);

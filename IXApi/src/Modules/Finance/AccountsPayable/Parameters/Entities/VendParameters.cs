@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Finance.Common;
@@ -75,6 +75,37 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
         /// item policies are what drove matching before this field existed.
         /// </summary>
         public NoYes MatchingPolicyAllowOverride { get; set; } = NoYes.Yes;
+
+        /// <summary>
+        /// D365 <c>USEEXTENDEDPRICEMATCHING</c>: gates net unit price (extended price) matching,
+        /// inside <see cref="UseInvoiceMatching"/>. This compares the invoice's net <b>unit</b>
+        /// price with the ordered one, where <see cref="UseTotalPriceMatching"/> compares the net
+        /// <b>amount</b> for the quantity; the two are independent gates, as in D365.
+        /// </summary>
+        /// <remarks>
+        /// Unlike <see cref="UseInvoiceMatching"/> and <see cref="UseTotalPriceMatching"/>, this one
+        /// takes D365's own default of <see cref="NoYes.No"/>. Those two default to Yes here only
+        /// because matching already ran before they existed; net unit price matching never ran, so
+        /// there is no behavior to preserve and defaulting to No changes nothing for any caller.
+        /// </remarks>
+        public NoYes UseExtendedPriceMatching { get; set; } = NoYes.No;
+
+        /// <summary>
+        /// D365 <c>EXTENDEDPRICETOLERANCEPERCENTAGE</c>: percentage by which the invoice's net unit
+        /// price may differ from the ordered unit price. Applies only when greater than zero.
+        /// </summary>
+        [Column(TypeName = "decimal(32, 6)")]
+        public decimal ExtendedPriceTolerancePercentage { get; set; }
+
+        /// <summary>
+        /// D365 <c>EXTENDEDPRICETOLERANCEAMOUNT</c>: absolute amount by which the invoice's net unit
+        /// price may differ from the ordered unit price, in the document currency. Applies only when
+        /// greater than zero, and is checked alongside
+        /// <see cref="ExtendedPriceTolerancePercentage"/> rather than instead of it: any configured
+        /// tolerance that is exceeded fails the match.
+        /// </summary>
+        [Column(TypeName = "decimal(32, 6)")]
+        public decimal ExtendedPriceToleranceAmount { get; set; }
 
         public long Partition { get; set; }
     }

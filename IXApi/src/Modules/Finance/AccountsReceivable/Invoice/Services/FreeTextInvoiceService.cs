@@ -1,6 +1,7 @@
 ﻿using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.NumberSequences;
+using IAX.IXApi.Modules.Finance.AccountsReceivable.Settlement;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Shared.Application.Identity;
@@ -53,10 +54,14 @@ public sealed class FreeTextInvoiceService(
     public Task<FreeTextInvoiceResult> CreateAsync(FreeTextInvoiceSaveDto input, CancellationToken ct) =>
         SaveAsync(null, input, ct);
 
+    public Task<FreeTextInvoiceResult> CreateCorrectionAsync(long originalRecId, FreeTextInvoiceSaveDto input, CancellationToken ct) =>
+        Db.Database.CreateExecutionStrategy().ExecuteAsync(() => SaveAsync(null, input, ct, originalRecId));
+
     public Task<FreeTextInvoiceResult> UpdateAsync(long recId, FreeTextInvoiceSaveDto input, CancellationToken ct) =>
         SaveAsync(recId, input, ct);
 
-    private async Task<FreeTextInvoiceResult> SaveAsync(long? recId, FreeTextInvoiceSaveDto input, CancellationToken ct)
+    private async Task<FreeTextInvoiceResult> SaveAsync(long? recId, FreeTextInvoiceSaveDto input, CancellationToken ct,
+        long? originalRecId = null)
     {
         var area = company.GetDataAreaId();
         if (string.IsNullOrWhiteSpace(area)) return new(400, null, "A company must be selected.");
@@ -64,6 +69,8 @@ public sealed class FreeTextInvoiceService(
         try
         {
             var support = new SubledgerPostingSupport(Db);
+            const int correctionType = (int)InvoiceAssociationType.CorrectedInvoice;
+            CustInvoiceTable? original = null;
             CustInvoiceTable header;
             if (recId.HasValue)
             {
@@ -73,9 +80,19 @@ public sealed class FreeTextInvoiceService(
                     ?? throw new FreeTextInvoiceInputException("Free text invoice was not found.", 404);
                 if (header.Posted == NoYes.Yes)
                     throw new FreeTextInvoiceInputException("A posted free text invoice cannot be changed.");
+                originalRecId = await Db.Set<CustRelatedInvoice>().Where(x => x.DataAreaId == area
+                    && x.CustInvoice == header.RecId && x.InvoiceAssociationType == correctionType)
+                    .Select(x => x.ParentCustInvoice).SingleOrDefaultAsync(ct);
             }
             else
             {
+                if (originalRecId.HasValue)
+                {
+                    await support.LockAsync($"FreeTextInvoice:{area}:{originalRecId.Value}", ct);
+                    if (await Db.Set<CustRelatedInvoice>().AnyAsync(x => x.DataAreaId == area
+                        && x.ParentCustInvoice == originalRecId && x.InvoiceAssociationType == correctionType, ct))
+                        throw new FreeTextInvoiceInputException("A correction already exists for this free text invoice.");
+                }
                 header = new CustInvoiceTable { DataAreaId = area };
                 Db.Set<CustInvoiceTable>().Add(header);
             }
@@ -97,6 +114,15 @@ public sealed class FreeTextInvoiceService(
 
             var date = (input.InvoiceDate ?? DateTime.UtcNow).Date;
             var currency = Normalize(input.CurrencyCode, customer.CurrencyCode);
+            if (originalRecId.HasValue)
+            {
+                original = await Db.Set<CustInvoiceTable>().AsNoTracking().SingleOrDefaultAsync(x => x.DataAreaId == area
+                    && x.RecId == originalRecId && x.Posted == NoYes.Yes, ct)
+                    ?? throw new FreeTextInvoiceInputException("The posted original free text invoice was not found.", 404);
+                if (customer.AccountNum != original.OrderAccount || invoiceCustomer.AccountNum != original.InvoiceAccount
+                    || currency != original.CurrencyCode || date < original.InvoiceDate.Date)
+                    throw new FreeTextInvoiceInputException("A correction must keep the original customer, invoice account and currency and cannot be backdated before the original invoice.");
+            }
             if (currency.Length == 0 || !await Db.Set<Currency>().AsNoTracking()
                     .AnyAsync(x => x.DataAreaId == area && x.CurrencyCode == currency, ct))
                 throw new FreeTextInvoiceInputException("The invoice currency was not found in the selected company.");
@@ -142,6 +168,12 @@ public sealed class FreeTextInvoiceService(
             header.Posted = NoYes.No;
 
             await unitOfWork.CompleteAsync(ct);
+            if (original != null && !recId.HasValue)
+                Db.Add(new CustRelatedInvoice
+                {
+                    DataAreaId = area, CustInvoice = header.RecId, ParentCustInvoice = original.RecId,
+                    OriginalCustInvoice = original.RecId, InvoiceAssociationType = correctionType
+                });
             var previous = await Db.Set<CustInvoiceLine>()
                 .Where(x => x.DataAreaId == area && x.ParentRecId == header.RecId).ToListAsync(ct);
             if (previous.Count > 0) Db.Set<CustInvoiceLine>().RemoveRange(previous);
@@ -225,6 +257,9 @@ public sealed class FreeTextInvoiceService(
             if (header.Posted == NoYes.Yes) return await FailAsync(422, "A posted free text invoice cannot be deleted.", ct);
             var lines = await Db.Set<CustInvoiceLine>()
                 .Where(x => x.DataAreaId == area && x.ParentRecId == recId).ToListAsync(ct);
+            var correctionLinks = await Db.Set<CustRelatedInvoice>().Where(x => x.DataAreaId == area
+                && x.CustInvoice == recId && x.InvoiceAssociationType == (int)InvoiceAssociationType.CorrectedInvoice).ToListAsync(ct);
+            Db.RemoveRange(correctionLinks);
             Db.Set<CustInvoiceLine>().RemoveRange(lines);
             Db.Set<CustInvoiceTable>().Remove(header);
             await unitOfWork.CompleteAsync(ct);
@@ -264,6 +299,10 @@ public sealed class FreeTextInvoiceService(
                 return new(200, previous, "Free text invoice was already posted.");
             }
             if (lines.Count == 0) return await FailAsync(422, "At least one free text invoice line is required.", ct);
+            var correction = await Db.Set<CustRelatedInvoice>().SingleOrDefaultAsync(x => x.DataAreaId == area
+                && x.CustInvoice == recId && x.InvoiceAssociationType == (int)InvoiceAssociationType.CorrectedInvoice, ct);
+            if (correction != null)
+                await CancelOriginalAsync(area, header, correction, support, ct);
 
             await PostInvoiceAsync(area, header, lines, support, ct);
             var result = Map(header, lines);
@@ -280,6 +319,137 @@ public sealed class FreeTextInvoiceService(
             Db.ChangeTracker.Clear();
             throw;
         }
+    }
+
+    private async Task CancelOriginalAsync(string area, CustInvoiceTable corrected, CustRelatedInvoice correction,
+        SubledgerPostingSupport support, CancellationToken ct)
+    {
+        var account = corrected.InvoiceAccount;
+        var date = corrected.InvoiceDate.Date;
+        await support.LockCustomerSettlementAsync(area, account, ct);
+        var original = await Db.Set<CustInvoiceTable>().AsNoTracking().SingleOrDefaultAsync(x =>
+            x.DataAreaId == area && x.RecId == correction.ParentCustInvoice && x.Posted == NoYes.Yes, ct);
+        if (original == null || original.InvoiceAccount != account || original.CurrencyCode != corrected.CurrencyCode
+            || original.OrderAccount != corrected.OrderAccount || original.InvoiceDate.Date > date)
+            throw new SubledgerPostingException("The posted original does not match the correction.");
+
+        var source = await Db.Set<CustInvoiceJour>().AsNoTracking().SingleOrDefaultAsync(x => x.DataAreaId == area
+            && x.InvoiceId == original.InvoiceId && x.InvoiceAccount == account
+            && x.DocumentStatus == DocumentStatus.FreeTextInvoice, ct);
+        if (source == null)
+            throw new SubledgerPostingException("The original free text invoice journal was not found.");
+        var debit = await Db.Set<CustTrans>().SingleOrDefaultAsync(x => x.DataAreaId == area
+            && x.AccountNum == account && x.Invoice == source.InvoiceId && x.Voucher == source.LedgerVoucher, ct);
+        var debitOpen = debit == null ? null : await Db.Set<CustTransOpen>().SingleOrDefaultAsync(x =>
+            x.DataAreaId == area && x.AccountNum == account && x.RefRecId == debit.RecId, ct);
+        if (debit == null || debitOpen == null || debit.AmountCur <= 0m || debitOpen.AmountCur != debit.AmountCur
+            || debitOpen.AmountMst != debit.AmountMst || debitOpen.ReportingCurrencyAmount != debit.ReportingCurrencyAmount)
+            throw new SubledgerPostingException("The original invoice must be fully open. Reverse its settlements before correcting it.");
+
+        var ledger = await support.LoadLedgerContextAsync(area, date, LedgerPostingModule.Customer,
+            currentUser.GetCurrentUserId(), ct);
+        var voucher = await Db.Set<SubledgerVoucherGeneralJournalEntry>().AsNoTracking().SingleOrDefaultAsync(x =>
+            x.DataAreaId == area && x.VoucherDataAreaId == area && x.Voucher == source.LedgerVoucher
+            && x.AccountingDate == source.InvoiceDate, ct);
+        var ledgerLines = voucher == null ? [] : await Db.Set<GeneralJournalAccountEntry>().AsNoTracking()
+            .Where(x => x.DataAreaId == area && x.GeneralJournalEntry == voucher.GeneralJournalEntry).ToListAsync(ct);
+        if (ledgerLines.Count == 0 || ledgerLines.Sum(x => x.TransactionCurrencyAmount) != 0m
+            || ledgerLines.Sum(x => x.AccountingCurrencyAmount) != 0m || ledgerLines.Sum(x => x.ReportingCurrencyAmount) != 0m)
+            throw new SubledgerPostingException("The original free text invoice voucher is missing or unbalanced.");
+        var sourceLines = await Db.Set<CustInvoiceTrans>().AsNoTracking()
+            .Where(x => x.DataAreaId == area && x.ParentRecId == source.RecId).ToListAsync(ct);
+        if (sourceLines.Count == 0)
+            throw new SubledgerPostingException("The original posted invoice has no lines to cancel.");
+        var tax = await Db.Set<TaxTrans>().AsNoTracking().Where(x => x.DataAreaId == area
+            && x.Voucher == source.LedgerVoucher && x.TransDate == source.InvoiceDate).ToListAsync(ct);
+
+        var id = (await numbers.NextAsync("CustInvoiceJour", area, ct)).Code;
+        var entry = support.NewEntry(area, id, id, date, ledger);
+        var adjusting = new CustInvoiceTable
+        {
+            DataAreaId = area, InvoiceId = id, InvoiceDate = date, DocumentDate = date, DueDate = date,
+            InvoiceAccount = account, OrderAccount = original.OrderAccount, Name = original.Name,
+            CustGroup = original.CustGroup, CurrencyCode = original.CurrencyCode, Payment = original.Payment,
+            PaymMode = original.PaymMode, DefaultDimension = original.DefaultDimension,
+            PostingProfile = original.PostingProfile, TaxGroup = original.TaxGroup, Posted = NoYes.Yes
+        };
+        var journal = new CustInvoiceJour
+        {
+            DataAreaId = area, InvoiceId = id, LedgerVoucher = id, InvoiceDate = date, DocumentDate = date, DueDate = date,
+            InvoiceAccount = account, OrderAccount = source.OrderAccount, InvoicingName = source.InvoicingName,
+            CustGroup = source.CustGroup, CurrencyCode = source.CurrencyCode, Payment = source.Payment,
+            DefaultDimension = source.DefaultDimension, PostingProfile = source.PostingProfile, TaxGroup = source.TaxGroup,
+            DocumentStatus = DocumentStatus.FreeTextInvoice, PostedState = NoYes.Yes, Updated = NoYes.Yes,
+            Qty = -source.Qty, SalesBalance = -source.SalesBalance, SalesBalanceMst = -source.SalesBalanceMst,
+            SumTax = -source.SumTax, SumTaxMst = -source.SumTaxMst,
+            InvoiceAmount = -source.InvoiceAmount, InvoiceAmountMst = -source.InvoiceAmountMst
+        };
+        var credit = new CustTrans
+        {
+            DataAreaId = area, AccountNum = account, OrderAccount = debit.OrderAccount, Invoice = id, Voucher = id,
+            DocumentNum = id, TransDate = date, DocumentDate = date, DueDate = date, Txt = debit.Txt,
+            CurrencyCode = debit.CurrencyCode, TransType = debit.TransType, AmountCur = -debit.AmountCur,
+            AmountMst = -debit.AmountMst, ReportingCurrencyAmount = -debit.ReportingCurrencyAmount,
+            PostingProfile = debit.PostingProfile, DefaultDimension = debit.DefaultDimension
+        };
+        Db.AddRange(entry, adjusting, journal, credit);
+        await unitOfWork.CompleteAsync(ct);
+
+        Db.Add(new SubledgerVoucherGeneralJournalEntry
+        {
+            DataAreaId = area, GeneralJournalEntry = entry.RecId, Voucher = id, VoucherDataAreaId = area, AccountingDate = date
+        });
+        Db.AddRange(ledgerLines.Select(line => new GeneralJournalAccountEntry
+        {
+            DataAreaId = area, GeneralJournalEntry = entry.RecId, OriginalAccountEntry = line.RecId,
+            MainAccount = line.MainAccount, LedgerDimension = line.LedgerDimension, LedgerAccount = line.LedgerAccount,
+            PostingType = line.PostingType, Text = line.Text, TransactionCurrencyCode = line.TransactionCurrencyCode,
+            TransactionCurrencyAmount = -line.TransactionCurrencyAmount, AccountingCurrencyAmount = -line.AccountingCurrencyAmount,
+            ReportingCurrencyAmount = -line.ReportingCurrencyAmount, Quantity = -line.Quantity,
+            IsCorrection = NoYes.Yes, IsCredit = line.IsCredit == NoYes.Yes ? NoYes.No : NoYes.Yes
+        }));
+        Db.AddRange(tax.Select(row => TaxTransaction(area, date, id, row.TaxCode, row.TaxGroup, row.TaxItemGroup,
+            row.CurrencyCode, -row.TaxBaseAmountCur, -row.TaxAmountCur, -row.TaxBaseAmount, -row.TaxAmount,
+            -row.TaxBaseAmountRep, -row.TaxAmountRep, row.TaxValue)));
+        foreach (var line in sourceLines)
+        {
+            var adjustingLine = new CustInvoiceLine
+            {
+                DataAreaId = area, ParentRecId = adjusting.RecId, LineNum = line.LineNum, Description = line.LineHeader,
+                Quantity = -line.Qty, UnitPrice = line.SalesPrice, AmountCur = -line.LineAmount, TaxAmount = -line.TaxAmount,
+                LedgerDimension = line.LedgerDimension, DefaultDimension = line.DefaultDimension,
+                TaxGroup = line.TaxGroup, TaxItemGroup = line.TaxItemGroup
+            };
+            Db.Add(adjustingLine);
+        }
+        await unitOfWork.CompleteAsync(ct);
+        var adjustingLines = await Db.Set<CustInvoiceLine>().Where(x => x.DataAreaId == area
+            && x.ParentRecId == adjusting.RecId).ToDictionaryAsync(x => x.LineNum, ct);
+        Db.AddRange(sourceLines.Select(line => new CustInvoiceTrans
+        {
+            DataAreaId = area, ParentRecId = journal.RecId, CustInvoiceLineIdRef = adjustingLines[line.LineNum].RecId,
+            InvoiceId = id, InvoiceDate = date, LineNum = line.LineNum, LineHeader = line.LineHeader,
+            Name = line.Name, Qty = -line.Qty, SalesPrice = line.SalesPrice, PriceUnit = line.PriceUnit,
+            LineAmount = -line.LineAmount, LineAmountMst = -line.LineAmountMst, TaxAmount = -line.TaxAmount,
+            TaxAmountMst = -line.TaxAmountMst, LineAmountTax = -line.LineAmountTax, LineAmountTaxMst = -line.LineAmountTaxMst,
+            LedgerDimension = line.LedgerDimension, DefaultDimension = line.DefaultDimension,
+            TaxGroup = line.TaxGroup, TaxItemGroup = line.TaxItemGroup, CurrencyCode = line.CurrencyCode
+        }));
+        Db.Add(new CustRelatedInvoice
+        {
+            DataAreaId = area, CustInvoice = adjusting.RecId, OriginalCustInvoice = correction.OriginalCustInvoice,
+            ParentCustInvoice = original.RecId, InvoiceAssociationType = (int)InvoiceAssociationType.AdjustingInvoice
+        });
+        var creditOpen = new CustTransOpen
+        {
+            DataAreaId = area, AccountNum = account, RefRecId = credit.RecId, TransDate = date, DueDate = date,
+            AmountCur = credit.AmountCur, AmountMst = credit.AmountMst, ReportingCurrencyAmount = credit.ReportingCurrencyAmount
+        };
+        Db.Add(creditOpen);
+        await unitOfWork.CompleteAsync(ct);
+        var settlement = (await numbers.NextAsync("CustSettlement", area, ct)).Code;
+        CustSettleOpenTransactionsService.ApplyPair(Db, area, account, date, settlement,
+            debit, debitOpen, credit, creditOpen, debit.AmountCur);
     }
 
     private async Task PostInvoiceAsync(string area, CustInvoiceTable header, List<CustInvoiceLine> lines,

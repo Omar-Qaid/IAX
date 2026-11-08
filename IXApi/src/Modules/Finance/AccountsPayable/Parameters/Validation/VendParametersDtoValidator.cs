@@ -1,4 +1,4 @@
-using IAX.IXApi.Modules.Finance.Common;
+﻿using IAX.IXApi.Modules.Finance.Common;
 using FluentValidation;
 using IAX.IXApi.Shared.Application.Validation;
 
@@ -16,5 +16,10 @@ public class VendParametersDtoValidator : BaseValidator<VendParametersDto>
         RuleFor(x => x.UseInvoiceMatching).IsInEnum();
         RuleFor(x => x.UseTotalPriceMatching).IsInEnum();
         RuleFor(x => x.MatchingPolicyAllowOverride).IsInEnum();
+        RuleFor(x => x.UseExtendedPriceMatching).IsInEnum();
+        RuleFor(x => x.ExtendedPriceTolerancePercentage).InclusiveBetween(0m, 100m)
+            .WithMessage("The net unit price match tolerance must be a percentage between 0 and 100.");
+        RuleFor(x => x.ExtendedPriceToleranceAmount).GreaterThanOrEqualTo(0m)
+            .WithMessage("The net unit price match tolerance amount cannot be negative.");
     }
 }

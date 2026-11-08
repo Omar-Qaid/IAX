@@ -3165,6 +3165,14 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasColumnType("nvarchar(4)")
                         .HasDefaultValue("dat");
 
+                    b.Property<decimal>("ExtendedPriceToleranceAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(32, 6)");
+
+                    b.Property<decimal>("ExtendedPriceTolerancePercentage")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(32, 6)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -3208,6 +3216,11 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<decimal>("TotalPriceTolerancePercentage")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(32, 6)");
+
+                    b.Property<int>("UseExtendedPriceMatching")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<int>("UseInvoiceMatching")
                         .ValueGeneratedOnAdd()
@@ -3781,6 +3794,456 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("VendTransOpen", (string)null);
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CollectionLetters.CustCollectionLetterJour", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<string>("AccountNum")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("Canceled")
+                        .HasColumnType("date");
+
+                    b.Property<int>("CollectionLetterCode")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CollectionLetterDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("CollectionLetterNum")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("Fee")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(28, 8)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LedgerVoucher")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PaymTermId")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("PostingProfile")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<DateTime?>("PrintDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int?>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TaxAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(28, 8)");
+
+                    b.Property<DateTime?>("Updated")
+                        .HasColumnType("date");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("DataAreaId", "CollectionLetterNum")
+                        .IsUnique();
+
+                    b.ToTable("CustCollectionLetterJour", (string)null);
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CollectionLetters.CustCollectionLetterLine", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<int>("Block")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CollectionLetterCode")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CollectionLetterCourse")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<decimal>("Fee")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(28, 8)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("LedgerDimension")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("MinAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(28, 8)");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("NumOfDays")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("TaxItemGroup")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Txt")
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("DataAreaId", "CollectionLetterCourse", "CurrencyCode", "CollectionLetterCode")
+                        .IsUnique();
+
+                    b.ToTable("CustCollectionLetterLine", (string)null);
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CollectionLetters.CustCollectionLetterTable", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<string>("CollectionLetterCourse")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PaymTermId")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("DataAreaId", "CollectionLetterCourse")
+                        .IsUnique();
+
+                    b.ToTable("CustCollectionLetterTable", (string)null);
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CollectionLetters.CustCollectionLetterTrans", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<string>("AccountNum")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<decimal>("CalculationAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(28, 8)");
+
+                    b.Property<int>("CollectionLetterCode")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CollectionLetterIssued")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CollectionLetterNum")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.Property<long>("CustTransId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("CustTransOpenRecId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("Fee")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(28, 8)");
+
+                    b.Property<string>("Invoice")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("RemainAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(28, 8)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime>("TransDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Voucher")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("DataAreaId", "CollectionLetterNum", "CustTransId")
+                        .IsUnique();
+
+                    b.ToTable("CustCollectionLetterTrans", (string)null);
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CurrencyRevaluation.CustExchRateAdjustment", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<DateTime?>("ConsideredDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<DateTime?>("DateOfRate")
+                        .HasColumnType("date");
+
+                    b.Property<int?>("Dimensions")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ExchPrinciple")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ExecutedDate")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PostingProfile")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Reviewed")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int?>("UseProfile")
+                        .HasColumnType("int");
+
+                    b.HasKey("RecId");
+
+                    b.ToTable("CustExchRateAdjustment", (string)null);
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CustConfirmJour", b =>
                 {
                     b.Property<long>("RecId")
@@ -4187,152 +4650,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.HasKey("RecId");
 
                     b.ToTable("CustConfirmTrans");
-                });
-
-            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CollectionLetters.CustCollectionLetterTable", b =>
-                {
-                    b.Property<long>("RecId").ValueGeneratedOnAdd().HasColumnType("bigint").HasColumnName("RECID");
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
-                    b.Property<string>("CollectionLetterCourse").IsRequired().HasMaxLength(10).HasColumnType("nvarchar(10)");
-                    b.Property<string>("Name").IsRequired().HasMaxLength(60).HasColumnType("nvarchar(60)");
-                    b.Property<string>("PaymTermId").HasMaxLength(10).HasColumnType("nvarchar(10)");
-                    b.Property<string>("DataAreaId").IsRequired().HasMaxLength(10).HasColumnType("nvarchar(10)");
-                    b.Property<string>("CreatedBy").HasColumnType("nvarchar(max)");
-                    b.Property<DateTime?>("CreatedAt").HasColumnType("datetime2");
-                    b.Property<string>("LastModifiedBy").HasColumnType("nvarchar(max)");
-                    b.Property<DateTime?>("LastModifiedAt").HasColumnType("datetime2");
-                    b.Property<string>("OwnerAccountId").HasColumnType("nvarchar(max)");
-                    b.Property<byte[]>("RowVersion").IsConcurrencyToken().IsRequired().ValueGeneratedOnAddOrUpdate().HasColumnType("rowversion");
-                    b.Property<bool>("IsDeleted").HasColumnType("bit");
-                    b.Property<bool>("IsActive").HasColumnType("bit");
-                    b.Property<int>("RecVersion").HasColumnType("int");
-                    b.HasKey("RecId");
-                    b.HasIndex("DataAreaId", "CollectionLetterCourse").IsUnique();
-                    b.ToTable("CustCollectionLetterTable");
-                });
-
-            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CollectionLetters.CustCollectionLetterLine", b =>
-                {
-                    b.Property<long>("RecId").ValueGeneratedOnAdd().HasColumnType("bigint").HasColumnName("RECID");
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
-                    b.Property<string>("CollectionLetterCourse").IsRequired().HasMaxLength(10).HasColumnType("nvarchar(10)");
-                    b.Property<int>("CollectionLetterCode").HasColumnType("int");
-                    b.Property<string>("CurrencyCode").IsRequired().HasMaxLength(3).HasColumnType("nvarchar(3)");
-                    b.Property<int>("NumOfDays").HasColumnType("int");
-                    b.Property<decimal>("MinAmount").HasColumnType("decimal(28, 8)");
-                    b.Property<decimal>("Fee").HasColumnType("decimal(28, 8)");
-                    b.Property<long>("LedgerDimension").HasColumnType("bigint");
-                    b.Property<string>("TaxItemGroup").HasMaxLength(10).HasColumnType("nvarchar(10)");
-                    b.Property<int>("Block").HasColumnType("int");
-                    b.Property<string>("Txt").HasMaxLength(60).HasColumnType("nvarchar(60)");
-                    b.Property<string>("Notes").HasColumnType("nvarchar(max)");
-                    b.Property<string>("DataAreaId").IsRequired().HasMaxLength(10).HasColumnType("nvarchar(10)");
-                    b.Property<string>("CreatedBy").HasColumnType("nvarchar(max)");
-                    b.Property<DateTime?>("CreatedAt").HasColumnType("datetime2");
-                    b.Property<string>("LastModifiedBy").HasColumnType("nvarchar(max)");
-                    b.Property<DateTime?>("LastModifiedAt").HasColumnType("datetime2");
-                    b.Property<string>("OwnerAccountId").HasColumnType("nvarchar(max)");
-                    b.Property<byte[]>("RowVersion").IsConcurrencyToken().IsRequired().ValueGeneratedOnAddOrUpdate().HasColumnType("rowversion");
-                    b.Property<bool>("IsDeleted").HasColumnType("bit");
-                    b.Property<bool>("IsActive").HasColumnType("bit");
-                    b.Property<int>("RecVersion").HasColumnType("int");
-                    b.HasKey("RecId");
-                    b.HasIndex("DataAreaId", "CollectionLetterCourse", "CurrencyCode", "CollectionLetterCode").IsUnique();
-                    b.ToTable("CustCollectionLetterLine");
-                });
-
-            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CollectionLetters.CustCollectionLetterJour", b =>
-                {
-                    b.Property<long>("RecId").ValueGeneratedOnAdd().HasColumnType("bigint").HasColumnName("RECID");
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
-                    b.Property<string>("CollectionLetterNum").IsRequired().HasMaxLength(20).HasColumnType("nvarchar(20)");
-                    b.Property<string>("AccountNum").IsRequired().HasMaxLength(20).HasColumnType("nvarchar(20)");
-                    b.Property<int>("CollectionLetterCode").HasColumnType("int");
-                    b.Property<DateTime>("CollectionLetterDate").HasColumnType("date");
-                    b.Property<string>("CurrencyCode").IsRequired().HasMaxLength(3).HasColumnType("nvarchar(3)");
-                    b.Property<string>("PostingProfile").IsRequired().HasMaxLength(10).HasColumnType("nvarchar(10)");
-                    b.Property<int?>("Status").HasColumnType("int");
-                    b.Property<DateTime?>("Updated").HasColumnType("date");
-                    b.Property<DateTime?>("Canceled").HasColumnType("date");
-                    b.Property<decimal>("Fee").HasColumnType("decimal(28, 8)");
-                    b.Property<decimal>("TaxAmount").HasColumnType("decimal(28, 8)");
-                    b.Property<string>("LedgerVoucher").HasMaxLength(20).HasColumnType("nvarchar(20)");
-                    b.Property<DateTime?>("PrintDate").HasColumnType("date");
-                    b.Property<string>("PaymTermId").HasMaxLength(10).HasColumnType("nvarchar(10)");
-                    b.Property<DateTime?>("DueDate").HasColumnType("date");
-                    b.Property<string>("DataAreaId").IsRequired().HasMaxLength(10).HasColumnType("nvarchar(10)");
-                    b.Property<string>("CreatedBy").HasColumnType("nvarchar(max)");
-                    b.Property<DateTime?>("CreatedAt").HasColumnType("datetime2");
-                    b.Property<string>("LastModifiedBy").HasColumnType("nvarchar(max)");
-                    b.Property<DateTime?>("LastModifiedAt").HasColumnType("datetime2");
-                    b.Property<string>("OwnerAccountId").HasColumnType("nvarchar(max)");
-                    b.Property<byte[]>("RowVersion").IsConcurrencyToken().IsRequired().ValueGeneratedOnAddOrUpdate().HasColumnType("rowversion");
-                    b.Property<bool>("IsDeleted").HasColumnType("bit");
-                    b.Property<bool>("IsActive").HasColumnType("bit");
-                    b.Property<int>("RecVersion").HasColumnType("int");
-                    b.HasKey("RecId");
-                    b.HasIndex("DataAreaId", "CollectionLetterNum").IsUnique();
-                    b.ToTable("CustCollectionLetterJour");
-                });
-
-            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CollectionLetters.CustCollectionLetterTrans", b =>
-                {
-                    b.Property<long>("RecId").ValueGeneratedOnAdd().HasColumnType("bigint").HasColumnName("RECID");
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
-                    b.Property<string>("CollectionLetterNum").IsRequired().HasMaxLength(20).HasColumnType("nvarchar(20)");
-                    b.Property<string>("AccountNum").IsRequired().HasMaxLength(20).HasColumnType("nvarchar(20)");
-                    b.Property<int>("CollectionLetterCode").HasColumnType("int");
-                    b.Property<string>("CurrencyCode").IsRequired().HasMaxLength(3).HasColumnType("nvarchar(3)");
-                    b.Property<long>("CustTransId").HasColumnType("bigint");
-                    b.Property<long>("CustTransOpenRecId").HasColumnType("bigint");
-                    b.Property<DateTime>("DueDate").HasColumnType("date");
-                    b.Property<DateTime>("TransDate").HasColumnType("date");
-                    b.Property<string>("Invoice").HasMaxLength(20).HasColumnType("nvarchar(20)");
-                    b.Property<string>("Voucher").HasMaxLength(20).HasColumnType("nvarchar(20)");
-                    b.Property<decimal>("RemainAmount").HasColumnType("decimal(28, 8)");
-                    b.Property<decimal>("CalculationAmount").HasColumnType("decimal(28, 8)");
-                    b.Property<decimal>("Fee").HasColumnType("decimal(28, 8)");
-                    b.Property<int>("CollectionLetterIssued").HasColumnType("int");
-                    b.Property<string>("DataAreaId").IsRequired().HasMaxLength(10).HasColumnType("nvarchar(10)");
-                    b.Property<string>("CreatedBy").HasColumnType("nvarchar(max)");
-                    b.Property<DateTime?>("CreatedAt").HasColumnType("datetime2");
-                    b.Property<string>("LastModifiedBy").HasColumnType("nvarchar(max)");
-                    b.Property<DateTime?>("LastModifiedAt").HasColumnType("datetime2");
-                    b.Property<string>("OwnerAccountId").HasColumnType("nvarchar(max)");
-                    b.Property<byte[]>("RowVersion").IsConcurrencyToken().IsRequired().ValueGeneratedOnAddOrUpdate().HasColumnType("rowversion");
-                    b.Property<bool>("IsDeleted").HasColumnType("bit");
-                    b.Property<bool>("IsActive").HasColumnType("bit");
-                    b.Property<int>("RecVersion").HasColumnType("int");
-                    b.HasKey("RecId");
-                    b.HasIndex("DataAreaId", "CollectionLetterNum", "CustTransId").IsUnique();
-                    b.ToTable("CustCollectionLetterTrans");
-                });
-
-            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CurrencyRevaluation.CustExchRateAdjustment", b =>
-                {
-                    b.Property<long>("RecId").ValueGeneratedOnAdd().HasColumnType("bigint").HasColumnName("RECID");
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
-                    b.Property<DateTime?>("CreatedAt").HasColumnType("datetime2");
-                    b.Property<string>("CreatedBy").HasColumnType("nvarchar(max)");
-                    b.Property<string>("DataAreaId").IsRequired().HasMaxLength(10).HasColumnType("nvarchar(10)");
-                    b.Property<DateTime?>("ConsideredDate").HasColumnType("date");
-                    b.Property<DateTime?>("DateOfRate").HasColumnType("date");
-                    b.Property<int?>("Dimensions").HasColumnType("int");
-                    b.Property<int?>("ExchPrinciple").HasColumnType("int");
-                    b.Property<DateTime?>("ExecutedDate").HasColumnType("date");
-                    b.Property<string>("Notes").HasColumnType("nvarchar(max)");
-                    b.Property<string>("PostingProfile").HasMaxLength(10).HasColumnType("nvarchar(10)");
-                    b.Property<int?>("Reviewed").HasColumnType("int");
-                    b.Property<int?>("UseProfile").HasColumnType("int");
-                    b.Property<bool>("IsActive").HasColumnType("bit");
-                    b.Property<bool>("IsDeleted").HasColumnType("bit");
-                    b.Property<DateTime?>("LastModifiedAt").HasColumnType("datetime2");
-                    b.Property<string>("LastModifiedBy").HasColumnType("nvarchar(max)");
-                    b.Property<string>("OwnerAccountId").HasColumnType("nvarchar(max)");
-                    b.Property<int>("RecVersion").HasColumnType("int");
-                    b.Property<byte[]>("RowVersion").IsConcurrencyToken().IsRequired().ValueGeneratedOnAddOrUpdate().HasColumnType("rowversion");
-                    b.HasKey("RecId");
-                    b.ToTable("CustExchRateAdjustment");
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CustGroup", b =>
@@ -5055,39 +5372,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("CustInvoiceLine", (string)null);
-                });
-
-            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.Invoice.CustRelatedInvoice", b =>
-                {
-                    b.Property<long>("RecId").ValueGeneratedOnAdd().HasColumnType("bigint").HasColumnName("RECID");
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
-                    b.Property<DateTime?>("CreatedAt").HasColumnType("datetime2");
-                    b.Property<string>("CreatedBy").HasColumnType("nvarchar(max)");
-                    b.Property<long?>("CustInvoice").HasColumnType("bigint");
-                    b.Property<string>("DataAreaId").IsRequired().HasMaxLength(10).HasColumnType("nvarchar(10)");
-                    b.Property<int?>("InvoiceAssociationType").HasColumnType("int");
-                    b.Property<bool>("IsActive").HasColumnType("bit");
-                    b.Property<bool>("IsDeleted").HasColumnType("bit");
-                    b.Property<DateTime?>("LastModifiedAt").HasColumnType("datetime2");
-                    b.Property<string>("LastModifiedBy").HasColumnType("nvarchar(max)");
-                    b.Property<long?>("OriginalCustInvoice").HasColumnType("bigint");
-                    b.Property<string>("OwnerAccountId").HasColumnType("nvarchar(max)");
-                    b.Property<long?>("ParentCustInvoice").HasColumnType("bigint");
-                    b.Property<int>("RecVersion").HasColumnType("int");
-                    b.Property<byte[]>("RowVersion").IsConcurrencyToken().IsRequired().ValueGeneratedOnAddOrUpdate().HasColumnType("rowversion");
-                    b.HasKey("RecId");
-                    b.HasIndex("CustInvoice");
-                    b.HasIndex("OriginalCustInvoice");
-                    b.HasIndex("ParentCustInvoice");
-                    b.HasIndex("DataAreaId", "CustInvoice");
-                    b.HasIndex("DataAreaId", "ParentCustInvoice", "InvoiceAssociationType");
-                    b.ToTable("CustRelatedInvoice");
-                    b.HasOne("IAX.IXApi.Modules.Finance.AccountsReceivable.CustInvoiceTable", null)
-                        .WithMany().HasForeignKey("CustInvoice").OnDelete(DeleteBehavior.Restrict);
-                    b.HasOne("IAX.IXApi.Modules.Finance.AccountsReceivable.CustInvoiceTable", null)
-                        .WithMany().HasForeignKey("OriginalCustInvoice").OnDelete(DeleteBehavior.Restrict);
-                    b.HasOne("IAX.IXApi.Modules.Finance.AccountsReceivable.CustInvoiceTable", null)
-                        .WithMany().HasForeignKey("ParentCustInvoice").OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CustInvoiceTable", b =>
@@ -6385,65 +6669,182 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CustPackingSlipTransHistory", b =>
                 {
-                    b.Property<long>("RecId").ValueGeneratedOnAdd().HasColumnType("bigint").HasColumnName("RECID");
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
-                    b.Property<DateTime?>("CreatedAt").HasColumnType("datetime2");
-                    b.Property<string>("CreatedBy").HasColumnType("nvarchar(max)");
-                    b.Property<long>("CustPackingSlipTrans").HasColumnType("bigint");
-                    b.Property<string>("DataAreaId").IsRequired().HasMaxLength(4).HasColumnType("nvarchar(4)");
-                    b.Property<decimal>("InventQty").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
-                    b.Property<bool>("IsActive").HasColumnType("bit");
-                    b.Property<bool>("IsDeleted").HasColumnType("bit");
-                    b.Property<DateTime?>("LastModifiedAt").HasColumnType("datetime2");
-                    b.Property<string>("LastModifiedBy").HasColumnType("nvarchar(max)");
-                    b.Property<string>("OwnerAccountId").HasColumnType("nvarchar(max)");
-                    b.Property<decimal>("PdsCwQty").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
-                    b.Property<decimal>("PdsCwRemain").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
-                    b.Property<decimal>("Qty").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
-                    b.Property<int>("RecVersion").HasColumnType("int");
-                    b.Property<decimal>("Remain").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
-                    b.Property<decimal>("RemainInvent").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
-                    b.Property<byte[]>("RowVersion").IsConcurrencyToken().IsRequired().ValueGeneratedOnAddOrUpdate().HasColumnType("rowversion");
-                    b.Property<decimal>("StatValueMst").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
-                    b.Property<DateTime>("ValidFrom").HasColumnType("datetime2");
-                    b.Property<DateTime>("ValidTo").HasColumnType("datetime2");
-                    b.Property<decimal>("ValueMst").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
-                    b.Property<decimal>("Weight").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("CustPackingSlipTrans")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<decimal>("InventQty")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("PdsCwQty")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("PdsCwRemain")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("Qty")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Remain")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("RemainInvent")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<decimal>("StatValueMst")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime>("ValidFrom")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ValidTo")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("ValueMst")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("Weight")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.HasKey("RecId");
-                    b.HasIndex("CustPackingSlipTrans", "ValidFrom").IsUnique();
-                    b.ToTable("CustPackingSlipTransHistory");
-                    b.HasOne("IAX.IXApi.Modules.Finance.AccountsReceivable.CustPackingSlipTrans", "PackingSlipLine")
-                        .WithMany().HasForeignKey("CustPackingSlipTrans").OnDelete(DeleteBehavior.Restrict).IsRequired();
-                    b.Navigation("PackingSlipLine");
+
+                    b.HasIndex("CustPackingSlipTrans", "ValidFrom")
+                        .IsUnique();
+
+                    b.ToTable("CustPackingSlipTransHistory", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CustPackingSlipVersion", b =>
                 {
-                    b.Property<long>("RecId").ValueGeneratedOnAdd().HasColumnType("bigint").HasColumnName("RECID");
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
-                    b.Property<DateTime>("AccountingDate").HasColumnType("datetime2");
-                    b.Property<DateTime?>("CreatedAt").HasColumnType("datetime2");
-                    b.Property<string>("CreatedBy").HasColumnType("nvarchar(max)");
-                    b.Property<long>("CustPackingSlipJour").HasColumnType("bigint");
-                    b.Property<string>("InternalPackingSlipId").IsRequired().HasMaxLength(100).HasColumnType("nvarchar(100)");
-                    b.Property<bool>("IsActive").HasColumnType("bit");
-                    b.Property<bool>("IsDeleted").HasColumnType("bit");
-                    b.Property<DateTime?>("LastModifiedAt").HasColumnType("datetime2");
-                    b.Property<string>("LastModifiedBy").HasColumnType("nvarchar(max)");
-                    b.Property<string>("LedgerVoucher").IsRequired().HasMaxLength(100).HasColumnType("nvarchar(100)");
-                    b.Property<string>("OwnerAccountId").HasColumnType("nvarchar(max)");
-                    b.Property<string>("ParmId").IsRequired().HasMaxLength(100).HasColumnType("nvarchar(100)");
-                    b.Property<decimal>("Qty").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
-                    b.Property<int>("RecVersion").HasColumnType("int");
-                    b.Property<byte[]>("RowVersion").IsConcurrencyToken().IsRequired().ValueGeneratedOnAddOrUpdate().HasColumnType("rowversion");
-                    b.Property<DateTime>("VersionDateTime").HasColumnType("datetime2");
-                    b.Property<decimal>("Volume").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
-                    b.Property<decimal>("Weight").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime>("AccountingDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("CustPackingSlipJour")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("InternalPackingSlipId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LedgerVoucher")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ParmId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("Qty")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime>("VersionDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("Volume")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("Weight")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.HasKey("RecId");
-                    b.HasIndex("CustPackingSlipJour", "InternalPackingSlipId").IsUnique();
-                    b.ToTable("CustPackingSlipVersion");
-                    b.HasOne("IAX.IXApi.Modules.Finance.AccountsReceivable.CustPackingSlipJour", null)
-                        .WithMany().HasForeignKey("CustPackingSlipJour").OnDelete(DeleteBehavior.Restrict).IsRequired();
+
+                    b.HasIndex("CustPackingSlipJour", "InternalPackingSlipId")
+                        .IsUnique();
+
+                    b.ToTable("CustPackingSlipVersion", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CustParameters", b =>
@@ -6546,9 +6947,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
-                    b.Property<int>("TaxOnPrepayment")
-                        .HasColumnType("int");
-
                     b.Property<string>("PriceDiscJournalNameLineDisc")
                         .IsRequired()
                         .HasMaxLength(10)
@@ -6603,6 +7001,9 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
+
+                    b.Property<int>("TaxOnPrepayment")
+                        .HasColumnType("int");
 
                     b.HasKey("RecId");
 
@@ -8303,6 +8704,77 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.HasIndex("RefRecId");
 
                     b.ToTable("CustTransOpen", (string)null);
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.Invoice.CustRelatedInvoice", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long?>("CustInvoice")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<int?>("InvoiceAssociationType")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long?>("OriginalCustInvoice")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long?>("ParentCustInvoice")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("CustInvoice");
+
+                    b.HasIndex("OriginalCustInvoice");
+
+                    b.HasIndex("ParentCustInvoice");
+
+                    b.HasIndex("DataAreaId", "CustInvoice");
+
+                    b.HasIndex("DataAreaId", "ParentCustInvoice", "InvoiceAssociationType");
+
+                    b.ToTable("CustRelatedInvoice", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.MarkupTrans", b =>
@@ -11677,6 +12149,86 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("AccountingEvent");
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.BankAccountStatement", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<string>("AccountId")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<DateTime>("AccountStatementDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AccountStatementNum")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("CancelDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<decimal>("EndingBalance")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ReconcileDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("DataAreaId", "AccountId", "AccountStatementNum")
+                        .IsUnique();
+
+                    b.ToTable("BankAccountStatement");
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.BankAccountTable", b =>
                 {
                     b.Property<long>("RecId")
@@ -11949,32 +12501,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.HasKey("RecId");
 
                     b.ToTable("BankAccountTable");
-                });
-
-            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.BankAccountStatement", b =>
-                {
-                    b.Property<long>("RecId").ValueGeneratedOnAdd().HasColumnType("bigint").HasColumnName("RECID");
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
-                    b.Property<string>("AccountId").IsRequired().HasMaxLength(10).HasColumnType("nvarchar(10)");
-                    b.Property<DateTime>("AccountStatementDate").HasColumnType("datetime2");
-                    b.Property<string>("AccountStatementNum").IsRequired().HasMaxLength(20).HasColumnType("nvarchar(20)");
-                    b.Property<DateTime>("CancelDate").HasColumnType("datetime2");
-                    b.Property<DateTime?>("CreatedAt").HasColumnType("datetime2");
-                    b.Property<string>("CreatedBy").HasColumnType("nvarchar(max)");
-                    b.Property<string>("CurrencyCode").IsRequired().HasMaxLength(3).HasColumnType("nvarchar(3)");
-                    b.Property<string>("DataAreaId").IsRequired().HasMaxLength(4).HasColumnType("nvarchar(4)");
-                    b.Property<decimal>("EndingBalance").HasPrecision(18, 4).HasColumnType("decimal(18,4)");
-                    b.Property<bool>("IsActive").HasColumnType("bit");
-                    b.Property<bool>("IsDeleted").HasColumnType("bit");
-                    b.Property<DateTime?>("LastModifiedAt").HasColumnType("datetime2");
-                    b.Property<string>("LastModifiedBy").HasColumnType("nvarchar(max)");
-                    b.Property<string>("OwnerAccountId").HasColumnType("nvarchar(max)");
-                    b.Property<int>("RecVersion").HasColumnType("int");
-                    b.Property<DateTime>("ReconcileDate").HasColumnType("datetime2");
-                    b.Property<byte[]>("RowVersion").IsConcurrencyToken().IsRequired().ValueGeneratedOnAddOrUpdate().HasColumnType("rowversion");
-                    b.HasKey("RecId");
-                    b.HasIndex("DataAreaId", "AccountId", "AccountStatementNum").IsUnique();
-                    b.ToTable("BankAccountStatement");
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.BankAccountTrans", b =>
@@ -33168,6 +33694,26 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Navigation("CustLedgerTable");
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CustPackingSlipTransHistory", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Finance.AccountsReceivable.CustPackingSlipTrans", "PackingSlipLine")
+                        .WithMany()
+                        .HasForeignKey("CustPackingSlipTrans")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PackingSlipLine");
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CustPackingSlipVersion", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Finance.AccountsReceivable.CustPackingSlipJour", null)
+                        .WithMany()
+                        .HasForeignKey("CustPackingSlipJour")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CustTable", b =>
                 {
                     b.HasOne("IAX.IXApi.Modules.Finance.Entities.DirPartyTable", "DirPartyTable")
@@ -33177,6 +33723,24 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("DirPartyTable");
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.Invoice.CustRelatedInvoice", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Finance.AccountsReceivable.CustInvoiceTable", null)
+                        .WithMany()
+                        .HasForeignKey("CustInvoice")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("IAX.IXApi.Modules.Finance.AccountsReceivable.CustInvoiceTable", null)
+                        .WithMany()
+                        .HasForeignKey("OriginalCustInvoice")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("IAX.IXApi.Modules.Finance.AccountsReceivable.CustInvoiceTable", null)
+                        .WithMany()
+                        .HasForeignKey("ParentCustInvoice")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.PriceDiscAdmTrans", b =>

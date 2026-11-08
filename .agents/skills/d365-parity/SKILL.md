@@ -8,10 +8,12 @@ description: Build any Finance feature in IXApi as a BASIC-parity replica of the
 IXApi is .NET, not D365. The rule is still: **implement the same cycle D365 implements**, with
 D365's standard tables and fields, and C# services that carry out the documented behavior.
 
-**Target basic D365 only — ERP essentials.** The standard happy path of each core cycle, working
-correctly end to end. Not every option, not the advanced modules. "Basic" is the ceiling, not a
-first step toward building everything: do not add an advanced feature because the code is nearby
-or it would "complete" the module.
+**Stay within basic ERP and the requested cycle.** Implement and verify the standard core flow
+end to end, including its accounting, validation, and supported corrections. Treat basic ERP
+as the scope limit for implementation, bug fixes, tests, and recurring repair runs. If a reference
+lists advanced cases alongside core cases, preserve the reference and record those cases as outside
+the current scope. Move to another cycle only when the user has requested it and any prerequisite
+cycle is complete.
 
 ## The two hard prohibitions
 
@@ -47,7 +49,11 @@ interunit/balancing dimensions, consolidation and elimination, budgeting and bud
 posting layers other than `Current`, year-end close, fixed assets, production and manufacturing,
 advanced warehousing (WMS), catch weight, asset leasing, revenue recognition (RevRec),
 subscription billing, 1099, localization extensions (e.g. ZATCA e-invoicing), bank
-reconciliation and statement matching, workflow approval engines, financial reporting designers.
+reconciliation and statement matching, collection letters, collection interest or fees,
+workflow-driven write-offs, workflow approval engines, financial reporting designers.
+
+An instruction to work on **basic ERP only** excludes these features even if the reference describes
+them. Keep prior implementation and test evidence unless the user requests a change to it.
 
 When a basic path meets one of these — a non-`Current` layer, a foreign currency needing
 conversion, journal tax, an intercompany line — **refuse it with a message naming what is

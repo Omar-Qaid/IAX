@@ -1,4 +1,4 @@
-using IAX.IXApi.Modules.Finance.Common;
+﻿using IAX.IXApi.Modules.Finance.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -22,6 +22,11 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
             builder.Property(x => x.UseTotalPriceMatching).HasDefaultValue(NoYes.Yes);
             builder.Property(x => x.MatchingPolicy).HasDefaultValue(MatchingPolicy.None);
             builder.Property(x => x.MatchingPolicyAllowOverride).HasDefaultValue(NoYes.Yes);
+            // Net unit price matching takes D365's own default of No: it never ran before, so an
+            // existing row gains nothing it was not already doing.
+            builder.Property(x => x.UseExtendedPriceMatching).HasDefaultValue(NoYes.No);
+            builder.Property(x => x.ExtendedPriceTolerancePercentage).HasColumnType("decimal(32, 6)");
+            builder.Property(x => x.ExtendedPriceToleranceAmount).HasColumnType("decimal(32, 6)");
             builder.Property(x => x.DataAreaId).HasMaxLength(4).HasDefaultValue("dat").IsRequired();
         }
     }

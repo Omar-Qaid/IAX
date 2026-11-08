@@ -27,6 +27,11 @@ public sealed class FreeTextInvoiceController(IFreeTextInvoiceService service) :
     public Task<IActionResult> Create([FromBody] FreeTextInvoiceSaveDto input, CancellationToken ct) =>
         Present(service.CreateAsync(input, ct));
 
+    [HttpPost("{recId:long}/corrections")]
+    [DomainPermission("AccountsReceivable", "Invoices", "Create")]
+    public Task<IActionResult> CreateCorrection(long recId, [FromBody] FreeTextInvoiceSaveDto input, CancellationToken ct) =>
+        Present(service.CreateCorrectionAsync(recId, input, ct));
+
     [HttpPut("{recId:long}")]
     [DomainPermission("AccountsReceivable", "Invoices", "Edit")]
     public Task<IActionResult> Update(long recId, [FromBody] FreeTextInvoiceSaveDto input, CancellationToken ct) =>

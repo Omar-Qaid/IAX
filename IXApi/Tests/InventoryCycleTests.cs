@@ -2153,6 +2153,104 @@ public sealed class InventoryCycleTests
         return (invoices, po, await db.Set<PurchLine>().SingleAsync());
     }
 
+    // ---- Net unit price (extended price) matching: D365 USEEXTENDEDPRICEMATCHING ----
+    // Price totals matching is switched off in these tests so the unit-price comparison is what is
+    // being asserted; the two are independent gates and an order can fail either.
+
+    [Fact]
+    public async Task A_net_unit_price_within_the_configured_percentage_posts()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        var (invoices, po, line) = await ReceivedOrderForMatchingAsync(db, MatchingPolicy.ThreeWay,
+            MatchingPolicy.None, null, x =>
+            {
+                x.UseExtendedPriceMatching = NoYes.Yes;
+                x.ExtendedPriceTolerancePercentage = 5m;
+                x.UseTotalPriceMatching = NoYes.No;
+            });
+
+        // A unit price of 51 against 50 is a 2% variance, inside the 5% tolerance.
+        Assert.Equal(200, (await invoices.PostAsync(po.RecId,
+            new VendorInvoicePostDto("INV-1", new DateTime(2026, 10, 29), [new(line.RecId, 100, 51)]), default)).StatusCode);
+        Assert.Equal(5100m, (await db.Set<VendInvoiceJour>().SingleAsync()).InvoiceAmount);
+    }
+
+    [Fact]
+    public async Task A_net_unit_price_outside_the_configured_percentage_is_refused_with_the_variance()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        var (invoices, po, line) = await ReceivedOrderForMatchingAsync(db, MatchingPolicy.ThreeWay,
+            MatchingPolicy.None, null, x =>
+            {
+                x.UseExtendedPriceMatching = NoYes.Yes;
+                x.ExtendedPriceTolerancePercentage = 5m;
+                x.UseTotalPriceMatching = NoYes.No;
+            });
+
+        // 54 against 50 is 8%, outside 5%.
+        var result = await invoices.PostAsync(po.RecId,
+            new VendorInvoicePostDto("INV-1", new DateTime(2026, 10, 29), [new(line.RecId, 100, 54)]), default);
+        Assert.Equal(422, result.StatusCode);
+        Assert.Equal("Invoice net unit price for item ITEM-001 differs from the purchase order by 8%, "
+            + "which exceeds the configured net unit price tolerance of 5%.", result.Message);
+        Assert.Empty(await db.Set<VendInvoiceJour>().ToListAsync());
+    }
+
+    /// <summary>
+    /// The decision this pins: D365 holds both a percentage and an absolute amount, and <b>any</b>
+    /// configured tolerance that is exceeded fails the match. A generous percentage therefore does
+    /// not let a line through that the amount tolerance refuses, so configuring a second tolerance
+    /// cannot widen the effective one.
+    /// </summary>
+    [Fact]
+    public async Task The_net_unit_price_amount_tolerance_is_enforced_alongside_the_percentage()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        var (invoices, po, line) = await ReceivedOrderForMatchingAsync(db, MatchingPolicy.ThreeWay,
+            MatchingPolicy.None, null, x =>
+            {
+                x.UseExtendedPriceMatching = NoYes.Yes;
+                x.ExtendedPriceTolerancePercentage = 50m;   // 8% would pass this on its own
+                x.ExtendedPriceToleranceAmount = 2m;        // but 4 per unit breaks this
+                x.UseTotalPriceMatching = NoYes.No;
+            });
+
+        var result = await invoices.PostAsync(po.RecId,
+            new VendorInvoicePostDto("INV-1", new DateTime(2026, 10, 29), [new(line.RecId, 100, 54)]), default);
+        Assert.Equal(422, result.StatusCode);
+        Assert.Equal("Invoice net unit price for item ITEM-001 differs from the purchase order by 4, "
+            + "which exceeds the configured net unit price tolerance of 2.", result.Message);
+        Assert.Empty(await db.Set<VendInvoiceJour>().ToListAsync());
+
+        // Inside both tolerances the same line posts, so the refusal above is the amount and not
+        // the switch simply refusing everything.
+        Assert.Equal(200, (await invoices.PostAsync(po.RecId,
+            new VendorInvoicePostDto("INV-2", new DateTime(2026, 10, 29), [new(line.RecId, 100, 51)]), default)).StatusCode);
+    }
+
+    [Fact]
+    public async Task Net_unit_price_matching_with_no_tolerance_configured_requires_an_exact_unit_price()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        var (invoices, po, line) = await ReceivedOrderForMatchingAsync(db, MatchingPolicy.ThreeWay,
+            MatchingPolicy.None, null, x =>
+            {
+                x.UseExtendedPriceMatching = NoYes.Yes;
+                x.UseTotalPriceMatching = NoYes.No;
+            });
+
+        var result = await invoices.PostAsync(po.RecId,
+            new VendorInvoicePostDto("INV-1", new DateTime(2026, 10, 29), [new(line.RecId, 100, 51)]), default);
+        Assert.Equal(422, result.StatusCode);
+        Assert.Equal("Invoice net unit price for item ITEM-001 is 51 against the ordered 50, "
+            + "and no net unit price tolerance is configured.", result.Message);
+        Assert.Empty(await db.Set<VendInvoiceJour>().ToListAsync());
+    }
+
     [Fact]
     public async Task Without_a_configured_tolerance_an_invoice_price_difference_is_still_refused_by_name()
     {
@@ -4180,7 +4278,7 @@ public sealed class InventoryCycleTests
             typeof(InventSite), typeof(InventLocation), typeof(InventTable), typeof(InventTableModule), typeof(UnitOfMeasure), typeof(UnitOfMeasureConversion),
             typeof(SalesTable), typeof(SalesLine), typeof(CustTable), typeof(CustParameters), typeof(CustPackingSlipJour), typeof(CustPackingSlipTrans),
             typeof(CustPackingSlipVersion), typeof(CustPackingSlipTransHistory),
-            typeof(CustInvoiceTable), typeof(CustInvoiceLine), typeof(CustInvoiceJour), typeof(CustInvoiceTrans), typeof(CustTrans), typeof(CustTransOpen), typeof(CustSettlement), typeof(CustLedgerAccounts),
+            typeof(CustInvoiceTable), typeof(CustInvoiceLine), typeof(CustInvoiceJour), typeof(CustInvoiceTrans), typeof(CustRelatedInvoice), typeof(CustTrans), typeof(CustTransOpen), typeof(CustSettlement), typeof(CustLedgerAccounts),
             typeof(Currency), typeof(ExchangeRate), typeof(ExchangeRateType), typeof(ExchangeRateCurrencyPair),
             typeof(DirPartyTable), typeof(CustPaymModeTable), typeof(TaxGroupHeading), typeof(TaxItemGroupHeading),
             typeof(TaxGroupData), typeof(TaxOnItem), typeof(TaxData), typeof(TaxTable), typeof(TaxLedgerAccountGroup), typeof(TaxTrans),

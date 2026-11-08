@@ -1,5 +1,13 @@
 namespace IAX.IXApi.Modules.Finance.Common
 {
+
+    public enum InvoiceAssociationType
+{
+    OriginalInvoice = 0,
+    CorrectedInvoice = 1,
+    AdjustingInvoice = 2
+}
+
     public enum EvenOdd
     {
         All = 0,

@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Identity;
+﻿using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Administration.NumberSequences;
@@ -362,9 +362,21 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
                     || vendorPolicy is MatchingPolicy.TwoWay or MatchingPolicy.ThreeWay))
             || parameters?.MatchingPolicy is MatchingPolicy.TwoWay or MatchingPolicy.ThreeWay;
         if (!matched || unitPrice == line.PurchPrice) return null;
-        if (parameters != null && parameters.UseTotalPriceMatching == NoYes.No) return null;
 
         var priceUnit = line.PriceUnit > 0 ? line.PriceUnit : 1m;
+
+        // Net unit price (extended price) matching, D365 USEEXTENDEDPRICEMATCHING: the invoice's
+        // net *unit* price against the ordered one, where price totals matching below compares the
+        // net *amount* for the quantity. The two are independent gates in D365, so an order whose
+        // unit price is within tolerance can still fail the totals check, and vice versa.
+        if (parameters?.UseExtendedPriceMatching == NoYes.Yes)
+        {
+            var failure = ExtendedPriceFailure(parameters, line, unitPrice, priceUnit);
+            if (failure != null) return failure;
+        }
+
+        if (parameters != null && parameters.UseTotalPriceMatching == NoYes.No) return null;
+
         var ordered = decimal.Round(quantity * line.PurchPrice / priceUnit, 2, MidpointRounding.AwayFromZero);
         var invoiced = decimal.Round(quantity * unitPrice / priceUnit, 2, MidpointRounding.AwayFromZero);
         var tolerance = parameters?.TotalPriceTolerancePercentage ?? 0m;
@@ -379,6 +391,48 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
         // A zero tolerance, or an ordered amount of zero to measure against, requires an exact match.
         return $"Invoice price for item {line.ItemId} is {unitPrice} against the ordered "
             + $"{line.PurchPrice} under the configured matching policy, and no price match tolerance is configured.";
+    }
+
+    /// <summary>
+    /// Compares the invoice's net unit price with the ordered one and names the tolerance it broke,
+    /// or returns null when it is within tolerance.
+    /// </summary>
+    /// <remarks>
+    /// D365 holds both a percentage (<c>EXTENDEDPRICETOLERANCEPERCENTAGE</c>) and an absolute
+    /// amount (<c>EXTENDEDPRICETOLERANCEAMOUNT</c>). Each applies only when configured above zero,
+    /// and <b>any configured tolerance that is exceeded fails the match</b> rather than either one
+    /// alone being enough to pass. That is the conservative reading: it only ever adds matching, the
+    /// same principle the vendor-and-item policy precedence follows above, so a company cannot widen
+    /// its effective tolerance by configuring a second one. With neither configured the unit price
+    /// must match exactly, which mirrors how a zero totals tolerance behaves.
+    /// </remarks>
+    private static string? ExtendedPriceFailure(VendParameters parameters, PurchLine line,
+        decimal unitPrice, decimal priceUnit)
+    {
+        var orderedUnit = line.PurchPrice / priceUnit;
+        var invoicedUnit = unitPrice / priceUnit;
+        var difference = Math.Abs(invoicedUnit - orderedUnit);
+        var percentage = parameters.ExtendedPriceTolerancePercentage;
+        var absolute = parameters.ExtendedPriceToleranceAmount;
+
+        if (percentage <= 0m && absolute <= 0m)
+            return $"Invoice net unit price for item {line.ItemId} is {invoicedUnit} against the "
+                + $"ordered {orderedUnit}, and no net unit price tolerance is configured.";
+        if (absolute > 0m && difference > absolute)
+            return $"Invoice net unit price for item {line.ItemId} differs from the purchase order by "
+                + $"{decimal.Round(difference, 6, MidpointRounding.AwayFromZero)}, which exceeds the "
+                + $"configured net unit price tolerance of {absolute}.";
+        if (percentage > 0m && orderedUnit != 0m)
+        {
+            var variance = difference * 100m / Math.Abs(orderedUnit);
+            if (variance > percentage)
+                return $"Invoice net unit price for item {line.ItemId} differs from the purchase order by "
+                    + $"{decimal.Round(variance, 2, MidpointRounding.AwayFromZero)}%, which exceeds the "
+                    + $"configured net unit price tolerance of {percentage}%.";
+        }
+        // An ordered unit price of zero cannot carry a percentage, so only the amount tolerance
+        // above can have cleared it; that is deliberate rather than a silent pass.
+        return null;
     }
 
     private async Task<PurchResult> Fail(int status, string message, CancellationToken ct)

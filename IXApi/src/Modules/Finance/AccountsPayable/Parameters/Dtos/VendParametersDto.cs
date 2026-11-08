@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Shared.Application.Contracts;
 
@@ -22,6 +22,18 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
         public MatchingPolicy MatchingPolicy { get; set; } = MatchingPolicy.None;
 
         public NoYes MatchingPolicyAllowOverride { get; set; } = NoYes.Yes;
+
+        /// <summary>
+        /// Gates net unit price matching. D365's own default of No, because this matching never ran
+        /// before the field existed.
+        /// </summary>
+        public NoYes UseExtendedPriceMatching { get; set; } = NoYes.No;
+
+        /// <summary>Zero means this tolerance is not configured.</summary>
+        public decimal ExtendedPriceTolerancePercentage { get; set; }
+
+        /// <summary>Zero means this tolerance is not configured. An absolute per-unit amount.</summary>
+        public decimal ExtendedPriceToleranceAmount { get; set; }
 
         public long Partition { get; set; }
     }
