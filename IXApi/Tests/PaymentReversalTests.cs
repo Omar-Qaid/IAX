@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.AccountsPayable;
@@ -519,7 +519,7 @@ public class PaymentReversalTests
         {
             Type[] types = [typeof(CustTrans), typeof(CustTransOpen), typeof(CustSettlement), typeof(CustTable),
                 typeof(CustParameters), typeof(CustLedgerAccounts),
-                typeof(VendTrans), typeof(VendTransOpen), typeof(VendSettlement), typeof(VendTable),
+                typeof(VendTrans), typeof(VendTransOpen), typeof(VendSettlement), typeof(VendInvoiceJour), typeof(VendTable),
                 typeof(VendLedgerAccounts),
                 typeof(VendParameters),
                 typeof(LedgerJournalTable), typeof(LedgerJournalTrans), typeof(BankAccountTrans),

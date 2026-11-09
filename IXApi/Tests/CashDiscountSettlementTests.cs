@@ -452,7 +452,7 @@ public class CashDiscountSettlementTests
         {
             Type[] types = [typeof(CustTrans), typeof(CustTransOpen), typeof(CustSettlement), typeof(CustTable),
                 typeof(CustParameters), typeof(CustLedgerAccounts), typeof(CashDisc),
-                typeof(VendTrans), typeof(VendTransOpen), typeof(VendSettlement), typeof(VendTable),
+                typeof(VendTrans), typeof(VendTransOpen), typeof(VendSettlement), typeof(VendInvoiceJour), typeof(VendTable),
                 typeof(VendLedgerAccounts),
                 typeof(VendParameters),
                 typeof(LedgerJournalTable), typeof(LedgerJournalTrans), typeof(LedgerJournalName),

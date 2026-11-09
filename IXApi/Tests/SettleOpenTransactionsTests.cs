@@ -478,7 +478,7 @@ public class SettleOpenTransactionsTests
         protected override void OnModelCreating(ModelBuilder builder)
         {
             Type[] types = [typeof(CustTrans), typeof(CustTransOpen), typeof(CustSettlement), typeof(CustTable),
-                typeof(VendTrans), typeof(VendTransOpen), typeof(VendSettlement), typeof(VendTable),
+                typeof(VendTrans), typeof(VendTransOpen), typeof(VendSettlement), typeof(VendInvoiceJour), typeof(VendTable),
                 typeof(GeneralJournalEntry), typeof(GeneralJournalAccountEntry), typeof(LedgerJournalTrans),
                 typeof(SubledgerVoucherGeneralJournalEntry), typeof(Ledger), typeof(FiscalCalendarPeriod),
                 typeof(LedgerFiscalCalendarPeriod), typeof(MainAccount), typeof(DimensionAttributeValueCombination)];

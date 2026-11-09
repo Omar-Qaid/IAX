@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.AccountsPayable;
@@ -176,7 +176,7 @@ public class VendPaymModeTests
         protected override void OnModelCreating(ModelBuilder builder)
         {
             Type[] types = [typeof(VendPaymModeTable), typeof(VendParameters),
-                typeof(VendTrans), typeof(VendTransOpen), typeof(VendSettlement), typeof(VendTable),
+                typeof(VendTrans), typeof(VendTransOpen), typeof(VendSettlement), typeof(VendInvoiceJour), typeof(VendTable),
                 typeof(VendLedgerAccounts),
                 typeof(LedgerJournalTable), typeof(LedgerJournalTrans),
                 typeof(BankAccountTable), typeof(BankAccountTrans),
