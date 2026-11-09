@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Identity;
+﻿using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Administration.NumberSequences;
@@ -327,7 +327,21 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
         if (line.StockedProduct != NoYes.Yes)
         {
             var policy = await new SubledgerPostingSupport(Db).ResolveItemModelPolicyAsync(area, line.ItemId, ct);
-            if (policy == null) throw new SubledgerPostingException($"Item model group is missing for {line.ItemId}.");
+            if (policy == null)
+            {
+                // A Service item with no model group assignment is non-stocked. That is the same
+                // rule `SalesInventoryDemandService` applies when it declines to raise inventory
+                // demand for the line, so invoicing has to agree with it: demanding a model group
+                // here made such a line impossible to invoice, because a non-stocked model group
+                // cannot be created in the first place. Any other item with no group is still
+                // refused, so a genuinely unconfigured stocked item cannot slip through.
+                var itemType = await Db.Set<InventTable>().AsNoTracking()
+                    .Where(x => x.DataAreaId == area && x.ItemId == line.ItemId)
+                    .Select(x => (ItemType?)x.ItemType).FirstOrDefaultAsync(ct);
+                if (itemType != ItemType.Service)
+                    throw new SubledgerPostingException($"Item model group is missing for {line.ItemId}.");
+                return (0m, [], 0L);
+            }
             if (policy.StockedProduct == NoYes.Yes)
                 throw new SubledgerPostingException($"Stocked product policy conflicts with sales line {line.RecId}.");
             return (0m, [], 0L);

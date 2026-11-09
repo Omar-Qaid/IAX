@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.NumberSequences;
@@ -3277,6 +3277,161 @@ public sealed class InventoryCycleTests
 
     private static ISysNumberSequenceService Sequence() =>
         DispatchProxy.Create<ISysNumberSequenceService, TestSequenceProxy>();
+
+    // ---- The inventory reference cycle (CycleErpExamples/Inventory/Read_only.md) --------------
+
+    /// <summary>
+    /// Runs the eleven-step example from the inventory cycle reference end to end through the real
+    /// purchase, reservation, delivery, invoice and close services, then asserts the figures the
+    /// reference publishes: <b>90</b> on hand, inventory value <b>1,080</b>, cost of goods sold
+    /// <b>720</b>, and a net cost adjustment of <b>120</b> split <b>-80</b> over the first issue
+    /// and <b>-40</b> over the second. The crux of periodic weighted average is what this proves:
+    /// the second receipt arrives <i>after</i> both sales and still lifts the period average to 12,
+    /// so the already-invoiced issues are adjusted upward at close.
+    /// Quantities, prices and dates follow the reference; item, site and warehouse ids follow this
+    /// fixture, and the example carries no tax, charge or discount exactly as the reference states.
+    /// </summary>
+    [Fact]
+    public async Task Inventory_reference_cycle_closes_at_ninety_on_hand_and_one_thousand_eighty_value()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        SeedSalesMasterData(db);
+        // The reference costs this example with periodic weighted average.
+        db.Set<InventModelGroup>().Local.Single().InventModel = InventModel.WeightedAvg;
+        // The sales delivery pair, seeded inline as the other delivery tests do.
+        db.Set<InventPosting>().AddRange(
+            new InventPosting { RecId = 13, DataAreaId = "dat", InventAccountType = InventAccountType.SalesPackingSlip, ItemCode = TableGroupAll.All, CustVendCode = TableGroupAll.All, LedgerDimension = 1 },
+            new InventPosting { RecId = 14, DataAreaId = "dat", InventAccountType = InventAccountType.SalesPackingSlipOffsetAccount, ItemCode = TableGroupAll.All, CustVendCode = TableGroupAll.All, LedgerDimension = 2 });
+        // The reference's service line. A Service item with no model group assignment is
+        // non-stocked, so it invoices without touching inventory.
+        db.Set<InventTable>().Add(new InventTable { RecId = 2, DataAreaId = "dat", ItemId = "SRV-01", NameAlias = "Installation", ItemType = ItemType.Service });
+        db.Set<InventTableModule>().Add(new InventTableModule { RecId = 3, DataAreaId = "dat", ItemId = "SRV-01", ModuleType = ModuleInventPurchSales.Sales, UnitId = "PCS" });
+        db.Set<PaymTerm>().Add(new PaymTerm { DataAreaId = "dat", PaymTermId = "NET30", PaymMethod = PaymMethod.Net, NumOfDays = 30 });
+        await db.SaveChangesAsync();
+
+        var work = new TestUnitOfWork(db);
+        var company = new TestCompany();
+        var numbers = new TestInventNumbers();
+        var (orders, confirmations, receipts, vendorInvoices) = PurchaseServices(db, numbers);
+
+        // Steps 1-3: buy 100 at 10, receive all of it, then invoice all of it.
+        Assert.Equal(200, (await orders.CreateAsync(new PurchOrderCreateDto("V-0001", null, "SAR", new DateTime(2026, 11, 1), "S01", "WH-01", null), default)).StatusCode);
+        var po1 = await db.Set<PurchTable>().SingleAsync();
+        Assert.Equal(200, (await orders.AddLineAsync(po1.RecId, new PurchLineInputDto("ITEM-001", 100, "PCS", 10, 1, null, null, null, null), default)).StatusCode);
+        Assert.Equal(200, (await confirmations.ConfirmAsync(po1.RecId, default)).StatusCode);
+        var po1Line = await db.Set<PurchLine>().SingleAsync();
+        Assert.Equal(200, (await receipts.PostAsync(po1.RecId,
+            new ProductReceiptPostDto("PR-001", new DateTime(2026, 11, 2), [new(po1Line.RecId, 100)]), default)).StatusCode);
+        Assert.Equal(100m, (await db.Set<InventSum>().SingleAsync()).PhysicalInvent);
+        Assert.Equal(200, (await vendorInvoices.PostAsync(po1.RecId,
+            new VendorInvoicePostDto("VI-001", new DateTime(2026, 11, 3), [new(po1Line.RecId, 100)]), default)).StatusCode);
+        var sum = await db.Set<InventSum>().SingleAsync();
+        Assert.Equal(100m, sum.PhysicalInvent);
+        Assert.Equal(100m, sum.PostedQty);
+        Assert.Equal(1000m, sum.PostedValue);
+
+        // Step 4: one sales order carrying the stocked item and the service together.
+        var order = new SalesTable
+        {
+            DataAreaId = "dat", SalesId = "SO-001", CustAccount = "C-001", CurrencyCode = "SAR",
+            SalesStatus = SalesStatus.Backorder, InventSiteId = "S01", InventLocationId = "WH-01",
+            OrderDate = new DateTime(2026, 11, 4), PaymTerm = "NET30"
+        };
+        db.Set<SalesTable>().Add(order);
+        await db.SaveChangesAsync();
+        var itemLine = new SalesLine
+        {
+            DataAreaId = "dat", SalesId = order.SalesId, LineNum = 1, ItemId = "ITEM-001", SalesQty = 60, QtyOrdered = 60,
+            RemainSalesPhysical = 60, RemainSalesFinancial = 60, SalesUnit = "PCS", SalesPrice = 25, PriceUnit = 1,
+            LineAmount = 1500, SalesStatus = SalesStatus.Backorder, StockedProduct = NoYes.Yes, CurrencyCode = "SAR",
+            ReceiptDateRequested = new DateTime(2026, 11, 5)
+        };
+        var demand = new SalesInventoryDemandService(work, numbers, new InventDimensionResolver(work, numbers));
+        await demand.CreateAsync(order, itemLine, "S01", "WH-01");
+        db.Set<SalesLine>().Add(itemLine);
+        var serviceLine = new SalesLine
+        {
+            DataAreaId = "dat", SalesId = order.SalesId, LineNum = 2, ItemId = "SRV-01", SalesQty = 1, QtyOrdered = 1,
+            RemainSalesPhysical = 1, RemainSalesFinancial = 1, SalesUnit = "PCS", SalesPrice = 300, PriceUnit = 1,
+            LineAmount = 300, SalesStatus = SalesStatus.Backorder, StockedProduct = NoYes.No, CurrencyCode = "SAR",
+            ReceiptDateRequested = new DateTime(2026, 11, 5)
+        };
+        db.Set<SalesLine>().Add(serviceLine);
+        await db.SaveChangesAsync();
+
+        // Step 5: reserve 60 physically. On hand stays 100 and available drops to 40.
+        var reservation = new InventoryReservationService(work, company);
+        Assert.Null((await reservation.ReserveAsync(itemLine.InventTransId, 60m, false, default)).Error);
+        sum = await db.Set<InventSum>().SingleAsync();
+        Assert.Equal(100m, sum.PhysicalInvent);
+        Assert.Equal(60m, sum.ReservPhysical);
+        Assert.Equal(40m, sum.AvailPhysical);
+
+        var packingSlips = new PackingSlipJournalService(work, company, Sequence());
+        var salesInvoices = new SalesInvoiceService(work, company, Sequence());
+
+        // Step 6: deliver 40. On hand 60, still 20 reserved, 40 available.
+        Assert.Equal(200, (await packingSlips.PostAsync(order.RecId, new PostPackingSlipRequest(new DateTime(2026, 11, 6), "All", true, "PS-001",
+            [new PackingSlipPostingLineRequest(itemLine.RecId.ToString(), 40)]), default)).StatusCode);
+        sum = await db.Set<InventSum>().SingleAsync();
+        Assert.Equal(60m, sum.PhysicalInvent);
+        Assert.Equal(20m, sum.ReservPhysical);
+        Assert.Equal(40m, sum.AvailPhysical);
+
+        // Step 7: invoice the 40 delivered. An initial cost of 400 at 10 each.
+        Assert.Equal(200, (await salesInvoices.PostAsync(order.RecId,
+            new SalesInvoicePostDto(new DateTime(2026, 11, 7), "SI-001", [new(itemLine.RecId, 40)]), default)).StatusCode);
+        Assert.Equal(-400m, (await db.Set<InventTrans>().Where(x => x.StatusIssue == StatusIssue.Sold).ToListAsync()).Sum(x => x.CostAmountPosted));
+
+        // Step 8: deliver the remaining 20. On hand 40 and nothing left reserved.
+        Assert.Equal(200, (await packingSlips.PostAsync(order.RecId, new PostPackingSlipRequest(new DateTime(2026, 11, 8), "All", true, "PS-002",
+            [new PackingSlipPostingLineRequest(itemLine.RecId.ToString(), 20)]), default)).StatusCode);
+        sum = await db.Set<InventSum>().SingleAsync();
+        Assert.Equal(40m, sum.PhysicalInvent);
+        Assert.Equal(0m, sum.ReservPhysical);
+
+        // Step 9: invoice the last 20 together with the service. Item cost reaches 600.
+        var finalInvoice = await salesInvoices.PostAsync(order.RecId,
+            new SalesInvoicePostDto(new DateTime(2026, 11, 9), "SI-002", [new(itemLine.RecId, 20), new(serviceLine.RecId, 1)]), default);
+        Assert.True(finalInvoice.StatusCode == 200, finalInvoice.Message);
+        Assert.Equal(-600m, (await db.Set<InventTrans>().Where(x => x.StatusIssue == StatusIssue.Sold).ToListAsync()).Sum(x => x.CostAmountPosted));
+        // The service billed 300 and never produced an inventory transaction.
+        Assert.DoesNotContain(await db.Set<InventTrans>().ToListAsync(), x => x.ItemId == "SRV-01");
+
+        // Step 10: buy 50 more at 16 after both sales. On hand 90, inventory value 1,200.
+        Assert.Equal(200, (await orders.CreateAsync(new PurchOrderCreateDto("V-0001", null, "SAR", new DateTime(2026, 11, 10), "S01", "WH-01", null), default)).StatusCode);
+        var po2 = await db.Set<PurchTable>().SingleAsync(x => x.RecId != po1.RecId);
+        Assert.Equal(200, (await orders.AddLineAsync(po2.RecId, new PurchLineInputDto("ITEM-001", 50, "PCS", 16, 1, null, null, null, null), default)).StatusCode);
+        Assert.Equal(200, (await confirmations.ConfirmAsync(po2.RecId, default)).StatusCode);
+        var po2Line = await db.Set<PurchLine>().SingleAsync(x => x.PurchId == po2.PurchId);
+        Assert.Equal(200, (await receipts.PostAsync(po2.RecId,
+            new ProductReceiptPostDto("PR-002", new DateTime(2026, 11, 11), [new(po2Line.RecId, 50)]), default)).StatusCode);
+        Assert.Equal(200, (await vendorInvoices.PostAsync(po2.RecId,
+            new VendorInvoicePostDto("VI-002", new DateTime(2026, 11, 12), [new(po2Line.RecId, 50)]), default)).StatusCode);
+        sum = await db.Set<InventSum>().SingleAsync();
+        Assert.Equal(90m, sum.PhysicalInvent);
+
+        // Step 11: close. Period average is (100*10 + 50*16) / 150 = 12.
+        var close = await new InventCloseService(work, company, new TestUser(), Sequence())
+            .CloseItemAsync("ITEM-001", new DateTime(2026, 11, 30));
+        Assert.Null(close.Error);
+
+        var issues = await db.Set<InventTrans>().Where(x => x.StatusIssue == StatusIssue.Sold).ToListAsync();
+        // Cost of goods sold becomes 60 * 12 = 720, so the net adjustment is 120.
+        Assert.Equal(-720m, issues.Sum(x => x.CostAmountPosted + x.CostAmountAdjustment));
+        Assert.Equal(-120m, issues.Sum(x => x.CostAmountAdjustment));
+        // Split across the two issues: 40 * 2 and 20 * 2.
+        Assert.Equal(-80m, issues.Where(x => x.Qty == -40m).Sum(x => x.CostAmountAdjustment));
+        Assert.Equal(-40m, issues.Where(x => x.Qty == -20m).Sum(x => x.CostAmountAdjustment));
+        // Receipts stay at 1,800 and the remaining inventory is 90 * 12 = 1,080.
+        var purchased = await db.Set<InventTrans>().Where(x => x.Qty > 0).ToListAsync();
+        Assert.Equal(1800m, purchased.Sum(x => x.CostAmountPosted + x.CostAmountAdjustment));
+        Assert.Equal(1080m, purchased.Sum(x => x.CostAmountPosted + x.CostAmountAdjustment)
+            + issues.Sum(x => x.CostAmountPosted + x.CostAmountAdjustment));
+    }
 
     // ---- Inventory marking --------------------------------------------------------------------
 

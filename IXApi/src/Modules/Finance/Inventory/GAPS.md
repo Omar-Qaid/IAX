@@ -30,6 +30,7 @@ alters behavior:
 | Inventory marking (`InventTrans.MarkingRefInventTransOrigin`) | Implemented |
 | Physical and financial inventory value, inventory value report | Implemented |
 | Ledger integration (`InventPosting` profiles, subledger vouchers) | Implemented |
+| Reference cycle (`CycleErpExamples/Inventory/Read_only.md`) executed end to end | Implemented and **tested** |
 | SQL Server behavior | **Unverified for this module** — SQLite tests only. Only the AP cycle has been run on SQL Server (2026-11-04); `BatchDatabaseLock` mutual exclusion is verified there, but no AR/GL/Inventory flow is. |
 
 ## Open gaps
@@ -123,6 +124,10 @@ message quoted.
   average and LIFO settlement paths unreachable. Setup and the close engine now share one list.
 
 ## Changelog
+
+| Date | Change |
+| --- | --- |
+| 2026-11-09 | **Made the inventory reference cycle executable, and it immediately found a blocking defect.** `CycleErpExamples/Inventory/` held only `Read_only.md` - no runnable flow and no validators, unlike the AP package - so the eleven-step example and its published figures were proven by nothing, which is why every case id in the reference read `Not run`. `Inventory_reference_cycle_closes_at_ninety_on_hand_and_one_thousand_eighty_value` in `Tests/InventoryCycleTests.cs` now runs all eleven steps through the **real** purchase, reservation, delivery, invoice and close services and asserts the reference figures: **90** on hand, cost of goods sold **720**, inventory value **1,080**, and the net cost adjustment of **120** split **-80** over the 40-piece issue and **-40** over the 20-piece issue. This matters because it proves the crux of periodic weighted average - the second receipt (50 at 16) arrives *after* both sales and still lifts the period average to 12, so already-invoiced issues are adjusted upward at close. **The costing arithmetic was correct**; 36 of the 37 existing close tests build `InventTrans` rows by hand, so this is the first time close has been proven after real document postings. **The defect it found: a non-stocked service line could be ordered and delivered but never invoiced.** `SalesInvoiceService` required an item model group for a non-stocked line and required that group to be non-stocked, while `InventModelGroupService` refuses to create any non-stocked model group - so both branches refused, with no group giving `Item model group is missing for {itemId}.` and any creatable group giving `Stocked product policy conflicts with sales line {recId}.` Step 9 of the reference, which bills a 300 service line beside the item, was therefore unreachable. `SalesInvoiceService` now treats a **`ItemType.Service` item with no model group as non-stocked**, which is exactly the rule `SalesInventoryDemandService` already applies when it declines to raise demand for the line; the two services had contradicted each other. Any non-service item with no model group is **still refused**, so an unconfigured stocked item cannot slip through. |
 
 | Date | Change |
 | --- | --- |

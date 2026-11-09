@@ -191,6 +191,7 @@
   "PriceDiscTable",
   "PurchLine",
   "PurchParameters",
+  "PurchPrepayTable",
   "PurchReceiptAccrual",
   "PurchTable",
   "ReportEntityVersions",
