@@ -17,7 +17,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 /// Receipt-before-invoice is enforced with receipt-line quantity links and input-tax snapshots.
 /// Charges and receipt-accrual reversal are separate posting concerns.
 /// </summary>
-public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendorInvoiceService
+public sealed partial class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendorInvoiceService
 {
     private readonly ICompanyExecutionContext _company;
     private readonly ISysNumberSequenceService _numbers;

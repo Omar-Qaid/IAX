@@ -1,4 +1,4 @@
-﻿using IAX.IXApi.Infrastructure.Identity;
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Administration.NumberSequences;
@@ -73,12 +73,18 @@ public sealed partial class VendPaymentService(IUnitOfWork work, ICurrentUserSer
             // the vendor invoice uses. The invoice translated at its date's rate, so settling a
             // foreign-currency invoice realizes the difference between the two.
             var translation = await SubledgerCurrencyTranslation.LoadAsync(Db, area, ledger.Ledger, currency, date, ct);
-            var vendorAccount = await support.ResolveVendorSummaryAsync(area, vendor, ct);
             var bankAccount = await support.LoadDimensionAsync(area, bank.LedgerDimension, "bank", ct);
             var invoices = await (from open in Db.Set<VendTransOpen>() join trans in Db.Set<VendTrans>() on open.RefRecId equals trans.RecId
                 where open.DataAreaId == area && trans.DataAreaId == area && open.AccountNum == input.VendAccount && trans.AccountNum == input.VendAccount
                     && open.AmountCur < 0 && trans.CurrencyCode == currency
-                select new { Open = open, Trans = trans }).ToListAsync(ct);
+                select new
+                {
+                    Open = open,
+                    Trans = trans,
+                    IsPrepayment = Db.Set<VendInvoiceJour>().Any(x => x.DataAreaId == area
+                        && x.InvoiceAccount == trans.AccountNum && x.InvoiceId == trans.Invoice && x.LedgerVoucher == trans.Voucher
+                        && x.Prepayment == NoYes.Yes)
+                }).ToListAsync(ct);
             // Posting an on-account payment is independent from settling the open transactions.
             if (!input.SettleAutomatically) invoices.Clear();
             if (!string.IsNullOrWhiteSpace(input.SettleInvoiceId))
@@ -86,6 +92,32 @@ public sealed partial class VendPaymentService(IUnitOfWork work, ICurrentUserSer
                 invoices = invoices.Where(x => x.Trans.Invoice == input.SettleInvoiceId).ToList();
                 if (invoices.Count == 0) return await Fail("The selected invoice has no open balance for this vendor and currency.", ct);
             }
+            else
+                invoices.RemoveAll(x => x.IsPrepayment);
+
+            DimensionAttributeValueCombination vendorAccount;
+            PurchPrepayTable? prepaymentDefinition = null;
+            var prepayment = invoices.FirstOrDefault(x => x.IsPrepayment);
+            if (prepayment != null)
+            {
+                if (invoices.Count != 1 || input.Amount > -prepayment.Open.AmountCur || decimal.Round(input.Amount, 2) != input.Amount)
+                    return await Fail("Select one prepayment invoice and pay no more than its open balance.", ct);
+                var originalVoucher = prepayment.Trans.Voucher;
+                var accounts = await (from journal in Db.Set<GeneralJournalEntry>()
+                    join line in Db.Set<GeneralJournalAccountEntry>() on journal.RecId equals line.GeneralJournalEntry
+                    where journal.DataAreaId == area && line.DataAreaId == area && journal.SubledgerVoucher == originalVoucher
+                        && line.PostingType == LedgerPostingType.VendBalance && line.AccountingCurrencyAmount < 0
+                    select line.LedgerDimension).ToListAsync(ct);
+                if (accounts.Count != 1) return await Fail("The original prepayment liability account could not be identified.", ct);
+                vendorAccount = await support.LoadDimensionAsync(area, accounts[0], "original prepayment liability", ct);
+                var purchaseId = await Db.Set<VendInvoiceJour>().Where(x => x.DataAreaId == area && x.InvoiceAccount == input.VendAccount
+                    && x.InvoiceId == prepayment.Trans.Invoice && x.LedgerVoucher == originalVoucher && x.Prepayment == NoYes.Yes)
+                    .Select(x => x.PurchId).SingleAsync(ct);
+                prepaymentDefinition = await Db.Set<PurchPrepayTable>().SingleOrDefaultAsync(x => x.DataAreaId == area && x.PurchTable == purchaseId, ct);
+                if (prepaymentDefinition == null) return await Fail("The purchase order prepayment definition was not found.", ct);
+            }
+            else
+                vendorAccount = await support.ResolveVendorSummaryAsync(area, vendor, ct);
             if (invoices.Any(x => x.Open.AmountCur != x.Trans.AmountCur - x.Trans.SettleAmountCur || x.Open.AmountMst != x.Trans.AmountMst - x.Trans.SettleAmountMst))
                 return await Fail("Vendor open balances require reconciliation before settlement.", ct);
             var journalNum = (await numbers.NextAsync("LedgerJournalTable", area, ct)).Code;
@@ -176,6 +208,8 @@ public sealed partial class VendPaymentService(IUnitOfWork work, ICurrentUserSer
                 remaining -= cash;
             }
             var totalDiscount = discountsByAccount.Values.Sum();
+            if (prepaymentDefinition != null)
+                prepaymentDefinition.PrepayApplicationRemaining += input.Amount - remaining;
             if (remaining == 0) payment.Closed = date;
             else VendorOpenBalance.Add(Db, payment);
             Db.Add(new LedgerJournalTable { DataAreaId = area, JournalNum = journalNum, JournalName = journalSetup?.JournalName ?? "VendPaym", NumberSequenceTable = journalSetup?.NumberSequenceTable ?? 0, Name = $"Vendor payment {vendor.AccountNum}",

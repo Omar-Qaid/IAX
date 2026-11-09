@@ -16,7 +16,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 /// Purchase order header/line maintenance. Adding a line for a stocked item creates its Ordered
 /// inventory receipt (D365: approved PO creates ordered inbound quantity, no physical stock).
 /// </summary>
-public sealed class PurchOrderService : BaseService<PurchTable>, IPurchOrderService
+public sealed partial class PurchOrderService : BaseService<PurchTable>, IPurchOrderService
 {
     private readonly ICompanyExecutionContext _company;
     private readonly ISysNumberSequenceService _numbers;

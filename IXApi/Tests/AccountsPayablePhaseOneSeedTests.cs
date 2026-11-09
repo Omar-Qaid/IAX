@@ -707,7 +707,9 @@ public sealed class AccountsPayablePhaseOneSeedTests
                 foreach (var migrationId in new[]
                 {
                     "20261108221500_AddVendPackingSlipVersion",
-                    "20261108221600_AddVendPackingSlipTransHistory"
+                    "20261108221600_AddVendPackingSlipTransHistory",
+                    "20261109055928_AddPurchaseOrderPrepaymentStorage",
+                    "20261109071429_AddVendorAdvancePostingProfile"
                 })
                 {
                     var migration = migrations.CreateMigration(migrations.Migrations[migrationId], db.Database.ProviderName!);
@@ -924,7 +926,73 @@ public sealed class AccountsPayablePhaseOneSeedTests
             await examples.RunAsync(new(2026,"cycle-test"));
             Assert.Equal(before,await CountsAsync(db));
         });
-        Record("scenario-10","فاتورة دفعة مقدمة مرتبطة بأمر الشراء","NOT_IMPLEMENTED","Not implemented by the current AP example/business-service path.");
+        await Stage("scenario-10", "فاتورة دفعة مقدمة مرتبطة بأمر الشراء", async () =>
+        {
+            var vendor = await db.Set<VendTable>().SingleAsync(x => x.DataAreaId == "dat" && x.AccountNum == account);
+            vendor.TaxGroup = string.Empty;
+            var category = new EcoResCategory { Name = "AP stage prepayment", IsActive = true };
+            db.Add(category);
+            var parameters = await db.Set<VendParameters>().SingleAsync(x => x.DataAreaId == "dat");
+            parameters.AdvancePostingProfile = "APSTADV";
+            var dimensions = await db.Set<DimensionAttributeValueCombination>().Where(x => x.DataAreaId == "dat"
+                && (x.MainAccountValue == GeneralLedgerSeedExample.VendorAdvance || x.MainAccountValue == GeneralLedgerSeedExample.ReceivedNotInvoiced)).ToListAsync();
+            var asset = Assert.Single(dimensions, x => x.MainAccountValue == GeneralLedgerSeedExample.VendorAdvance);
+            var liability = Assert.Single(dimensions, x => x.MainAccountValue == GeneralLedgerSeedExample.ReceivedNotInvoiced);
+            db.Add(new VendLedgerAccounts { DataAreaId = "dat", PostingProfile = "APSTADV",
+                AccountCode = IAX.IXApi.Modules.Finance.Common.AccountCode.All, SummaryLedgerDimension = liability.RecId });
+            await db.SaveChangesAsync();
+            db.Add(new InventPosting { DataAreaId = "dat", InventAccountType = IAX.IXApi.Modules.Finance.Common.InventAccountType.PurchAdvance,
+                ItemCode = IAX.IXApi.Modules.Finance.Common.TableGroupAll.All, CustVendCode = IAX.IXApi.Modules.Finance.Common.TableGroupAll.All,
+                LedgerDimension = asset.RecId, CategoryRelation = category.RecId });
+            await db.SaveChangesAsync();
+            var created = await orders.CreateAsync(new(account, null, "SAR", date, "APV2-SITE", "APV2-WH", "AP-STAGE-ADV", date.AddDays(-1)), default);
+            Success(created);
+            var purchase = (PurchTable)created.Data!;
+            Success(await orders.AddLineAsync(purchase.RecId, new("APV2-STOCK", 10m, "EA", 100m, 1m, "APV2-SITE", "APV2-WH", date, null), default));
+            var advanceLine = await db.Set<PurchLine>().SingleAsync(x => x.DataAreaId == "dat" && x.PurchId == purchase.PurchId);
+            Success(await orders.DefinePrepaymentAsync(purchase.RecId, new(300m, category.RecId, "Order deposit"), default));
+            var invoices = services.GetRequiredService<IVendorInvoiceService>();
+            var advanceResult = await invoices.PostPrepaymentAsync(purchase.RecId, "AP-STAGE-ADV-I", date, 300m, default);
+            Success(advanceResult);
+            var advance = (VendInvoiceJour)advanceResult.Data!;
+            Success(await services.GetRequiredService<IProductReceiptService>().PostAsync(purchase.RecId,
+                new("AP-STAGE-ADV-R", date.AddDays(1), [new(advanceLine.RecId, 10m)]), default));
+            Success(await invoices.PostAsync(purchase.RecId, new("AP-STAGE-ADV-F", date.AddDays(2), [new(advanceLine.RecId, 10m)]), default));
+            var final = await db.Set<VendInvoiceJour>().AsNoTracking().SingleAsync(x => x.DataAreaId == "dat" && x.InvoiceId == "AP-STAGE-ADV-F");
+            Assert.Equal(1000m, final.InvoiceAmount);
+            Assert.Equal(422, (await invoices.ApplyPrepaymentAsync(purchase.RecId, advance.RecId, final.RecId, date.AddDays(3), 200m, default)).StatusCode);
+            Success(await services.GetRequiredService<IVendPaymentService>().PostAsync(
+                new(account, "APV2-BANK", 300m, "AP-STAGE-ADV-P", date.AddDays(3), SettleInvoiceId: advance.InvoiceId), default));
+            var applied = await invoices.ApplyPrepaymentAsync(purchase.RecId, advance.RecId, final.RecId, date.AddDays(4), 200m, default);
+            Success(applied);
+            Success(await invoices.ApplyPrepaymentAsync(purchase.RecId, advance.RecId, final.RecId, date.AddDays(4), 200m, default));
+            var definition = await db.Set<PurchPrepayTable>().AsNoTracking().SingleAsync(x => x.DataAreaId == "dat" && x.PurchTable == purchase.PurchId);
+            Assert.Equal(100m, definition.PrepayApplicationRemaining);
+            var finalTrans = await db.Set<VendTrans>().AsNoTracking().SingleAsync(x => x.DataAreaId == "dat" && x.Voucher == final.LedgerVoucher && x.Invoice == final.InvoiceId);
+            var balance = await db.Set<VendTransOpen>().AsNoTracking().SingleAsync(x => x.DataAreaId == "dat" && x.RefRecId == finalTrans.RecId);
+            Assert.Equal(-800m, balance.AmountCur);
+            var match = (VendSettlement)applied.Data!;
+            var entryId = await db.Set<GeneralJournalEntry>().Where(x => x.DataAreaId == "dat" && x.SubledgerVoucher == match.Voucher)
+                .Select(x => x.RecId).SingleAsync();
+            var entries = await db.Set<GeneralJournalAccountEntry>().Where(x => x.DataAreaId == "dat" && x.GeneralJournalEntry == entryId).ToListAsync();
+            Assert.Equal(-200m, Assert.Single(entries, x => x.LedgerDimension == asset.RecId).AccountingCurrencyAmount);
+            Assert.Equal(200m, Assert.Single(entries, x => x.LedgerDimension != asset.RecId).AccountingCurrencyAmount);
+
+            var reversed = await invoices.ReversePrepaymentApplicationAsync(purchase.RecId, match.RecId, date.AddDays(5), default);
+            Success(reversed);
+            Success(await invoices.ReversePrepaymentApplicationAsync(purchase.RecId, match.RecId, date.AddDays(5), default));
+            var reversedMatch = (VendSettlement)reversed.Data!;
+            Assert.Equal(-200m, reversedMatch.AmountCur);
+            Assert.Equal(300m, (await db.Set<PurchPrepayTable>().AsNoTracking()
+                .SingleAsync(x => x.DataAreaId == "dat" && x.PurchTable == purchase.PurchId)).PrepayApplicationRemaining);
+            Assert.Equal(-1000m, (await db.Set<VendTransOpen>().AsNoTracking()
+                .SingleAsync(x => x.DataAreaId == "dat" && x.RefRecId == finalTrans.RecId)).AmountCur);
+            var reversedEntryId = await db.Set<GeneralJournalEntry>().Where(x => x.DataAreaId == "dat" && x.SubledgerVoucher == reversedMatch.Voucher)
+                .Select(x => x.RecId).SingleAsync();
+            var reversalLines = await db.Set<GeneralJournalAccountEntry>().Where(x => x.DataAreaId == "dat" && x.GeneralJournalEntry == reversedEntryId).ToListAsync();
+            foreach (var original in entries)
+                Assert.Equal(-original.AccountingCurrencyAmount, Assert.Single(reversalLines, x => x.LedgerDimension == original.LedgerDimension).AccountingCurrencyAmount);
+        });
         await Stage("scenario-17", "تصحيح استلام تاريخي", async () =>
         {
             const string item = "APV2-STOCK";

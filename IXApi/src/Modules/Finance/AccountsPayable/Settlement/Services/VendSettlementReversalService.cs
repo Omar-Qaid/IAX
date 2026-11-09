@@ -74,6 +74,8 @@ public sealed class VendSettlementReversalService : BaseService<VendSettlement>,
             if (rows.Count == 0)
                 return await Fail(404, $"Settlement voucher '{voucher}' was not found in the selected company.", ct);
 
+            foreach (var account in rows.Select(x => x.AccountNum).Distinct().OrderBy(x => x, StringComparer.Ordinal))
+                await support.LockAsync($"VendPayment:{area}:{account}", ct);
             var date = (reversalDate ?? DateTime.UtcNow).Date;
             if (await Db.Set<GeneralJournalEntry>().AnyAsync(x => x.DataAreaId == area && x.SubledgerVoucher == voucher
                     && x.DocumentNumber == "Vendor prepayment settlement", ct))

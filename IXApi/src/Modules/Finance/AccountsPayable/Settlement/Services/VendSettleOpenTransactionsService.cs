@@ -97,6 +97,11 @@ public sealed class VendSettleOpenTransactionsService : BaseService<VendSettleme
             var missing = selected.Except(marked.Select(x => x.Trans.RecId)).ToList();
             if (missing.Count > 0)
                 return await Fail(422, $"Transaction {missing[0]} is not an open transaction of vendor '{account}'.", ct);
+            if (await Db.Set<VendTrans>().Where(x => x.DataAreaId == area && x.AccountNum == account && selected.Contains(x.RecId))
+                .AnyAsync(trans => Db.Set<VendInvoiceJour>().Any(invoice => invoice.DataAreaId == area
+                    && invoice.InvoiceAccount == account && invoice.InvoiceId == trans.Invoice
+                    && invoice.LedgerVoucher == trans.Voucher && invoice.Prepayment == NoYes.Yes), ct))
+                return await Fail(422, "Pay the purchase order prepayment invoice using a payment that selects that invoice.", ct);
 
             var date = (input.SettleDate ?? DateTime.UtcNow).Date;
             var currencies = marked.Select(x => x.Trans.CurrencyCode).Distinct().ToList();

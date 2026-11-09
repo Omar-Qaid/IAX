@@ -32,6 +32,9 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
         [StringLength(FieldLengths.PostingProfile)]
         public string VendPostingProfile { get; set; } = string.Empty;
 
+        [StringLength(FieldLengths.PostingProfile)]
+        public string AdvancePostingProfile { get; set; } = string.Empty;
+
         /// <summary>
         /// D365 <c>TOTALPRICETOLERANCEPERCENTAGE</c> (price totals match tolerance), verified against
         /// real <c>VendParameters</c> metadata. Percentage by which a vendor invoice line's net amount

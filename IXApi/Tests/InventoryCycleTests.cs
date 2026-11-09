@@ -2127,6 +2127,146 @@ public sealed class InventoryCycleTests
         db.Add(new TaxLedgerAccountGroup { RecId = 1, DataAreaId = "dat", TaxAccountGroup = "VATG", TaxIncomingLedgerDimension = 4 });
     }
     [Fact]
+    public async Task Purchase_order_prepayment_definition_respects_the_order_limit_and_is_repeatable()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedPurchaseMasterData(db);
+        var category = new EcoResCategory { Name = "Purchase prepayment", IsActive = true };
+        db.Add(category);
+        await db.SaveChangesAsync();
+        var (orders, _, _, _) = PurchaseServices(db);
+        var date = new DateTime(2026, 10, 1);
+        Assert.Equal(200, (await orders.CreateAsync(new("V-0001", null, "SAR", date, "S01", "WH-01", null), default)).StatusCode);
+        var order = await db.Set<PurchTable>().SingleAsync();
+        Assert.Equal(200, (await orders.AddLineAsync(order.RecId, new("ITEM-001", 10m, "PCS", 100m, 1m, null, null, null, null), default)).StatusCode);
+        Assert.Equal(422, (await orders.DefinePrepaymentAsync(order.RecId, new(1100m, category.RecId, "Deposit"), default)).StatusCode);
+        Assert.Empty(await db.Set<PurchPrepayTable>().ToListAsync());
+        var input = new PurchPrepaymentDefinitionDto(300m, category.RecId, "Deposit");
+        Assert.Equal(200, (await orders.DefinePrepaymentAsync(order.RecId, input, default)).StatusCode);
+        Assert.Equal(200, (await orders.DefinePrepaymentAsync(order.RecId, input, default)).StatusCode);
+        var definition = await db.Set<PurchPrepayTable>().AsNoTracking().SingleAsync();
+        Assert.Equal(order.PurchId, definition.PurchTable);
+        Assert.Equal("SAR", definition.Currency);
+        Assert.Equal(1, definition.Type);
+        Assert.Equal(300m, definition.PrepayAvailable);
+        Assert.Equal(1000m, definition.PrepayLimit);
+        Assert.Equal(0m, definition.PrepayApplicationRemaining);
+        Assert.Empty(await db.Set<VendTrans>().ToListAsync());
+        Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
+    }
+
+    [Fact]
+    public async Task Purchase_order_prepayment_invoice_uses_the_configured_advance_accounts()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        var category = new EcoResCategory { Name = "Purchase prepayment", IsActive = true };
+        db.Add(category);
+        await db.SaveChangesAsync();
+        db.Add(new VendParameters { DataAreaId = "dat", VendPostingProfile = "GEN", AdvancePostingProfile = "ADV" });
+        db.Add(new VendLedgerAccounts { DataAreaId = "dat", PostingProfile = "ADV", AccountCode = AccountCode.All, SummaryLedgerDimension = 2 });
+        db.Add(new InventPosting { DataAreaId = "dat", InventAccountType = InventAccountType.PurchAdvance,
+            ItemCode = TableGroupAll.All, CustVendCode = TableGroupAll.All, LedgerDimension = 3, CategoryRelation = category.RecId + 1 });
+        db.Add(new InventPosting { DataAreaId = "dat", InventAccountType = InventAccountType.PurchAdvance,
+            ItemCode = TableGroupAll.All, CustVendCode = TableGroupAll.All, LedgerDimension = 1, CategoryRelation = category.RecId });
+        await db.SaveChangesAsync();
+        var (orders, _, _, _) = PurchaseServices(db);
+        var paymentNumbers = Sequence();
+        var invoices = new VendorInvoiceService(new TestUnitOfWork(db), new TestUser(), new TestCompany(), paymentNumbers);
+        var date = new DateTime(2026, 10, 1);
+        Assert.Equal(200, (await orders.CreateAsync(new("V-0001", null, "SAR", date, "S01", "WH-01", null), default)).StatusCode);
+        var order = await db.Set<PurchTable>().SingleAsync();
+        Assert.Equal(200, (await orders.AddLineAsync(order.RecId, new("ITEM-001", 10m, "PCS", 100m, 1m, null, null, null, null), default)).StatusCode);
+        Assert.Equal(200, (await orders.DefinePrepaymentAsync(order.RecId, new(300m, category.RecId, "Deposit"), default)).StatusCode);
+        Assert.Equal(422, (await invoices.PostPrepaymentAsync(order.RecId, "ADV-1", date, 350m, default)).StatusCode);
+        Assert.Empty(await db.Set<VendInvoiceJour>().ToListAsync());
+        var posted = await invoices.PostPrepaymentAsync(order.RecId, "ADV-1", date, 300m, default);
+        Assert.True(posted.StatusCode == 200, posted.Message);
+        Assert.Equal(200, (await invoices.PostPrepaymentAsync(order.RecId, "ADV-1", date, 300m, default)).StatusCode);
+        Assert.Equal(422, (await invoices.PostPrepaymentAsync(order.RecId, "ADV-1", date, 299m, default)).StatusCode);
+        Assert.Equal(422, (await invoices.PostPrepaymentAsync(order.RecId, "ADV-2", date, 1m, default)).StatusCode);
+
+        var invoice = await db.Set<VendInvoiceJour>().AsNoTracking().SingleAsync();
+        Assert.Equal(NoYes.Yes, invoice.Prepayment);
+        Assert.Equal(order.PurchId, invoice.PurchId);
+        Assert.Equal(-300m, (await db.Set<VendTransOpen>().SingleAsync()).AmountCur);
+        var entries = await db.Set<GeneralJournalAccountEntry>().ToListAsync();
+        Assert.Equal(2, entries.Count);
+        Assert.Equal(300m, Assert.Single(entries, x => x.LedgerDimension == 1).AccountingCurrencyAmount);
+        Assert.Equal(-300m, Assert.Single(entries, x => x.LedgerDimension == 2).AccountingCurrencyAmount);
+        Assert.Equal(0m, (await db.Set<PurchPrepayTable>().AsNoTracking().SingleAsync()).PrepayAvailable);
+        db.Add(new BankAccountTable { DataAreaId = "dat", AccountId = "PREPAY-BANK", LedgerDimension = 90, CurrencyCode = "SAR" });
+        var profile = await db.Set<VendLedgerAccounts>().SingleAsync(x => x.PostingProfile == "ADV");
+        profile.SummaryLedgerDimension = 3;
+        await db.SaveChangesAsync();
+        var payments = new VendPaymentService(new TestUnitOfWork(db), new TestUser(), new TestCompany(), paymentNumbers);
+        var payment = new VendPaymentPostDto("V-0001", "PREPAY-BANK", 300m, "ADV-PAY", date.AddDays(1), SettleInvoiceId: "ADV-1");
+        Assert.Equal(422, (await payments.PostAsync(payment with { Amount = 301m }, default)).StatusCode);
+        var paid = await payments.PostAsync(payment, default);
+        Assert.True(paid.StatusCode == 200, paid.Message);
+        Assert.Equal(200, (await payments.PostAsync(payment, default)).StatusCode);
+        Assert.Empty(await db.Set<VendTransOpen>().ToListAsync());
+        Assert.Equal(300m, (await db.Set<VendSettlement>().SingleAsync()).AmountCur);
+        var paymentLine = await db.Set<LedgerJournalTrans>().SingleAsync(x => x.PaymReference == "ADV-PAY");
+        Assert.Equal(2, paymentLine.LedgerDimension);
+        Assert.Equal(300m, paymentLine.AmountCurDebit);
+        var reversalService = new VendPaymentReversalService(new TestUnitOfWork(db), new TestUser(), new TestCompany(), paymentNumbers);
+        var reversed = await reversalService.ReverseAsync(paymentLine.JournalNum, date.AddDays(2), default);
+        Assert.True(reversed.StatusCode == 200, reversed.Message);
+        var reopened = await db.Set<VendTransOpen>().AsNoTracking().SingleAsync();
+        Assert.Equal(-300m, reopened.AmountCur);
+        var reversalJournal = await db.Set<LedgerJournalTable>().SingleAsync(x => x.OriginalJournalNum == paymentLine.JournalNum);
+        var reversalLine = await db.Set<LedgerJournalTrans>().SingleAsync(x => x.JournalNum == reversalJournal.JournalNum);
+        Assert.Equal(2, reversalLine.LedgerDimension);
+        Assert.Equal(300m, reversalLine.AmountCurCredit);
+        Assert.Equal(10m, (await db.Set<PurchLine>().AsNoTracking().SingleAsync()).RemainPurchFinancial);
+        Assert.Equal(0m, (await db.Set<InventSum>().AsNoTracking().SingleAsync()).PhysicalInvent);
+        Assert.Equal(0m, (await db.Set<PurchPrepayTable>().AsNoTracking().SingleAsync()).PrepayApplicationRemaining);
+
+        var (_, _, receipts, _) = PurchaseServices(db);
+        var purchaseLine = await db.Set<PurchLine>().SingleAsync();
+        Assert.Equal(200, (await receipts.PostAsync(order.RecId, new("ADV-R", date.AddDays(2), [new(purchaseLine.RecId, 10m)]), default)).StatusCode);
+        var finalPosted = await invoices.PostAsync(order.RecId, new("ADV-FINAL", date.AddDays(3), [new(purchaseLine.RecId, 10m)]), default);
+        Assert.True(finalPosted.StatusCode == 200, finalPosted.Message);
+        Assert.Equal(200, (await invoices.PostPrepaymentAsync(order.RecId, "ADV-1", date, 300m, default)).StatusCode);
+        var final = await db.Set<VendInvoiceJour>().AsNoTracking().SingleAsync(x => x.InvoiceId == "ADV-FINAL");
+        Assert.Equal(422, (await invoices.ApplyPrepaymentAsync(order.RecId, invoice.RecId, final.RecId, date.AddDays(4), 200m, default)).StatusCode);
+        var repaid = await payments.PostAsync(payment with { RequestId = "ADV-PAY-2", PaymentDate = date.AddDays(4) }, default);
+        Assert.True(repaid.StatusCode == 200, repaid.Message);
+        Assert.Equal(300m, (await db.Set<PurchPrepayTable>().AsNoTracking().SingleAsync()).PrepayApplicationRemaining);
+        Assert.Equal(422, (await invoices.ApplyPrepaymentAsync(order.RecId, invoice.RecId, final.RecId, date.AddDays(5), 301m, default)).StatusCode);
+        var applied = await invoices.ApplyPrepaymentAsync(order.RecId, invoice.RecId, final.RecId, date.AddDays(5), 200m, default);
+        Assert.True(applied.StatusCode == 200, applied.Message);
+        Assert.Equal(200, (await invoices.ApplyPrepaymentAsync(order.RecId, invoice.RecId, final.RecId, date.AddDays(5), 200m, default)).StatusCode);
+        var appliedMatch = Assert.IsType<VendSettlement>(applied.Data);
+        var appliedEntry = await db.Set<GeneralJournalEntry>().SingleAsync(x => x.SubledgerVoucher == appliedMatch.Voucher);
+        var transfer = await db.Set<GeneralJournalAccountEntry>().Where(x => x.GeneralJournalEntry == appliedEntry.RecId).ToListAsync();
+        Assert.Equal(200m, Assert.Single(transfer, x => x.LedgerDimension == 3).AccountingCurrencyAmount);
+        Assert.Equal(-200m, Assert.Single(transfer, x => x.LedgerDimension == 1).AccountingCurrencyAmount);
+        Assert.Equal(-800m, (await db.Set<VendTransOpen>().AsNoTracking().SingleAsync()).AmountCur);
+        Assert.Equal(100m, (await db.Set<PurchPrepayTable>().AsNoTracking().SingleAsync()).PrepayApplicationRemaining);
+        var secondPayment = await db.Set<LedgerJournalTrans>().SingleAsync(x => x.PaymReference == "ADV-PAY-2");
+        Assert.Equal(422, (await reversalService.ReverseAsync(secondPayment.JournalNum, date.AddDays(6), default)).StatusCode);
+
+        var undo = await invoices.ReversePrepaymentApplicationAsync(order.RecId, appliedMatch.RecId, date.AddDays(6), default);
+        Assert.True(undo.StatusCode == 200, undo.Message);
+        Assert.Equal(200, (await invoices.ReversePrepaymentApplicationAsync(order.RecId, appliedMatch.RecId, date.AddDays(6), default)).StatusCode);
+        Assert.Equal(300m, (await db.Set<PurchPrepayTable>().AsNoTracking().SingleAsync()).PrepayApplicationRemaining);
+        Assert.Equal(-1000m, (await db.Set<VendTransOpen>().AsNoTracking().SingleAsync()).AmountCur);
+        var undoMatch = Assert.IsType<VendSettlement>(undo.Data);
+        var undoEntry = await db.Set<GeneralJournalEntry>().SingleAsync(x => x.SubledgerVoucher == undoMatch.Voucher);
+        var undoLines = await db.Set<GeneralJournalAccountEntry>().Where(x => x.GeneralJournalEntry == undoEntry.RecId).ToListAsync();
+        Assert.Equal(-200m, Assert.Single(undoLines, x => x.LedgerDimension == 3).AccountingCurrencyAmount);
+        Assert.Equal(200m, Assert.Single(undoLines, x => x.LedgerDimension == 1).AccountingCurrencyAmount);
+        var retryReversePayment = await reversalService.ReverseAsync(secondPayment.JournalNum, date.AddDays(7), default);
+        Assert.True(retryReversePayment.StatusCode == 200, retryReversePayment.Message);
+        Assert.Equal(0m, (await db.Set<PurchPrepayTable>().AsNoTracking().SingleAsync()).PrepayApplicationRemaining);
+    }
+
+    [Fact]
     public async Task Receipt_accrual_reverses_only_matched_quantities_using_original_accounts()
     {
         await using var fixture = await Fixture.CreateAsync();
@@ -4518,7 +4658,7 @@ public sealed class InventoryCycleTests
             typeof(SourceDocumentHeader), typeof(SourceDocumentLine), typeof(AccountingEvent), typeof(AccountingDistribution),
             typeof(SubledgerJournalEntry), typeof(SubledgerJournalAccountEntry), typeof(SubledgerJournalAccountEntryDistribution),
             typeof(PurchParameters), typeof(VendInvoiceInfoTable), typeof(VendInvoiceInfoLine), typeof(VendInvoiceInfoSubLine),
-            typeof(PurchTable), typeof(PurchLine), typeof(VendPurchOrderJour), typeof(VendPurchOrderTrans),
+            typeof(PurchTable), typeof(PurchLine), typeof(PurchPrepayTable), typeof(EcoResCategory), typeof(VendPurchOrderJour), typeof(VendPurchOrderTrans),
             typeof(VendPackingSlipJour), typeof(VendPackingSlipTrans), typeof(VendPackingSlipVersion), typeof(VendPackingSlipTransHistory),
             typeof(VendInvoiceJour), typeof(VendInvoiceTrans), typeof(VendInvoicePackingSlipQuantityMatch),
             typeof(PaymTerm), typeof(VendTrans), typeof(VendTransOpen), typeof(VendSettlement), typeof(PurchReceiptAccrual), typeof(VendLedgerAccounts), typeof(InventTransOriginPurchLine), typeof(VendTable), typeof(VendParameters), typeof(VendPaymModeTable),

@@ -38,6 +38,27 @@ internal static class VendSettlementRestore
 
         foreach (var row in rows)
         {
+            var advance = await (from invoice in db.Set<VendInvoiceJour>()
+                join trans in db.Set<VendTrans>() on new { invoice.DataAreaId, Account = invoice.InvoiceAccount, Invoice = invoice.InvoiceId, Voucher = invoice.LedgerVoucher }
+                    equals new { trans.DataAreaId, Account = trans.AccountNum, trans.Invoice, trans.Voucher }
+                where invoice.DataAreaId == area && trans.RecId == row.InvoiceTransRecId && invoice.Prepayment == NoYes.Yes
+                select invoice).SingleOrDefaultAsync(ct);
+            if (advance != null)
+            {
+                if (await (from offset in db.Set<VendTrans>()
+                    join application in db.Set<VendSettlement>() on offset.RecId equals application.PaymentTransRecId
+                    where offset.DataAreaId == area && offset.AccountNum == row.AccountNum && offset.Invoice == advance.InvoiceId
+                        && offset.TransType == LedgerTransType.PurchAdvanceApplication && application.DataAreaId == area
+                        && application.AmountCur > 0 && !db.Set<VendSettlement>().Any(reversal => reversal.DataAreaId == area
+                            && reversal.PaymentTransRecId == offset.RecId && reversal.InvoiceTransRecId == application.InvoiceTransRecId
+                            && reversal.AmountCur < 0)
+                    select application.RecId).AnyAsync(ct))
+                    return "Reverse the prepayment application before reversing its payment settlement.";
+                var definition = await db.Set<PurchPrepayTable>().SingleOrDefaultAsync(x => x.DataAreaId == area && x.PurchTable == advance.PurchId, ct);
+                if (definition == null || definition.PrepayApplicationRemaining < row.AmountCur)
+                    return "The purchase order prepayment balance requires reconciliation.";
+                definition.PrepayApplicationRemaining -= row.AmountCur;
+            }
             db.Set<VendSettlement>().Add(new VendSettlement
             {
                 DataAreaId = area, AccountNum = row.AccountNum,

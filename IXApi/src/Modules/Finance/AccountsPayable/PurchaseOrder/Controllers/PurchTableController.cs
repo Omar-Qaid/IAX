@@ -1,4 +1,4 @@
-﻿using IAX.IXApi.Api.Controllers;
+using IAX.IXApi.Api.Controllers;
 using IAX.IXApi.Modules.Identity.Permissions;
 using IAX.IXApi.Shared.Application.Contracts;
 using Microsoft.AspNetCore.Mvc;
@@ -65,6 +65,11 @@ public sealed class PurchTableController : BaseController<PurchTable, PurchTable
     public async Task<IActionResult> AddLine(long recId, [FromBody] PurchLineInputDto input, CancellationToken ct) =>
         Present(await _orders.AddLineAsync(recId, input, ct));
 
+    [HttpPut("{recId:long}/prepayment")]
+    [DomainPermission("AccountsPayable", "PurchaseOrders", "Edit")]
+    public async Task<IActionResult> DefinePrepayment(long recId, [FromBody] PurchPrepaymentDefinitionDto input, CancellationToken ct) =>
+        Present(await _orders.DefinePrepaymentAsync(recId, input, ct));
+
     /// <summary>
     /// Cancels the quantity the order has not received. Anything already received stays invoiceable,
     /// so this is the ordinary way to close an order whose remainder will never arrive.
@@ -108,6 +113,22 @@ public sealed class PurchTableController : BaseController<PurchTable, PurchTable
     [DomainPermission("AccountsPayable", "PurchaseOrders", "Post")]
     public async Task<IActionResult> Invoice(long recId, [FromBody] VendorInvoicePostDto input, CancellationToken ct) =>
         Present(await _invoices.PostAsync(recId, input, ct));
+
+    [HttpPost("{recId:long}/prepayment/invoices")]
+    [DomainPermission("AccountsPayable", "PurchaseOrders", "Post")]
+    public async Task<IActionResult> PostPrepaymentInvoice(long recId, [FromBody] VendorPrepaymentInvoicePostDto input, CancellationToken ct) =>
+        Present(await _invoices.PostPrepaymentAsync(recId, input.InvoiceId, input.InvoiceDate, input.Amount, ct));
+
+    [HttpPost("{recId:long}/prepayment/applications")]
+    [DomainPermission("AccountsPayable", "PurchaseOrders", "Post")]
+    public async Task<IActionResult> ApplyPrepayment(long recId, [FromBody] VendorPrepaymentApplicationDto input, CancellationToken ct) =>
+        Present(await _invoices.ApplyPrepaymentAsync(recId, input.PrepaymentInvoiceRecId, input.FinalInvoiceRecId, input.AccountingDate, input.Amount, ct));
+
+    [HttpPost("{recId:long}/prepayment/applications/{applicationRecId:long}/reverse")]
+    [DomainPermission("AccountsPayable", "PurchaseOrders", "Post")]
+    public async Task<IActionResult> ReversePrepaymentApplication(long recId, long applicationRecId,
+        [FromBody] VendorPrepaymentApplicationReversalDto input, CancellationToken ct) =>
+        Present(await _invoices.ReversePrepaymentApplicationAsync(recId, applicationRecId, input.AccountingDate, ct));
 
     private IActionResult Present(PurchResult result) => result.StatusCode switch
     {

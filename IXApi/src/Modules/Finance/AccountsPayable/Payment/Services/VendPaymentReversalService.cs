@@ -91,6 +91,7 @@ public sealed class VendPaymentReversalService : BaseService<VendTrans>, IVendPa
             if (lines.Count != 1)
                 return await Fail(422, "Only a single-line vendor payment journal can be reversed by this path.", ct);
             var line = lines[0];
+            await support.LockAsync($"VendPayment:{area}:{line.LedgerDimensionName}", ct);
 
             var paymentTrans = await Db.Set<VendTrans>()
                 .FirstOrDefaultAsync(x => x.DataAreaId == area && x.RecId == line.VendTransId, ct);
@@ -133,7 +134,9 @@ public sealed class VendPaymentReversalService : BaseService<VendTrans>, IVendPa
             if (bankMovement == null)
                 return await Fail(422, "The bank movement behind the payment was not found, so the reversal cannot restore it.", ct);
 
-            var vendorAccount = await support.ResolveVendorSummaryAsync(area, vendor, ct);
+            var vendorAccount = line.LedgerDimension > 0
+                ? await support.LoadDimensionAsync(area, line.LedgerDimension, "original vendor payment", ct)
+                : await support.ResolveVendorSummaryAsync(area, vendor, ct);
             var bankAccount = await support.LoadDimensionAsync(area, line.OffsetLedgerDimension, "bank", ct);
 
             var reversalJournal = (await _numbers.NextAsync("LedgerJournalTable", area, ct)).Code;

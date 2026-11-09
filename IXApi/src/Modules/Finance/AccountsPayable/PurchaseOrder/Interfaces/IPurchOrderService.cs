@@ -7,6 +7,7 @@ public interface IPurchOrderService : IBaseService<PurchTable>
     Task<PurchResult> CreateAsync(PurchOrderCreateDto input, CancellationToken ct);
     Task<PurchResult> AddLineAsync(long recId, PurchLineInputDto input, CancellationToken ct);
     Task<PurchResult> GetAsync(long recId, CancellationToken ct);
+    Task<PurchResult> DefinePrepaymentAsync(long recId, PurchPrepaymentDefinitionDto input, CancellationToken ct);
 
     /// <summary>Cancels the quantity the order has not received, leaving the received part invoiceable.</summary>
     Task<PurchResult> CancelRemainderAsync(long recId, CancellationToken ct);

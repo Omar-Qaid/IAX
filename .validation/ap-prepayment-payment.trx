@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="1b8ef970-3ef7-46b1-9f38-0ea0dc8baffd" name="Omar Almojahid@DESKTOP-3Q67JPL 2026-11-09 10:45:42" runUser="DESKTOP-3Q67JPL\Omar Almojahid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-09T10:45:42.7136589+03:00" queuing="2026-11-09T10:45:42.7136594+03:00" start="2026-11-09T10:45:19.8370670+03:00" finish="2026-11-09T10:46:21.7032537+03:00" />
+  <TestSettings name="default" id="82795fed-d2ca-4783-88ec-bb3f85314ed6">
+    <Deployment runDeploymentRoot="Omar_Almojahid_DESKTOP-3Q67JPL_2026-11-09_10_45_42" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="c8ec9b3b-68dd-4c38-a49a-0b7b5c5c9dd1" testId="5e231013-ad6d-2252-2f77-c0b6d1c8a548" testName="IXApi.Tests.AccountsPayablePhaseOneSeedTests.AP_services_one_by_one_SQLite" computerName="DESKTOP-3Q67JPL" duration="00:00:37.8600373" startTime="2026-11-09T10:45:43.6557031+03:00" endTime="2026-11-09T10:46:21.5162265+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c8ec9b3b-68dd-4c38-a49a-0b7b5c5c9dd1" />
+    <UnitTestResult executionId="09c6c4e6-7f6b-47e2-b713-23bd3768a479" testId="0235d075-8c06-9cd5-0e8e-03158dd0d2d2" testName="IAX.IXApi.Tests.InventoryCycleTests.Purchase_order_prepayment_invoice_uses_the_configured_advance_accounts" computerName="DESKTOP-3Q67JPL" duration="00:00:18.0788914" startTime="2026-11-09T10:45:24.6095798+03:00" endTime="2026-11-09T10:45:42.6662971+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="09c6c4e6-7f6b-47e2-b713-23bd3768a479" />
+    <UnitTestResult executionId="022ec38c-7084-4444-9153-3f4510c3b337" testId="42d72873-e557-c45e-a031-752dfe8d7d74" testName="IAX.IXApi.Tests.InventoryCycleTests.Purchase_order_prepayment_definition_respects_the_order_limit_and_is_repeatable" computerName="DESKTOP-3Q67JPL" duration="00:00:00.9820879" startTime="2026-11-09T10:45:42.6941572+03:00" endTime="2026-11-09T10:45:43.6488489+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="022ec38c-7084-4444-9153-3f4510c3b337" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IXApi.Tests.AccountsPayablePhaseOneSeedTests.AP_services_one_by_one_SQLite" storage="c:\users\omar almojahid\desktop\iax\ixapi\tests\bin\prepayvalidation\net9.0\ixapi.tests.dll" id="5e231013-ad6d-2252-2f77-c0b6d1c8a548">
+      <Execution id="c8ec9b3b-68dd-4c38-a49a-0b7b5c5c9dd1" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\bin\PrepayValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsPayablePhaseOneSeedTests" name="AP_services_one_by_one_SQLite" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.InventoryCycleTests.Purchase_order_prepayment_invoice_uses_the_configured_advance_accounts" storage="c:\users\omar almojahid\desktop\iax\ixapi\tests\bin\prepayvalidation\net9.0\ixapi.tests.dll" id="0235d075-8c06-9cd5-0e8e-03158dd0d2d2">
+      <Execution id="09c6c4e6-7f6b-47e2-b713-23bd3768a479" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\bin\PrepayValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.InventoryCycleTests" name="Purchase_order_prepayment_invoice_uses_the_configured_advance_accounts" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.InventoryCycleTests.Purchase_order_prepayment_definition_respects_the_order_limit_and_is_repeatable" storage="c:\users\omar almojahid\desktop\iax\ixapi\tests\bin\prepayvalidation\net9.0\ixapi.tests.dll" id="42d72873-e557-c45e-a031-752dfe8d7d74">
+      <Execution id="022ec38c-7084-4444-9153-3f4510c3b337" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\bin\PrepayValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.InventoryCycleTests" name="Purchase_order_prepayment_definition_respects_the_order_limit_and_is_repeatable" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="5e231013-ad6d-2252-2f77-c0b6d1c8a548" executionId="c8ec9b3b-68dd-4c38-a49a-0b7b5c5c9dd1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0235d075-8c06-9cd5-0e8e-03158dd0d2d2" executionId="09c6c4e6-7f6b-47e2-b713-23bd3768a479" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="42d72873-e557-c45e-a031-752dfe8d7d74" executionId="022ec38c-7084-4444-9153-3f4510c3b337" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="3" executed="3" passed="3" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.60]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:02.93]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:03.05]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:01:00.09]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

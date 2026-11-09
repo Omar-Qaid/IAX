@@ -20,6 +20,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
         public string InvoiceAccount { get; set; } = string.Empty;
         public string CurrencyCode { get; set; } = string.Empty;
         public string LedgerVoucher { get; set; } = string.Empty;
+        public NoYes Prepayment { get; set; } = NoYes.No;
         public decimal Qty { get; set; }
         public decimal SalesBalance { get; set; }
         public decimal SumTax { get; set; }

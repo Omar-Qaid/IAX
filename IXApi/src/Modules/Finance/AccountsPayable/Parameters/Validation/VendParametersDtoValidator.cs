@@ -9,6 +9,7 @@ public class VendParametersDtoValidator : BaseValidator<VendParametersDto>
     public VendParametersDtoValidator()
     {
         RuleFor(x => x.VendPostingProfile).MaximumLength(FieldLengths.PostingProfile);
+        RuleFor(x => x.AdvancePostingProfile).MaximumLength(FieldLengths.PostingProfile);
         RuleFor(x => x.TotalPriceTolerancePercentage).InclusiveBetween(0m, 100m)
             .WithMessage("The invoice price match tolerance must be a percentage between 0 and 100.");
         RuleFor(x => x.MatchingPolicy).IsInEnum()

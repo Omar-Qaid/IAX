@@ -199,12 +199,13 @@ internal sealed class SubledgerPostingSupport(DbContext db)
     /// <param name="custVendGroup">That vendor's or customer's group, when the caller already loaded it.</param>
     public async Task<DimensionAttributeValueCombination> ResolveInventPostingAsync(string area, string itemId,
         InventAccountType type, CancellationToken ct, string? itemGroupId = null,
-        string? custVendAccount = null, string? custVendGroup = null)
+        string? custVendAccount = null, string? custVendGroup = null, long? categoryRecId = null)
     {
         var itemGroup = itemGroupId ?? await db.Set<InventItemGroupItem>().AsNoTracking()
             .Where(x => x.ItemDataAreaId == area && x.ItemId == itemId).Select(x => x.ItemGroupId).FirstOrDefaultAsync(ct) ?? string.Empty;
         var rules = await db.Set<InventPosting>().AsNoTracking()
-            .Where(x => x.DataAreaId == area && x.InventAccountType == type).ToListAsync(ct);
+            .Where(x => x.DataAreaId == area && x.InventAccountType == type
+                && (categoryRecId == null || x.CategoryRelation == 0 || x.CategoryRelation == categoryRecId)).ToListAsync(ct);
 
         // Rank: Table beats Group beats All on each axis. -1 means the rule does not match at all.
         static int Rank(TableGroupAll code, string relation, string? specific, string? group) => code switch
@@ -222,7 +223,8 @@ internal sealed class SubledgerPostingSupport(DbContext db)
                 CustVendRank = Rank(x.CustVendCode, x.CustVendRelation, custVendAccount, custVendGroup)
             })
             .Where(x => x.ItemRank >= 0 && x.CustVendRank >= 0)
-            .OrderByDescending(x => x.ItemRank).ThenByDescending(x => x.CustVendRank).ThenBy(x => x.Rule.RecId)
+            .OrderByDescending(x => categoryRecId != null && x.Rule.CategoryRelation == categoryRecId)
+            .ThenByDescending(x => x.ItemRank).ThenByDescending(x => x.CustVendRank).ThenBy(x => x.Rule.RecId)
             .Select(x => x.Rule)
             .FirstOrDefault();
         if (rule == null || rule.LedgerDimension == 0)
