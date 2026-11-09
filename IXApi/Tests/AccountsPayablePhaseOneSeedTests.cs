@@ -1,4 +1,4 @@
-﻿using IAX.IXApi.Shared.Application.Contracts;
+using IAX.IXApi.Shared.Application.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.Services;
 using System.Reflection;
 using IAX.IXApi.Infrastructure.Persistence;
@@ -17,6 +17,8 @@ using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Account
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsPayable.Data;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using IAX.IXApi.Shared.Application.Identity;
@@ -696,7 +698,25 @@ public sealed class AccountsPayablePhaseOneSeedTests
         var runId = Guid.NewGuid().ToString("N");
         try
         {
-            await RunDetailedApStagesAsync(db, "SQL Server", async () => { created = await db.Database.EnsureCreatedAsync(); Assert.True(created); }, runId);
+            await RunDetailedApStagesAsync(db, "SQL Server", async () =>
+            {
+                created = await db.Database.EnsureCreatedAsync();
+                Assert.True(created);
+                var migrations = db.GetService<IMigrationsAssembly>();
+                var generator = db.GetService<IMigrationsSqlGenerator>();
+                foreach (var migrationId in new[]
+                {
+                    "20261108221500_AddVendPackingSlipVersion",
+                    "20261108221600_AddVendPackingSlipTransHistory"
+                })
+                {
+                    var migration = migrations.CreateMigration(migrations.Migrations[migrationId], db.Database.ProviderName!);
+                    foreach (var command in generator.Generate(migration.DownOperations))
+                        await db.Database.ExecuteSqlRawAsync(command.CommandText);
+                    foreach (var command in generator.Generate(migration.UpOperations))
+                        await db.Database.ExecuteSqlRawAsync(command.CommandText);
+                }
+            }, runId);
             completed = true;
         }
         finally
@@ -775,8 +795,28 @@ public sealed class AccountsPayablePhaseOneSeedTests
         });
         await Stage("4", "استلام البضاعة والتحديث المادي للمخزون", async () =>
         {
-            Success(await services.GetRequiredService<IProductReceiptService>().PostAsync(order.RecId,new("AP-STAGE-R1",date.AddDays(1),[new(line.RecId,100m)]),default));
-            Assert.Equal(100m,(await db.Set<VendPackingSlipJour>().SingleAsync(x => x.DataAreaId == "dat" && x.PurchId == order.PurchId)).Qty);
+            var receipts = services.GetRequiredService<IProductReceiptService>();
+            var duplicate = await receipts.PostAsync(order.RecId,
+                new("AP-STAGE-R1", date.AddDays(1), [new(line.RecId, 50m), new(line.RecId, 50m)]), default);
+            Assert.Equal(422, duplicate.StatusCode);
+            Assert.Empty(await db.Set<VendPackingSlipJour>().ToListAsync());
+            Success(await receipts.PostAsync(order.RecId,new("AP-STAGE-R1",date.AddDays(1),[new(line.RecId,100m)]),default));
+            var receipt = await db.Set<VendPackingSlipJour>().SingleAsync(x => x.DataAreaId == "dat" && x.PurchId == order.PurchId);
+            Assert.Equal(100m, receipt.Qty);
+            var version = await db.Set<VendPackingSlipVersion>().AsNoTracking()
+                .SingleAsync(x => x.VendPackingSlipJour == receipt.RecId);
+            Assert.Equal(receipt.InternalPackingSlipId, version.InternalPackingSlipId);
+            Assert.Equal(receipt.LedgerVoucher, version.LedgerVoucher);
+            Assert.Equal(date.AddDays(1), version.AccountingDate);
+            Assert.Equal(100m, version.Qty);
+            var receiptLine = await db.Set<VendPackingSlipTrans>().AsNoTracking()
+                .SingleAsync(x => x.DataAreaId == "dat" && x.VendPackingSlipJour == receipt.RecId);
+            var history = await db.Set<VendPackingSlipTransHistory>().AsNoTracking()
+                .SingleAsync(x => x.DataAreaId == "dat" && x.VendPackingSlipTrans == receiptLine.RecId);
+            Assert.Equal(version.VersionDateTime, history.ValidFrom);
+            Assert.Equal(100m, history.InventQty);
+            Assert.Equal(0m, history.RemainInvent);
+            Assert.Equal(2500m, history.ValueMst);
             var received = await db.Set<PurchLine>().SingleAsync(x => x.RecId == line.RecId);
             Assert.Equal(0m,received.RemainPurchPhysical); Assert.Equal(100m,received.RemainPurchFinancial);
             Assert.Empty(await db.Set<VendInvoiceJour>().ToListAsync());
@@ -885,7 +925,74 @@ public sealed class AccountsPayablePhaseOneSeedTests
             Assert.Equal(before,await CountsAsync(db));
         });
         Record("scenario-10","فاتورة دفعة مقدمة مرتبطة بأمر الشراء","NOT_IMPLEMENTED","Not implemented by the current AP example/business-service path.");
-        Record("scenario-17","تصحيح استلام تاريخي","NOT_IMPLEMENTED","Not implemented by the current AP example/business-service path.");
+        await Stage("scenario-17", "تصحيح استلام تاريخي", async () =>
+        {
+            const string item = "APV2-STOCK";
+            var assignment = await db.Set<InventModelGroupItem>().SingleAsync(x => x.ItemDataAreaId == "dat" && x.ItemId == item);
+            var model = await db.Set<InventModelGroup>().SingleAsync(x => x.DataAreaId == "dat" && x.ModelGroupId == assignment.ModelGroupId);
+            model.PostPhysicalPurchase = IAX.IXApi.Modules.Finance.Common.NoYes.Yes;
+            model.PostOnHandPhysical = IAX.IXApi.Modules.Finance.Common.NoYes.Yes;
+            await db.SaveChangesAsync();
+
+            var created = await orders.CreateAsync(new(account, null, "SAR", date, "APV2-SITE", "APV2-WH", "AP-STAGE-CORRECT", date.AddDays(-1)), default);
+            Success(created);
+            var correctionOrder = (PurchTable)created.Data!;
+            Success(await orders.AddLineAsync(correctionOrder.RecId, new(item, 100m, "EA", 100m, 1m, "APV2-SITE", "APV2-WH", date, null), default));
+            var correctionLine = await db.Set<PurchLine>().SingleAsync(x => x.DataAreaId == "dat" && x.PurchId == correctionOrder.PurchId);
+            var summary = db.Set<InventSum>().AsNoTracking().Where(x => x.DataAreaId == "dat" && x.ItemId == item && x.InventDimId == correctionLine.InventDimId);
+            var stockBefore = await summary.SingleAsync();
+            var vendorRowsBefore = await db.Set<VendTrans>().CountAsync(x => x.DataAreaId == "dat");
+            var receipts = services.GetRequiredService<IProductReceiptService>();
+            var posted = await receipts.PostAsync(correctionOrder.RecId, new("AP-STAGE-CORRECT-R", date.AddDays(1), [new(correctionLine.RecId, 60m)]), default);
+            Success(posted);
+            var receipt = (VendPackingSlipJour)posted.Data!;
+            var receiptLine = await db.Set<VendPackingSlipTrans>().AsNoTracking().SingleAsync(x => x.DataAreaId == "dat" && x.VendPackingSlipJour == receipt.RecId);
+            var initial = await db.Set<PurchReceiptAccrual>().AsNoTracking().SingleAsync(x => x.DataAreaId == "dat" && x.PackingSlipTransRecId == receiptLine.RecId);
+            Assert.Equal(6000m, initial.AmountMst);
+            var invalid = await receipts.CorrectAsync(receipt.RecId, new(receiptLine.RecId, 70m, date.AddDays(2)), default);
+            Assert.Equal(422, invalid.StatusCode);
+            Assert.Equal(stockBefore.PhysicalInvent + 60m, (await summary.SingleAsync()).PhysicalInvent);
+            var request = new ProductReceiptCorrectionDto(receiptLine.RecId, 50m, date.AddDays(2));
+            Success(await receipts.CorrectAsync(receipt.RecId, request, default));
+            Success(await receipts.CorrectAsync(receipt.RecId, request, default));
+            var stockAfter = await summary.SingleAsync();
+            Assert.Equal(stockBefore.PhysicalInvent + 50m, stockAfter.PhysicalInvent);
+            Assert.Equal(stockBefore.PhysicalValue + 5000m, stockAfter.PhysicalValue);
+            Assert.Equal(stockBefore.Ordered - 50m, stockAfter.Ordered);
+            var versions = await db.Set<VendPackingSlipVersion>().AsNoTracking().Where(x => x.VendPackingSlipJour == receipt.RecId).OrderBy(x => x.VersionDateTime).ToListAsync();
+            Assert.Equal(new[] { 60m, 50m }, versions.Select(x => x.Qty));
+            var histories = await db.Set<VendPackingSlipTransHistory>().AsNoTracking().Where(x => x.DataAreaId == "dat" && x.VendPackingSlipTrans == receiptLine.RecId).OrderBy(x => x.ValidFrom).ToListAsync();
+            Assert.Equal(new[] { 6000m, 5000m }, histories.Select(x => x.ValueMst));
+            Assert.Equal(histories[0].ValidTo, histories[1].ValidFrom);
+            var vouchers = versions.Select(x => x.LedgerVoucher).ToArray();
+            var entryIds = await db.Set<GeneralJournalEntry>().Where(x => vouchers.Contains(x.SubledgerVoucher)).Select(x => x.RecId).ToArrayAsync();
+            Assert.Equal(2, entryIds.Length);
+            var entries = await db.Set<GeneralJournalAccountEntry>().Where(x => x.DataAreaId == "dat" && entryIds.Contains(x.GeneralJournalEntry)).ToListAsync();
+            Assert.Equal(5000m, entries.Where(x => x.LedgerDimension == initial.InventoryLedgerDimension).Sum(x => x.AccountingCurrencyAmount));
+            Assert.Equal(-5000m, entries.Where(x => x.LedgerDimension == initial.AccrualLedgerDimension).Sum(x => x.AccountingCurrencyAmount));
+            Assert.Equal(vendorRowsBefore, await db.Set<VendTrans>().CountAsync(x => x.DataAreaId == "dat"));
+
+            Success(await receipts.CancelAsync(receipt.RecId, date.AddDays(3), default));
+            Success(await receipts.CancelAsync(receipt.RecId, date.AddDays(3), default));
+            var canceledStock = await summary.SingleAsync();
+            Assert.Equal(stockBefore.PhysicalInvent, canceledStock.PhysicalInvent);
+            Assert.Equal(stockBefore.PhysicalValue, canceledStock.PhysicalValue);
+            Assert.Equal(stockBefore.Ordered, canceledStock.Ordered);
+            Assert.Equal(100m, (await db.Set<PurchLine>().AsNoTracking().SingleAsync(x => x.RecId == correctionLine.RecId)).RemainPurchPhysical);
+            var canceledVersions = await db.Set<VendPackingSlipVersion>().AsNoTracking()
+                .Where(x => x.VendPackingSlipJour == receipt.RecId).OrderBy(x => x.VersionDateTime).ToListAsync();
+            Assert.Equal(new[] { 60m, 50m, 0m }, canceledVersions.Select(x => x.Qty));
+            var finalHistory = await db.Set<VendPackingSlipTransHistory>().AsNoTracking().Where(x => x.DataAreaId == "dat" && x.VendPackingSlipTrans == receiptLine.RecId)
+                .OrderByDescending(x => x.ValidFrom).FirstAsync();
+            Assert.Equal(0m, finalHistory.Qty);
+            Assert.Equal(0m, finalHistory.ValueMst);
+            var cancellationVouchers = canceledVersions.Select(x => x.LedgerVoucher).ToArray();
+            var allEntryIds = await db.Set<GeneralJournalEntry>().Where(x => cancellationVouchers.Contains(x.SubledgerVoucher)).Select(x => x.RecId).ToArrayAsync();
+            Assert.Equal(3, allEntryIds.Length);
+            var allEntries = await db.Set<GeneralJournalAccountEntry>().Where(x => x.DataAreaId == "dat" && allEntryIds.Contains(x.GeneralJournalEntry)).ToListAsync();
+            Assert.All(allEntries.GroupBy(x => x.LedgerDimension), group => Assert.Equal(0m, group.Sum(x => x.AccountingCurrencyAmount)));
+            Assert.Equal(vendorRowsBefore, await db.Set<VendTrans>().CountAsync(x => x.DataAreaId == "dat"));
+        });
         Record("run","اختبار دورة الحسابات الدائنة","PASSED");
     }
 

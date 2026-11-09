@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="64abc8ac-55ed-4732-b839-fa5dc0cf6c01" name="Omar Almojahid@DESKTOP-3Q67JPL 2026-11-09 07:30:08" runUser="DESKTOP-3Q67JPL\Omar Almojahid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-09T07:30:08.6924212+03:00" queuing="2026-11-09T07:30:08.6924217+03:00" start="2026-11-09T07:29:44.5729280+03:00" finish="2026-11-09T07:30:08.7014092+03:00" />
+  <TestSettings name="default" id="cffdb207-0091-4042-8c14-d589ecddd1e0">
+    <Deployment runDeploymentRoot="Omar_Almojahid_DESKTOP-3Q67JPL_2026-11-09_07_30_08" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="2eabd0e0-8b09-4272-be76-72eeb5af8593" testId="18791f6e-8b86-edbb-2193-65c702cacd3b" testName="IAX.IXApi.Tests.InventoryCycleTests.Correcting_a_receipt_preserves_history_and_reverses_only_the_removed_accrual" computerName="DESKTOP-3Q67JPL" duration="00:00:17.8689988" startTime="2026-11-09T07:29:50.6746656+03:00" endTime="2026-11-09T07:30:08.4572775+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2eabd0e0-8b09-4272-be76-72eeb5af8593" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IAX.IXApi.Tests.InventoryCycleTests.Correcting_a_receipt_preserves_history_and_reverses_only_the_removed_accrual" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="18791f6e-8b86-edbb-2193-65c702cacd3b">
+      <Execution id="2eabd0e0-8b09-4272-be76-72eeb5af8593" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.InventoryCycleTests" name="Correcting_a_receipt_preserves_history_and_reverses_only_the_removed_accrual" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="18791f6e-8b86-edbb-2193-65c702cacd3b" executionId="2eabd0e0-8b09-4272-be76-72eeb5af8593" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="1" executed="1" passed="1" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.58]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:03.36]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:03.51]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:00:21.49]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

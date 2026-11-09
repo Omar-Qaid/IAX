@@ -56,8 +56,11 @@ public sealed class PurchaseReceiptAccrualPosting(DbContext db, string userId = 
         var remainingQty = accrual.InventQuantity - accrual.ReversedInventQuantity;
         if (match.InventQuantity == 0 || Math.Sign(match.InventQuantity) != Math.Sign(remainingQty) || Math.Abs(match.InventQuantity) > Math.Abs(remainingQty))
             throw new SubledgerPostingException("Matched invoice quantity exceeds the un-reversed receipt accrual.");
-        var amount = match.InventQuantity == remainingQty ? accrual.AmountMst - accrual.ReversedAmountMst
-            : decimal.Round(accrual.AmountMst * match.InventQuantity / accrual.InventQuantity, 4, MidpointRounding.AwayFromZero);
+        // Round the total reversed so far, then subtract what was already posted.
+        var reversedQty = accrual.ReversedInventQuantity + match.InventQuantity;
+        var totalReversal = match.InventQuantity == remainingQty ? accrual.AmountMst
+            : decimal.Round(accrual.AmountMst * reversedQty / accrual.InventQuantity, 4, MidpointRounding.AwayFromZero);
+        var amount = totalReversal - accrual.ReversedAmountMst;
         var support = new SubledgerPostingSupport(db);
         // The posting record is the account source, as on the sales side; the accrual row only
         // tracks how much of the receipt is still un-matched. Older accruals predate the record.

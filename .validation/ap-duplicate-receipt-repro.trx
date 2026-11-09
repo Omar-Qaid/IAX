@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="dc02568c-d813-4103-bde3-40ba42085e11" name="Omar Almojahid@DESKTOP-3Q67JPL 2026-11-09 05:15:46" runUser="DESKTOP-3Q67JPL\Omar Almojahid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-09T05:15:47.0000522+03:00" queuing="2026-11-09T05:15:47.0000526+03:00" start="2026-11-09T05:15:06.1099454+03:00" finish="2026-11-09T05:15:47.0269820+03:00" />
+  <TestSettings name="default" id="37e3976d-07ec-43b3-a728-a759c6b976ce">
+    <Deployment runDeploymentRoot="Omar_Almojahid_DESKTOP-3Q67JPL_2026-11-09_05_15_46" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="f71c739f-f69b-452f-b88a-e11affad7091" testId="a300709c-644e-bdcc-aab7-1092a2beff81" testName="IXApi.Tests.AccountsPayablePhaseOneSeedTests.Detailed_AP_stages_SQLite" computerName="DESKTOP-3Q67JPL" duration="00:00:36.2206831" startTime="2026-11-09T05:15:10.5619065+03:00" endTime="2026-11-09T05:15:46.7743742+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f71c739f-f69b-452f-b88a-e11affad7091">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ&#xD;
+Expected: 422&#xD;
+Actual:   200</Message>
+          <StackTrace>   at IXApi.Tests.AccountsPayablePhaseOneSeedTests.&lt;&gt;c__DisplayClass19_0.&lt;&lt;RunDetailedApStagesAsync&gt;b__6&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsPayablePhaseOneSeedTests.cs:line 781&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IXApi.Tests.AccountsPayablePhaseOneSeedTests.&lt;&gt;c__DisplayClass19_0.&lt;&lt;RunDetailedApStagesAsync&gt;g__Stage|1&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsPayablePhaseOneSeedTests.cs:line 738&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IXApi.Tests.AccountsPayablePhaseOneSeedTests.RunDetailedApStagesAsync(ApplicationDbContext db, String providerName, Func`1 initialize, String reportRunId) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsPayablePhaseOneSeedTests.cs:line 776&#xD;
+   at IXApi.Tests.AccountsPayablePhaseOneSeedTests.Detailed_AP_stages_SQLite() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsPayablePhaseOneSeedTests.cs:line 684&#xD;
+   at IXApi.Tests.AccountsPayablePhaseOneSeedTests.Detailed_AP_stages_SQLite() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsPayablePhaseOneSeedTests.cs:line 684&#xD;
+   at IXApi.Tests.AccountsPayablePhaseOneSeedTests.Detailed_AP_stages_SQLite() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsPayablePhaseOneSeedTests.cs:line 684&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IXApi.Tests.AccountsPayablePhaseOneSeedTests.Detailed_AP_stages_SQLite" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="a300709c-644e-bdcc-aab7-1092a2beff81">
+      <Execution id="f71c739f-f69b-452f-b88a-e11affad7091" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsPayablePhaseOneSeedTests" name="Detailed_AP_stages_SQLite" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="a300709c-644e-bdcc-aab7-1092a2beff81" executionId="f71c739f-f69b-452f-b88a-e11affad7091" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="1" executed="1" passed="0" failed="1" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.39]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:03.00]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:03.07]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:00:39.37]       Assert.Equal() Failure: Values differ&#xD;
+[xUnit.net 00:00:39.37]       Expected: 422&#xD;
+[xUnit.net 00:00:39.37]       Actual:   200&#xD;
+[xUnit.net 00:00:39.38]       Stack Trace:&#xD;
+[xUnit.net 00:00:39.38]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsPayablePhaseOneSeedTests.cs(781,0): at IXApi.Tests.AccountsPayablePhaseOneSeedTests.&lt;&gt;c__DisplayClass19_0.&lt;&lt;RunDetailedApStagesAsync&gt;b__6&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:39.38]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:39.38]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsPayablePhaseOneSeedTests.cs(738,0): at IXApi.Tests.AccountsPayablePhaseOneSeedTests.&lt;&gt;c__DisplayClass19_0.&lt;&lt;RunDetailedApStagesAsync&gt;g__Stage|1&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:39.38]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:39.38]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsPayablePhaseOneSeedTests.cs(776,0): at IXApi.Tests.AccountsPayablePhaseOneSeedTests.RunDetailedApStagesAsync(ApplicationDbContext db, String providerName, Func`1 initialize, String reportRunId)&#xD;
+[xUnit.net 00:00:39.38]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsPayablePhaseOneSeedTests.cs(684,0): at IXApi.Tests.AccountsPayablePhaseOneSeedTests.Detailed_AP_stages_SQLite()&#xD;
+[xUnit.net 00:00:39.38]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsPayablePhaseOneSeedTests.cs(684,0): at IXApi.Tests.AccountsPayablePhaseOneSeedTests.Detailed_AP_stages_SQLite()&#xD;
+[xUnit.net 00:00:39.38]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\AccountsPayablePhaseOneSeedTests.cs(684,0): at IXApi.Tests.AccountsPayablePhaseOneSeedTests.Detailed_AP_stages_SQLite()&#xD;
+[xUnit.net 00:00:39.38]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:39.40]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="DESKTOP-3Q67JPL" outcome="Error" timestamp="2026-11-09T05:15:46.7786471+03:00">
+        <Text>[xUnit.net 00:00:39.37]     IXApi.Tests.AccountsPayablePhaseOneSeedTests.Detailed_AP_stages_SQLite [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

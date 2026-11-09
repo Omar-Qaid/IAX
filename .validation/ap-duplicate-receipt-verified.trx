@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="77d9deaf-ad09-45c9-8bb4-a697d0dd25db" name="Omar Almojahid@DESKTOP-3Q67JPL 2026-11-09 05:17:56" runUser="DESKTOP-3Q67JPL\Omar Almojahid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-09T05:17:56.7039456+03:00" queuing="2026-11-09T05:17:56.7039460+03:00" start="2026-11-09T05:16:45.1821911+03:00" finish="2026-11-09T05:24:12.3346485+03:00" />
+  <TestSettings name="default" id="155eb1d9-a382-4423-99b0-ef3b05a7d882">
+    <Deployment runDeploymentRoot="Omar_Almojahid_DESKTOP-3Q67JPL_2026-11-09_05_17_56" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="5196a2de-9177-487d-bf13-dd7a17206ecd" testId="d0566dd7-6a02-f1e3-54c8-62a3caa9abb6" testName="IXApi.Tests.AccountsPayablePhaseOneSeedTests.Detailed_AP_stages_SQLServer" computerName="DESKTOP-3Q67JPL" duration="00:06:15.3879265" startTime="2026-11-09T05:17:56.6322795+03:00" endTime="2026-11-09T05:24:12.0485848+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5196a2de-9177-487d-bf13-dd7a17206ecd" />
+    <UnitTestResult executionId="05a8919e-e2e0-4bcc-ac0a-87adc72567e6" testId="a300709c-644e-bdcc-aab7-1092a2beff81" testName="IXApi.Tests.AccountsPayablePhaseOneSeedTests.Detailed_AP_stages_SQLite" computerName="DESKTOP-3Q67JPL" duration="00:01:05.8079398" startTime="2026-11-09T05:16:50.8147383+03:00" endTime="2026-11-09T05:17:56.6042696+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="05a8919e-e2e0-4bcc-ac0a-87adc72567e6" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IXApi.Tests.AccountsPayablePhaseOneSeedTests.Detailed_AP_stages_SQLite" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="a300709c-644e-bdcc-aab7-1092a2beff81">
+      <Execution id="05a8919e-e2e0-4bcc-ac0a-87adc72567e6" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsPayablePhaseOneSeedTests" name="Detailed_AP_stages_SQLite" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.AccountsPayablePhaseOneSeedTests.Detailed_AP_stages_SQLServer" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="d0566dd7-6a02-f1e3-54c8-62a3caa9abb6">
+      <Execution id="5196a2de-9177-487d-bf13-dd7a17206ecd" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsPayablePhaseOneSeedTests" name="Detailed_AP_stages_SQLServer" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="d0566dd7-6a02-f1e3-54c8-62a3caa9abb6" executionId="5196a2de-9177-487d-bf13-dd7a17206ecd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a300709c-644e-bdcc-aab7-1092a2beff81" executionId="05a8919e-e2e0-4bcc-ac0a-87adc72567e6" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="2" executed="2" passed="2" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.50]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:03.06]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:03.14]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:07:24.53]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

@@ -26,6 +26,16 @@ public class ProductReceiptController : BaseController<VendPackingSlipJour, Vend
     public async Task<IActionResult> Post(long recId, [FromBody] ProductReceiptPostDto input, CancellationToken ct) =>
         Present(await _receiptService.PostAsync(recId, input, ct));
 
+    [HttpPost("{recId:long}/correct")]
+    [DomainPermission("AccountsPayable", "PurchaseOrders", "Post")]
+    public async Task<IActionResult> Correct(long recId, [FromBody] ProductReceiptCorrectionDto input, CancellationToken ct) =>
+        Present(await _receiptService.CorrectAsync(recId, input, ct));
+
+    [HttpPost("{recId:long}/cancel")]
+    [DomainPermission("AccountsPayable", "PurchaseOrders", "Post")]
+    public async Task<IActionResult> Cancel(long recId, [FromBody] ProductReceiptCancelDto input, CancellationToken ct) =>
+        Present(await _receiptService.CancelAsync(recId, input.AccountingDate, ct));
+
     [NonAction]
     public override Task<ActionResult<APIResponse<VendPackingSlipJourDto>>> Create(
         VendPackingSlipJourDto dto,

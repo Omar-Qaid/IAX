@@ -1,4 +1,4 @@
-﻿using IAX.IXApi.Modules.Finance.Inventory;
+using IAX.IXApi.Modules.Finance.Inventory;
 using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Infrastructure.Persistence.Services;
@@ -17,7 +17,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 /// receipts are supported; over-receipt and duplicate product receipt numbers are rejected.
 /// Configured physical-purchase posting records receipt accruals for matched invoice reversal.
 /// </summary>
-public sealed class ProductReceiptService : BaseService<VendPackingSlipJour>, IProductReceiptService
+public sealed partial class ProductReceiptService : BaseService<VendPackingSlipJour>, IProductReceiptService
 {
     private readonly ICompanyExecutionContext _company;
     private readonly ISysNumberSequenceService _numbers;
@@ -62,6 +62,8 @@ public sealed class ProductReceiptService : BaseService<VendPackingSlipJour>, IP
         var area = _company.GetDataAreaId();
         var validation = await (_validator ?? new ProductReceiptPostDtoValidator()).ValidateAsync(input, ct);
         if (!validation.IsValid) return new(400, null, validation.Errors[0].ErrorMessage);
+        if (input.Lines.Select(x => x.PurchLineRecId).Distinct().Count() != input.Lines.Count)
+            return new(422, null, "A purchase line can appear only once on a product receipt.");
         var date = (input.DeliveryDate ?? DateTime.UtcNow).Date;
         await _unitOfWork.BeginTransactionAsync(ct);
         try

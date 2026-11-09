@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.NumberSequences;
@@ -2174,6 +2174,157 @@ public sealed class InventoryCycleTests
         Assert.Equal(NoYes.No, posting.IsPosted);
         Assert.Equal(422, (await invoices.PostAsync(order.RecId, new VendorInvoicePostDto("ACCRUAL-I2", null, [new(line.RecId, 20)]), default)).StatusCode);
         Assert.Equal(2, await db.Set<VendInvoicePackingSlipQuantityMatch>().CountAsync());
+    }
+
+    [Fact]
+    public async Task Partial_receipt_accrual_reversals_do_not_exceed_the_original_amount()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        var policy = db.Set<InventModelGroup>().Local.Single();
+        policy.PostPhysicalPurchase = NoYes.Yes;
+        policy.PostOnHandPhysical = NoYes.Yes;
+        db.Set<InventPosting>().AddRange(
+            new InventPosting { RecId = 4, DataAreaId = "dat", InventAccountType = InventAccountType.PurchPackingSlip, ItemCode = TableGroupAll.All, CustVendCode = TableGroupAll.All, LedgerDimension = 1 },
+            new InventPosting { RecId = 5, DataAreaId = "dat", InventAccountType = InventAccountType.PurchPackingSlipOffsetAccount, ItemCode = TableGroupAll.All, CustVendCode = TableGroupAll.All, LedgerDimension = 3 });
+        await db.SaveChangesAsync();
+        var (orders, _, receipts, _) = PurchaseServices(db);
+        Assert.Equal(200, (await orders.CreateAsync(new PurchOrderCreateDto("V-0001", null, "SAR", new DateTime(2026, 10, 1), "S01", "WH-01", null), default)).StatusCode);
+        var order = await db.Set<PurchTable>().SingleAsync();
+        Assert.Equal(200, (await orders.AddLineAsync(order.RecId, new PurchLineInputDto("ITEM-001", 4, "PCS", 50, 1, null, null, null, null), default)).StatusCode);
+        var line = await db.Set<PurchLine>().SingleAsync();
+        Assert.Equal(200, (await receipts.PostAsync(order.RecId, new ProductReceiptPostDto("ACCRUAL-ROUND", new DateTime(2026, 10, 2), [new(line.RecId, 4)]), default)).StatusCode);
+        var accrual = await db.Set<PurchReceiptAccrual>().SingleAsync();
+        accrual.AmountMst = 0.0002m;
+
+        var posting = new PurchaseReceiptAccrualPosting(db);
+        foreach (var expected in new[] { 0.0001m, 0m, 0.0001m, 0m })
+        {
+            var match = new VendInvoicePackingSlipQuantityMatch { PackingSlipTransRecId = accrual.PackingSlipTransRecId, InventQuantity = 1m };
+            await posting.ReverseAsync("dat", match, accrual.GeneralJournalEntryRecId, "SAR", default);
+            Assert.Equal(expected, match.AccrualReversalAmountMst);
+        }
+        Assert.Equal(accrual.AmountMst, accrual.ReversedAmountMst);
+        Assert.Equal(accrual.InventQuantity, accrual.ReversedInventQuantity);
+    }
+
+    [Fact]
+    public async Task Correcting_a_receipt_preserves_history_and_reverses_only_the_removed_accrual()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        var policy = db.Set<InventModelGroup>().Local.Single();
+        policy.PostPhysicalPurchase = NoYes.Yes;
+        policy.PostOnHandPhysical = NoYes.Yes;
+        db.Set<InventPosting>().AddRange(
+            new InventPosting { RecId = 4, DataAreaId = "dat", InventAccountType = InventAccountType.PurchPackingSlip, ItemCode = TableGroupAll.All, CustVendCode = TableGroupAll.All, LedgerDimension = 1 },
+            new InventPosting { RecId = 5, DataAreaId = "dat", InventAccountType = InventAccountType.PurchPackingSlipOffsetAccount, ItemCode = TableGroupAll.All, CustVendCode = TableGroupAll.All, LedgerDimension = 3 });
+        await db.SaveChangesAsync();
+        var (orders, _, receipts, invoices) = PurchaseServices(db);
+        var date = new DateTime(2026, 10, 1);
+        Assert.Equal(200, (await orders.CreateAsync(new("V-0001", null, "SAR", date, "S01", "WH-01", null), default)).StatusCode);
+        var order = await db.Set<PurchTable>().SingleAsync();
+        Assert.Equal(200, (await orders.AddLineAsync(order.RecId, new("ITEM-001", 100m, "PCS", 100m, 1m, null, null, null, null), default)).StatusCode);
+        var line = await db.Set<PurchLine>().SingleAsync();
+        Assert.Equal(200, (await receipts.PostAsync(order.RecId, new("RCPT-CORRECT", date.AddDays(1), [new(line.RecId, 60m)]), default)).StatusCode);
+        var receipt = await db.Set<VendPackingSlipJour>().AsNoTracking().SingleAsync();
+        var source = await db.Set<VendPackingSlipTrans>().AsNoTracking().SingleAsync();
+
+        var bad = await receipts.CorrectAsync(receipt.RecId, new(source.RecId, 70m, date.AddDays(2)), default);
+        Assert.Equal(422, bad.StatusCode);
+        Assert.Equal(60m, (await db.Set<InventSum>().AsNoTracking().SingleAsync()).PhysicalInvent);
+        Assert.Single(await db.Set<VendPackingSlipVersion>().ToListAsync());
+        var correction = new ProductReceiptCorrectionDto(source.RecId, 50m, date.AddDays(2));
+        // A stock rejection occurs after the reversal voucher is staged. The transaction must undo it.
+        var reserved = await db.Set<InventSum>().SingleAsync();
+        reserved.ReservPhysical = 55m;
+        await db.SaveChangesAsync();
+        Assert.Equal(422, (await receipts.CorrectAsync(receipt.RecId, correction, default)).StatusCode);
+        Assert.Single(await db.Set<GeneralJournalEntry>().ToListAsync());
+        Assert.Single(await db.Set<VendPackingSlipVersion>().ToListAsync());
+        Assert.Equal(0m, (await db.Set<PurchReceiptAccrual>().AsNoTracking().SingleAsync()).ReversedAmountMst);
+        Assert.Equal(60m, (await db.Set<VendPackingSlipTrans>().AsNoTracking().SingleAsync()).Qty);
+        reserved = await db.Set<InventSum>().SingleAsync();
+        reserved.ReservPhysical = 0m;
+        await db.SaveChangesAsync();
+        var result = await receipts.CorrectAsync(receipt.RecId, correction, default);
+        Assert.True(result.StatusCode == 200, result.Message);
+        Assert.Equal(200, (await receipts.CorrectAsync(receipt.RecId, correction, default)).StatusCode);
+
+        var versions = await db.Set<VendPackingSlipVersion>().OrderBy(x => x.VersionDateTime).ToListAsync();
+        Assert.Equal(new[] { 60m, 50m }, versions.Select(x => x.Qty));
+        Assert.NotEqual(versions[0].LedgerVoucher, versions[1].LedgerVoucher);
+        var history = await db.Set<VendPackingSlipTransHistory>().OrderBy(x => x.ValidFrom).ToListAsync();
+        Assert.Equal(new[] { 6000m, 5000m }, history.Select(x => x.ValueMst));
+        Assert.Equal(history[0].ValidTo, history[1].ValidFrom);
+        var current = await db.Set<VendPackingSlipTrans>().AsNoTracking().SingleAsync();
+        Assert.Equal(50m, current.Qty);
+        Assert.Equal(50m, (await db.Set<PurchLine>().AsNoTracking().SingleAsync()).RemainPurchPhysical);
+        var stock = await db.Set<InventSum>().AsNoTracking().SingleAsync();
+        Assert.Equal(50m, stock.PhysicalInvent);
+        Assert.Equal(50m, stock.Ordered);
+        Assert.Equal(5000m, stock.PhysicalValue);
+        Assert.Empty(await db.Set<VendTrans>().ToListAsync());
+        var ledger = await db.Set<GeneralJournalAccountEntry>().ToListAsync();
+        Assert.Equal(5000m, ledger.Where(x => x.LedgerDimension == 1).Sum(x => x.AccountingCurrencyAmount));
+        Assert.Equal(-5000m, ledger.Where(x => x.LedgerDimension == 3).Sum(x => x.AccountingCurrencyAmount));
+        Assert.Equal(200, (await invoices.PostAsync(order.RecId, new("CORRECT-I", date.AddDays(3), [new(line.RecId, 50m)]), default)).StatusCode);
+        Assert.Equal(6000m, (await db.Set<PurchReceiptAccrual>().AsNoTracking().SingleAsync()).ReversedAmountMst);
+    }
+
+    [Fact]
+    public async Task Receipt_cancellation_reverses_every_line_in_one_transaction()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        var policy = db.Set<InventModelGroup>().Local.Single();
+        policy.PostPhysicalPurchase = NoYes.Yes;
+        policy.PostOnHandPhysical = NoYes.Yes;
+        db.Set<InventPosting>().AddRange(
+            new InventPosting { RecId = 4, DataAreaId = "dat", InventAccountType = InventAccountType.PurchPackingSlip, ItemCode = TableGroupAll.All, CustVendCode = TableGroupAll.All, LedgerDimension = 1 },
+            new InventPosting { RecId = 5, DataAreaId = "dat", InventAccountType = InventAccountType.PurchPackingSlipOffsetAccount, ItemCode = TableGroupAll.All, CustVendCode = TableGroupAll.All, LedgerDimension = 3 });
+        await db.SaveChangesAsync();
+        var (orders, _, receipts, _) = PurchaseServices(db);
+        var date = new DateTime(2026, 10, 1);
+        Assert.Equal(200, (await orders.CreateAsync(new("V-0001", null, "SAR", date, "S01", "WH-01", null), default)).StatusCode);
+        var order = await db.Set<PurchTable>().SingleAsync();
+        foreach (var qty in new[] { 20m, 30m })
+            Assert.Equal(200, (await orders.AddLineAsync(order.RecId, new("ITEM-001", qty, "PCS", 100m, 1m, null, null, null, null), default)).StatusCode);
+        var lines = await db.Set<PurchLine>().OrderBy(x => x.RecId).ToListAsync();
+        Assert.Equal(200, (await receipts.PostAsync(order.RecId, new("CANCEL-TWO", date.AddDays(1), lines.Select(x => new PurchPostLineDto(x.RecId, x.PurchQty)).ToList()), default)).StatusCode);
+        var receipt = await db.Set<VendPackingSlipJour>().AsNoTracking().SingleAsync();
+
+        var stock = await db.Set<InventSum>().SingleAsync();
+        stock.ReservPhysical = 25m;
+        await db.SaveChangesAsync();
+        Assert.Equal(422, (await receipts.CancelAsync(receipt.RecId, date.AddDays(2), default)).StatusCode);
+        Assert.Equal(50m, (await db.Set<InventSum>().AsNoTracking().SingleAsync()).PhysicalInvent);
+        Assert.Equal(2, await db.Set<GeneralJournalEntry>().CountAsync());
+        Assert.Single(await db.Set<VendPackingSlipVersion>().ToListAsync());
+        Assert.All(await db.Set<PurchReceiptAccrual>().AsNoTracking().ToListAsync(), x => Assert.Equal(0m, x.ReversedAmountMst));
+
+        stock = await db.Set<InventSum>().SingleAsync();
+        stock.ReservPhysical = 0m;
+        await db.SaveChangesAsync();
+        var result = await receipts.CancelAsync(receipt.RecId, date.AddDays(2), default);
+        Assert.True(result.StatusCode == 200, result.Message);
+        Assert.Equal(200, (await receipts.CancelAsync(receipt.RecId, date.AddDays(2), default)).StatusCode);
+        stock = await db.Set<InventSum>().AsNoTracking().SingleAsync();
+        Assert.Equal(50m, stock.Ordered);
+        Assert.Equal(0m, stock.PhysicalInvent);
+        Assert.Equal(0m, stock.PhysicalValue);
+        Assert.Equal(3, await db.Set<GeneralJournalEntry>().CountAsync());
+        var versions = await db.Set<VendPackingSlipVersion>().OrderBy(x => x.VersionDateTime).ToListAsync();
+        Assert.Equal(new[] { 50m, 0m }, versions.Select(x => x.Qty));
+        Assert.All(await db.Set<VendPackingSlipTrans>().AsNoTracking().ToListAsync(), x => Assert.Equal(0m, x.Qty));
+        Assert.All(await db.Set<PurchReceiptAccrual>().AsNoTracking().ToListAsync(), x => Assert.Equal(x.AmountMst, x.ReversedAmountMst));
+        Assert.Empty(await db.Set<VendTrans>().ToListAsync());
     }
 
     [Fact]
