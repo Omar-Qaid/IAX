@@ -4368,7 +4368,8 @@ public sealed class InventoryCycleTests
             typeof(SubledgerJournalEntry), typeof(SubledgerJournalAccountEntry), typeof(SubledgerJournalAccountEntryDistribution),
             typeof(PurchParameters), typeof(VendInvoiceInfoTable), typeof(VendInvoiceInfoLine), typeof(VendInvoiceInfoSubLine),
             typeof(PurchTable), typeof(PurchLine), typeof(VendPurchOrderJour), typeof(VendPurchOrderTrans),
-            typeof(VendPackingSlipJour), typeof(VendPackingSlipTrans), typeof(VendInvoiceJour), typeof(VendInvoiceTrans), typeof(VendInvoicePackingSlipQuantityMatch),
+            typeof(VendPackingSlipJour), typeof(VendPackingSlipTrans), typeof(VendPackingSlipVersion), typeof(VendPackingSlipTransHistory),
+            typeof(VendInvoiceJour), typeof(VendInvoiceTrans), typeof(VendInvoicePackingSlipQuantityMatch),
             typeof(PaymTerm), typeof(VendTrans), typeof(VendTransOpen), typeof(VendSettlement), typeof(PurchReceiptAccrual), typeof(VendLedgerAccounts), typeof(InventTransOriginPurchLine), typeof(VendTable), typeof(VendParameters), typeof(VendPaymModeTable),
             typeof(InventSite), typeof(InventLocation), typeof(InventTable), typeof(InventTableModule), typeof(UnitOfMeasure), typeof(UnitOfMeasureConversion),
             typeof(SalesTable), typeof(SalesLine), typeof(CustTable), typeof(CustParameters), typeof(CustPackingSlipJour), typeof(CustPackingSlipTrans),
@@ -4401,6 +4402,9 @@ public sealed class InventoryCycleTests
                 builder.Ignore(type);
             foreach (var type in Included) Configure(builder, type);
             builder.Entity<CustPackingSlipVersion>().Ignore(x => x.DataAreaId);
+            builder.Entity<VendPackingSlipVersion>().Ignore(x => x.DataAreaId);
+            builder.Entity<VendPackingSlipTransHistory>().HasOne(x => x.PackingSlipLine)
+                .WithMany().HasForeignKey(x => x.VendPackingSlipTrans);
             builder.Entity<CustPackingSlipTransHistory>().HasOne(x => x.PackingSlipLine)
                 .WithMany().HasForeignKey(x => x.CustPackingSlipTrans).OnDelete(DeleteBehavior.Restrict);
         }

@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="32011a3c-c493-43ed-8f2f-100538ad04d7" name="Omar Almojahid@DESKTOP-3Q67JPL 2026-11-09 03:21:37" runUser="DESKTOP-3Q67JPL\Omar Almojahid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-09T03:21:37.5860971+03:00" queuing="2026-11-09T03:21:37.5860974+03:00" start="2026-11-09T03:21:14.4225947+03:00" finish="2026-11-09T03:21:44.5295712+03:00" />
+  <TestSettings name="default" id="bdf92b15-37bd-4279-8082-01686a86f36d">
+    <Deployment runDeploymentRoot="Omar_Almojahid_DESKTOP-3Q67JPL_2026-11-09_03_21_37" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="edcb9dd9-ffed-4959-805d-254c44b7e33f" testId="42c0b5c6-81b5-aba2-49d6-5d8203e97962" testName="IAX.IXApi.Tests.AccountsPayableGenericArchitectureTests.Generic_vendor_controllers_run_their_dto_validators" computerName="DESKTOP-3Q67JPL" duration="00:00:00.3308773" startTime="2026-11-09T03:21:37.4162149+03:00" endTime="2026-11-09T03:21:37.6963779+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="edcb9dd9-ffed-4959-805d-254c44b7e33f" />
+    <UnitTestResult executionId="d3a6dd8e-e4e4-498e-bfdc-f300ab4dfdaa" testId="41543c9a-334a-b6e3-5ac7-88da93c239a9" testName="IAX.IXApi.Tests.AccountsPayableGenericArchitectureTests.Purchase_posting_services_remain_specialized_and_registered" computerName="DESKTOP-3Q67JPL" duration="00:00:00.0296904" startTime="2026-11-09T03:21:37.4153334+03:00" endTime="2026-11-09T03:21:37.4153950+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d3a6dd8e-e4e4-498e-bfdc-f300ab4dfdaa" />
+    <UnitTestResult executionId="309df8bd-79ba-4efe-8e01-4e58fec85a7e" testId="de1ea525-809a-163e-442e-9b9ef3c76035" testName="IAX.IXApi.Tests.AccountsPayableGenericArchitectureTests.Accounts_payable_validators_use_existing_base_validator" computerName="DESKTOP-3Q67JPL" duration="00:00:00.0089874" startTime="2026-11-09T03:21:37.4144388+03:00" endTime="2026-11-09T03:21:37.4146324+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="309df8bd-79ba-4efe-8e01-4e58fec85a7e" />
+    <UnitTestResult executionId="4f734106-17ec-4b9e-98d4-8f4f60f78c5b" testId="cd2724be-958f-f9a2-9a57-c396650ffccf" testName="IAX.IXApi.Tests.AccountsPayableGenericArchitectureTests.Purchase_journal_controllers_disable_generic_mutations" computerName="DESKTOP-3Q67JPL" duration="00:00:00.0052849" startTime="2026-11-09T03:21:37.7308189+03:00" endTime="2026-11-09T03:21:37.7360089+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4f734106-17ec-4b9e-98d4-8f4f60f78c5b" />
+    <UnitTestResult executionId="b931b45c-1a6f-4442-829e-269970ac0bd5" testId="f11bc8a3-9eab-63ba-ca65-d65cf2cfbe2f" testName="IAX.IXApi.Tests.AccountsPayableGenericArchitectureTests.Vendor_crud_controllers_use_registered_base_services" computerName="DESKTOP-3Q67JPL" duration="00:00:00.0013121" startTime="2026-11-09T03:21:37.6965744+03:00" endTime="2026-11-09T03:21:37.6977438+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b931b45c-1a6f-4442-829e-269970ac0bd5" />
+    <UnitTestResult executionId="0665f1c9-442c-4c93-b85a-d9b420ca08cc" testId="bb49fdb4-1d24-3077-3f88-33bca8d01b71" testName="IAX.IXApi.Tests.AccountsPayableGenericArchitectureTests.Vendor_posting_configuration_preserves_existing_table_shape" computerName="DESKTOP-3Q67JPL" duration="00:00:11.1431153" startTime="2026-11-09T03:21:26.1763934+03:00" endTime="2026-11-09T03:21:37.3241679+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0665f1c9-442c-4c93-b85a-d9b420ca08cc" />
+    <UnitTestResult executionId="10aee9ce-3876-474d-b53e-d7a02dd6c0ba" testId="1e55594d-c87b-edd1-24b2-3e0dde9d4aa8" testName="IAX.IXApi.Tests.InventoryCycleTests.Receipt_accrual_reverses_only_matched_quantities_using_original_accounts" computerName="DESKTOP-3Q67JPL" duration="00:00:21.1666457" startTime="2026-11-09T03:21:22.9504320+03:00" endTime="2026-11-09T03:21:44.1151757+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="10aee9ce-3876-474d-b53e-d7a02dd6c0ba" />
+    <UnitTestResult executionId="c2a5e3ce-c5d5-41de-b292-e1eeb3b9922a" testId="97752904-0950-f78f-3a6f-3496dd25b1f6" testName="IAX.IXApi.Tests.AccountsPayableGenericArchitectureTests.Vendor_return_controller_disables_unfiltered_generic_reads" computerName="DESKTOP-3Q67JPL" duration="00:00:00.0009685" startTime="2026-11-09T03:21:37.4158997+03:00" endTime="2026-11-09T03:21:37.4160592+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c2a5e3ce-c5d5-41de-b292-e1eeb3b9922a" />
+    <UnitTestResult executionId="a5c2ef09-b2db-4d35-9a65-afb031e421c7" testId="2c3ef06c-86ef-56ca-9668-605dd4482800" testName="IAX.IXApi.Tests.AccountsPayableGenericArchitectureTests.Accounts_payable_features_adhere_to_seven_folder_layout" computerName="DESKTOP-3Q67JPL" duration="00:00:00.0327784" startTime="2026-11-09T03:21:37.6979013+03:00" endTime="2026-11-09T03:21:37.7306129+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a5c2ef09-b2db-4d35-9a65-afb031e421c7" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IAX.IXApi.Tests.AccountsPayableGenericArchitectureTests.Purchase_posting_services_remain_specialized_and_registered" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="41543c9a-334a-b6e3-5ac7-88da93c239a9">
+      <Execution id="d3a6dd8e-e4e4-498e-bfdc-f300ab4dfdaa" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.AccountsPayableGenericArchitectureTests" name="Purchase_posting_services_remain_specialized_and_registered" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.AccountsPayableGenericArchitectureTests.Generic_vendor_controllers_run_their_dto_validators" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="42c0b5c6-81b5-aba2-49d6-5d8203e97962">
+      <Execution id="edcb9dd9-ffed-4959-805d-254c44b7e33f" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.AccountsPayableGenericArchitectureTests" name="Generic_vendor_controllers_run_their_dto_validators" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.AccountsPayableGenericArchitectureTests.Vendor_return_controller_disables_unfiltered_generic_reads" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="97752904-0950-f78f-3a6f-3496dd25b1f6">
+      <Execution id="c2a5e3ce-c5d5-41de-b292-e1eeb3b9922a" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.AccountsPayableGenericArchitectureTests" name="Vendor_return_controller_disables_unfiltered_generic_reads" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.AccountsPayableGenericArchitectureTests.Purchase_journal_controllers_disable_generic_mutations" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="cd2724be-958f-f9a2-9a57-c396650ffccf">
+      <Execution id="4f734106-17ec-4b9e-98d4-8f4f60f78c5b" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.AccountsPayableGenericArchitectureTests" name="Purchase_journal_controllers_disable_generic_mutations" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.AccountsPayableGenericArchitectureTests.Accounts_payable_features_adhere_to_seven_folder_layout" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="2c3ef06c-86ef-56ca-9668-605dd4482800">
+      <Execution id="a5c2ef09-b2db-4d35-9a65-afb031e421c7" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.AccountsPayableGenericArchitectureTests" name="Accounts_payable_features_adhere_to_seven_folder_layout" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.AccountsPayableGenericArchitectureTests.Vendor_posting_configuration_preserves_existing_table_shape" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="bb49fdb4-1d24-3077-3f88-33bca8d01b71">
+      <Execution id="0665f1c9-442c-4c93-b85a-d9b420ca08cc" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.AccountsPayableGenericArchitectureTests" name="Vendor_posting_configuration_preserves_existing_table_shape" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.AccountsPayableGenericArchitectureTests.Vendor_crud_controllers_use_registered_base_services" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="f11bc8a3-9eab-63ba-ca65-d65cf2cfbe2f">
+      <Execution id="b931b45c-1a6f-4442-829e-269970ac0bd5" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.AccountsPayableGenericArchitectureTests" name="Vendor_crud_controllers_use_registered_base_services" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.AccountsPayableGenericArchitectureTests.Accounts_payable_validators_use_existing_base_validator" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="de1ea525-809a-163e-442e-9b9ef3c76035">
+      <Execution id="309df8bd-79ba-4efe-8e01-4e58fec85a7e" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.AccountsPayableGenericArchitectureTests" name="Accounts_payable_validators_use_existing_base_validator" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.InventoryCycleTests.Receipt_accrual_reverses_only_matched_quantities_using_original_accounts" storage="c:\users\omar almojahid\appdata\local\temp\iax-otc-credit-2359\debug\net9.0\ixapi.tests.dll" id="1e55594d-c87b-edd1-24b2-3e0dde9d4aa8">
+      <Execution id="10aee9ce-3876-474d-b53e-d7a02dd6c0ba" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\AppData\Local\Temp\iax-otc-credit-2359\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.InventoryCycleTests" name="Receipt_accrual_reverses_only_matched_quantities_using_original_accounts" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="42c0b5c6-81b5-aba2-49d6-5d8203e97962" executionId="edcb9dd9-ffed-4959-805d-254c44b7e33f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="41543c9a-334a-b6e3-5ac7-88da93c239a9" executionId="d3a6dd8e-e4e4-498e-bfdc-f300ab4dfdaa" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="de1ea525-809a-163e-442e-9b9ef3c76035" executionId="309df8bd-79ba-4efe-8e01-4e58fec85a7e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="cd2724be-958f-f9a2-9a57-c396650ffccf" executionId="4f734106-17ec-4b9e-98d4-8f4f60f78c5b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f11bc8a3-9eab-63ba-ca65-d65cf2cfbe2f" executionId="b931b45c-1a6f-4442-829e-269970ac0bd5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bb49fdb4-1d24-3077-3f88-33bca8d01b71" executionId="0665f1c9-442c-4c93-b85a-d9b420ca08cc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1e55594d-c87b-edd1-24b2-3e0dde9d4aa8" executionId="10aee9ce-3876-474d-b53e-d7a02dd6c0ba" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="97752904-0950-f78f-3a6f-3496dd25b1f6" executionId="c2a5e3ce-c5d5-41de-b292-e1eeb3b9922a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2c3ef06c-86ef-56ca-9668-605dd4482800" executionId="a5c2ef09-b2db-4d35-9a65-afb031e421c7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="9" executed="9" passed="9" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.01] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.77]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:02.94]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:03.08]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:00:24.40]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

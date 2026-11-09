@@ -256,6 +256,8 @@
   "VendLedgerAccounts",
   "VendPackingSlipJour",
   "VendPackingSlipTrans",
+  "VendPackingSlipTransHistory",
+  "VendPackingSlipVersion",
   "VendParameters",
   "VendPaymModeTable",
   "VendPurchOrderJour",

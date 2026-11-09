@@ -91,6 +91,7 @@ public sealed class ProductReceiptService : BaseService<VendPackingSlipJour>, IP
             Db.Set<VendPackingSlipJour>().Add(journal);
             await _unitOfWork.CompleteAsync(ct);
 
+            var versionDateTime = DateTime.UtcNow;
             foreach (var request in input.Lines)
             {
                 var line = await Db.Set<PurchLine>().FirstOrDefaultAsync(x => x.RecId == request.PurchLineRecId
@@ -184,10 +185,31 @@ public sealed class ProductReceiptService : BaseService<VendPackingSlipJour>, IP
                 receiptLine.SourceDocumentLine = await new PurchaseSourceAccounting(Db).LineAsync(area, journal.SourceDocumentHeader!.Value,
                     FinanceTableNumbers.VendPackingSlipTrans, request.Qty, date, ct);
                 Db.Set<VendPackingSlipTrans>().Add(receiptLine);
+                Db.Set<VendPackingSlipTransHistory>().Add(new VendPackingSlipTransHistory
+                {
+                    DataAreaId = area,
+                    PackingSlipLine = receiptLine,
+                    InventQty = receiptLine.InventQty,
+                    Qty = receiptLine.Qty,
+                    Remain = receiptLine.Remain,
+                    RemainInvent = receiptLine.RemainInvent,
+                    ValueMst = receiptLine.ValueMst,
+                    ValidFrom = versionDateTime,
+                    ValidTo = new DateTime(2154, 12, 31, 23, 59, 59, DateTimeKind.Utc)
+                });
                 await new PurchaseReceiptAccrualPosting(Db, _currentUser.GetCurrentUserId()).PostAsync(order, receiptLine, ct);
                 journal.Qty += request.Qty;
             }
 
+            Db.Set<VendPackingSlipVersion>().Add(new VendPackingSlipVersion
+            {
+                VendPackingSlipJour = journal.RecId,
+                InternalPackingSlipId = journal.InternalPackingSlipId,
+                LedgerVoucher = journal.LedgerVoucher,
+                AccountingDate = date,
+                VersionDateTime = versionDateTime,
+                Qty = journal.Qty
+            });
             var lines = await Db.Set<PurchLine>().Where(x => x.DataAreaId == area && x.PurchId == order.PurchId
                 && x.PurchStatus != PurchStatus.Canceled).ToListAsync(ct);
             if (lines.All(x => x.RemainPurchPhysical <= 0)) order.PurchStatus = PurchStatus.Received;
