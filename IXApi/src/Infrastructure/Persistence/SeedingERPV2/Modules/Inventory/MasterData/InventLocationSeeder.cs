@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
+﻿using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Common;
@@ -18,6 +18,16 @@ public sealed class InventLocationSeeder : IDataSeeder
     public async Task SeedAsync(SeedContext c, CancellationToken ct)
     {
 
-        await c.EnsureAsync<InventLocation>(x => x.InventLocationId == "APV2-WH", new() { InventLocationId = "APV2-WH", Name = "Office supplies warehouse (demo)", InventSiteId = "APV2-SITE", WhsEnabled = NoYes.No }, ct);
+        // The destination and transit warehouses exist for transfer orders: InventTransferOrderService
+        // requires a Standard source, a Transit leg and a Standard destination, and supplies all three
+        // per order rather than deriving them from the source warehouse.
+        foreach (var (id, name, type) in new[]
+        {
+            ("APV2-WH", "Office supplies warehouse (demo)", InventLocationType.Standard),
+            ("APV2-WH2", "Office supplies overflow warehouse (demo)", InventLocationType.Standard),
+            ("APV2-TRN", "Office supplies transit warehouse (demo)", InventLocationType.Transit)
+        })
+            await c.EnsureAsync<InventLocation>(x => x.InventLocationId == id,
+                new() { InventLocationId = id, Name = name, InventSiteId = "APV2-SITE", InventLocationType = type, WhsEnabled = NoYes.No }, ct);
     }
 }

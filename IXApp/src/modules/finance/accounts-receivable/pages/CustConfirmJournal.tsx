@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+﻿import React, { useMemo, useState } from 'react';
 import { Box, Tab, Tabs } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -45,7 +45,7 @@ export function CustConfirmJournal(): React.ReactElement {
   const ordersQuery = useQuery({ queryKey: ['accounts-receivable', 'sales-orders'], queryFn: ({ signal }) => salesOrderListApi.list(signal) });
   const journalsQuery = useQuery({ queryKey: ['sales-order-confirmations', salesOrderId], queryFn: ({ signal }) => salesOrderConfirmationApi.list(salesOrderId!, signal), enabled: Boolean(salesOrderId) });
   const order = ordersQuery.data?.find((row) => row.id === salesOrderId);
-  const journals = journalsQuery.data ?? [];
+  const journals = useMemo(() => journalsQuery.data ?? [], [journalsQuery.data]);
   const activeId = journals.some((row) => row.id === selectedId) ? selectedId : journals[0]?.id;
   const detailQuery = useQuery({ queryKey: ['sales-order-confirmation', salesOrderId, activeId], queryFn: ({ signal }) => salesOrderConfirmationApi.get(salesOrderId!, activeId!, signal), enabled: Boolean(salesOrderId && activeId && tab === 'lines') });
   const rows = useMemo<GridRow[]>(() => tab === 'overview'

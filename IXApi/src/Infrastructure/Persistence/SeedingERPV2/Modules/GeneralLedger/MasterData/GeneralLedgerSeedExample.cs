@@ -1,4 +1,4 @@
-using IAX.IXApi.Modules.Finance.Common;
+﻿using IAX.IXApi.Modules.Finance.Common;
 
 namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.GeneralLedger;
 
@@ -29,6 +29,11 @@ public static class GeneralLedgerSeedExample
     public const string CostOfGoodsSold = "681004";
     public const string SalesCashDiscount = "681005";
 
+    // Inventory journal side of the demo chart. Adjustment and counting journals post their
+    // difference to these two accounts, which no purchase or sales document ever reaches.
+    public const string InventoryProfit = "481004";
+    public const string InventoryLoss = "681006";
+
     public static IReadOnlyList<(string Code, string Name, MainAccountType Type)> MainAccounts { get; } =
     [
         (Bank, "Treasury bank (demo)", MainAccountType.Asset),
@@ -50,11 +55,16 @@ public static class GeneralLedgerSeedExample
         (DeliveredNotInvoiced, "Office paper delivered not invoiced (demo)", MainAccountType.Liability),
         (SalesRevenue, "Office paper sales revenue (demo)", MainAccountType.Revenue),
         (CostOfGoodsSold, "Cost of office paper sold (demo)", MainAccountType.Expense),
-        (SalesCashDiscount, "Sales cash discounts (demo)", MainAccountType.Expense)
+        (SalesCashDiscount, "Sales cash discounts (demo)", MainAccountType.Expense),
+        (InventoryProfit, "Inventory profit (demo)", MainAccountType.Revenue),
+        (InventoryLoss, "Inventory loss (demo)", MainAccountType.Expense)
     ];
 
     /// <summary>The receivable codes, in the order the sales account structure allows them.</summary>
     public static IReadOnlyList<string> AccountsReceivableAccounts { get; } =
         [CustomerControl, DeliveredNotInvoicedInterim, CustomerAdvance, PayableSalesTax,
          DeliveredNotInvoiced, SalesRevenue, CostOfGoodsSold, SalesCashDiscount];
+
+    /// <summary>The inventory journal codes, in the order the inventory account structure allows them.</summary>
+    public static IReadOnlyList<string> InventoryJournalAccounts { get; } = [InventoryProfit, InventoryLoss];
 }

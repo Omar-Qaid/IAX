@@ -1,0 +1,16 @@
+{
+  "scope": "ConfigurationAndMasterData",
+  "transactionScenariosEnabled": false,
+  "steps": [
+    { "order": 1, "id": "IV2-SETUP-UNIT", "description": "Unit of measure EA exists and is the unit of every item module." },
+    { "order": 2, "id": "IV2-SETUP-MODELGROUP", "description": "Weighted-average item model groups exist, one stocked and one non-stocked." },
+    { "order": 3, "id": "IV2-SETUP-ITEMGROUP", "description": "Item group APV2 exists and carries the inventory posting profiles." },
+    { "order": 4, "id": "IV2-SETUP-POSTING", "description": "Inventory posting profiles resolve to seeded main accounts." },
+    { "order": 5, "id": "IV2-SETUP-SITEWAREHOUSE", "description": "Site, warehouse and the default inventory dimension exist." },
+    { "order": 6, "id": "IV2-SETUP-TAX", "description": "Zero-rate item tax group IV2-ZERO exists, so costing is asserted without tax noise." },
+    { "order": 7, "id": "IV2-MASTER-PRODUCT", "description": "Fiscal-year-scoped released products exist for the stocked and the service item." },
+    { "order": 8, "id": "IV2-MASTER-DIMGROUPS", "description": "Storage and tracking dimension groups are assigned to the stocked item only." },
+    { "order": 9, "id": "IV2-MASTER-ORDERSETUP", "description": "Default order settings exist for the stocked item." },
+    { "order": 10, "id": "IV2-MASTER-NUMBERING", "description": "Inventory close and cost-settlement number sequences are allocatable." }
+  ]
+}

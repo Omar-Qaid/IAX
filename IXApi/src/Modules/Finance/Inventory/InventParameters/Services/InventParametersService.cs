@@ -60,7 +60,7 @@ public sealed class InventParametersService : BaseService<InventParametersEntity
         if (!await Db.Set<IAX.IXApi.Modules.Finance.Entities.InventModelGroup>().AsNoTracking().AnyAsync(x => x.DataAreaId == companyId
                 && (x.InventModel == InventModel.FIFO || x.InventModel == InventModel.LIFO || x.InventModel == InventModel.WeightedAvg)
                 && x.StockedProduct == NoYes.Yes && x.NegativePhysical == NoYes.No
-                && x.NegativeFinancial == NoYes.No && x.InclPhysicalValueInCost == NoYes.No && x.PostOnHandFinancial == NoYes.Yes
+                && x.NegativeFinancial == NoYes.No && (x.InclPhysicalValueInCost == NoYes.No || x.InventModel == InventModel.WeightedAvg) && x.PostOnHandFinancial == NoYes.Yes
                 && x.MandatoryReceive == NoYes.No, ct))
             Add("MISSING_MODEL_GROUP", "Configure a supported stocked item model group with financial posting and negative inventory disabled.");
 

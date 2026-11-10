@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="6e3ac969-ae8d-4bf6-a366-e8b66d7302c4" name="Omar Almojahid@DESKTOP-3Q67JPL 2026-11-09 19:27:15" runUser="DESKTOP-3Q67JPL\Omar Almojahid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-09T19:27:15.3541453+03:00" queuing="2026-11-09T19:27:15.3541458+03:00" start="2026-11-09T19:26:56.7898518+03:00" finish="2026-11-09T19:28:21.8237498+03:00" />
+  <TestSettings name="default" id="dd0f9ede-fc93-4c38-9454-18d180f81602">
+    <Deployment runDeploymentRoot="Omar_Almojahid_DESKTOP-3Q67JPL_2026-11-09_19_27_15" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="f03e29b3-797e-46e3-bb1a-76b5ee321a1f" testId="8101773a-f548-1168-c582-6bfc9d121a77" testName="IXApi.Tests.InventorySeedIntegrityTests.Inventory_preparation_is_repeatable_preserves_counters_and_rejects_conflicts" computerName="DESKTOP-3Q67JPL" duration="00:00:04.6746226" startTime="2026-11-09T19:28:06.0442347+03:00" endTime="2026-11-09T19:28:10.7182171+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f03e29b3-797e-46e3-bb1a-76b5ee321a1f" />
+    <UnitTestResult executionId="9390c6eb-8670-475a-8bcc-7e3bdea4fb29" testId="0b100d4d-d172-6614-eaca-7f9f50638417" testName="IXApi.Tests.InventorySeedIntegrityTests.Inventory_preparation_rolls_back_masters_after_late_validation_failure" computerName="DESKTOP-3Q67JPL" duration="00:00:35.5572490" startTime="2026-11-09T19:27:30.4845823+03:00" endTime="2026-11-09T19:28:06.0433623+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9390c6eb-8670-475a-8bcc-7e3bdea4fb29" />
+    <UnitTestResult executionId="55f4f3c3-de83-4c48-82d9-e110171b7572" testId="4bb0725b-bcf2-9b08-96f8-193bc6bce97a" testName="IXApi.Tests.InventorySeedIntegrityTests.Inventory_reference_package_posts_and_reruns_without_duplicate_movements" computerName="DESKTOP-3Q67JPL" duration="00:00:10.9079882" startTime="2026-11-09T19:28:10.7189752+03:00" endTime="2026-11-09T19:28:21.6264981+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="55f4f3c3-de83-4c48-82d9-e110171b7572">
+      <Output>
+        <StdOut>{"Company":"dat","FiscalYear":2026,"ScenarioId":"01","ItemId":"IV2-2026-STOCK","Stages":[{"CaseId":"RES-01","Stage":"Reserve 60","Reference":"AR2SO-000001","ExpectedQuantity":60,"ActualQuantity":60,"ExpectedValue":null,"ActualValue":null,"Vouchers":[],"Outcome":"Passed"},{"CaseId":"CST-04","Stage":"Weighted-average close","Reference":"IV2-2026-STOCK","ExpectedQuantity":90,"ActualQuantity":90,"ExpectedValue":1080,"ActualValue":1080,"Vouchers":["AP2IV-000001","AR2IV-000001","AR2IV-000002","AP2IV-000002","IV2CL-000001"],"Outcome":"Passed"},{"CaseId":"ISS-03","Stage":"Stock and service invoicing","Reference":"IV2-2026-01","ExpectedQuantity":null,"ActualQuantity":null,"ExpectedValue":1800,"ActualValue":1800.00,"Vouchers":["AR2IV-000001","AR2IV-000002"],"Outcome":"Passed"}],"PhysicalQuantity":90,"InventoryValue":1080,"CostOfGoodsSold":720}&#xD;
+{"Company":"dat","FiscalYear":2026,"ScenarioId":"01","ItemId":"IV2-2026-STOCK","Stages":[{"CaseId":"CST-04","Stage":"Weighted-average close","Reference":"IV2-2026-STOCK","ExpectedQuantity":90,"ActualQuantity":90.0,"ExpectedValue":1080,"ActualValue":1080.0,"Vouchers":["AP2IV-000001","AR2IV-000001","AR2IV-000002","AP2IV-000002","IV2CL-000001"],"Outcome":"Passed"},{"CaseId":"ISS-03","Stage":"Stock and service invoicing","Reference":"IV2-2026-01","ExpectedQuantity":null,"ActualQuantity":null,"ExpectedValue":1800,"ActualValue":1800.0,"Vouchers":["AR2IV-000001","AR2IV-000002"],"Outcome":"Passed"}],"PhysicalQuantity":90.0,"InventoryValue":1080.0,"CostOfGoodsSold":720.0}</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="1f265eef-fca5-469c-8df4-3ca28449b639" testId="c96fc406-7b0d-cf75-936b-f140ff75d9f8" testName="IAX.IXApi.Tests.InventoryCycleTests.CFG02_weighted_average_setup_accepts_include_physical_value" computerName="DESKTOP-3Q67JPL" duration="00:00:13.5900052" startTime="2026-11-09T19:27:01.7716139+03:00" endTime="2026-11-09T19:27:15.3042663+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1f265eef-fca5-469c-8df4-3ca28449b639" />
+    <UnitTestResult executionId="ccad5231-2404-4f9a-9c80-b7d36ab56579" testId="9c3b5957-242a-3879-09e6-64c5cd5c79b1" testName="IAX.IXApi.Tests.InventoryCycleTests.CST02_physical_receipt_changes_running_average_only_when_enabled(includePhysical: True, expectedCost: 15)" computerName="DESKTOP-3Q67JPL" duration="00:00:01.6164436" startTime="2026-11-09T19:27:28.8526528+03:00" endTime="2026-11-09T19:27:30.4667291+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ccad5231-2404-4f9a-9c80-b7d36ab56579" />
+    <UnitTestResult executionId="52621e28-aac1-47c4-a3f6-fa4a21bb7685" testId="62690a32-90b6-ac2a-cfbd-9c79c4c507b6" testName="IAX.IXApi.Tests.InventoryCycleTests.CST02_physical_receipt_changes_running_average_only_when_enabled(includePhysical: False, expectedCost: 10)" computerName="DESKTOP-3Q67JPL" duration="00:00:13.5451467" startTime="2026-11-09T19:27:15.3332738+03:00" endTime="2026-11-09T19:27:28.8501507+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="52621e28-aac1-47c4-a3f6-fa4a21bb7685" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IXApi.Tests.InventorySeedIntegrityTests.Inventory_preparation_rolls_back_masters_after_late_validation_failure" storage="c:\users\omar almojahid\desktop\iax\.validation\inventory-package\bin\ixapi.tests.dll" id="0b100d4d-d172-6614-eaca-7f9f50638417">
+      <Execution id="9390c6eb-8670-475a-8bcc-7e3bdea4fb29" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\.validation\inventory-package\bin\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.InventorySeedIntegrityTests" name="Inventory_preparation_rolls_back_masters_after_late_validation_failure" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.InventoryCycleTests.CST02_physical_receipt_changes_running_average_only_when_enabled(includePhysical: True, expectedCost: 15)" storage="c:\users\omar almojahid\desktop\iax\.validation\inventory-package\bin\ixapi.tests.dll" id="9c3b5957-242a-3879-09e6-64c5cd5c79b1">
+      <Execution id="ccad5231-2404-4f9a-9c80-b7d36ab56579" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\.validation\inventory-package\bin\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.InventoryCycleTests" name="CST02_physical_receipt_changes_running_average_only_when_enabled" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.InventorySeedIntegrityTests.Inventory_reference_package_posts_and_reruns_without_duplicate_movements" storage="c:\users\omar almojahid\desktop\iax\.validation\inventory-package\bin\ixapi.tests.dll" id="4bb0725b-bcf2-9b08-96f8-193bc6bce97a">
+      <Execution id="55f4f3c3-de83-4c48-82d9-e110171b7572" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\.validation\inventory-package\bin\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.InventorySeedIntegrityTests" name="Inventory_reference_package_posts_and_reruns_without_duplicate_movements" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.InventoryCycleTests.CFG02_weighted_average_setup_accepts_include_physical_value" storage="c:\users\omar almojahid\desktop\iax\.validation\inventory-package\bin\ixapi.tests.dll" id="c96fc406-7b0d-cf75-936b-f140ff75d9f8">
+      <Execution id="1f265eef-fca5-469c-8df4-3ca28449b639" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\.validation\inventory-package\bin\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.InventoryCycleTests" name="CFG02_weighted_average_setup_accepts_include_physical_value" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.InventoryCycleTests.CST02_physical_receipt_changes_running_average_only_when_enabled(includePhysical: False, expectedCost: 10)" storage="c:\users\omar almojahid\desktop\iax\.validation\inventory-package\bin\ixapi.tests.dll" id="62690a32-90b6-ac2a-cfbd-9c79c4c507b6">
+      <Execution id="52621e28-aac1-47c4-a3f6-fa4a21bb7685" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\.validation\inventory-package\bin\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.InventoryCycleTests" name="CST02_physical_receipt_changes_running_average_only_when_enabled" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.InventorySeedIntegrityTests.Inventory_preparation_is_repeatable_preserves_counters_and_rejects_conflicts" storage="c:\users\omar almojahid\desktop\iax\.validation\inventory-package\bin\ixapi.tests.dll" id="8101773a-f548-1168-c582-6bfc9d121a77">
+      <Execution id="f03e29b3-797e-46e3-bb1a-76b5ee321a1f" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\.validation\inventory-package\bin\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.InventorySeedIntegrityTests" name="Inventory_preparation_is_repeatable_preserves_counters_and_rejects_conflicts" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="8101773a-f548-1168-c582-6bfc9d121a77" executionId="f03e29b3-797e-46e3-bb1a-76b5ee321a1f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0b100d4d-d172-6614-eaca-7f9f50638417" executionId="9390c6eb-8670-475a-8bcc-7e3bdea4fb29" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4bb0725b-bcf2-9b08-96f8-193bc6bce97a" executionId="55f4f3c3-de83-4c48-82d9-e110171b7572" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c96fc406-7b0d-cf75-936b-f140ff75d9f8" executionId="1f265eef-fca5-469c-8df4-3ca28449b639" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9c3b5957-242a-3879-09e6-64c5cd5c79b1" executionId="ccad5231-2404-4f9a-9c80-b7d36ab56579" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="62690a32-90b6-ac2a-cfbd-9c79c4c507b6" executionId="52621e28-aac1-47c4-a3f6-fa4a21bb7685" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="6" executed="6" passed="6" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.79]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:01.71]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:01.85]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:01:21.92]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
@@ -42,5 +42,7 @@
                       LogicalName="SeedingERPV2.AccountsPayable.%(Filename)%(Extension)" />
     <EmbeddedResource Include="Persistence\SeedingERPV2\CycleErpExamples\AccountsReceivable\Data\*.json"
                       LogicalName="SeedingERPV2.AccountsReceivable.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Persistence\SeedingERPV2\CycleErpExamples\Inventory\Data\*.json"
+                      LogicalName="SeedingERPV2.Inventory.%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

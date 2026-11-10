@@ -1,0 +1,110 @@
+[
+  {
+    "suffix": "STOCK",
+    "name": "Inventory cycle stocked item",
+    "productType": "Item",
+    "unit": "EA",
+    "modelGroup": "APV2",
+    "itemGroup": "APV2",
+    "itemTaxGroup": "IV2-ZERO",
+    "stocked": true,
+    "purchasePrice": 10,
+    "salesPrice": 25
+  },
+  {
+    "suffix": "ADJ",
+    "name": "Inventory adjustment cycle item",
+    "productType": "Item",
+    "unit": "EA",
+    "modelGroup": "APV2",
+    "itemGroup": "APV2",
+    "itemTaxGroup": "IV2-ZERO",
+    "stocked": true,
+    "purchasePrice": 10,
+    "salesPrice": 25
+  },
+  {
+    "suffix": "COUNT",
+    "name": "Inventory counting cycle item",
+    "productType": "Item",
+    "unit": "EA",
+    "modelGroup": "APV2",
+    "itemGroup": "APV2",
+    "itemTaxGroup": "IV2-ZERO",
+    "stocked": true,
+    "purchasePrice": 10,
+    "salesPrice": 25
+  },
+  {
+    "suffix": "CPLUS",
+    "name": "Inventory counting overage item",
+    "productType": "Item",
+    "unit": "EA",
+    "modelGroup": "APV2",
+    "itemGroup": "APV2",
+    "itemTaxGroup": "IV2-ZERO",
+    "stocked": true,
+    "purchasePrice": 10,
+    "salesPrice": 25
+  },
+  {
+    "suffix": "CMATCH",
+    "name": "Inventory matching count item",
+    "productType": "Item",
+    "unit": "EA",
+    "modelGroup": "APV2",
+    "itemGroup": "APV2",
+    "itemTaxGroup": "IV2-ZERO",
+    "stocked": true,
+    "purchasePrice": 10,
+    "salesPrice": 25
+  },
+  {
+    "suffix": "TRANS",
+    "name": "Inventory transfer cycle item",
+    "productType": "Item",
+    "unit": "EA",
+    "modelGroup": "APV2",
+    "itemGroup": "APV2",
+    "itemTaxGroup": "IV2-ZERO",
+    "stocked": true,
+    "purchasePrice": 10,
+    "salesPrice": 25
+  },
+  {
+    "suffix": "TJOUR",
+    "name": "Inventory transfer journal item",
+    "productType": "Item",
+    "unit": "EA",
+    "modelGroup": "APV2",
+    "itemGroup": "APV2",
+    "itemTaxGroup": "IV2-ZERO",
+    "stocked": true,
+    "purchasePrice": 10,
+    "salesPrice": 25
+  },
+  {
+    "suffix": "MOVE",
+    "name": "Inventory movement journal item",
+    "productType": "Item",
+    "unit": "EA",
+    "modelGroup": "APV2",
+    "itemGroup": "APV2",
+    "itemTaxGroup": "IV2-ZERO",
+    "stocked": true,
+    "purchasePrice": 10,
+    "salesPrice": 25
+  },
+  {
+    "suffix": "SVC",
+    "name": "Inventory cycle service",
+    "productType": "Service",
+    "unit": "EA",
+    "modelGroup": "APV2-SVC",
+    "itemGroup": "APV2",
+    "itemTaxGroup": "IV2-ZERO",
+    "stocked": false,
+    "purchasePrice": 300,
+    "salesPrice": 300
+  }
+]

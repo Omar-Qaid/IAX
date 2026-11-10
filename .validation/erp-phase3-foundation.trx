@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="44e4ef81-b6bb-4dae-af4e-3dab4bfa0998" name="Omar Almojahid@DESKTOP-3Q67JPL 2026-11-09 15:10:48" runUser="DESKTOP-3Q67JPL\Omar Almojahid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-09T15:10:48.3920861+03:00" queuing="2026-11-09T15:10:48.3920865+03:00" start="2026-11-09T15:08:49.5570130+03:00" finish="2026-11-09T15:12:07.4383155+03:00" />
+  <TestSettings name="default" id="0ba62d64-6c22-490e-8531-d5ccba1a291d">
+    <Deployment runDeploymentRoot="Omar_Almojahid_DESKTOP-3Q67JPL_2026-11-09_15_10_48" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="0cccf0b8-08ab-4fc9-94d9-29f699f93d7f" testId="e32391b9-7e77-2915-3840-1ad933425bc9" testName="IXApi.Tests.FoundationServiceStageTests.Foundation_services_SQLite" computerName="DESKTOP-3Q67JPL" duration="00:00:43.8983556" startTime="2026-11-09T15:10:48.3683885+03:00" endTime="2026-11-09T15:11:32.2407580+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0cccf0b8-08ab-4fc9-94d9-29f699f93d7f" />
+    <UnitTestResult executionId="a249933c-02ff-4b42-9977-2b7a08d2b2b3" testId="f2c4c883-b0ba-b1f9-3b0b-fb83f65eaae7" testName="IXApi.Tests.FoundationSeedTests.Foundation_manifest_rejects_coverage_drift" computerName="DESKTOP-3Q67JPL" duration="00:00:00.0036834" startTime="2026-11-09T15:11:51.1454919+03:00" endTime="2026-11-09T15:11:51.1483487+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a249933c-02ff-4b42-9977-2b7a08d2b2b3" />
+    <UnitTestResult executionId="07b81037-5753-41ef-a19d-54a148a634e8" testId="a899c981-274a-ce67-22e9-6d25c5fc504c" testName="IXApi.Tests.FoundationSeedTests.Tax_and_charge_examples_use_business_services_and_are_repeatable" computerName="DESKTOP-3Q67JPL" duration="00:00:11.4993981" startTime="2026-11-09T15:11:55.7647308+03:00" endTime="2026-11-09T15:12:07.2635796+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="07b81037-5753-41ef-a19d-54a148a634e8" />
+    <UnitTestResult executionId="88695792-de10-485c-9299-4aa085d3928c" testId="cd7a5024-2b1b-ce16-53ff-f4cc9de1bccc" testName="IXApi.Tests.FoundationServiceStageTests.Foundation_services_SQLServer" computerName="DESKTOP-3Q67JPL" duration="00:01:56.5125128" startTime="2026-11-09T15:08:51.8094784+03:00" endTime="2026-11-09T15:10:48.3390514+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="88695792-de10-485c-9299-4aa085d3928c" />
+    <UnitTestResult executionId="d2b688fb-e204-4c15-bec4-3619b623534a" testId="651d4613-a786-66ec-197a-dc6ccc0d26a0" testName="IXApi.Tests.FoundationSeedTests.Registration_is_idempotent_and_dependencies_resolve" computerName="DESKTOP-3Q67JPL" duration="00:00:00.0021843" startTime="2026-11-09T15:12:07.2644733+03:00" endTime="2026-11-09T15:12:07.2658697+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d2b688fb-e204-4c15-bec4-3619b623534a" />
+    <UnitTestResult executionId="eae97272-cc90-4ef5-8311-b0422b569b28" testId="d44c92db-35d9-64ee-acb1-9632c39b420a" testName="IXApi.Tests.FoundationSeedTests.All_master_tables_are_populated_and_reruns_preserve_keys_and_conflicts_roll_back" computerName="DESKTOP-3Q67JPL" duration="00:00:02.3154535" startTime="2026-11-09T15:11:53.4487312+03:00" endTime="2026-11-09T15:11:55.7638202+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="eae97272-cc90-4ef5-8311-b0422b569b28" />
+    <UnitTestResult executionId="9726f491-a64f-4c60-9bfa-fc1ee0b7d7d1" testId="f59352b4-889c-1b23-ce11-67dbfaad33cd" testName="IXApi.Tests.FoundationSeedTests.Foundation_preparation_reports_persisted_references_and_preserves_them_on_rerun" computerName="DESKTOP-3Q67JPL" duration="00:00:18.9003748" startTime="2026-11-09T15:11:32.2489525+03:00" endTime="2026-11-09T15:11:51.1445994+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9726f491-a64f-4c60-9bfa-fc1ee0b7d7d1" />
+    <UnitTestResult executionId="18683a93-8f25-4a9e-b3c5-47530463bda0" testId="3a8584a1-a545-7673-82b0-cbe44b83b2d6" testName="IXApi.Tests.FoundationSeedTests.Late_cross_company_reference_is_rejected_and_rolled_back" computerName="DESKTOP-3Q67JPL" duration="00:00:02.2996122" startTime="2026-11-09T15:11:51.1486848+03:00" endTime="2026-11-09T15:11:53.4481918+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="18683a93-8f25-4a9e-b3c5-47530463bda0" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IXApi.Tests.FoundationSeedTests.Registration_is_idempotent_and_dependencies_resolve" storage="c:\users\omar almojahid\desktop\iax\ixapi\tests\bin\prepayvalidation\net9.0\ixapi.tests.dll" id="651d4613-a786-66ec-197a-dc6ccc0d26a0">
+      <Execution id="d2b688fb-e204-4c15-bec4-3619b623534a" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\bin\PrepayValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.FoundationSeedTests" name="Registration_is_idempotent_and_dependencies_resolve" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.FoundationSeedTests.Tax_and_charge_examples_use_business_services_and_are_repeatable" storage="c:\users\omar almojahid\desktop\iax\ixapi\tests\bin\prepayvalidation\net9.0\ixapi.tests.dll" id="a899c981-274a-ce67-22e9-6d25c5fc504c">
+      <Execution id="07b81037-5753-41ef-a19d-54a148a634e8" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\bin\PrepayValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.FoundationSeedTests" name="Tax_and_charge_examples_use_business_services_and_are_repeatable" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.FoundationSeedTests.Late_cross_company_reference_is_rejected_and_rolled_back" storage="c:\users\omar almojahid\desktop\iax\ixapi\tests\bin\prepayvalidation\net9.0\ixapi.tests.dll" id="3a8584a1-a545-7673-82b0-cbe44b83b2d6">
+      <Execution id="18683a93-8f25-4a9e-b3c5-47530463bda0" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\bin\PrepayValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.FoundationSeedTests" name="Late_cross_company_reference_is_rejected_and_rolled_back" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.FoundationSeedTests.Foundation_manifest_rejects_coverage_drift" storage="c:\users\omar almojahid\desktop\iax\ixapi\tests\bin\prepayvalidation\net9.0\ixapi.tests.dll" id="f2c4c883-b0ba-b1f9-3b0b-fb83f65eaae7">
+      <Execution id="a249933c-02ff-4b42-9977-2b7a08d2b2b3" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\bin\PrepayValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.FoundationSeedTests" name="Foundation_manifest_rejects_coverage_drift" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.FoundationServiceStageTests.Foundation_services_SQLServer" storage="c:\users\omar almojahid\desktop\iax\ixapi\tests\bin\prepayvalidation\net9.0\ixapi.tests.dll" id="cd7a5024-2b1b-ce16-53ff-f4cc9de1bccc">
+      <Execution id="88695792-de10-485c-9299-4aa085d3928c" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\bin\PrepayValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.FoundationServiceStageTests" name="Foundation_services_SQLServer" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.FoundationSeedTests.All_master_tables_are_populated_and_reruns_preserve_keys_and_conflicts_roll_back" storage="c:\users\omar almojahid\desktop\iax\ixapi\tests\bin\prepayvalidation\net9.0\ixapi.tests.dll" id="d44c92db-35d9-64ee-acb1-9632c39b420a">
+      <Execution id="eae97272-cc90-4ef5-8311-b0422b569b28" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\bin\PrepayValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.FoundationSeedTests" name="All_master_tables_are_populated_and_reruns_preserve_keys_and_conflicts_roll_back" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.FoundationSeedTests.Foundation_preparation_reports_persisted_references_and_preserves_them_on_rerun" storage="c:\users\omar almojahid\desktop\iax\ixapi\tests\bin\prepayvalidation\net9.0\ixapi.tests.dll" id="f59352b4-889c-1b23-ce11-67dbfaad33cd">
+      <Execution id="9726f491-a64f-4c60-9bfa-fc1ee0b7d7d1" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\bin\PrepayValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.FoundationSeedTests" name="Foundation_preparation_reports_persisted_references_and_preserves_them_on_rerun" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.FoundationServiceStageTests.Foundation_services_SQLite" storage="c:\users\omar almojahid\desktop\iax\ixapi\tests\bin\prepayvalidation\net9.0\ixapi.tests.dll" id="e32391b9-7e77-2915-3840-1ad933425bc9">
+      <Execution id="0cccf0b8-08ab-4fc9-94d9-29f699f93d7f" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\bin\PrepayValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.FoundationServiceStageTests" name="Foundation_services_SQLite" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="e32391b9-7e77-2915-3840-1ad933425bc9" executionId="0cccf0b8-08ab-4fc9-94d9-29f699f93d7f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f2c4c883-b0ba-b1f9-3b0b-fb83f65eaae7" executionId="a249933c-02ff-4b42-9977-2b7a08d2b2b3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a899c981-274a-ce67-22e9-6d25c5fc504c" executionId="07b81037-5753-41ef-a19d-54a148a634e8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="cd7a5024-2b1b-ce16-53ff-f4cc9de1bccc" executionId="88695792-de10-485c-9299-4aa085d3928c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="651d4613-a786-66ec-197a-dc6ccc0d26a0" executionId="d2b688fb-e204-4c15-bec4-3619b623534a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d44c92db-35d9-64ee-acb1-9632c39b420a" executionId="eae97272-cc90-4ef5-8311-b0422b569b28" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f59352b4-889c-1b23-ce11-67dbfaad33cd" executionId="9726f491-a64f-4c60-9bfa-fc1ee0b7d7d1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3a8584a1-a545-7673-82b0-cbe44b83b2d6" executionId="18683a93-8f25-4a9e-b3c5-47530463bda0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="8" executed="8" passed="8" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.44]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:00.88]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:00.92]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:03:16.43]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

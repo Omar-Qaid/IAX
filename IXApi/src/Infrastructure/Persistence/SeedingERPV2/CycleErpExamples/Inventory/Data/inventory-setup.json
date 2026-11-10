@@ -1,0 +1,23 @@
+{
+  "costingMethod": "WeightedAvg",
+  "site": "APV2-SITE",
+  "warehouse": "APV2-WH",
+  "inventDimId": "APV2-DIM",
+  "unit": "EA",
+  "itemGroup": "APV2",
+  "postingProfiles": [
+    { "accountType": "PurchPackingSlip", "mainAccount": "181003" },
+    { "accountType": "PurchPackingSlipOffsetAccount", "mainAccount": "281002" },
+    { "accountType": "PurchReceipt", "mainAccount": "181002" },
+    { "accountType": "PurchConsump", "mainAccount": "681001" },
+    { "accountType": "PurchDisc", "mainAccount": "481001" },
+    { "accountType": "InventReceipt", "mainAccount": "181002" },
+    { "accountType": "InventIssue", "mainAccount": "181002" },
+    { "accountType": "InventProfit", "mainAccount": "481004" },
+    { "accountType": "InventLoss", "mainAccount": "681006" }
+  ],
+  "ledgerAccounts": {
+    "inventory": "181002",
+    "costOfGoodsSold": "681004"
+  }
+}

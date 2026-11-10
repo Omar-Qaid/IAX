@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+﻿import React, { useMemo, useState } from 'react';
 import { Alert, Snackbar } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
@@ -141,7 +141,7 @@ export function EcoResProductDetailsPage(): React.ReactElement {
           setValue: (product) => product,
         },
       ],
-      sections: ({ record }) => {
+      sections: ({ record: _record }) => {
         const formatPrice = (value: number) => value.toLocaleString(currentLanguage.code, {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,

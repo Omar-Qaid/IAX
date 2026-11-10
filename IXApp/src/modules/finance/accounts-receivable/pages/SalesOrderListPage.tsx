@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+﻿import React, { useMemo, useState } from 'react';
 import { Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
@@ -168,7 +168,7 @@ export function SalesOrderListPage(): React.ReactElement {
         <SalesOrderQuickCreate
           open={quickCreateOpen}
           onClose={() => setQuickCreateOpen(false)}
-          onSave={async (order) => {
+          onSave={async (_order) => {
             setQuickCreateOpen(false);
             await orderQuery.refetch();
           }}

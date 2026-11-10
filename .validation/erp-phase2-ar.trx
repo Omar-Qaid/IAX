@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="64a3ed4d-81e9-45fe-977f-6dd5bfdd4d2f" name="Omar Almojahid@DESKTOP-3Q67JPL 2026-11-09 14:59:24" runUser="DESKTOP-3Q67JPL\Omar Almojahid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-09T14:59:24.5354425+03:00" queuing="2026-11-09T14:59:24.5354428+03:00" start="2026-11-09T14:58:48.7361469+03:00" finish="2026-11-09T15:08:35.8424331+03:00" />
+  <TestSettings name="default" id="a5be18d1-2fdb-443c-81a5-b1a9745eee0f">
+    <Deployment runDeploymentRoot="Omar_Almojahid_DESKTOP-3Q67JPL_2026-11-09_14_59_24" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="25633757-72f3-47e8-809e-c10b8a67fae1" testId="d25714f6-0cee-21f1-feab-e59b2f21ac2a" testName="IXApi.Tests.AccountsReceivableSeedIntegrityTests.Shared_inventory_dimension_owner_is_an_explicit_seed_dependency" computerName="DESKTOP-3Q67JPL" duration="00:00:00.0126564" startTime="2026-11-09T15:00:18.6390988+03:00" endTime="2026-11-09T15:00:18.6510247+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="25633757-72f3-47e8-809e-c10b8a67fae1" />
+    <UnitTestResult executionId="da0c014b-a315-4059-9ab2-c718ad225a7c" testId="2d4c8a76-3076-6297-9f0c-75fc09f3e649" testName="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_returns_credit_only_and_corrections_SQLServer" computerName="DESKTOP-3Q67JPL" duration="00:01:43.7786178" startTime="2026-11-09T15:04:08.8724429+03:00" endTime="2026-11-09T15:05:52.6547035+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="da0c014b-a315-4059-9ab2-c718ad225a7c" />
+    <UnitTestResult executionId="22e39e76-4c1b-46a5-9a91-b04d97b07813" testId="e94b589c-cbd8-abbd-3557-15c59e9ce95a" testName="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_manually_settles_customer_revaluation_SQLServer" computerName="DESKTOP-3Q67JPL" duration="00:00:31.5836203" startTime="2026-11-09T15:01:04.2751874+03:00" endTime="2026-11-09T15:01:35.8596216+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="22e39e76-4c1b-46a5-9a91-b04d97b07813" />
+    <UnitTestResult executionId="9be703ed-7000-4122-95ac-98522b17ed2c" testId="744bdfdc-ffcc-a06a-c671-a0dd9a8852e0" testName="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer" computerName="DESKTOP-3Q67JPL" duration="00:01:20.8650188" startTime="2026-11-09T15:07:14.6902425+03:00" endTime="2026-11-09T15:08:35.5564687+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9be703ed-7000-4122-95ac-98522b17ed2c" />
+    <UnitTestResult executionId="b31ce231-ab4b-42d8-8d8d-99ae1d50baf6" testId="08514005-6856-229f-fa04-cc86913236a0" testName="IXApi.Tests.AccountsReceivableSeedIntegrityTests.Inventory_close_sequences_are_prepared_and_consumed_counters_survive_reruns" computerName="DESKTOP-3Q67JPL" duration="00:00:33.4668842" startTime="2026-11-09T14:58:50.9815228+03:00" endTime="2026-11-09T14:59:24.4850660+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b31ce231-ab4b-42d8-8d8d-99ae1d50baf6" />
+    <UnitTestResult executionId="89a448d3-1fbe-4544-803e-e9bfcb973f53" testId="98785b66-5d9a-7df7-7363-89fe257e6108" testName="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_posts_and_reverses_customer_revaluation_SQLServer" computerName="DESKTOP-3Q67JPL" duration="00:00:11.5074811" startTime="2026-11-09T15:01:35.8604799+03:00" endTime="2026-11-09T15:01:47.3700381+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="89a448d3-1fbe-4544-803e-e9bfcb973f53" />
+    <UnitTestResult executionId="c6ded262-23f9-4399-b1cb-7c361fa5aab5" testId="de9828ad-a9a9-b971-8e3c-0b2f64dd3f8c" testName="IXApi.Tests.AccountsReceivableSeedIntegrityTests.Explicit_missing_customer_profile_cannot_borrow_another_profiles_accounts(requestedProfile: &quot;EMPTY&quot;, createHeader: True)" computerName="DESKTOP-3Q67JPL" duration="00:00:04.4764113" startTime="2026-11-09T14:59:24.5138946+03:00" endTime="2026-11-09T14:59:28.9621392+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c6ded262-23f9-4399-b1cb-7c361fa5aab5" />
+    <UnitTestResult executionId="e7ae64f6-8697-4cbc-b3f0-28606d2259f3" testId="355fcc9e-77f7-08bd-6270-97c9c234696d" testName="IXApi.Tests.AccountsReceivableSeedIntegrityTests.Cross_module_corruptions_are_rejected_before_commit_and_every_write_rolls_back" computerName="DESKTOP-3Q67JPL" duration="00:00:47.8058179" startTime="2026-11-09T14:59:30.8326400+03:00" endTime="2026-11-09T15:00:18.6382661+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e7ae64f6-8697-4cbc-b3f0-28606d2259f3" />
+    <UnitTestResult executionId="b1903cef-e55e-413d-8beb-2ee10ddcdd60" testId="9136e4f7-3d94-2027-11a3-305b1956e0d4" testName="IXApi.Tests.AccountsReceivableCycleStageTests.Detailed_AR_stages_SQLite" computerName="DESKTOP-3Q67JPL" duration="00:00:54.8677762" startTime="2026-11-09T15:05:52.6563932+03:00" endTime="2026-11-09T15:06:47.5243225+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b1903cef-e55e-413d-8beb-2ee10ddcdd60" />
+    <UnitTestResult executionId="f297f52f-d565-494e-b67c-e46a181d1ca8" testId="478bddd2-dc6d-d84d-b2dd-82bcf61d17b0" testName="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_line_total_discounts_and_taxed_charges_reach_partial_invoices_SQLServer" computerName="DESKTOP-3Q67JPL" duration="00:00:45.6145565" startTime="2026-11-09T15:00:18.6540071+03:00" endTime="2026-11-09T15:01:04.2720117+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f297f52f-d565-494e-b67c-e46a181d1ca8" />
+    <UnitTestResult executionId="05be1482-69b8-44da-8ed5-bead977183c3" testId="7b988b31-2005-31be-d8bb-5695c1ecc1a8" testName="IXApi.Tests.AccountsReceivableCycleStageTests.Detailed_AR_stages_SQLServer" computerName="DESKTOP-3Q67JPL" duration="00:02:21.4960049" startTime="2026-11-09T15:01:47.3715910+03:00" endTime="2026-11-09T15:04:08.8702509+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="05be1482-69b8-44da-8ed5-bead977183c3" />
+    <UnitTestResult executionId="9c8c46f7-d116-4aa0-b5a9-0c55a7e4e7e1" testId="aaa102da-ced8-13ea-949e-87c9dc2de92a" testName="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_customer_creation_updates_address_and_rolls_back_invalid_changes_SQLServer" computerName="DESKTOP-3Q67JPL" duration="00:00:27.1250665" startTime="2026-11-09T15:06:47.5252430+03:00" endTime="2026-11-09T15:07:14.6896533+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9c8c46f7-d116-4aa0-b5a9-0c55a7e4e7e1" />
+    <UnitTestResult executionId="e75effab-06b9-4390-a81c-9b5097fab3ae" testId="dda4f2a8-d1a8-7dda-d031-296915e17c8b" testName="IXApi.Tests.AccountsReceivableSeedIntegrityTests.Explicit_missing_customer_profile_cannot_borrow_another_profiles_accounts(requestedProfile: &quot;MISSING&quot;, createHeader: False)" computerName="DESKTOP-3Q67JPL" duration="00:00:01.8695581" startTime="2026-11-09T14:59:28.9668640+03:00" endTime="2026-11-09T14:59:30.8317094+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e75effab-06b9-4390-a81c-9b5097fab3ae" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IXApi.Tests.AccountsReceivableCycleStageTests.Detailed_AR_stages_SQLServer" storage="c:\users\omar almojahid\desktop\iax\ixapi\tests\bin\prepayvalidation\net9.0\ixapi.tests.dll" id="7b988b31-2005-31be-d8bb-5695c1ecc1a8">
+      <Execution id="05be1482-69b8-44da-8ed5-bead977183c3" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\bin\PrepayValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableCycleStageTests" name="Detailed_AR_stages_SQLServer" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_customer_creation_updates_address_and_rolls_back_invalid_changes_SQLServer" storage="c:\users\omar almojahid\desktop\iax\ixapi\tests\bin\prepayvalidation\net9.0\ixapi.tests.dll" id="aaa102da-ced8-13ea-949e-87c9dc2de92a">
+      <Execution id="9c8c46f7-d116-4aa0-b5a9-0c55a7e4e7e1" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\bin\PrepayValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableCycleStageTests" name="Order_to_cash_customer_creation_updates_address_and_rolls_back_invalid_changes_SQLServer" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.AccountsReceivableCycleStageTests.Detailed_AR_stages_SQLite" storage="c:\users\omar almojahid\desktop\iax\ixapi\tests\bin\prepayvalidation\net9.0\ixapi.tests.dll" id="9136e4f7-3d94-2027-11a3-305b1956e0d4">
+      <Execution id="b1903cef-e55e-413d-8beb-2ee10ddcdd60" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\bin\PrepayValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableCycleStageTests" name="Detailed_AR_stages_SQLite" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_line_total_discounts_and_taxed_charges_reach_partial_invoices_SQLServer" storage="c:\users\omar almojahid\desktop\iax\ixapi\tests\bin\prepayvalidation\net9.0\ixapi.tests.dll" id="478bddd2-dc6d-d84d-b2dd-82bcf61d17b0">
+      <Execution id="f297f52f-d565-494e-b67c-e46a181d1ca8" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\bin\PrepayValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableCycleStageTests" name="Order_to_cash_line_total_discounts_and_taxed_charges_reach_partial_invoices_SQLServer" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.AccountsReceivableSeedIntegrityTests.Explicit_missing_customer_profile_cannot_borrow_another_profiles_accounts(requestedProfile: &quot;EMPTY&quot;, createHeader: True)" storage="c:\users\omar almojahid\desktop\iax\ixapi\tests\bin\prepayvalidation\net9.0\ixapi.tests.dll" id="de9828ad-a9a9-b971-8e3c-0b2f64dd3f8c">
+      <Execution id="c6ded262-23f9-4399-b1cb-7c361fa5aab5" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\bin\PrepayValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableSeedIntegrityTests" name="Explicit_missing_customer_profile_cannot_borrow_another_profiles_accounts" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_manually_settles_customer_revaluation_SQLServer" storage="c:\users\omar almojahid\desktop\iax\ixapi\tests\bin\prepayvalidation\net9.0\ixapi.tests.dll" id="e94b589c-cbd8-abbd-3557-15c59e9ce95a">
+      <Execution id="22e39e76-4c1b-46a5-9a91-b04d97b07813" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\bin\PrepayValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableCycleStageTests" name="Order_to_cash_manually_settles_customer_revaluation_SQLServer" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_returns_credit_only_and_corrections_SQLServer" storage="c:\users\omar almojahid\desktop\iax\ixapi\tests\bin\prepayvalidation\net9.0\ixapi.tests.dll" id="2d4c8a76-3076-6297-9f0c-75fc09f3e649">
+      <Execution id="da0c014b-a315-4059-9ab2-c718ad225a7c" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\bin\PrepayValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableCycleStageTests" name="Order_to_cash_attachment_returns_credit_only_and_corrections_SQLServer" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.AccountsReceivableSeedIntegrityTests.Shared_inventory_dimension_owner_is_an_explicit_seed_dependency" storage="c:\users\omar almojahid\desktop\iax\ixapi\tests\bin\prepayvalidation\net9.0\ixapi.tests.dll" id="d25714f6-0cee-21f1-feab-e59b2f21ac2a">
+      <Execution id="25633757-72f3-47e8-809e-c10b8a67fae1" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\bin\PrepayValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableSeedIntegrityTests" name="Shared_inventory_dimension_owner_is_an_explicit_seed_dependency" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_posts_and_reverses_customer_revaluation_SQLServer" storage="c:\users\omar almojahid\desktop\iax\ixapi\tests\bin\prepayvalidation\net9.0\ixapi.tests.dll" id="98785b66-5d9a-7df7-7363-89fe257e6108">
+      <Execution id="89a448d3-1fbe-4544-803e-e9bfcb973f53" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\bin\PrepayValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableCycleStageTests" name="Order_to_cash_posts_and_reverses_customer_revaluation_SQLServer" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.AccountsReceivableCycleStageTests.Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer" storage="c:\users\omar almojahid\desktop\iax\ixapi\tests\bin\prepayvalidation\net9.0\ixapi.tests.dll" id="744bdfdc-ffcc-a06a-c671-a0dd9a8852e0">
+      <Execution id="9be703ed-7000-4122-95ac-98522b17ed2c" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\bin\PrepayValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableCycleStageTests" name="Order_to_cash_attachment_exact_amounts_and_weighted_average_close_SQLServer" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.AccountsReceivableSeedIntegrityTests.Cross_module_corruptions_are_rejected_before_commit_and_every_write_rolls_back" storage="c:\users\omar almojahid\desktop\iax\ixapi\tests\bin\prepayvalidation\net9.0\ixapi.tests.dll" id="355fcc9e-77f7-08bd-6270-97c9c234696d">
+      <Execution id="e7ae64f6-8697-4cbc-b3f0-28606d2259f3" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\bin\PrepayValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableSeedIntegrityTests" name="Cross_module_corruptions_are_rejected_before_commit_and_every_write_rolls_back" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.AccountsReceivableSeedIntegrityTests.Explicit_missing_customer_profile_cannot_borrow_another_profiles_accounts(requestedProfile: &quot;MISSING&quot;, createHeader: False)" storage="c:\users\omar almojahid\desktop\iax\ixapi\tests\bin\prepayvalidation\net9.0\ixapi.tests.dll" id="dda4f2a8-d1a8-7dda-d031-296915e17c8b">
+      <Execution id="e75effab-06b9-4390-a81c-9b5097fab3ae" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\bin\PrepayValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableSeedIntegrityTests" name="Explicit_missing_customer_profile_cannot_borrow_another_profiles_accounts" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.AccountsReceivableSeedIntegrityTests.Inventory_close_sequences_are_prepared_and_consumed_counters_survive_reruns" storage="c:\users\omar almojahid\desktop\iax\ixapi\tests\bin\prepayvalidation\net9.0\ixapi.tests.dll" id="08514005-6856-229f-fa04-cc86913236a0">
+      <Execution id="b31ce231-ab4b-42d8-8d8d-99ae1d50baf6" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\bin\PrepayValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.AccountsReceivableSeedIntegrityTests" name="Inventory_close_sequences_are_prepared_and_consumed_counters_survive_reruns" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="d25714f6-0cee-21f1-feab-e59b2f21ac2a" executionId="25633757-72f3-47e8-809e-c10b8a67fae1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2d4c8a76-3076-6297-9f0c-75fc09f3e649" executionId="da0c014b-a315-4059-9ab2-c718ad225a7c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e94b589c-cbd8-abbd-3557-15c59e9ce95a" executionId="22e39e76-4c1b-46a5-9a91-b04d97b07813" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="744bdfdc-ffcc-a06a-c671-a0dd9a8852e0" executionId="9be703ed-7000-4122-95ac-98522b17ed2c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="08514005-6856-229f-fa04-cc86913236a0" executionId="b31ce231-ab4b-42d8-8d8d-99ae1d50baf6" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="98785b66-5d9a-7df7-7363-89fe257e6108" executionId="89a448d3-1fbe-4544-803e-e9bfcb973f53" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="de9828ad-a9a9-b971-8e3c-0b2f64dd3f8c" executionId="c6ded262-23f9-4399-b1cb-7c361fa5aab5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="355fcc9e-77f7-08bd-6270-97c9c234696d" executionId="e7ae64f6-8697-4cbc-b3f0-28606d2259f3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9136e4f7-3d94-2027-11a3-305b1956e0d4" executionId="b1903cef-e55e-413d-8beb-2ee10ddcdd60" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="478bddd2-dc6d-d84d-b2dd-82bcf61d17b0" executionId="f297f52f-d565-494e-b67c-e46a181d1ca8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7b988b31-2005-31be-d8bb-5695c1ecc1a8" executionId="05be1482-69b8-44da-8ed5-bead977183c3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="aaa102da-ced8-13ea-949e-87c9dc2de92a" executionId="9c8c46f7-d116-4aa0-b5a9-0c55a7e4e7e1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="dda4f2a8-d1a8-7dda-d031-296915e17c8b" executionId="e75effab-06b9-4390-a81c-9b5097fab3ae" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="13" executed="13" passed="13" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.51]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:01.03]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:01.11]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:09:45.74]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

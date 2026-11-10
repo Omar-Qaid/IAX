@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+﻿import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ListDetailsListGridPage } from '@patterns/list-details-listgrid/ListDetailsListGridPage';
 import type { DetailValues, EnterpriseListDetailsConfig } from '@patterns/list-details/types';
@@ -41,7 +41,7 @@ export function TaxItemGroupPage(): React.ReactElement {
     getPrimaryText: (record) => record.taxItemGroup,
     getSecondaryText: (record) => record.name,
     matchesSearch: (record, query) => `${record.taxItemGroup} ${record.name}`.toLowerCase().includes(query.toLowerCase()),
-    getValues: (record): DetailValues => ({}),
+    getValues: (_record): DetailValues => ({}),
     setValues: (record) => record,
     headerFields: [
       {

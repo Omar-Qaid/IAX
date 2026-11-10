@@ -74,6 +74,10 @@ public sealed class SecurityConfigurationTests
         {
             if (File.Exists(Path.Combine(directory.FullName, "IXApi.csproj")))
                 return directory.FullName;
+            // Isolated builds may live under the workspace's .validation directory rather than IXApi/bin.
+            var workspaceProject = Path.Combine(directory.FullName, "IXApi");
+            if (File.Exists(Path.Combine(workspaceProject, "IXApi.csproj")))
+                return workspaceProject;
         }
 
         throw new DirectoryNotFoundException("Could not locate the IXApi project root.");

@@ -1,0 +1,248 @@
+[
+  {
+    "caseId": "ADJ-01",
+    "status": "Passed: scenario 02 positive/negative adjustment, profit/loss reconciliation, replay and conflict preservation in isolated SQLite",
+    "reference": "Read_only.md",
+    "evidence": [".validation/inventory-package/package-20261110-adjustment.trx", ".validation/inventory-package/20261110-adjustment-outcome.md"]
+  },
+  {
+    "caseId": "CFG-01",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "CFG-02",
+    "status": "Partial: weighted-average include-physical setup passed; remaining setup checks pending",
+    "reference": "Read_only.md",
+    "evidence": [
+      ".validation/inventory-20261109/physical-value-repro-corrected.trx",
+      ".validation/inventory-package/physical-value-fixed.trx"
+    ]
+  },
+  {
+    "caseId": "CFG-03",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "CFG-04",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "CNT-01",
+    "status": "Passed: scenario 03 counts 88 against 90, reconciles loss 24, and preserves movements/vouchers/counter on replay in isolated SQLite",
+    "reference": "Read_only.md",
+    "evidence": [".validation/inventory-package/package-20261110-counting.trx", ".validation/inventory-package/20261110-counting-outcome.md"]
+  },
+  {
+    "caseId": "CNT-02",
+    "status": "Passed: independent overage and matching-count scenarios 04/05, accounting, zero-variance no-posting, replay and conflict preservation in isolated SQLite",
+    "reference": "Read_only.md",
+    "evidence": [".validation/inventory-package/package-20261110-counting-variants.trx", ".validation/inventory-package/package-20261110-counting-variants-fixed.trx", ".validation/inventory-package/20261110-counting-variants-outcome.md"]
+  },
+  {
+    "caseId": "CST-01",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "CST-02",
+    "status": "Passed: isolated SQLite receipt/issue test, flag on and off",
+    "reference": "Read_only.md",
+    "evidence": [
+      ".validation/inventory-20261109/physical-value-repro-corrected.trx",
+      ".validation/inventory-package/physical-value-fixed.trx"
+    ]
+  },
+  {
+    "caseId": "CST-03",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "CST-04",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "CST-05",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "CST-06",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "CTL-01",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "ISS-01",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "ISS-02",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "ISS-03",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "ISS-04",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "MD-01",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "MD-02",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "MD-03",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "MD-04",
+    "status": "In scope by explicit user request; implementation incomplete",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "MD-05",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "MOV-01",
+    "status": "Passed: scenario 08 receipt/issue, explicit offset-account reconciliation and replay verified in isolated SQLite",
+    "reference": "Read_only.md",
+    "evidence": [".validation/inventory-package/package-20261110-movement-retry.trx", ".validation/inventory-package/20261110-movement-outcome.md"]
+  },
+  {
+    "caseId": "RCV-01",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "RCV-02",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "RCV-03",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "RCV-04",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "RCV-05",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "REP-01",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "REP-02",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "REP-03",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "RES-01",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "RES-02",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "RET-01",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "RET-02",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "RET-03",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  },
+  {
+    "caseId": "TRF-01",
+    "status": "Passed: scenario 07 transfers 10 within a site; warehouse quantities/values, site conservation and replay verified in isolated SQLite",
+    "reference": "Read_only.md",
+    "evidence": [".validation/inventory-package/package-20261110-transfer-journal.trx", ".validation/inventory-package/20261110-transfer-journal-outcome.md"]
+  },
+  {
+    "caseId": "TRF-02",
+    "status": "Passed: scenario 06 ships 10, receives 6 with 4 in transit, then receives 4; warehouse values, site conservation and replay verified in isolated SQLite",
+    "reference": "Read_only.md",
+    "evidence": [".validation/inventory-package/package-20261110-transfer.trx", ".validation/inventory-package/20261110-transfer-outcome.md"]
+  },
+  {
+    "caseId": "TRF-03",
+    "status": "Not verified by Inventory package",
+    "reference": "Read_only.md",
+    "evidence": []
+  }
+]

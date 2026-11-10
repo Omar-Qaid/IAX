@@ -1,0 +1,375 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="9f7ec410-ec43-486b-9fcd-266197b59781" name="Omar Almojahid@DESKTOP-3Q67JPL 2026-11-10 05:42:12" runUser="DESKTOP-3Q67JPL\Omar Almojahid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-10T05:42:12.4219181+03:00" queuing="2026-11-10T05:42:12.4219185+03:00" start="2026-11-10T05:41:37.2948279+03:00" finish="2026-11-10T05:42:29.1551561+03:00" />
+  <TestSettings name="default" id="53ce2612-1f46-4a6c-a0b4-3cae9ae722d8">
+    <Deployment runDeploymentRoot="Omar_Almojahid_DESKTOP-3Q67JPL_2026-11-10_05_42_12" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="9ba0159a-aa84-4539-8ac3-0e14a4f03901" testId="8101773a-f548-1168-c582-6bfc9d121a77" testName="IXApi.Tests.InventorySeedIntegrityTests.Inventory_preparation_is_repeatable_preserves_counters_and_rejects_conflicts" computerName="DESKTOP-3Q67JPL" duration="00:00:01.8987990" startTime="2026-11-10T05:42:23.2662709+03:00" endTime="2026-11-10T05:42:25.1633332+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9ba0159a-aa84-4539-8ac3-0e14a4f03901">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : EcoResProduct.DisplayProductNumber exceeds its mapped length 20.</Message>
+          <StackTrace>   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models.SeedContext.EnsureAsync[T](Expression`1 key, T proposed, CancellationToken ct, String[] fields) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Models\SeedContext.cs:line 57&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Inventory.InventoryCycleMasterSeeder.SeedAsync(SeedContext c, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Modules\Inventory\MasterData\InventoryCycleMasterSeeder.cs:line 32&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 29&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 41&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 42&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 20&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 20&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.InventoryCycleSeeder.PrepareAsync(InventoryExampleOptions options, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Inventory\InventoryCycleSeeder.cs:line 18&#xD;
+   at IXApi.Tests.InventorySeedIntegrityTests.Inventory_preparation_is_repeatable_preserves_counters_and_rejects_conflicts() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs:line 150&#xD;
+   at IXApi.Tests.InventorySeedIntegrityTests.Inventory_preparation_is_repeatable_preserves_counters_and_rejects_conflicts() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs:line 171&#xD;
+   at IXApi.Tests.InventorySeedIntegrityTests.Inventory_preparation_is_repeatable_preserves_counters_and_rejects_conflicts() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs:line 171&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="4b089d9b-5739-461f-84f0-3a33e0540e91" testId="33c580fd-6830-b419-22e1-67f554a748ac" testName="IXApi.Tests.InventorySeedIntegrityTests.Inventory_preparation_seeds_the_journal_setup_the_readiness_check_requires" computerName="DESKTOP-3Q67JPL" duration="00:00:01.8751874" startTime="2026-11-10T05:42:27.1215211+03:00" endTime="2026-11-10T05:42:28.9938668+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4b089d9b-5739-461f-84f0-3a33e0540e91">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : EcoResProduct.DisplayProductNumber exceeds its mapped length 20.</Message>
+          <StackTrace>   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models.SeedContext.EnsureAsync[T](Expression`1 key, T proposed, CancellationToken ct, String[] fields) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Models\SeedContext.cs:line 57&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Inventory.InventoryCycleMasterSeeder.SeedAsync(SeedContext c, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Modules\Inventory\MasterData\InventoryCycleMasterSeeder.cs:line 32&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 29&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 41&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 42&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 20&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 20&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.InventoryCycleSeeder.PrepareAsync(InventoryExampleOptions options, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Inventory\InventoryCycleSeeder.cs:line 18&#xD;
+   at IXApi.Tests.InventorySeedIntegrityTests.Inventory_preparation_seeds_the_journal_setup_the_readiness_check_requires() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs:line 183&#xD;
+   at IXApi.Tests.InventorySeedIntegrityTests.Inventory_preparation_seeds_the_journal_setup_the_readiness_check_requires() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs:line 225&#xD;
+   at IXApi.Tests.InventorySeedIntegrityTests.Inventory_preparation_seeds_the_journal_setup_the_readiness_check_requires() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs:line 225&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="b5f9cb71-7e70-424b-8508-b9b0f47a6f1e" testId="f60293c0-b493-1ace-a687-f6ea6c824562" testName="IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(scenarioId: &quot;05&quot;, expectedQuantity: 90, expectedValue: 1080)" computerName="DESKTOP-3Q67JPL" duration="00:00:04.5941057" startTime="2026-11-10T05:42:12.3990865+03:00" endTime="2026-11-10T05:42:16.9488562+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b5f9cb71-7e70-424b-8508-b9b0f47a6f1e">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : EcoResProduct.DisplayProductNumber exceeds its mapped length 20.</Message>
+          <StackTrace>   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models.SeedContext.EnsureAsync[T](Expression`1 key, T proposed, CancellationToken ct, String[] fields) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Models\SeedContext.cs:line 57&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Inventory.InventoryCycleMasterSeeder.SeedAsync(SeedContext c, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Modules\Inventory\MasterData\InventoryCycleMasterSeeder.cs:line 32&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 29&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 41&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 42&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 20&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 20&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.InventoryCycleSeeder.PrepareAsync(InventoryExampleOptions options, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Inventory\InventoryCycleSeeder.cs:line 18&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.InventoryTransactionExamples.RunAsync(InventoryTransactionOptions options, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Inventory\InventoryTransactionExamples.cs:line 23&#xD;
+   at IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(String scenarioId, Decimal expectedQuantity, Decimal expectedValue) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs:line 99&#xD;
+   at IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(String scenarioId, Decimal expectedQuantity, Decimal expectedValue) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs:line 128&#xD;
+   at IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(String scenarioId, Decimal expectedQuantity, Decimal expectedValue) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs:line 128&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="e7ff67e8-7a83-4af2-9755-05c9aacb4bbc" testId="0b100d4d-d172-6614-eaca-7f9f50638417" testName="IXApi.Tests.InventorySeedIntegrityTests.Inventory_preparation_rolls_back_masters_after_late_validation_failure" computerName="DESKTOP-3Q67JPL" duration="00:00:01.9472488" startTime="2026-11-10T05:42:21.3178924+03:00" endTime="2026-11-10T05:42:23.2640060+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e7ff67e8-7a83-4af2-9755-05c9aacb4bbc" />
+    <UnitTestResult executionId="4db6b1d6-0aa8-4ae5-a348-c4334544fbcb" testId="b7e1b921-dc99-00cf-85de-c9f9e7ad6eda" testName="IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(scenarioId: &quot;03&quot;, expectedQuantity: 88, expectedValue: 1056)" computerName="DESKTOP-3Q67JPL" duration="00:00:32.0931951" startTime="2026-11-10T05:41:40.3121547+03:00" endTime="2026-11-10T05:42:12.3521901+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4db6b1d6-0aa8-4ae5-a348-c4334544fbcb">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : EcoResProduct.DisplayProductNumber exceeds its mapped length 20.</Message>
+          <StackTrace>   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models.SeedContext.EnsureAsync[T](Expression`1 key, T proposed, CancellationToken ct, String[] fields) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Models\SeedContext.cs:line 57&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Inventory.InventoryCycleMasterSeeder.SeedAsync(SeedContext c, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Modules\Inventory\MasterData\InventoryCycleMasterSeeder.cs:line 32&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 29&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 41&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 42&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 20&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 20&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.InventoryCycleSeeder.PrepareAsync(InventoryExampleOptions options, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Inventory\InventoryCycleSeeder.cs:line 18&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.InventoryTransactionExamples.RunAsync(InventoryTransactionOptions options, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Inventory\InventoryTransactionExamples.cs:line 23&#xD;
+   at IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(String scenarioId, Decimal expectedQuantity, Decimal expectedValue) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs:line 99&#xD;
+   at IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(String scenarioId, Decimal expectedQuantity, Decimal expectedValue) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs:line 128&#xD;
+   at IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(String scenarioId, Decimal expectedQuantity, Decimal expectedValue) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs:line 128&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="8cba7ebc-4346-40d4-9413-fe7053123ddb" testId="4bb0725b-bcf2-9b08-96f8-193bc6bce97a" testName="IXApi.Tests.InventorySeedIntegrityTests.Inventory_reference_package_posts_and_reruns_without_duplicate_movements" computerName="DESKTOP-3Q67JPL" duration="00:00:01.9532790" startTime="2026-11-10T05:42:25.1687120+03:00" endTime="2026-11-10T05:42:27.1176904+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8cba7ebc-4346-40d4-9413-fe7053123ddb">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : EcoResProduct.DisplayProductNumber exceeds its mapped length 20.</Message>
+          <StackTrace>   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models.SeedContext.EnsureAsync[T](Expression`1 key, T proposed, CancellationToken ct, String[] fields) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Models\SeedContext.cs:line 57&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Inventory.InventoryCycleMasterSeeder.SeedAsync(SeedContext c, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Modules\Inventory\MasterData\InventoryCycleMasterSeeder.cs:line 32&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 29&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 41&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 42&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 20&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 20&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.InventoryCycleSeeder.PrepareAsync(InventoryExampleOptions options, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Inventory\InventoryCycleSeeder.cs:line 18&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.InventoryTransactionExamples.RunAsync(InventoryTransactionOptions options, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Inventory\InventoryTransactionExamples.cs:line 23&#xD;
+   at IXApi.Tests.InventorySeedIntegrityTests.Inventory_reference_package_posts_and_reruns_without_duplicate_movements() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs:line 62&#xD;
+   at IXApi.Tests.InventorySeedIntegrityTests.Inventory_reference_package_posts_and_reruns_without_duplicate_movements() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs:line 77&#xD;
+   at IXApi.Tests.InventorySeedIntegrityTests.Inventory_reference_package_posts_and_reruns_without_duplicate_movements() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs:line 77&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="8e24868a-5bf7-4089-a853-02768b963f05" testId="ffcc6887-d62d-f326-c0bf-056018ce88d0" testName="IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(scenarioId: &quot;04&quot;, expectedQuantity: 93, expectedValue: 1116)" computerName="DESKTOP-3Q67JPL" duration="00:00:02.1913357" startTime="2026-11-10T05:42:19.1228969+03:00" endTime="2026-11-10T05:42:21.3124962+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8e24868a-5bf7-4089-a853-02768b963f05">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : EcoResProduct.DisplayProductNumber exceeds its mapped length 20.</Message>
+          <StackTrace>   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models.SeedContext.EnsureAsync[T](Expression`1 key, T proposed, CancellationToken ct, String[] fields) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Models\SeedContext.cs:line 57&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Inventory.InventoryCycleMasterSeeder.SeedAsync(SeedContext c, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Modules\Inventory\MasterData\InventoryCycleMasterSeeder.cs:line 32&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 29&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 41&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 42&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 20&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 20&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.InventoryCycleSeeder.PrepareAsync(InventoryExampleOptions options, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Inventory\InventoryCycleSeeder.cs:line 18&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.InventoryTransactionExamples.RunAsync(InventoryTransactionOptions options, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Inventory\InventoryTransactionExamples.cs:line 23&#xD;
+   at IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(String scenarioId, Decimal expectedQuantity, Decimal expectedValue) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs:line 99&#xD;
+   at IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(String scenarioId, Decimal expectedQuantity, Decimal expectedValue) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs:line 128&#xD;
+   at IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(String scenarioId, Decimal expectedQuantity, Decimal expectedValue) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs:line 128&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="6c49b386-dab7-4a55-af5c-d7ea0fc8bd69" testId="b6b368ae-6efe-fe8a-997c-acf08e701dbc" testName="IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(scenarioId: &quot;02&quot;, expectedQuantity: 8, expectedValue: 80)" computerName="DESKTOP-3Q67JPL" duration="00:00:02.1716802" startTime="2026-11-10T05:42:16.9574930+03:00" endTime="2026-11-10T05:42:19.1203147+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6c49b386-dab7-4a55-af5c-d7ea0fc8bd69">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : EcoResProduct.DisplayProductNumber exceeds its mapped length 20.</Message>
+          <StackTrace>   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models.SeedContext.EnsureAsync[T](Expression`1 key, T proposed, CancellationToken ct, String[] fields) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Models\SeedContext.cs:line 57&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Inventory.InventoryCycleMasterSeeder.SeedAsync(SeedContext c, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Modules\Inventory\MasterData\InventoryCycleMasterSeeder.cs:line 32&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 29&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 41&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 42&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 20&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs:line 20&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.InventoryCycleSeeder.PrepareAsync(InventoryExampleOptions options, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Inventory\InventoryCycleSeeder.cs:line 18&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.InventoryTransactionExamples.RunAsync(InventoryTransactionOptions options, CancellationToken ct) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Inventory\InventoryTransactionExamples.cs:line 23&#xD;
+   at IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(String scenarioId, Decimal expectedQuantity, Decimal expectedValue) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs:line 99&#xD;
+   at IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(String scenarioId, Decimal expectedQuantity, Decimal expectedValue) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs:line 128&#xD;
+   at IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(String scenarioId, Decimal expectedQuantity, Decimal expectedValue) in C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs:line 128&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IXApi.Tests.InventorySeedIntegrityTests.Inventory_preparation_rolls_back_masters_after_late_validation_failure" storage="c:\users\omar almojahid\desktop\iax\.validation\inventory-package\bin\ixapi.tests.dll" id="0b100d4d-d172-6614-eaca-7f9f50638417">
+      <Execution id="e7ff67e8-7a83-4af2-9755-05c9aacb4bbc" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\.validation\inventory-package\bin\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.InventorySeedIntegrityTests" name="Inventory_preparation_rolls_back_masters_after_late_validation_failure" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.InventorySeedIntegrityTests.Inventory_preparation_seeds_the_journal_setup_the_readiness_check_requires" storage="c:\users\omar almojahid\desktop\iax\.validation\inventory-package\bin\ixapi.tests.dll" id="33c580fd-6830-b419-22e1-67f554a748ac">
+      <Execution id="4b089d9b-5739-461f-84f0-3a33e0540e91" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\.validation\inventory-package\bin\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.InventorySeedIntegrityTests" name="Inventory_preparation_seeds_the_journal_setup_the_readiness_check_requires" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(scenarioId: &quot;04&quot;, expectedQuantity: 93, expectedValue: 1116)" storage="c:\users\omar almojahid\desktop\iax\.validation\inventory-package\bin\ixapi.tests.dll" id="ffcc6887-d62d-f326-c0bf-056018ce88d0">
+      <Execution id="8e24868a-5bf7-4089-a853-02768b963f05" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\.validation\inventory-package\bin\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.InventorySeedIntegrityTests" name="Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.InventorySeedIntegrityTests.Inventory_reference_package_posts_and_reruns_without_duplicate_movements" storage="c:\users\omar almojahid\desktop\iax\.validation\inventory-package\bin\ixapi.tests.dll" id="4bb0725b-bcf2-9b08-96f8-193bc6bce97a">
+      <Execution id="8cba7ebc-4346-40d4-9413-fe7053123ddb" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\.validation\inventory-package\bin\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.InventorySeedIntegrityTests" name="Inventory_reference_package_posts_and_reruns_without_duplicate_movements" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(scenarioId: &quot;02&quot;, expectedQuantity: 8, expectedValue: 80)" storage="c:\users\omar almojahid\desktop\iax\.validation\inventory-package\bin\ixapi.tests.dll" id="b6b368ae-6efe-fe8a-997c-acf08e701dbc">
+      <Execution id="6c49b386-dab7-4a55-af5c-d7ea0fc8bd69" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\.validation\inventory-package\bin\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.InventorySeedIntegrityTests" name="Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(scenarioId: &quot;05&quot;, expectedQuantity: 90, expectedValue: 1080)" storage="c:\users\omar almojahid\desktop\iax\.validation\inventory-package\bin\ixapi.tests.dll" id="f60293c0-b493-1ace-a687-f6ea6c824562">
+      <Execution id="b5f9cb71-7e70-424b-8508-b9b0f47a6f1e" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\.validation\inventory-package\bin\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.InventorySeedIntegrityTests" name="Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(scenarioId: &quot;03&quot;, expectedQuantity: 88, expectedValue: 1056)" storage="c:\users\omar almojahid\desktop\iax\.validation\inventory-package\bin\ixapi.tests.dll" id="b7e1b921-dc99-00cf-85de-c9f9e7ad6eda">
+      <Execution id="4db6b1d6-0aa8-4ae5-a348-c4334544fbcb" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\.validation\inventory-package\bin\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.InventorySeedIntegrityTests" name="Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.InventorySeedIntegrityTests.Inventory_preparation_is_repeatable_preserves_counters_and_rejects_conflicts" storage="c:\users\omar almojahid\desktop\iax\.validation\inventory-package\bin\ixapi.tests.dll" id="8101773a-f548-1168-c582-6bfc9d121a77">
+      <Execution id="9ba0159a-aa84-4539-8ac3-0e14a4f03901" />
+      <TestMethod codeBase="C:\Users\Omar Almojahid\Desktop\IAX\.validation\inventory-package\bin\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.InventorySeedIntegrityTests" name="Inventory_preparation_is_repeatable_preserves_counters_and_rejects_conflicts" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="8101773a-f548-1168-c582-6bfc9d121a77" executionId="9ba0159a-aa84-4539-8ac3-0e14a4f03901" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="33c580fd-6830-b419-22e1-67f554a748ac" executionId="4b089d9b-5739-461f-84f0-3a33e0540e91" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f60293c0-b493-1ace-a687-f6ea6c824562" executionId="b5f9cb71-7e70-424b-8508-b9b0f47a6f1e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0b100d4d-d172-6614-eaca-7f9f50638417" executionId="e7ff67e8-7a83-4af2-9755-05c9aacb4bbc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b7e1b921-dc99-00cf-85de-c9f9e7ad6eda" executionId="4db6b1d6-0aa8-4ae5-a348-c4334544fbcb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4bb0725b-bcf2-9b08-96f8-193bc6bce97a" executionId="8cba7ebc-4346-40d4-9413-fe7053123ddb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ffcc6887-d62d-f326-c0bf-056018ce88d0" executionId="8e24868a-5bf7-4089-a853-02768b963f05" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b6b368ae-6efe-fe8a-997c-acf08e701dbc" executionId="6c49b386-dab7-4a55-af5c-d7ea0fc8bd69" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="8" executed="8" passed="1" failed="7" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.59]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:01.19]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:01.29]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:00:33.47]       System.InvalidOperationException : EcoResProduct.DisplayProductNumber exceeds its mapped length 20.&#xD;
+[xUnit.net 00:00:33.47]       Stack Trace:&#xD;
+[xUnit.net 00:00:33.47]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Models\SeedContext.cs(57,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models.SeedContext.EnsureAsync[T](Expression`1 key, T proposed, CancellationToken ct, String[] fields)&#xD;
+[xUnit.net 00:00:33.47]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Modules\Inventory\MasterData\InventoryCycleMasterSeeder.cs(32,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Inventory.InventoryCycleMasterSeeder.SeedAsync(SeedContext c, CancellationToken ct)&#xD;
+[xUnit.net 00:00:33.47]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(29,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:33.47]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:33.47]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(41,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:33.47]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:33.47]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(42,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:33.47]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:33.47]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(20,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct)&#xD;
+[xUnit.net 00:00:33.47]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(20,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct)&#xD;
+[xUnit.net 00:00:33.47]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Inventory\InventoryCycleSeeder.cs(18,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.InventoryCycleSeeder.PrepareAsync(InventoryExampleOptions options, CancellationToken ct)&#xD;
+[xUnit.net 00:00:33.47]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Inventory\InventoryTransactionExamples.cs(23,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.InventoryTransactionExamples.RunAsync(InventoryTransactionOptions options, CancellationToken ct)&#xD;
+[xUnit.net 00:00:33.47]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs(99,0): at IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(String scenarioId, Decimal expectedQuantity, Decimal expectedValue)&#xD;
+[xUnit.net 00:00:33.47]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs(128,0): at IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(String scenarioId, Decimal expectedQuantity, Decimal expectedValue)&#xD;
+[xUnit.net 00:00:33.47]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs(128,0): at IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(String scenarioId, Decimal expectedQuantity, Decimal expectedValue)&#xD;
+[xUnit.net 00:00:33.47]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:38.06]       System.InvalidOperationException : EcoResProduct.DisplayProductNumber exceeds its mapped length 20.&#xD;
+[xUnit.net 00:00:38.07]       Stack Trace:&#xD;
+[xUnit.net 00:00:38.07]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Models\SeedContext.cs(57,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models.SeedContext.EnsureAsync[T](Expression`1 key, T proposed, CancellationToken ct, String[] fields)&#xD;
+[xUnit.net 00:00:38.07]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Modules\Inventory\MasterData\InventoryCycleMasterSeeder.cs(32,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Inventory.InventoryCycleMasterSeeder.SeedAsync(SeedContext c, CancellationToken ct)&#xD;
+[xUnit.net 00:00:38.07]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(29,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:38.07]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:38.07]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(41,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:38.07]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:38.07]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(42,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:38.07]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:38.07]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(20,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct)&#xD;
+[xUnit.net 00:00:38.07]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(20,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct)&#xD;
+[xUnit.net 00:00:38.07]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Inventory\InventoryCycleSeeder.cs(18,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.InventoryCycleSeeder.PrepareAsync(InventoryExampleOptions options, CancellationToken ct)&#xD;
+[xUnit.net 00:00:38.07]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Inventory\InventoryTransactionExamples.cs(23,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.InventoryTransactionExamples.RunAsync(InventoryTransactionOptions options, CancellationToken ct)&#xD;
+[xUnit.net 00:00:38.07]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs(99,0): at IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(String scenarioId, Decimal expectedQuantity, Decimal expectedValue)&#xD;
+[xUnit.net 00:00:38.07]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs(128,0): at IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(String scenarioId, Decimal expectedQuantity, Decimal expectedValue)&#xD;
+[xUnit.net 00:00:38.07]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs(128,0): at IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(String scenarioId, Decimal expectedQuantity, Decimal expectedValue)&#xD;
+[xUnit.net 00:00:38.07]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:40.24]       System.InvalidOperationException : EcoResProduct.DisplayProductNumber exceeds its mapped length 20.&#xD;
+[xUnit.net 00:00:40.24]       Stack Trace:&#xD;
+[xUnit.net 00:00:40.24]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Models\SeedContext.cs(57,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models.SeedContext.EnsureAsync[T](Expression`1 key, T proposed, CancellationToken ct, String[] fields)&#xD;
+[xUnit.net 00:00:40.24]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Modules\Inventory\MasterData\InventoryCycleMasterSeeder.cs(32,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Inventory.InventoryCycleMasterSeeder.SeedAsync(SeedContext c, CancellationToken ct)&#xD;
+[xUnit.net 00:00:40.24]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(29,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:40.24]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:40.24]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(41,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:40.24]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:40.24]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(42,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:40.24]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:40.24]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(20,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct)&#xD;
+[xUnit.net 00:00:40.24]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(20,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct)&#xD;
+[xUnit.net 00:00:40.24]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Inventory\InventoryCycleSeeder.cs(18,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.InventoryCycleSeeder.PrepareAsync(InventoryExampleOptions options, CancellationToken ct)&#xD;
+[xUnit.net 00:00:40.24]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Inventory\InventoryTransactionExamples.cs(23,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.InventoryTransactionExamples.RunAsync(InventoryTransactionOptions options, CancellationToken ct)&#xD;
+[xUnit.net 00:00:40.24]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs(99,0): at IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(String scenarioId, Decimal expectedQuantity, Decimal expectedValue)&#xD;
+[xUnit.net 00:00:40.24]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs(128,0): at IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(String scenarioId, Decimal expectedQuantity, Decimal expectedValue)&#xD;
+[xUnit.net 00:00:40.24]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs(128,0): at IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(String scenarioId, Decimal expectedQuantity, Decimal expectedValue)&#xD;
+[xUnit.net 00:00:40.24]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:42.43]       System.InvalidOperationException : EcoResProduct.DisplayProductNumber exceeds its mapped length 20.&#xD;
+[xUnit.net 00:00:42.43]       Stack Trace:&#xD;
+[xUnit.net 00:00:42.43]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Models\SeedContext.cs(57,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models.SeedContext.EnsureAsync[T](Expression`1 key, T proposed, CancellationToken ct, String[] fields)&#xD;
+[xUnit.net 00:00:42.43]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Modules\Inventory\MasterData\InventoryCycleMasterSeeder.cs(32,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Inventory.InventoryCycleMasterSeeder.SeedAsync(SeedContext c, CancellationToken ct)&#xD;
+[xUnit.net 00:00:42.43]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(29,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:42.43]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:42.43]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(41,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:42.43]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:42.43]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(42,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:42.43]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:42.43]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(20,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct)&#xD;
+[xUnit.net 00:00:42.43]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(20,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct)&#xD;
+[xUnit.net 00:00:42.43]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Inventory\InventoryCycleSeeder.cs(18,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.InventoryCycleSeeder.PrepareAsync(InventoryExampleOptions options, CancellationToken ct)&#xD;
+[xUnit.net 00:00:42.43]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Inventory\InventoryTransactionExamples.cs(23,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.InventoryTransactionExamples.RunAsync(InventoryTransactionOptions options, CancellationToken ct)&#xD;
+[xUnit.net 00:00:42.43]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs(99,0): at IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(String scenarioId, Decimal expectedQuantity, Decimal expectedValue)&#xD;
+[xUnit.net 00:00:42.43]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs(128,0): at IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(String scenarioId, Decimal expectedQuantity, Decimal expectedValue)&#xD;
+[xUnit.net 00:00:42.43]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs(128,0): at IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(String scenarioId, Decimal expectedQuantity, Decimal expectedValue)&#xD;
+[xUnit.net 00:00:42.43]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:46.28]       System.InvalidOperationException : EcoResProduct.DisplayProductNumber exceeds its mapped length 20.&#xD;
+[xUnit.net 00:00:46.28]       Stack Trace:&#xD;
+[xUnit.net 00:00:46.28]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Models\SeedContext.cs(57,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models.SeedContext.EnsureAsync[T](Expression`1 key, T proposed, CancellationToken ct, String[] fields)&#xD;
+[xUnit.net 00:00:46.28]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Modules\Inventory\MasterData\InventoryCycleMasterSeeder.cs(32,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Inventory.InventoryCycleMasterSeeder.SeedAsync(SeedContext c, CancellationToken ct)&#xD;
+[xUnit.net 00:00:46.28]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(29,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:46.28]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:46.28]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(41,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:46.28]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:46.28]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(42,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:46.28]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:46.28]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(20,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct)&#xD;
+[xUnit.net 00:00:46.28]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(20,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct)&#xD;
+[xUnit.net 00:00:46.28]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Inventory\InventoryCycleSeeder.cs(18,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.InventoryCycleSeeder.PrepareAsync(InventoryExampleOptions options, CancellationToken ct)&#xD;
+[xUnit.net 00:00:46.28]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs(150,0): at IXApi.Tests.InventorySeedIntegrityTests.Inventory_preparation_is_repeatable_preserves_counters_and_rejects_conflicts()&#xD;
+[xUnit.net 00:00:46.28]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs(171,0): at IXApi.Tests.InventorySeedIntegrityTests.Inventory_preparation_is_repeatable_preserves_counters_and_rejects_conflicts()&#xD;
+[xUnit.net 00:00:46.28]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs(171,0): at IXApi.Tests.InventorySeedIntegrityTests.Inventory_preparation_is_repeatable_preserves_counters_and_rejects_conflicts()&#xD;
+[xUnit.net 00:00:46.28]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:48.23]       System.InvalidOperationException : EcoResProduct.DisplayProductNumber exceeds its mapped length 20.&#xD;
+[xUnit.net 00:00:48.23]       Stack Trace:&#xD;
+[xUnit.net 00:00:48.23]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Models\SeedContext.cs(57,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models.SeedContext.EnsureAsync[T](Expression`1 key, T proposed, CancellationToken ct, String[] fields)&#xD;
+[xUnit.net 00:00:48.23]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Modules\Inventory\MasterData\InventoryCycleMasterSeeder.cs(32,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Inventory.InventoryCycleMasterSeeder.SeedAsync(SeedContext c, CancellationToken ct)&#xD;
+[xUnit.net 00:00:48.23]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(29,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:48.23]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:48.23]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(41,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:48.23]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:48.23]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(42,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:48.23]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:48.23]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(20,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct)&#xD;
+[xUnit.net 00:00:48.23]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(20,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct)&#xD;
+[xUnit.net 00:00:48.23]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Inventory\InventoryCycleSeeder.cs(18,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.InventoryCycleSeeder.PrepareAsync(InventoryExampleOptions options, CancellationToken ct)&#xD;
+[xUnit.net 00:00:48.23]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Inventory\InventoryTransactionExamples.cs(23,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.InventoryTransactionExamples.RunAsync(InventoryTransactionOptions options, CancellationToken ct)&#xD;
+[xUnit.net 00:00:48.23]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs(62,0): at IXApi.Tests.InventorySeedIntegrityTests.Inventory_reference_package_posts_and_reruns_without_duplicate_movements()&#xD;
+[xUnit.net 00:00:48.23]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs(77,0): at IXApi.Tests.InventorySeedIntegrityTests.Inventory_reference_package_posts_and_reruns_without_duplicate_movements()&#xD;
+[xUnit.net 00:00:48.23]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs(77,0): at IXApi.Tests.InventorySeedIntegrityTests.Inventory_reference_package_posts_and_reruns_without_duplicate_movements()&#xD;
+[xUnit.net 00:00:48.23]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:50.11]       System.InvalidOperationException : EcoResProduct.DisplayProductNumber exceeds its mapped length 20.&#xD;
+[xUnit.net 00:00:50.11]       Stack Trace:&#xD;
+[xUnit.net 00:00:50.11]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Models\SeedContext.cs(57,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models.SeedContext.EnsureAsync[T](Expression`1 key, T proposed, CancellationToken ct, String[] fields)&#xD;
+[xUnit.net 00:00:50.11]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Modules\Inventory\MasterData\InventoryCycleMasterSeeder.cs(32,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Inventory.InventoryCycleMasterSeeder.SeedAsync(SeedContext c, CancellationToken ct)&#xD;
+[xUnit.net 00:00:50.11]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(29,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:50.11]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:50.11]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(41,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:50.11]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:50.11]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(42,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.&lt;&gt;c__DisplayClass4_0.&lt;&lt;RunAsync&gt;b__0&gt;d.MoveNext()&#xD;
+[xUnit.net 00:00:50.11]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:50.11]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(20,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct)&#xD;
+[xUnit.net 00:00:50.11]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\Core\Execution\SeedRunner.cs(20,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SeedRunner.RunAsync(Int32 fiscalYear, String actor, CancellationToken ct)&#xD;
+[xUnit.net 00:00:50.11]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Inventory\InventoryCycleSeeder.cs(18,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.InventoryCycleSeeder.PrepareAsync(InventoryExampleOptions options, CancellationToken ct)&#xD;
+[xUnit.net 00:00:50.11]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs(183,0): at IXApi.Tests.InventorySeedIntegrityTests.Inventory_preparation_seeds_the_journal_setup_the_readiness_check_requires()&#xD;
+[xUnit.net 00:00:50.11]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs(225,0): at IXApi.Tests.InventorySeedIntegrityTests.Inventory_preparation_seeds_the_journal_setup_the_readiness_check_requires()&#xD;
+[xUnit.net 00:00:50.11]         C:\Users\Omar Almojahid\Desktop\IAX\IXApi\Tests\InventorySeedIntegrityTests.cs(225,0): at IXApi.Tests.InventorySeedIntegrityTests.Inventory_preparation_seeds_the_journal_setup_the_readiness_check_requires()&#xD;
+[xUnit.net 00:00:50.11]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:50.12]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="DESKTOP-3Q67JPL" outcome="Error" timestamp="2026-11-10T05:42:12.3556913+03:00">
+        <Text>[xUnit.net 00:00:33.47]     IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(scenarioId: "03", expectedQuantity: 88, expectedValue: 1056) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="DESKTOP-3Q67JPL" outcome="Error" timestamp="2026-11-10T05:42:16.9504361+03:00">
+        <Text>[xUnit.net 00:00:38.06]     IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(scenarioId: "05", expectedQuantity: 90, expectedValue: 1080) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="DESKTOP-3Q67JPL" outcome="Error" timestamp="2026-11-10T05:42:19.1208386+03:00">
+        <Text>[xUnit.net 00:00:40.24]     IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(scenarioId: "02", expectedQuantity: 8, expectedValue: 80) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="DESKTOP-3Q67JPL" outcome="Error" timestamp="2026-11-10T05:42:21.3129467+03:00">
+        <Text>[xUnit.net 00:00:42.43]     IXApi.Tests.InventorySeedIntegrityTests.Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(scenarioId: "04", expectedQuantity: 93, expectedValue: 1116) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="DESKTOP-3Q67JPL" outcome="Error" timestamp="2026-11-10T05:42:25.1672497+03:00">
+        <Text>[xUnit.net 00:00:46.28]     IXApi.Tests.InventorySeedIntegrityTests.Inventory_preparation_is_repeatable_preserves_counters_and_rejects_conflicts [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="DESKTOP-3Q67JPL" outcome="Error" timestamp="2026-11-10T05:42:27.1217626+03:00">
+        <Text>[xUnit.net 00:00:48.23]     IXApi.Tests.InventorySeedIntegrityTests.Inventory_reference_package_posts_and_reruns_without_duplicate_movements [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="DESKTOP-3Q67JPL" outcome="Error" timestamp="2026-11-10T05:42:28.9943890+03:00">
+        <Text>[xUnit.net 00:00:50.11]     IXApi.Tests.InventorySeedIntegrityTests.Inventory_preparation_seeds_the_journal_setup_the_readiness_check_requires [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

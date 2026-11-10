@@ -1,4 +1,4 @@
-import { localizedName } from '@shared/utilities/localizedName';
+﻿import { localizedName } from '@shared/utilities/localizedName';
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FastTabsDrawer } from '@patterns/drawer-fast-tabs';
@@ -90,7 +90,10 @@ export function SalesOrderQuickCreate({
     enabled: open && Boolean(selectedAccount),
   });
   const primaryAddress = customerDefaultsQuery.data?.address ?? '';
-  const customerAddresses = customerDefaultsQuery.data?.addresses ?? [];
+  const customerAddresses = React.useMemo(
+    () => customerDefaultsQuery.data?.addresses ?? [],
+    [customerDefaultsQuery.data?.addresses]
+  );
   const primaryDeliveryAddress = customerAddresses[0];
   const orderContacts = useMemo(() => (customerDefaultsQuery.data?.contacts ?? []).filter(
     (contact) => contact.type === 'Email' || contact.type === 'Phone'

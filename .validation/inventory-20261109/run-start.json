@@ -1,0 +1,18 @@
+{
+  "startedAt": "2026-11-09T17:06:21.5978383+03:00",
+  "reference": "IXApi/src/Infrastructure/Persistence/SeedingERPV2/CycleErpExamples/Inventory/Read_only.md",
+  "referenceSha256": "75F2429104DBA6B95372FC1D4DEAFFC30B99DFCF06AE3E581E73103E72F309D4",
+  "referenceConfirmedByUser": true,
+  "status": "Running",
+  "testCommand": "dotnet test IXApi/Tests/InventoryCycle.Tests.csproj --no-restore --logger trx;LogFileName=inventory-start-now-20261109.trx --results-directory .validation/inventory-20261109 --verbosity minimal",
+  "databaseIsolation": "Each InventoryCycleTests fixture opens its own SQLite :memory: database; not SQL Server verification",
+  "log": ".validation/inventory-start-now-20261109.log",
+  "preexistingChangesPreserved": [
+    "InventoryCycleTests.cs",
+    "SalesInvoiceService.cs",
+    "Inventory/GAPS.md",
+    "SeedMappedTables.json",
+    "AP/Foundation/OrderToCash reports"
+  ],
+  "scopeDecisionPending": "Batch/serial and Include physical value are present in acceptance reference but explicitly rejected by current basic implementation"
+}

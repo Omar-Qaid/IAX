@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+﻿import React, { useMemo, useState } from 'react';
 import { Box, Tab, Tabs } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -87,7 +87,7 @@ export function CustPackingSlipJournal(): React.ReactElement {
     enabled: Boolean(salesOrderId),
   });
   const order = ordersQuery.data?.find((row) => row.id === salesOrderId);
-  const journals = journalsQuery.data ?? [];
+  const journals = useMemo(() => journalsQuery.data ?? [], [journalsQuery.data]);
   const activeId = journals.some((row) => row.id === selectedId) ? selectedId : journals[0]?.id;
   const detailQuery = useQuery({
     queryKey: ['sales-order-packing-slip', salesOrderId, activeId],
@@ -110,7 +110,6 @@ export function CustPackingSlipJournal(): React.ReactElement {
   const columns = tab === 'overview'
     ? overviewColumns
     : tab === 'lines' ? lineColumns : orderTrackingColumns;
-  const tabValue = tab === 'overview' ? 'Overview' : tab === 'lines' ? 'Lines' : 'Order tracking';
 
   return (
     <SimpleListPage<GridRow>

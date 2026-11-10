@@ -1,4 +1,4 @@
-﻿import React, { useMemo } from 'react';
+﻿import React, { useCallback, useMemo } from 'react';
 import { Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
@@ -91,6 +91,60 @@ const empty = (): InventLocationRecord => ({
   maxPickingRouteTime: 0,
   pickingLineTime: 0,
 });
+// The warehouse detail form reads and writes exactly these columns. They are literals, so
+// they belong at module scope: held inside the component they were rebuilt on every render,
+// which is why the detail-configuration memo could not depend on them.
+const fields = [
+  'inventSiteId',
+  'inventLocationType',
+  'inventLocationLevel',
+  'inventLocationIdTransit',
+  'inventLocationIdQuarantine',
+  'inventLocationIdReqMain',
+  'itmInventLocationIdGit',
+  'itmInventLocationIdUnder',
+  'vendAccount',
+  'workflowApproval',
+  'manual',
+  'reqRefill',
+  'wmsLocationIdDefaultReceipt',
+  'wmsLocationIdDefaultIssue',
+  'defaultProductionInputLocation',
+  'defaultProductionFinishGoodsLocation',
+  'defaultKanbanFinishedGoodsLocation',
+  'defaultReturnCreditOnlyLocation',
+  'defaultStatusId',
+  'wmsRackFormat',
+  'wmsLevelFormat',
+  'wmsPositionFormat',
+  'whsEnabled',
+  'warehouseAutoReleaseReservation',
+  'autoUpdateShipment',
+  'reserveAtLoadPost',
+  'decrementLoadLine',
+  'printBolBeforeShipConfirm',
+  'cycleCountAllowPalletMove',
+  'allowLaborStandards',
+  'allowMarkingReservationRemoval',
+  'useWmsOrders',
+  'wmsAisleNameActive',
+  'wmsRackNameActive',
+  'wmsLevelNameActive',
+  'wmsPositionNameActive',
+  'uniqueCheckDigits',
+  'enableQualityManagement',
+  'removeInventBlockingOnStatusChange',
+  'prodReserveOnlyWhse',
+  'whsProdOrderBackflushMustUseReservedQty',
+  'fshStore',
+  'consolidateShipAtRtw',
+  'retailInventNegPhysical',
+  'retailInventNegFinancial',
+  'enableExternalWarehouse',
+  'maxPickingRouteTime',
+  'pickingLineTime',
+] as const;
+
 export function InventLocationPage(): React.ReactElement {
   const { t } = useAppTranslation();
   const lookups = useQuery({
@@ -98,102 +152,57 @@ export function InventLocationPage(): React.ReactElement {
     queryFn: ({ signal }) => inventLocationApi.lookups(signal),
     staleTime: 300000,
   });
-  const lookupField = (
-    name: string,
-    label: string,
-    options: 'sites' | 'warehouses',
-    record?: InventLocationRecord
-  ) => ({
-    name,
-    label,
-    renderOwnLabel: true,
-    render: ({
-      value,
-      editing,
-      disabled,
-      onChange,
-    }: {
-      value: string | number | boolean | undefined;
-      editing: boolean;
-      disabled: boolean;
-      onChange: (value: string) => void;
-    }) => {
-      const lookupOptions =
-        options === 'sites'
-          ? (lookups.data?.sites ?? [])
-          : (lookups.data?.warehouses ?? []).filter(
-              (option) =>
-                Boolean(record?.inventSiteId) &&
-                option.siteId === record?.inventSiteId &&
-                option.id !== record?.inventLocationId
-            );
-      return (
-        <LookupField
-          name={name}
-          masterRoute={options === 'sites' ? INVENTORY_ROUTE_PATHS.SITES : INVENTORY_ROUTE_PATHS.WAREHOUSES}
-          label={label}
-          value={String(value ?? '')}
-          options={lookupOptions}
-          displayMode="select"
-          searchable
-          lazyLoading={false}
-          readOnly={!editing}
-          disabled={disabled || lookups.isLoading}
-          onChange={(v) => onChange(String(v ?? ''))}
-        />
-      );
-    },
-  });
-  const fields = [
-    'inventSiteId',
-    'inventLocationType',
-    'inventLocationLevel',
-    'inventLocationIdTransit',
-    'inventLocationIdQuarantine',
-    'inventLocationIdReqMain',
-    'itmInventLocationIdGit',
-    'itmInventLocationIdUnder',
-    'vendAccount',
-    'workflowApproval',
-    'manual',
-    'reqRefill',
-    'wmsLocationIdDefaultReceipt',
-    'wmsLocationIdDefaultIssue',
-    'defaultProductionInputLocation',
-    'defaultProductionFinishGoodsLocation',
-    'defaultKanbanFinishedGoodsLocation',
-    'defaultReturnCreditOnlyLocation',
-    'defaultStatusId',
-    'wmsRackFormat',
-    'wmsLevelFormat',
-    'wmsPositionFormat',
-    'whsEnabled',
-    'warehouseAutoReleaseReservation',
-    'autoUpdateShipment',
-    'reserveAtLoadPost',
-    'decrementLoadLine',
-    'printBolBeforeShipConfirm',
-    'cycleCountAllowPalletMove',
-    'allowLaborStandards',
-    'allowMarkingReservationRemoval',
-    'useWmsOrders',
-    'wmsAisleNameActive',
-    'wmsRackNameActive',
-    'wmsLevelNameActive',
-    'wmsPositionNameActive',
-    'uniqueCheckDigits',
-    'enableQualityManagement',
-    'removeInventBlockingOnStatusChange',
-    'prodReserveOnlyWhse',
-    'whsProdOrderBackflushMustUseReservedQty',
-    'fshStore',
-    'consolidateShipAtRtw',
-    'retailInventNegPhysical',
-    'retailInventNegFinancial',
-    'enableExternalWarehouse',
-    'maxPickingRouteTime',
-    'pickingLineTime',
-  ] as const;
+  const lookupField = useCallback(
+    (
+      name: string,
+      label: string,
+      options: 'sites' | 'warehouses',
+      record?: InventLocationRecord
+    ) => ({
+      name,
+      label,
+      renderOwnLabel: true,
+      render: ({
+        value,
+        editing,
+        disabled,
+        onChange,
+      }: {
+        value: string | number | boolean | undefined;
+        editing: boolean;
+        disabled: boolean;
+        onChange: (value: string) => void;
+      }) => {
+        const lookupOptions =
+          options === 'sites'
+            ? (lookups.data?.sites ?? [])
+            : (lookups.data?.warehouses ?? []).filter(
+                (option) =>
+                  Boolean(record?.inventSiteId) &&
+                  option.siteId === record?.inventSiteId &&
+                  option.id !== record?.inventLocationId
+              );
+        return (
+          <LookupField
+            name={name}
+            masterRoute={
+              options === 'sites' ? INVENTORY_ROUTE_PATHS.SITES : INVENTORY_ROUTE_PATHS.WAREHOUSES
+            }
+            label={label}
+            value={String(value ?? '')}
+            options={lookupOptions}
+            displayMode="select"
+            searchable
+            lazyLoading={false}
+            readOnly={!editing}
+            disabled={disabled || lookups.isLoading}
+            onChange={(v) => onChange(String(v ?? ''))}
+          />
+        );
+      },
+    }),
+    [lookups.data, lookups.isLoading]
+  );
   const config = useMemo<EnterpriseListDetailsConfig<InventLocationRecord>>(
     () => ({
       recordTableName: 'InventLocation',
@@ -538,7 +547,9 @@ export function InventLocationPage(): React.ReactElement {
               },
             ],
           },
-        ].filter((section) => section.id === 'general' || section.id === 'hierarchy') as DetailSectionConfig[],
+        ].filter(
+          (section) => section.id === 'general' || section.id === 'hierarchy'
+        ) as DetailSectionConfig[],
       permissions: {
         view: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
         create: PERMISSIONS.INVENTORY_TRANSACTION_CREATE,
@@ -558,7 +569,7 @@ export function InventLocationPage(): React.ReactElement {
       },
       presentation: { mode: 'list', listWidth: 270, listResizable: true },
     }),
-    [lookups.data, lookups.isLoading, t]
+    [lookupField, lookups.data, t]
   );
   return (
     <ListDetailsPage

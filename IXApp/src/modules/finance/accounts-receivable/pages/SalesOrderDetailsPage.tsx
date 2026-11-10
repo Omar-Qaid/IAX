@@ -1,4 +1,4 @@
-import { useGridFilterRow } from '@shared/components/data-grid/hooks/useGridFilterRow';
+﻿import { useGridFilterRow } from '@shared/components/data-grid/hooks/useGridFilterRow';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
@@ -70,16 +70,6 @@ const salesOrderRibbonPinnedStorageKey = 'sales-order.action-pane.ribbon-pinned'
 
 export function SalesOrderDetailsPage(): React.ReactElement {
   const { t, currentLanguage } = useAppTranslation();
-  const salesLineTypeOptions = [
-    { value: 0, label: t('salesOrder.lineTypes.journal', 'Journal') },
-    { value: 1, label: t('salesOrder.lineTypes.quotation', 'Quotation') },
-    { value: 2, label: t('salesOrder.lineTypes.subscription', 'Subscription') },
-    { value: 3, label: t('salesOrder.lineTypes.sales', 'Sales') },
-    { value: 4, label: t('salesOrder.lineTypes.returnItem', 'Return item') },
-    { value: 5, label: t('salesOrder.lineTypes.blanket', 'Blanket') },
-    { value: 6, label: t('salesOrder.lineTypes.itemRequirement', 'Item requirement') },
-    { value: 7, label: t('salesOrder.lineTypes.prepayment', 'Prepayment') },
-  ];
   const salesDeliveryTypeOptions = [
     { value: 0, label: t('salesOrder.deliveryTypes.none', 'None') },
     { value: 1, label: t('salesOrder.deliveryTypes.pickup', 'Pickup') },

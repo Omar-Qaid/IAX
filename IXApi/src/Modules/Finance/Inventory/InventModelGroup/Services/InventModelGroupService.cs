@@ -112,7 +112,8 @@ public sealed class InventModelGroupService : BaseService<InventModelGroupEntity
             ? $"The basic inventory release settles {string.Join(", ", SettledModels)} only." :
         !input.StockedProduct ? "The basic inventory model group must contain stocked products." :
         input.NegativePhysical || input.NegativeFinancial ? "Negative physical and financial inventory are disabled in the basic release." :
-        input.InclPhysicalValueInCost ? "Include physical value in cost is disabled in the basic release." :
+        input.InclPhysicalValueInCost && (InventModel)input.InventModel != InventModel.WeightedAvg
+            ? "Include physical value is supported for periodic weighted average only; FIFO/LIFO physical close adjustments are not implemented." :
         !input.PostOnHandFinancial ? "Financial inventory posting is required in the basic release." :
         input.StandardCost || input.MandatoryWmsOrder || input.QuarantineControl || input.PdsCheck ||
         input.MandatoryRegister || input.MandatoryReceive || input.MandatoryPick || input.MandatoryDeduct ||

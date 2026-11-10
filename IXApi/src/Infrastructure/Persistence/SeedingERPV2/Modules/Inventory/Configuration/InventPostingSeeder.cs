@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
+﻿using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Common;
@@ -14,15 +14,16 @@ namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Inventory;
 public sealed class InventPostingSeeder : IDataSeeder
 {
     public string Id => "ERPV2.InventPostingSeeder";
-    public IReadOnlyCollection<string> Dependencies => ["ERPV2.DimensionAttributeValueCombinationSeeder", "ERPV2.ItemGroupSeeder"];
+    public IReadOnlyCollection<string> Dependencies => ["ERPV2.DimensionAttributeValueCombinationSeeder", "ERPV2.InventoryAccountStructureSeeder", "ERPV2.ItemGroupSeeder"];
     public async Task SeedAsync(SeedContext c, CancellationToken ct)
     {
 
-        foreach (var (type, code) in new[] { (InventAccountType.PurchPackingSlip, "181003"), (InventAccountType.PurchPackingSlipOffsetAccount, "281002"), (InventAccountType.PurchReceipt, "181002"), (InventAccountType.PurchConsump, "681001"), (InventAccountType.PurchDisc, "481001") })
+        var itemGroup = InventoryCycleSeedExample.ItemGroup;
+        foreach (var (type, code) in InventoryCycleSeedExample.PostingProfiles)
         {
             var dimension = await c.RequireAsync<DimensionAttributeValueCombination>(x => x.MainAccountValue == code, ct);
-            await c.EnsureAsync<InventPosting>(x => x.InventAccountType == type && x.ItemCode == TableGroupAll.Group && x.ItemRelation == "APV2" && x.CustVendCode == TableGroupAll.All,
-                new() { InventAccountType = type, ItemCode = TableGroupAll.Group, ItemRelation = "APV2", CustVendCode = TableGroupAll.All, LedgerDimension = dimension.RecId }, ct);
+            await c.EnsureAsync<InventPosting>(x => x.InventAccountType == type && x.ItemCode == TableGroupAll.Group && x.ItemRelation == itemGroup && x.CustVendCode == TableGroupAll.All,
+                new() { InventAccountType = type, ItemCode = TableGroupAll.Group, ItemRelation = itemGroup, CustVendCode = TableGroupAll.All, LedgerDimension = dimension.RecId }, ct);
         }
     }
 }

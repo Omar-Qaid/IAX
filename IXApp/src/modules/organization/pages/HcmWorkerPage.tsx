@@ -1,5 +1,5 @@
-import { useGridFilterRow } from '@shared/components/data-grid/hooks/useGridFilterRow';
-import React, { useMemo, useState } from 'react';
+﻿import { useGridFilterRow } from '@shared/components/data-grid/hooks/useGridFilterRow';
+import React, { useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { useCompanyStore } from '@core/company/useCompanyStore';
@@ -75,46 +75,49 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
     }),
   };
 
-  const lookupField = (
-    name: string,
-    label: string,
-    options: HcmLookupOption[],
-    loading: boolean,
-    required = true
-  ) => ({
-    name,
-    label,
-    renderOwnLabel: true,
-    render: ({
-      value,
-      disabled,
-      onChange,
-    }: {
-      value: DetailValue | undefined;
-      disabled: boolean;
-      onChange: (value: DetailValue) => void;
-    }) => (
-      <AppLookupField
-        name={name}
-        label={label}
-        value={numberValue(value)}
-        onChange={(next) => onChange(Number(next) || 0)}
-        options={options.map((option) => ({
-          id: option.id,
-          code: option.code ?? '',
-          name: localizedName(option, isRtl),
-          description: [option.name, option.nameAlias].filter(Boolean).join(' '),
-        }))}
-        required={required}
-        disabled={disabled || loading}
-        displayMode="select"
-        sideMode="client"
-        searchable
-        lazyLoading
-        pageSize={25}
-      />
-    ),
-  });
+  const lookupField = useCallback(
+    (
+      name: string,
+      label: string,
+      options: HcmLookupOption[],
+      loading: boolean,
+      required = true
+    ) => ({
+      name,
+      label,
+      renderOwnLabel: true,
+      render: ({
+        value,
+        disabled,
+        onChange,
+      }: {
+        value: DetailValue | undefined;
+        disabled: boolean;
+        onChange: (value: DetailValue) => void;
+      }) => (
+        <AppLookupField
+          name={name}
+          label={label}
+          value={numberValue(value)}
+          onChange={(next) => onChange(Number(next) || 0)}
+          options={options.map((option) => ({
+            id: option.id,
+            code: option.code ?? '',
+            name: localizedName(option, isRtl),
+            description: [option.name, option.nameAlias].filter(Boolean).join(' '),
+          }))}
+          required={required}
+          disabled={disabled || loading}
+          displayMode="select"
+          sideMode="client"
+          searchable
+          lazyLoading
+          pageSize={25}
+        />
+      ),
+    }),
+    [isRtl]
+  );
 
   const sections = useMemo<DetailSectionConfig[]>(
     () => [
@@ -220,8 +223,9 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
       lookups.occupations.isLoading,
       lookups.showrooms.data,
       lookups.showrooms.isLoading,
-      isRtl,
       t,
+      company,
+      lookupField,
     ]
   );
 

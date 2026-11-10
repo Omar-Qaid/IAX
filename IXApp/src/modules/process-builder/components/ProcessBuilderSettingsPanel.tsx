@@ -1,4 +1,4 @@
-import { localizedName } from '@shared/utilities/localizedName';
+﻿import { localizedName } from '@shared/utilities/localizedName';
 import React from 'react';
 import { loadBuilderNotificationTemplates } from '../api/processBuilderNotificationTemplates';
 import { validationTypesForControl } from '../validationTypesForControl';
@@ -94,7 +94,7 @@ function ReferenceFilterEditor({
   value?: ReferenceFilter;
   onChange: (value: ReferenceFilter) => void;
 }) {
-  const { t, isRtl } = useAppTranslation();
+  const { t } = useAppTranslation();
   const fields = useQuery({
     queryKey: ['workflow-reference-filter-fields', referenceType],
     queryFn: ({ signal }) => referenceFilterApi.fields(referenceType, signal),

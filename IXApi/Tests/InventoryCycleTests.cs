@@ -24,7 +24,7 @@ using Xunit;
 
 namespace IAX.IXApi.Tests;
 
-public sealed class InventoryCycleTests
+public sealed partial class InventoryCycleTests
 {
     [Fact]
     public async Task Free_text_invoice_posts_services_tax_and_receivable_without_inventory()

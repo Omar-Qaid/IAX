@@ -79,8 +79,8 @@ internal sealed class InventoryMovement(IUnitOfWork unitOfWork, ISalesInventoryN
     }
 
     /// <summary>
-    /// Provisional cost for the financially tracked site. The basic release does not include
-    /// physical value in cost, and warehouse is a physical (not financial) dimension.
+    /// Provisional cost for the financially tracked site. Weighted average can include the
+    /// received/deducted physical balances; its close still settles financial transactions only.
     /// </summary>
     public static async Task<decimal> SiteRunningAverageCostAsync(DbContext db, string companyId,
         string itemId, string siteId, CancellationToken ct)
@@ -94,6 +94,19 @@ internal sealed class InventoryMovement(IUnitOfWork unitOfWork, ISalesInventoryN
             .Select(x => x.Entity));
         var quantity = balances.Sum(x => x.PostedQty);
         var value = balances.Sum(x => x.PostedValue);
+        var model = await (from assignment in db.Set<InventModelGroupItem>().AsNoTracking()
+            join groupRow in db.Set<IAX.IXApi.Modules.Finance.Entities.InventModelGroup>().AsNoTracking()
+                on new { Area = assignment.ModelGroupDataAreaId, Id = assignment.ModelGroupId }
+                equals new { Area = groupRow.DataAreaId, Id = groupRow.ModelGroupId }
+            where assignment.ItemDataAreaId == companyId && assignment.ItemId == itemId
+            select groupRow).SingleOrDefaultAsync(ct);
+        if (model?.InclPhysicalValueInCost == NoYes.Yes)
+        {
+            if (model.InventModel != InventModel.WeightedAvg)
+                throw new SubledgerPostingException("Include physical value is supported for periodic weighted average only; FIFO/LIFO physical close adjustments are not implemented.");
+            quantity += balances.Sum(x => x.Received - x.Deducted);
+            value += balances.Sum(x => x.PhysicalValue);
+        }
         if (quantity > 0 && value > 0) return value / quantity;
 
         var itemCost = await db.Set<InventTableModule>().AsNoTracking()

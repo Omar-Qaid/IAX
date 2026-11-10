@@ -136,6 +136,7 @@ dotnet test IXApi/Tests/IXApi.Tests.csproj "/p:BaseOutputPath=$PWD/IXApi/.ap-sta
 - أعاد اختبار SQLite إنتاج رفض إعادة طلب ترحيل فاتورة المقدمة الأصلية بعد اكتمال فوترة أمر الشراء. أعاد المسار الحالة 422 بدل إرجاع الفاتورة المرحّلة. الدليل في `.validation/ap-prepayment-after-close-repro.trx`. عُدّل ترتيب التحقق ليبحث عن الطلب المطابق قبل رفض الترحيل الجديد على أمر مغلق، ويجري اختبار الإصلاح.
 - نجح اختبار الإصلاح على SQLite معزول. أعاد الطلب المطابق بعد إغلاق أمر الشراء الحالة 200 دون إنشاء فاتورة أو قيد جديد. سجل `.validation/ap-prepayment-after-close-fixed.trx` اختبارين ناجحين بلا فشل أو تخطٍ.
 - أكد المستخدم أن القيمة المخزنة في D365 للمبلغ الثابت هي `PurchPrepayTable.Type = 1`. أصبح تعريف الدفعة الثابتة يحفظ هذه القيمة صراحة، وأضيف فحص لها عند إعادة قراءة السجل.
+- نجح اختبارا الدفعة المقدمة المركّزان بعد تثبيت القيمة `1` على SQLite معزول، بصفر فشل أو تخطٍ. الدليل في `.validation/ap-prepayment-fixed-type.trx`. سجل تشغيل الدورة الموسعة السابق 33 نقطة تحقق ناجحة لكل محرك، مع نجاح تنظيف قاعدة SQL Server المعزولة. يغطي اختبار فاتورة المقدمة مبلغًا ثابتًا بعملة المحاسبة دون ضريبة.
 - أعاد اختبار المرحلة الرابعة إنتاج عيب تكرار سطر أمر الشراء في سند الاستلام. قبلت الخدمة سطرين للمرجع نفسه، كل منهما 50 وحدة، وأعادت 200. بعد الإصلاح ترفض الخدمة الطلب بـ422 قبل الترحيل، ويظل رقم السند متاحًا لترحيل الطلب الصحيح بـ100 وحدة. نجح اختبارا المراحل على SQLite وSQL Server دون فشل أو تخطٍ. الأدلة في `.validation/ap-duplicate-receipt-repro.trx` و`.validation/ap-duplicate-receipt-verified.trx`.
 
 ### تحديث اختبار الخدمات المباشر — 6 نوفمبر 2026
@@ -160,3 +161,10 @@ dotnet test IXApi/Tests/IXApi.Tests.csproj "/p:BaseOutputPath=$PWD/IXApi/.ap-sta
 - الانحدار العام: `ap-complete-regression-tests.log`.
 - انحدار المخزون: `ap-complete-inventory-tests.log`.
 - الاختبارات القابلة لإعادة التشغيل: `IXApi/Tests/AccountsPayablePhaseOneSeedTests.cs`، الدالتان `Detailed_AP_stages_SQLite` و`Detailed_AP_stages_SQLServer`.
+
+### إعادة التحقق قبل الانتقال إلى Accounts Receivable
+
+- نجح اختبار دورة الشراء الأساسية على SQLite في `.validation/erp-phase1-ap.trx`. تخطّى التشغيل نفسه SQL Server لأن إعداد الاتصال لم يكن مفعّلًا.
+- بعد تفعيل LocalDB، نجح اختبار SQL Server في `.validation/erp-phase1-ap-sql.trx` دون تخطٍ. سجل `.validation/erp-phase1-ap-sql.jsonl` نجاح سيناريوهات الدورة وإعادة التشغيل دون تكرار وتنظيف قاعدة الاختبار. لم تتطلب إعادة التحقق تعديل خدمات AP.
+- أُعيد بناء مشروع الاختبارات للتحقق من تعديل نماذج الاختبار في `7ff45667`، الذي أضاف `VendInvoiceJour` إلى ست مجموعات لفحوص الدفع والتسوية والعكس والخصم النقدي وفروق الصرف المحققة وطرق الدفع. نجحت الاختبارات الـ79 دون فشل أو تخطٍ في `.validation/erp-phase1-ap-test-models.trx`.
+- في إعادة التشغيل المتسلسلة، نجح اختبارا الدورة على SQLite وSQL Server المعزولين دون فشل أو تخطٍ. الأدلة في `.validation/erp-confirm-ap.trx` و`.validation/erp-confirm-ap.jsonl`.

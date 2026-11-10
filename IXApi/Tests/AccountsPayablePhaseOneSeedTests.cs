@@ -1,4 +1,4 @@
-using IAX.IXApi.Shared.Application.Contracts;
+﻿using IAX.IXApi.Shared.Application.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.Services;
 using System.Reflection;
 using IAX.IXApi.Infrastructure.Persistence;
@@ -41,8 +41,12 @@ public sealed class AccountsPayablePhaseOneSeedTests
         using var provider = services.BuildServiceProvider();
         using var scope = provider.CreateScope();
         var ordered = new SeedDependencyResolver().Resolve(scope.ServiceProvider.GetServices<IDataSeeder>());
-        Assert.Equal(59, ordered.Count);
-        Assert.Single(ordered.Where(x => x.Id == "ERPV2.InventoryNumberSequenceSeeder"));
+        Assert.Equal(61, ordered.Count);
+        Assert.Single(ordered, x => x.Id == "ERPV2.InventoryNumberSequenceSeeder");
+        // The inventory journal setup: its own account structure for the profit and loss codes, and
+        // the journal names the journal services cannot create or post without.
+        Assert.Single(ordered, x => x.Id == "ERPV2.InventoryAccountStructureSeeder");
+        Assert.Single(ordered, x => x.Id == "ERPV2.InventJournalNameSeeder");
         Assert.Equal(2, scope.ServiceProvider.GetServices<ISeedValidator>().Count());
         Assert.DoesNotContain(ordered, x => x.Id.Contains("Cycle") || x.Id.Contains("PurchTable"));
         foreach (var seeder in ordered)

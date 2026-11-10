@@ -70,7 +70,7 @@ message quoted.
 | Counting candidates on non-basic dimensions | `Item '{itemId}' holds stock on a batch, serial, status or location dimension, which the basic counting journal does not count.` |
 | Negative inventory | `Negative physical and financial inventory are disabled in the basic release.` |
 | Financial posting | `Financial inventory posting is required in the basic release.` |
-| Include physical value in cost | `Include physical value in cost is disabled in the basic release.` |
+| Include physical value for models other than periodic weighted average | `Include physical value is supported for periodic weighted average only; FIFO/LIFO physical close adjustments are not implemented.` |
 | Ordered reservation | `Reservation against ordered supply is disabled in the basic inventory scope.` |
 | Automatic journal reservation | `Automatic journal reservation is outside the basic inventory scope.` |
 | Product subtypes | `Only distinct Item products are supported in the basic inventory scope.` |
@@ -124,6 +124,8 @@ message quoted.
   average and LIFO settlement paths unreachable. Setup and the close engine now share one list.
 
 ## Changelog
+
+2026-11-09: The user expanded Inventory acceptance to include batch/serial tracking and Include physical value. The latter was reproduced as setup rejection and a 10-unit provisional issue cost where the reference expects 15. Weighted-average setup and running-average calculation now include received/deducted physical balances when enabled; weighted-average closing remains financial-only. Retest evidence is tracked under `.validation/inventory-20261109`. Batch/serial remains unresolved and must not be counted as excluded or complete. The new opt-in Inventory example package follows the AP preparation/service-flow pattern; its initial executable scenario is the reference core cycle, not all acceptance cases.
 
 | Date | Change |
 | --- | --- |
