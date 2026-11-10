@@ -1,6 +1,6 @@
 # 04 — Master data
 
-Nine released products per fiscal year, described in `Data/items.json`. The two reference-cycle products below
+Ten released products per fiscal year, described in `Data/items.json`. The two reference-cycle products below
 are joined by `IV2-{year}-ADJ`, which has the same stocked policy and module prices as STOCK but independent
 transactions for adjustment scenario 02. It is owned by InventoryCycleMasterSeeder and validated from the manifest.
 
@@ -15,6 +15,8 @@ Each starts with its own 90 units at cost 12; expected counted quantities are 93
 `IV2-{year}-TJOUR` similarly isolates same-site transfer-journal scenario 07.
 
 `IV2-{year}-MOVE` isolates movement-journal receipt and issue in scenario 08.
+
+`IV2-{year}-RECALC` isolates weighted-average recalculation and post-recalculation entry in scenario 09.
 
 | | Stocked item | Service item |
 | --- | --- | --- |

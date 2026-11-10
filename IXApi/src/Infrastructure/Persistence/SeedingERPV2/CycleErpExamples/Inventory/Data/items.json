@@ -96,6 +96,18 @@
     "salesPrice": 25
   },
   {
+    "suffix": "RECALC",
+    "name": "Inventory recalculation item",
+    "productType": "Item",
+    "unit": "EA",
+    "modelGroup": "APV2",
+    "itemGroup": "APV2",
+    "itemTaxGroup": "IV2-ZERO",
+    "stocked": true,
+    "purchasePrice": 10,
+    "salesPrice": 25
+  },
+  {
     "suffix": "SVC",
     "name": "Inventory cycle service",
     "productType": "Service",

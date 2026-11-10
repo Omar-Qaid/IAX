@@ -41,7 +41,8 @@ public sealed partial class InventoryTransactionFlow(ApplicationDbContext db, IP
         ["05"] = "Matching count of 90, no variance posting and safe replay",
         ["06"] = "Transfer order shipment, partial receipt, transit balance and final receipt",
         ["07"] = "Same-site transfer journal conserving quantity and value",
-        ["08"] = "Movement journal receipt and issue with explicit offset account"
+        ["08"] = "Movement journal receipt and issue with explicit offset account",
+        ["09"] = "Weighted-average recalculation and subsequent posting within its cutoff"
     };
 
     private string Area => db.GetDataAreaId();
@@ -63,6 +64,7 @@ public sealed partial class InventoryTransactionFlow(ApplicationDbContext db, IP
         if (id == "06") return await TransferCycleAsync(options, ct);
         if (id == "07") return await TransferJournalCycleAsync(options, ct);
         if (id == "08") return await MovementCycleAsync(options, ct);
+        if (id == "09") return await RecalculationCycleAsync(options, ct);
         var item = ExampleIdentifiers.StockItem(options.FiscalYear);
         var service = ExampleIdentifiers.ServiceItem(options.FiscalYear);
         var key = ExampleIdentifiers.ScenarioKey(options.FiscalYear, id);

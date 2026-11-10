@@ -19,7 +19,8 @@ public static class InventoryCycleSeedExample
     public const string TransferSuffix = "TRANS";
     public const string TransferJournalSuffix = "TJOUR";
     public const string MovementSuffix = "MOVE";
-    public static IReadOnlyList<string> ItemSuffixes { get; } = [StockSuffix, ServiceSuffix, AdjustmentSuffix, CountSuffix, CountOverageSuffix, CountMatchSuffix, TransferSuffix, TransferJournalSuffix, MovementSuffix];
+    public const string RecalculationSuffix = "RECALC";
+    public static IReadOnlyList<string> ItemSuffixes { get; } = [StockSuffix, ServiceSuffix, AdjustmentSuffix, CountSuffix, CountOverageSuffix, CountMatchSuffix, TransferSuffix, TransferJournalSuffix, MovementSuffix, RecalculationSuffix];
     public const string ItemGroup = "APV2";
     public const string StockModelGroup = "APV2";
     public const string ServiceModelGroup = "APV2-SVC";
@@ -43,6 +44,7 @@ public static class InventoryCycleSeedExample
         TransferSuffix => "Inventory transfer cycle item",
         TransferJournalSuffix => "Inventory transfer journal item",
         MovementSuffix => "Inventory movement journal item",
+        RecalculationSuffix => "Inventory recalculation item",
         _ => throw new ArgumentOutOfRangeException(nameof(suffix))
     };
 

@@ -85,6 +85,7 @@ public sealed class InventorySeedIntegrityTests(Xunit.Abstractions.ITestOutputHe
     [InlineData("06", 90, 1080)]
     [InlineData("07", 90, 1080)]
     [InlineData("08", 8, 80)]
+    [InlineData("09", 16, 240)]
     public async Task Inventory_journal_package_reconciles_profit_loss_and_preserves_posted_journals_on_replay(
         string scenarioId, decimal expectedQuantity, decimal expectedValue)
     {
@@ -105,7 +106,7 @@ public sealed class InventorySeedIntegrityTests(Xunit.Abstractions.ITestOutputHe
         Assert.Equal(expectedQuantity, scenario.PhysicalQuantity);
         Assert.Equal(expectedValue, scenario.InventoryValue);
         Assert.Equal(0m, scenario.CostOfGoodsSold);
-        Assert.Equal(scenarioId is "05" or "06" or "07" ? 1 : 2, scenario.PostedVouchers);
+        Assert.Equal(scenarioId == "09" ? 5 : scenarioId is "05" or "06" or "07" ? 1 : 2, scenario.PostedVouchers);
         Assert.All(scenario.Stages, stage => Assert.Equal(stage.ExpectedValue, stage.ActualValue));
         var movements = await db.Set<InventTrans>().CountAsync();
         var vouchers = await db.Set<GeneralJournalEntry>().CountAsync();
@@ -121,8 +122,8 @@ public sealed class InventorySeedIntegrityTests(Xunit.Abstractions.ITestOutputHe
         if (scenarioId == "06") Assert.Equal(3, await db.Set<InventTransferJour>().CountAsync());
 
         // Reusing a document key must validate the persisted business facts, even when it was already posted.
-        var openingQuantity = scenarioId is "02" or "08" ? 10m : 90m;
-        var line = await db.Set<InventJournalTrans>().SingleAsync(x => x.Qty == openingQuantity);
+        var openingQuantity = scenarioId is "02" or "08" or "09" ? 10m : 90m;
+        var line = await db.Set<InventJournalTrans>().SingleAsync(x => x.Qty == openingQuantity && (scenarioId != "09" || x.CostPrice == 10m));
         line.Qty += 1;
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
@@ -147,8 +148,8 @@ public sealed class InventorySeedIntegrityTests(Xunit.Abstractions.ITestOutputHe
         using var scope = provider.CreateScope();
         var runner = scope.ServiceProvider.GetRequiredService<InventoryTransactionExamples>();
         var first = await runner.RunAsync(new(2026, "inventory-test"));
-        Assert.Equal(8, first.Scenarios.Count);
-        Assert.Equal(8, first.Scenarios.Select(x => x.ItemId).Distinct().Count());
+        Assert.Equal(9, first.Scenarios.Count);
+        Assert.Equal(9, first.Scenarios.Select(x => x.ItemId).Distinct().Count());
         output.WriteLine(System.Text.Json.JsonSerializer.Serialize(first));
         var movements = await db.Set<InventTrans>().CountAsync();
         var vouchers = await db.Set<GeneralJournalEntry>().CountAsync();

@@ -67,9 +67,9 @@
   },
   {
     "caseId": "CST-04",
-    "status": "Not verified by Inventory package",
+    "status": "Passed: scenario 01 close reconciles 90 units, value 1080, COGS 720 and issue adjustment -120 with settlements and GL in isolated SQLite",
     "reference": "Read_only.md",
-    "evidence": []
+    "evidence": [".validation/inventory-package/package-20261110-combined.trx", ".validation/inventory-package/20261110-combined-outcome.md"]
   },
   {
     "caseId": "CST-05",
@@ -85,9 +85,9 @@
   },
   {
     "caseId": "CTL-01",
-    "status": "Not verified by Inventory package",
+    "status": "Partial: all eight implemented scenarios replay together without duplicate postings or sequence consumption; SQL Server concurrency remains unverified",
     "reference": "Read_only.md",
-    "evidence": []
+    "evidence": [".validation/inventory-package/package-20261110-combined.trx", ".validation/inventory-package/20261110-combined-outcome.md"]
   },
   {
     "caseId": "ISS-01",
