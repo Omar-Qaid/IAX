@@ -1,4 +1,4 @@
-# Scenario 01 — Reference cycle
+﻿# Scenario 01 — Reference cycle
 
 The eleven steps of `Read_only.md`, executed through the owning purchase, sales, reservation and closing services.
 
@@ -30,6 +30,11 @@ reconciled rather than repeated.
 
 ## Case ids touched
 
-`RCP-01` (purchase receipt), `RES-01` (reservation), `ISS-02` (delivery), `ISS-03` (stock and service invoicing),
-`CST-03` (running cost before close), `CST-04` (weighted-average close). These are the ids this scenario reports in
-`InventoryStageReport`; `Data/acceptance-status.json` remains the authority on what the package certifies overall.
+`RCV-01` (purchase receipt), `RES-01` (reservation), `ISS-01` (delivery), `ISS-03` (stock and service invoicing),
+`CST-01` (running cost before close), `CST-04` (weighted-average close). These are the ids this scenario reports in
+`InventoryStageReport`; `Data/acceptance-status.json` remains the authority on what the package certifies overall,
+and it records four of these six as partial because the scenario reaches only part of their reference requirement.
+
+Every stage pair is compared by the scenario-01 test, not merely reported. Before that assertion existed the
+`RCV-01` and `ISS-01` stages carried the same variable as both expected and actual, and `CST-04` reported an
+expected value with no actual at all, so none of the three could fail.

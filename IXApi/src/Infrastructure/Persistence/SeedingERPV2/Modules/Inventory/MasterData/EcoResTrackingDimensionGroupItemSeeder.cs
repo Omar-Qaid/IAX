@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
+﻿using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Common;
@@ -11,10 +11,17 @@ public sealed class EcoResTrackingDimensionGroupItemSeeder : IDataSeeder
     public IReadOnlyCollection<string> Dependencies => ["ERPV2.EcoResTrackingDimensionGroupFldSetupSeeder", "ERPV2.InventTableSeeder"];
     public async Task SeedAsync(SeedContext c, CancellationToken ct)
     {
-        var name = $"APV2-{c.Company}-NONE";
-        var group = await c.RequireAsync<EcoResTrackingDimensionGroup>(x => x.Name == name, ct);
-        await c.RequireAsync<InventTable>(x => x.ItemId == "APV2-STOCK", ct);
-        await c.EnsureAsync<EcoResTrackingDimensionGroupItem>(x => x.ItemId == "APV2-STOCK" && x.ItemDataAreaId == c.Company,
-            new() { ItemId = "APV2-STOCK", ItemDataAreaId = c.Company, TrackingDimensionGroup = group.RecId }, ct);
+        foreach (var (groupName, item) in new[]
+        {
+            ($"APV2-{c.Company}-NONE", "APV2-STOCK"),
+            ($"IV2-{c.Company}-BATCH", "APV2-BATCH"),
+            ($"IV2-{c.Company}-SERIAL", "APV2-SERIAL")
+        })
+        {
+            var group = await c.RequireAsync<EcoResTrackingDimensionGroup>(x => x.Name == groupName, ct);
+            await c.RequireAsync<InventTable>(x => x.ItemId == item, ct);
+            await c.EnsureAsync<EcoResTrackingDimensionGroupItem>(x => x.ItemId == item && x.ItemDataAreaId == c.Company,
+                new() { ItemId = item, ItemDataAreaId = c.Company, TrackingDimensionGroup = group.RecId }, ct);
+        }
     }
 }

@@ -1,4 +1,4 @@
-[
+﻿[
   {
     "caseId": "ADJ-01",
     "status": "Passed: scenario 02 positive/negative adjustment, profit/loss reconciliation, replay and conflict preservation in isolated SQLite",
@@ -7,9 +7,9 @@
   },
   {
     "caseId": "CFG-01",
-    "status": "Not verified by Inventory package",
+    "status": "Passed: a valid site/warehouse combination resolves one reused dimension; a warehouse outside the site, an unknown site and a blank warehouse are refused with their exact messages and leave no dimension; the purchase line refuses the combination before a line exists. Isolated SQLite.",
     "reference": "Read_only.md",
-    "evidence": []
+    "evidence": [".validation/inventory-package/20261110-cfg01-site-warehouse.trx"]
   },
   {
     "caseId": "CFG-02",
@@ -22,15 +22,15 @@
   },
   {
     "caseId": "CFG-03",
-    "status": "Not verified by Inventory package",
+    "status": "Passed: LedgerBalanceValidator asserts every posted voucher balances to zero in the accounting and reporting currency and that a voucher was posted, InventoryValueValidator ties financial inventory to the expected GL account, and a missing required inventory posting account refuses the post with its exact message leaving no packing slip, movement, voucher or on-hand change. Isolated SQLite.",
     "reference": "Read_only.md",
-    "evidence": []
+    "evidence": [".validation/inventory-package/20261110-cfg03-missing-account.trx", ".validation/inventory-package/package-20261110-cycle.trx"]
   },
   {
     "caseId": "CFG-04",
-    "status": "Not verified by Inventory package",
+    "status": "Passed: posting into a closed fiscal period, a date outside every operating period, and a period whose posting module is closed are each refused with their exact message and leave no packing slip, movement, voucher or on-hand change, while the same call posts when the period is open; number sequences are allocated at posting and a replay that posts nothing consumes no counter. Isolated SQLite.",
     "reference": "Read_only.md",
-    "evidence": []
+    "evidence": [".validation/inventory-package/20261110-cfg04-fiscal-period.trx", ".validation/inventory-package/20261110-partial-cases.trx"]
   },
   {
     "caseId": "CNT-01",
@@ -46,9 +46,9 @@
   },
   {
     "caseId": "CST-01",
-    "status": "Not verified by Inventory package",
+    "status": "Passed: scenario 01 asserts the pre-close running-cost inventory value of 1,200 and, separately, that the 60 issued before the second receipt carry -600 of cost, in isolated SQLite",
     "reference": "Read_only.md",
-    "evidence": []
+    "evidence": [".validation/inventory-package/20261110-partial-cases.trx", ".validation/inventory-package/20261110-stage-assertions-outcome.md"]
   },
   {
     "caseId": "CST-02",
@@ -67,9 +67,9 @@
   },
   {
     "caseId": "CST-04",
-    "status": "Passed: scenario 01 close reconciles 90 units, value 1080, COGS 720 and issue adjustment -120 with settlements and GL in isolated SQLite",
+    "status": "Passed: scenario 01 closes at 90 on hand, 1,080 inventory value, 720 COGS and a net -120 adjustment, with settlement and close-adjustment reconciliation and replay, in isolated SQLite",
     "reference": "Read_only.md",
-    "evidence": [".validation/inventory-package/package-20261110-combined.trx", ".validation/inventory-package/20261110-combined-outcome.md"]
+    "evidence": [".validation/inventory-package/20261110-stage-assertions.trx", ".validation/inventory-package/20261110-stage-assertions-outcome.md", ".validation/inventory-package/package-20261110-combined.trx", ".validation/inventory-package/20261110-combined-outcome.md"]
   },
   {
     "caseId": "CST-05",
@@ -85,27 +85,27 @@
   },
   {
     "caseId": "CTL-01",
-    "status": "Partial: all eight implemented scenarios replay together without duplicate postings or sequence consumption; SQL Server concurrency remains unverified",
+    "status": "Partial: re-running every scenario over its own posted state leaves the inventory value, the InventTrans count, the GeneralJournalEntry count and the voucher number-sequence counter unchanged, so a repeated post yields one document for the same movement and duplicates neither quantity nor voucher. Asserted for scenario 01, scenarios 02-08 and all scenarios combined. The concurrent-attempt half of the case needs SQL Server and is not verified.",
     "reference": "Read_only.md",
-    "evidence": [".validation/inventory-package/package-20261110-combined.trx", ".validation/inventory-package/20261110-combined-outcome.md"]
+    "evidence": [".validation/inventory-package/20261110-partial-cases.trx", ".validation/inventory-package/package-20261110-full.trx", ".validation/inventory-package/package-20261110-combined.trx", ".validation/inventory-package/20261110-combined-outcome.md"]
   },
   {
     "caseId": "ISS-01",
-    "status": "Not verified by Inventory package",
+    "status": "Passed: scenario 01 asserts a full then partial packing slip reduces on-hand by each delivered quantity and leaves the undelivered remainder on the sales line, in isolated SQLite",
     "reference": "Read_only.md",
-    "evidence": []
+    "evidence": [".validation/inventory-package/20261110-partial-cases.trx", ".validation/inventory-package/20261110-stage-assertions-outcome.md"]
   },
   {
     "caseId": "ISS-02",
-    "status": "Not verified by Inventory package",
+    "status": "Passed: scenario 01 invoices 40 of a delivered 60 and then the remaining 20; after each invoice the quantity moved to Sold equals the quantity invoiced and no more, so a delivered quantity is converted once rather than counted twice. Revenue is asserted by ISS-03 and the issue cost by CST-01 and CST-04. Isolated SQLite.",
     "reference": "Read_only.md",
-    "evidence": []
+    "evidence": [".validation/inventory-package/20261110-iss02-partial-invoicing.trx"]
   },
   {
     "caseId": "ISS-03",
-    "status": "Not verified by Inventory package",
+    "status": "Passed: scenario 01 invoices a stocked and a non-stocked line totalling 1,800, and NonStockedItemValidator asserts the service raises no inventory movement, in isolated SQLite",
     "reference": "Read_only.md",
-    "evidence": []
+    "evidence": [".validation/inventory-package/20261110-stage-assertions.trx", ".validation/inventory-package/20261110-stage-assertions-outcome.md"]
   },
   {
     "caseId": "ISS-04",
@@ -121,21 +121,21 @@
   },
   {
     "caseId": "MD-02",
-    "status": "Not verified by Inventory package",
+    "status": "Passed: scenario 01 orders, delivers and invoices a non-stocked service alongside the stocked line; ISS-03 asserts both lines reach invoicing at 1,800 and NonStockedItemValidator asserts the service raises no inventory movement, so on-hand is unaffected. Isolated SQLite.",
     "reference": "Read_only.md",
-    "evidence": []
+    "evidence": [".validation/inventory-package/20261110-partial-cases.trx", ".validation/inventory-package/package-20261110-cycle.trx"]
   },
   {
     "caseId": "MD-03",
-    "status": "Not verified by Inventory package",
+    "status": "Passed: a purchase of 2 BOX at a factor of 10 keeps the purchase unit on the line while ordering, receiving and on-hand all record 20 PCS, and two boxes at 100 post 200 of value over 20 pieces; the barcode lookup returns the item with unit EA and quantity 20 for the same conversion. Isolated SQLite.",
     "reference": "Read_only.md",
-    "evidence": []
+    "evidence": [".validation/inventory-package/20261110-md03-unit-conversion.trx"]
   },
   {
     "caseId": "MD-04",
-    "status": "In scope by explicit user request; implementation incomplete",
+    "status": "Passed: batch and serial preserved across purchase receipt, sales issue and on-hand per tracking dimension; blank, undefined, untracked-item and multi-unit-serial cases refused; out-of-scope dimensions still refused. Isolated SQLite.",
     "reference": "Read_only.md",
-    "evidence": []
+    "evidence": [".validation/inventory-package/md04-tracking-batch-and-serial.trx"]
   },
   {
     "caseId": "MD-05",
@@ -151,9 +151,9 @@
   },
   {
     "caseId": "RCV-01",
-    "status": "Not verified by Inventory package",
+    "status": "Passed: scenario 01 asserts that confirming a purchase order registers expected supply without creating physical stock, and that the receipt raises on-hand by the quantity received, in isolated SQLite",
     "reference": "Read_only.md",
-    "evidence": []
+    "evidence": [".validation/inventory-package/20261110-partial-cases.trx", ".validation/inventory-package/20261110-stage-assertions-outcome.md"]
   },
   {
     "caseId": "RCV-02",
@@ -181,15 +181,15 @@
   },
   {
     "caseId": "REP-01",
-    "status": "Not verified by Inventory package",
+    "status": "Passed: InventSumConsistencyValidator asserts the on-hand summaries total exactly the movements behind them, that available physical equals on hand less reserved, and that posted value matches the movements; TransactionOriginValidator asserts every movement names its source document. Summaries are per inventory dimension, so item, warehouse and batch are each covered, and MD-04 asserts separate per-batch on-hand rows. Runs in every scenario. Isolated SQLite.",
     "reference": "Read_only.md",
-    "evidence": []
+    "evidence": [".validation/inventory-package/20261110-iss02-partial-invoicing.trx", ".validation/inventory-package/20261110-tracking-batch-and-serial.trx"]
   },
   {
     "caseId": "REP-02",
-    "status": "Not verified by Inventory package",
+    "status": "Partial: InventoryValueValidator asserts financial inventory equals the inventory GL account for the same company, and LedgerBalanceValidator asserts every voucher balances to zero in the accounting and reporting currency. The reference also asks for a cut-off date, an account range and uninvoiced receipts or deliveries separated per the report setup; no report surface asserts those.",
     "reference": "Read_only.md",
-    "evidence": []
+    "evidence": [".validation/inventory-package/20261110-iss02-partial-invoicing.trx"]
   },
   {
     "caseId": "REP-03",
@@ -199,15 +199,15 @@
   },
   {
     "caseId": "RES-01",
-    "status": "Not verified by Inventory package",
+    "status": "Passed: scenario 01 asserts reserving 60 of 100 leaves 40 available, releasing returns availability to 100 without changing on-hand, and re-reserving restores 60, in isolated SQLite",
     "reference": "Read_only.md",
-    "evidence": []
+    "evidence": [".validation/inventory-package/20261110-partial-cases.trx", ".validation/inventory-package/20261110-stage-assertions-outcome.md"]
   },
   {
     "caseId": "RES-02",
-    "status": "Not verified by Inventory package",
+    "status": "Partial: reserving above remaining demand, and above available physical stock with partial disallowed, are refused with their exact messages and leave the buckets untouched; with partial allowed the reservation takes exactly the available quantity and the next request is refused. The reference also asks for two concurrent requests on the last available quantity, which needs SQL Server and is not verified.",
     "reference": "Read_only.md",
-    "evidence": []
+    "evidence": [".validation/inventory-package/20261110-res02-reservation-limits.trx"]
   },
   {
     "caseId": "RET-01",

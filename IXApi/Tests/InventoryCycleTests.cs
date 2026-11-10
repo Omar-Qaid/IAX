@@ -4837,6 +4837,11 @@ public sealed partial class InventoryCycleTests
             typeof(IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities.EcoResStorageDimensionGroupFldSetup),
             typeof(IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities.EcoResTrackingDimensionGroupItem),
             typeof(IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities.EcoResTrackingDimensionGroupFldSetup),
+            // A stated batch or serial is checked against those defined for the item.
+            typeof(InventBatch), typeof(InventSerial),
+            // The module-level period guard is wrapped in a FindEntityType check, so without this
+            // registration it is skipped silently rather than enforced.
+            typeof(LedgerPeriodModuleAccessControl),
             typeof(InventItemLocation)
         ];
 

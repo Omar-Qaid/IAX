@@ -1,6 +1,6 @@
 ﻿# Accounts receivable — gap analysis against basic D365 F&O
 
-**Last updated:** 2026-11-08
+**Last updated:** 2026-11-10
 **Scope:** basic (core) D365 F&O Accounts receivable and the sales order cycle only. Credit
 management, collections management, commissions, rebates, subscription billing, intercompany sales,
 and advanced warehouse shipping are out of scope by request and are not listed as gaps.
@@ -71,7 +71,7 @@ cannot be verified goes under *Flagged uncertainties* rather than being guessed 
 | Free text invoice currency | `Free text invoice posting requires the ledger accounting currency; foreign-currency conversion is not supported.` |
 | Credit note currency | `Credit note posting requires the return order currency to equal the ledger accounting currency; foreign-currency conversion is not supported.` |
 | Return disposition | `Disposition action {action} is outside the basic return scope (Credit and Credit only).` |
-| Sales line dimensions | `Only site and warehouse dimensions are supported in the basic inventory scope.` |
+| Sales line dimensions | `Only site, warehouse, batch, and serial dimensions are supported in the basic inventory scope.` |
 | Required dimensions | `Company, site, and warehouse are required for basic inventory dimensions.` |
 | Reverse-sign copy | `Reverse-sign copying requires a return-order flow and is not supported for sales orders.` |
 | Cancelling an order with nothing left | `The sales order has no undelivered quantity left to cancel.` |

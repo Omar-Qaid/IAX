@@ -67,6 +67,14 @@ public sealed class InventorySeedIntegrityTests(Xunit.Abstractions.ITestOutputHe
         Assert.Equal(1080, scenario.InventoryValue);
         Assert.Equal(720, scenario.CostOfGoodsSold);
         Assert.Equal(-120, scenario.CloseAdjustment);
+        // The aggregate figures alone would pass even if an intermediate step posted the wrong
+        // quantity and a later one compensated, so every stage pair is compared as well.
+        Assert.NotEmpty(scenario.Stages);
+        Assert.All(scenario.Stages, stage =>
+        {
+            Assert.Equal(stage.ExpectedQuantity, stage.ActualQuantity);
+            Assert.Equal(stage.ExpectedValue, stage.ActualValue);
+        });
         var movements = await db.Set<InventTrans>().CountAsync();
         var vouchers = await db.Set<GeneralJournalEntry>().CountAsync();
         db.ChangeTracker.Clear();

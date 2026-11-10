@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
+﻿using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Common;
@@ -14,5 +14,11 @@ public sealed class EcoResTrackingDimensionGroupSeeder : IDataSeeder
         var name = $"APV2-{c.Company}-NONE";
         await c.EnsureAsync<EcoResTrackingDimensionGroup>(x => x.Name == name,
             new() { Name = name, Description = "No batch or serial tracking" }, ct);
+        var batchName = $"IV2-{c.Company}-BATCH";
+        await c.EnsureAsync<EcoResTrackingDimensionGroup>(x => x.Name == batchName,
+            new() { Name = batchName, Description = "Batch tracking" }, ct);
+        var serialName = $"IV2-{c.Company}-SERIAL";
+        await c.EnsureAsync<EcoResTrackingDimensionGroup>(x => x.Name == serialName,
+            new() { Name = serialName, Description = "Serial tracking" }, ct);
     }
 }

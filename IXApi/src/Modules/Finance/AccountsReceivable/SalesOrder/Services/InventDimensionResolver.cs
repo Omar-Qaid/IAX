@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using System.Globalization;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
@@ -33,12 +33,15 @@ public sealed class InventDimensionResolver : IInventDimensionResolver
             !await _dbContext.Context.Set<InventLocation>().AsNoTracking().AnyAsync(x =>
                 x.DataAreaId == dataAreaId && x.InventSiteId == inventSiteId && x.InventLocationId == inventLocationId, cancellationToken))
             throw new InvalidOperationException("The warehouse does not belong to the selected site and company.");
+        // Batch and serial are tracking dimensions the basic scope now carries, so they are absent
+        // from this guard; the canonical hash, the uniqueness lookup and InventDim already store
+        // them. The remaining product and WMS dimensions stay out of scope.
         if (template is not null && (template.ConfigId.Length > 0 || template.InventSizeId.Length > 0 ||
             template.InventColorId.Length > 0 || template.InventStyleId.Length > 0 || template.InventVersionId.Length > 0 ||
-            template.InventBatchId.Length > 0 || template.InventSerialId.Length > 0 || template.InventStatusId.Length > 0 ||
+            template.InventStatusId.Length > 0 ||
             template.WmsLocationId.Length > 0 || template.LicensePlateId.Length > 0 || template.InventDimension10 != 0 ||
             template.InventDimension9 != default || template.InventDimension9TzId != 0))
-            throw new InvalidOperationException("Only site and warehouse dimensions are supported in the basic inventory scope.");
+            throw new InvalidOperationException("Only site, warehouse, batch, and serial dimensions are supported in the basic inventory scope.");
         var configId = template?.ConfigId ?? string.Empty;
         var sizeId = template?.InventSizeId ?? string.Empty;
         var colorId = template?.InventColorId ?? string.Empty;

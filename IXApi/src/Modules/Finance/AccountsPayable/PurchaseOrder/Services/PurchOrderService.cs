@@ -5,6 +5,7 @@ using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
+using IAX.IXApi.Modules.Finance.Inventory;
 using IAX.IXApi.Modules.Finance.Inventory.ProductLifecycle;
 using IAX.IXApi.Shared.Application.Identity;
 using FluentValidation;
@@ -166,6 +167,21 @@ public sealed partial class PurchOrderService : BaseService<PurchTable>, IPurchO
             var siteError = await ValidateSiteWarehouseAsync(area, site, warehouse, ct);
             if (siteError != null) return await Fail(422, siteError, ct);
 
+            var batchId = input.InventBatchId?.Trim() ?? string.Empty;
+            var serialId = input.InventSerialId?.Trim() ?? string.Empty;
+            if (stocked)
+            {
+                var trackingGroup = await InventoryDimensionPolicy.TrackingGroupAsync(Db, area, item.ItemId, ct);
+                if (trackingGroup is not null)
+                {
+                    var trackingError = await InventoryDimensionPolicy.CheckTrackingAsync(Db, item.ItemId, trackingGroup.Value,
+                        new InventDim { InventBatchId = batchId, InventSerialId = serialId }, inventQty.Value, ct);
+                    if (trackingError != null) return await Fail(422, trackingError, ct);
+                }
+                else if (batchId.Length > 0 || serialId.Length > 0)
+                    return await Fail(422, $"Item '{item.ItemId}' has no tracking dimension group, so a batch or serial number cannot be recorded.", ct);
+            }
+
             var priceUnit = input.PriceUnit.GetValueOrDefault() > 0 ? input.PriceUnit!.Value : 1m;
             var purchPrice = input.PurchPrice;
             if (input.UsePriceAgreement)
@@ -195,7 +211,7 @@ public sealed partial class PurchOrderService : BaseService<PurchTable>, IPurchO
                 PurchStatus = PurchStatus.Backorder,
                 DeliveryDate = (input.DeliveryDate ?? order.DeliveryDate).Date
             };
-            if (stocked) await _supply.CreateAsync(order, line, site, warehouse, ct);
+            if (stocked) await _supply.CreateAsync(order, line, site, warehouse, ct, batchId, serialId);
             else line.InventTransId = (await _numbers.NextAsync("InventTransId", area, ct)).Code;
             // Now that InventDimId is assigned, a dimension-specific agreement can be selected.
             if (input.UsePriceAgreement)

@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.Data;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.Reports;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.Validation;
@@ -116,13 +116,33 @@ public sealed partial class InventoryTransactionFlow(ApplicationDbContext db, IP
             var sum = await db.Set<InventSum>().SingleAsync(x => x.DataAreaId == Area && x.ItemId == item, ct);
             Check(sum.PhysicalInvent == 100m && sum.ReservPhysical == 60m && sum.AvailPhysical == 40m,
                 "Reservation quantities differ.");
-            stages.Add(new("RES-01", "Reserve 60 of 100", order.SalesId, 60m, sum.ReservPhysical, null, null, [], "Passed"));
+
+            // Releasing the whole reservation must return availability without touching on-hand,
+            // then the reservation is restored for the deliveries that follow.
+            var released = await reservations.ReleaseAsync(stockLine.InventTransId, 60m, ct);
+            Check(released.Error is null, released.Error ?? "Release failed.");
+            db.ChangeTracker.Clear();
+            var afterRelease = await db.Set<InventSum>().SingleAsync(x => x.DataAreaId == Area && x.ItemId == item, ct);
+            Check(afterRelease.PhysicalInvent == 100m && afterRelease.ReservPhysical == 0m
+                && afterRelease.AvailPhysical == 100m, "Release did not return the reserved quantity.");
+
+            var rereserved = await reservations.ReserveAsync(stockLine.InventTransId, 60m, false, ct);
+            Check(rereserved.Error is null, rereserved.Error ?? "Re-reservation failed.");
+            db.ChangeTracker.Clear();
+            sum = await db.Set<InventSum>().SingleAsync(x => x.DataAreaId == Area && x.ItemId == item, ct);
+            Check(sum.PhysicalInvent == 100m && sum.ReservPhysical == 60m && sum.AvailPhysical == 40m,
+                "Re-reservation quantities differ.");
+            stages.Add(new("RES-01", "Reserve 60 of 100, release, reserve again", order.SalesId, 60m,
+                sum.ReservPhysical, null, null, [], "Passed"));
         }
 
         await DeliverAsync(order, key + "-D1", stockLine, 40m, date.AddDays(5), ct);
         await InvoiceAsync(order, key + "-I1", [new(stockLine.RecId, 40m)], date.AddDays(6), ct);
+        await CheckSoldAsync(item, 40m, ct);
         await DeliverAsync(order, key + "-D2", stockLine, 20m, date.AddDays(7), ct);
         await InvoiceAsync(order, key + "-I2", [new(stockLine.RecId, 20m), new(serviceLine.RecId, 1m)], date.AddDays(8), ct);
+        var sold = await CheckSoldAsync(item, 60m, ct);
+        stages.Add(new("ISS-02", "Invoice the delivered quantity", key, 60m, sold, null, null, [], "Posted"));
 
         // 60 pieces at 25 plus the 300 service line. The service is billed only because it is non-stocked, so this
         // total is what proves the non-stocked line reached invoicing rather than being silently dropped.
@@ -140,6 +160,12 @@ public sealed partial class InventoryTransactionFlow(ApplicationDbContext db, IP
         var before = await db.Set<InventTrans>().Where(x => x.DataAreaId == Area && x.ItemId == item).ToListAsync(ct);
         Check(before.Sum(x => x.CostAmountPosted + x.CostAmountAdjustment) == 1200m,
             "Pre-close inventory value must be 1,200 at the running cost.");
+        // The 60 issued before the second receipt arrived carry the running cost of 10 each. This is
+        // asserted apart from the total so a costing fault cannot hide inside a correct net value.
+        var issuedCost = before
+            .Where(x => x.StatusIssue is StatusIssue.Deducted or StatusIssue.Sold)
+            .Sum(x => x.CostAmountPosted + x.CostAmountAdjustment);
+        Check(issuedCost == -600m, $"Pre-close issue cost is {issuedCost} instead of -600.");
         stages.Add(new("CST-01", "Pre-close running cost", item, 90m, before.Where(x =>
             x.StatusReceipt is StatusReceipt.Received or StatusReceipt.Purchased
             || x.StatusIssue is StatusIssue.Deducted or StatusIssue.Sold).Sum(x => x.Qty),
@@ -147,7 +173,12 @@ public sealed partial class InventoryTransactionFlow(ApplicationDbContext db, IP
 
         var result = await closing.CloseItemAsync(item, closeDate, ct);
         Check(result.Error is null, result.Error ?? "Close failed.");
-        stages.Add(new("CST-04", "Weighted-average close", item, null, null, 1080m, null, [], "Posted"));
+        // Summed over every movement, as the pre-close stage does: receipts carry a positive cost and
+        // issues a negative one, so the total is remaining inventory rather than gross receipts.
+        var closedValue = (await db.Set<InventTrans>().Where(x => x.DataAreaId == Area && x.ItemId == item).ToListAsync(ct))
+            .Sum(x => x.CostAmountPosted + x.CostAmountAdjustment);
+        Check(closedValue == 1080m, $"Closing inventory value is {closedValue} instead of 1,080.");
+        stages.Add(new("CST-04", "Weighted-average close", item, null, null, 1080m, closedValue, [], "Posted"));
     }
 
     private async Task<InventoryScenarioReport> ReconcileAsync(string id, string item, string service,
@@ -185,10 +216,20 @@ public sealed partial class InventoryTransactionFlow(ApplicationDbContext db, IP
         }
         Check(line.ItemId == item && line.PurchQty == qty && line.PurchPrice == price, "Existing purchase line differs.");
 
+        var onHandBeforeReceipt = await OnHandAsync(item, ct);
         if (!await db.Set<VendPurchOrderJour>().AnyAsync(x => x.DataAreaId == Area && x.PurchId == order.PurchId, ct))
         {
             var result = await confirmations.ConfirmAsync(order.RecId, ct, date);
             Success(result.StatusCode, result.Message);
+            // Expected supply is registered and physical stock is not: for the first purchase this is
+            // the reference’s zero-on-hand-before-receipt state, and for any later one it is the same
+            // statement expressed as an unchanged balance.
+            db.ChangeTracker.Clear();
+            Check(await OnHandAsync(item, ct) == onHandBeforeReceipt,
+                "Confirming a purchase order changed physical on-hand.");
+            var ordered = await db.Set<InventSum>().Where(x => x.DataAreaId == Area && x.ItemId == item)
+                .SumAsync(x => (decimal?)x.Ordered, ct) ?? 0m;
+            Check(ordered >= qty, $"Expected supply of at least {qty} is not registered; ordered is {ordered}.");
         }
         if (!await db.Set<VendPackingSlipJour>().AnyAsync(x => x.DataAreaId == Area && x.PurchId == order.PurchId && x.PackingSlipId == key + "-R", ct))
         {
@@ -200,9 +241,35 @@ public sealed partial class InventoryTransactionFlow(ApplicationDbContext db, IP
             var result = await vendorInvoices.PostAsync(order.RecId, new(key + "-I", date.AddDays(2), [new(line.RecId, qty)]), ct);
             Success(result.StatusCode, result.Message);
         }
-        stages.Add(new("RCV-01", $"Purchase {qty} at {price.ToString(CultureInfo.InvariantCulture)}", key, qty, qty, null, null, [], "Posted"));
+        var received = await OnHandAsync(item, ct);
+        Check(received == onHandBeforeReceipt + qty,
+            $"Receipt of {qty} left on-hand at {received} instead of {onHandBeforeReceipt + qty}.");
+        stages.Add(new("RCV-01", $"Purchase {qty} at {price.ToString(CultureInfo.InvariantCulture)}", key,
+            onHandBeforeReceipt + qty, received, null, null, [], "Posted"));
     }
 
+
+    /// <summary>
+    /// The quantity an item has moved to Sold, which must equal what has been invoiced and no more.
+    /// Invoicing a delivered quantity converts the issue rather than adding another, so a second
+    /// conversion of the same quantity would show up here as a doubled figure.
+    /// </summary>
+    private async Task<decimal> CheckSoldAsync(string item, decimal expected, CancellationToken ct)
+    {
+        var invoiced = (await db.Set<CustInvoiceTrans>()
+            .Where(x => x.DataAreaId == Area && x.ItemId == item).ToListAsync(ct)).Sum(x => x.Qty);
+        var sold = -(await db.Set<InventTrans>()
+            .Where(x => x.DataAreaId == Area && x.ItemId == item && x.StatusIssue == StatusIssue.Sold)
+            .ToListAsync(ct)).Sum(x => x.Qty);
+        Check(sold == expected, $"Sold quantity is {sold} instead of {expected}.");
+        Check(sold == Math.Abs(invoiced), $"Sold quantity {sold} does not match the invoiced quantity {Math.Abs(invoiced)}.");
+        return sold;
+    }
+
+    /// <summary>Physical on-hand for one item across the example dimension, or zero before any receipt.</summary>
+    private async Task<decimal> OnHandAsync(string item, CancellationToken ct) =>
+        await db.Set<InventSum>().Where(x => x.DataAreaId == Area && x.ItemId == item)
+            .SumAsync(x => (decimal?)x.PhysicalInvent, ct) ?? 0m;
     private async Task<SalesLine> EnsureSalesLineAsync(SalesTable order, string item, decimal qty, decimal price,
         DateTime date, CancellationToken ct)
     {
@@ -230,10 +297,22 @@ public sealed partial class InventoryTransactionFlow(ApplicationDbContext db, IP
     private async Task DeliverAsync(SalesTable order, string key, SalesLine line, decimal qty, DateTime date, CancellationToken ct)
     {
         if (await db.Set<CustPackingSlipJour>().AnyAsync(x => x.DataAreaId == Area && x.SalesId == order.SalesId && x.ParmId == key, ct)) return;
+        var onHandBeforeIssue = await OnHandAsync(line.ItemId, ct);
+        // Read from the database rather than the passed entity: the same line object serves both
+        // deliveries, so its in-memory remainder is stale by the second call.
+        var remainBeforeIssue = await db.Set<SalesLine>().Where(x => x.RecId == line.RecId)
+            .Select(x => x.RemainSalesPhysical).SingleAsync(ct);
         var result = await deliveries.PostAsync(order.RecId, new(date, "All", true, key,
             [new PackingSlipPostingLineRequest(line.RecId.ToString(CultureInfo.InvariantCulture), qty)]), ct);
         Success(result.StatusCode, result.Message);
-        stages.Add(new("ISS-01", $"Deliver {qty}", key, qty, qty, null, null, [], "Posted"));
+        var remaining = await OnHandAsync(line.ItemId, ct);
+        Check(remaining == onHandBeforeIssue - qty,
+            $"Delivery of {qty} left on-hand at {remaining} instead of {onHandBeforeIssue - qty}.");
+        db.ChangeTracker.Clear();
+        var delivered = await db.Set<SalesLine>().SingleAsync(x => x.RecId == line.RecId, ct);
+        Check(delivered.RemainSalesPhysical == remainBeforeIssue - qty,
+            $"Sales line shows {delivered.RemainSalesPhysical} undelivered instead of {remainBeforeIssue - qty}.");
+        stages.Add(new("ISS-01", $"Deliver {qty}", key, onHandBeforeIssue - qty, remaining, null, null, [], "Posted"));
     }
 
     private async Task InvoiceAsync(SalesTable order, string key, IReadOnlyList<SalesInvoiceLineDto> lines,

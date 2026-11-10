@@ -15,9 +15,17 @@ public sealed class PurchInventorySupplyService(IUnitOfWork unitOfWork, ISalesIn
 {
     private DbContext Db => unitOfWork.Context;
 
-    public async Task CreateAsync(PurchTable order, PurchLine line, string inventSiteId, string inventLocationId, CancellationToken ct = default)
+    public async Task CreateAsync(PurchTable order, PurchLine line, string inventSiteId, string inventLocationId,
+        CancellationToken ct = default, string? inventBatchId = null, string? inventSerialId = null)
     {
-        var dimension = await dimensions.ResolveAsync(order.DataAreaId, inventSiteId, inventLocationId, ct);
+        // A template is passed only when one of the tracking dimensions is actually given, so an
+        // untracked line resolves to the same site/warehouse dimension it always did.
+        var batchId = inventBatchId?.Trim() ?? string.Empty;
+        var serialId = inventSerialId?.Trim() ?? string.Empty;
+        var template = batchId.Length > 0 || serialId.Length > 0
+            ? new InventDim { InventBatchId = batchId, InventSerialId = serialId }
+            : null;
+        var dimension = await dimensions.ResolveAsync(order.DataAreaId, inventSiteId, inventLocationId, ct, template);
         var transactionId = await numbers.NextInventTransIdAsync(ct);
         var origin = new InventTransOrigin
         {

@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
+﻿using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Common;
@@ -18,7 +18,7 @@ public sealed class InventTableModuleSeeder : IDataSeeder
     public async Task SeedAsync(SeedContext c, CancellationToken ct)
     {
 
-        foreach (var item in new[] { "APV2-STOCK", "APV2-SVC" })
+        foreach (var item in new[] { "APV2-STOCK", "APV2-SVC", "APV2-BATCH", "APV2-SERIAL" })
             foreach (var module in new[] { ModuleInventPurchSales.Inventory, ModuleInventPurchSales.Purchase, ModuleInventPurchSales.Sales })
                 await c.EnsureAsync<InventTableModule>(x => x.ItemId == item && x.ModuleType == module,
                     new() { ItemId = item, ModuleType = module, UnitId = "EA", Price = InventorySeedExample.PurchasePrice(item), PriceQty = 1m, PriceUnit = 1m, TaxItemGroupId = "APV2" }, ct);

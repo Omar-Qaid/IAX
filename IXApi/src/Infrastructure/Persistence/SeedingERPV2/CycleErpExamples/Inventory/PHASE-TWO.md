@@ -1,4 +1,4 @@
-# Phase two — journal setup and executable scenarios
+﻿# Phase two — journal setup and executable scenarios
 
 The initial package executed scenario 01 only. Scenario 02 now implements positive and negative adjustments through
 the journal services, with a separate module-owned item, reconciliation and repeat/conflict checks. Its verification
@@ -49,6 +49,15 @@ In order:
 2. Counting journal — shortage, overage and matching counts passed isolated SQLite verification in scenarios 03/04/05. Consult CNT-01/CNT-02 for evidence; SQL Server concurrency remains separate.
 3. Transfer order — scenario 06 passed shipment, partial/final receipt, transit and warehouse value reconciliation in isolated SQLite. See TRF-02 evidence. Transfer journals and inter-site cases remain separate.
 4. Marking — mark an issue against a chosen receipt before close, and assert the settlement picks it.
+5. Serial sales issue — serial receipt, per-serial on-hand and the one-unit-per-line rule are
+   verified; no scenario issues a serial-tracked item through a packing slip. The batch issue path
+   is covered, and both share one resolver, so this is a scenario gap rather than a service gap.
+
+Batch and serial tracking (MD-04) are implemented outside the numbered scenarios, because it changes an item'"'"'s
+dimensions rather than adding a journal flow. The resolver guard that previously refused every
+tracking dimension now admits batch and serial only, and the purchase line applies the same
+`InventoryDimensionPolicy` the inventory journal uses, so a tracked item cannot receive a blank or
+undefined batch. Evidence is in `md04-batch-tracking.trx`.
 
 Each joins `InventoryTransactionFlow.Scenarios` only once it asserts its figures against posted rows, and updates its
 own row in `Data/acceptance-status.json` with the evidence. Listing an id there before that point would claim

@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
+﻿using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Common;
@@ -18,11 +18,11 @@ public sealed class EcoResProductSeeder : IDataSeeder
     public async Task SeedAsync(SeedContext c, CancellationToken ct)
     {
 
-        foreach (var suffix in new[] { "STOCK", "SVC" })
+        foreach (var suffix in new[] { "STOCK", "SVC", "BATCH", "SERIAL" })
         {
             var number = $"APV2-{c.Company}-{suffix}";
             await c.EnsureAsync<EcoResProduct>(x => x.DisplayProductNumber == number,
-                new() { DisplayProductNumber = number, SearchName = suffix == "STOCK" ? "A4-PAPER-REAM" : "PRINTER-MAINT", ProductType = suffix == "STOCK" ? ItemType.Item : ItemType.Service }, ct);
+                new() { DisplayProductNumber = number, SearchName = suffix switch { "STOCK" => "A4-PAPER-REAM", "BATCH" => "TONER-BATCH", "SERIAL" => "LABELPRN-SERIAL", _ => "PRINTER-MAINT" }, ProductType = suffix == "SVC" ? ItemType.Service : ItemType.Item }, ct);
         }
     }
 }

@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
+﻿using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Common;
@@ -18,16 +18,16 @@ public sealed class InventTableSeeder : IDataSeeder
     public async Task SeedAsync(SeedContext c, CancellationToken ct)
     {
 
-        foreach (var suffix in new[] { "STOCK", "SVC" })
+        foreach (var suffix in new[] { "STOCK", "SVC", "BATCH", "SERIAL" })
         {
             var number = $"APV2-{c.Company}-{suffix}";
             var product = await c.RequireAsync<EcoResProduct>(x => x.DisplayProductNumber == number, ct);
             var item = "APV2-" + suffix;
-            await c.EnsureAsync<InventTable>(x => x.ItemId == item, new() { ItemId = item, Product = product.RecId, Name = InventorySeedExample.Name(suffix), NameAlias = InventorySeedExample.Name(suffix), PrimaryVendorID = $"APV2-{c.Company}-LOCAL", ItemType = suffix == "STOCK" ? ItemType.Item : ItemType.Service, MatchingPolicy = suffix == "STOCK" ? MatchingPolicy.ThreeWay : MatchingPolicy.TwoWay }, ct);
+            await c.EnsureAsync<InventTable>(x => x.ItemId == item, new() { ItemId = item, Product = product.RecId, Name = InventorySeedExample.Name(suffix), NameAlias = InventorySeedExample.Name(suffix), PrimaryVendorID = $"APV2-{c.Company}-LOCAL", ItemType = suffix == "SVC" ? ItemType.Service : ItemType.Item, MatchingPolicy = suffix == "SVC" ? MatchingPolicy.TwoWay : MatchingPolicy.ThreeWay }, ct);
             await c.EnsureAsync<InventItemGroupItem>(x => x.ItemId == item && x.ItemDataAreaId == c.Company,
                 new() { ItemId = item, ItemGroupId = "APV2", ItemDataAreaId = c.Company, ItemGroupDataAreaId = c.Company }, ct);
             await c.EnsureAsync<InventModelGroupItem>(x => x.ItemId == item && x.ItemDataAreaId == c.Company,
-                new() { ItemId = item, ModelGroupId = suffix == "STOCK" ? "APV2" : "APV2-SVC", ItemDataAreaId = c.Company, ModelGroupDataAreaId = c.Company }, ct);
+                new() { ItemId = item, ModelGroupId = suffix == "SVC" ? "APV2-SVC" : "APV2", ItemDataAreaId = c.Company, ModelGroupDataAreaId = c.Company }, ct);
         }
     }
 }

@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
+﻿using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Common;
@@ -13,8 +13,11 @@ public sealed class EcoResStorageDimensionGroupItemSeeder : IDataSeeder
     {
         var name = $"APV2-{c.Company}-STORE";
         var group = await c.RequireAsync<EcoResStorageDimensionGroup>(x => x.Name == name, ct);
-        await c.RequireAsync<InventTable>(x => x.ItemId == "APV2-STOCK", ct);
-        await c.EnsureAsync<EcoResStorageDimensionGroupItem>(x => x.ItemId == "APV2-STOCK" && x.ItemDataAreaId == c.Company,
-            new() { ItemId = "APV2-STOCK", ItemDataAreaId = c.Company, StorageDimensionGroup = group.RecId }, ct);
+        foreach (var item in new[] { "APV2-STOCK", "APV2-BATCH", "APV2-SERIAL" })
+        {
+            await c.RequireAsync<InventTable>(x => x.ItemId == item, ct);
+            await c.EnsureAsync<EcoResStorageDimensionGroupItem>(x => x.ItemId == item && x.ItemDataAreaId == c.Company,
+                new() { ItemId = item, ItemDataAreaId = c.Company, StorageDimensionGroup = group.RecId }, ct);
+        }
     }
 }

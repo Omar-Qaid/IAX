@@ -1,4 +1,4 @@
-# 04 — Master data
+﻿# 04 — Master data
 
 Ten released products per fiscal year, described in `Data/items.json`. The two reference-cycle products below
 are joined by `IV2-{year}-ADJ`, which has the same stocked policy and module prices as STOCK but independent
@@ -30,6 +30,13 @@ Each starts with its own 90 units at cost 12; expected counted quantities are 93
 | Sales price | 25 | 300 |
 | Storage / tracking dimension group | assigned | not assigned |
 | Default order settings | present | not present |
+
+`APV2-BATCH` is the module-owned batch-tracked item behind MD-04. It is a stocked item on the same
+`APV2` model and item groups as `APV2-STOCK` and shares its storage dimension group, so the only
+difference between them is the tracking group: `APV2-{company}-NONE` leaves batch and serial
+inactive, while `IV2-{company}-BATCH` activates the batch number alone. An item carries exactly one
+tracking group, so a second item is the only way to keep the untracked scenarios’ figures intact.
+Serial stays inactive on both groups; a serial-tracked fixture remains unseeded.
 
 The service item deliberately has no dimension groups and no order settings: a non-stocked product has no stock to
 locate. `NonStockedItemValidator` then asserts the consequence — it raises no `InventTrans` row at all — because a

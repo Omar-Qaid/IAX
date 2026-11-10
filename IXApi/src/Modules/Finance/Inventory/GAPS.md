@@ -1,6 +1,6 @@
 ﻿# Inventory — gap analysis against basic D365 F&O
 
-**Last updated:** 2026-11-04
+**Last updated:** 2026-11-10
 **Scope:** basic (core) D365 F&O Inventory and Cost management only. Advanced warehouse (WHS),
 production, quality, and optional features are out of scope by request and are not listed as gaps.
 
@@ -31,12 +31,16 @@ alters behavior:
 | Physical and financial inventory value, inventory value report | Implemented |
 | Ledger integration (`InventPosting` profiles, subledger vouchers) | Implemented |
 | Reference cycle (`CycleErpExamples/Inventory/Read_only.md`) executed end to end | Implemented and **tested** |
+| Batch tracking across purchase receipt and sales issue (`MD-04`) | Implemented and **tested** (SQLite); authorized explicitly |
+| Serial tracking across purchase receipt and on-hand (`MD-04`) | Implemented and **tested** (SQLite), including the one-unit-per-line rule; no serial sales-issue scenario is verified |
 | SQL Server behavior | **Unverified for this module** — SQLite tests only. Only the AP cycle has been run on SQL Server (2026-11-04); `BatchDatabaseLock` mutual exclusion is verified there, but no AR/GL/Inventory flow is. |
 
 ## Open gaps
 
 | Area | Existing behavior | Expected basic D365 F&O behavior | Missing | Affected components | Priority |
 | --- | --- | --- | --- | --- | --- |
+| Tracking dimensions on a sales return | `CustReturnService` copies the sold movement's dimension onto the return line (`InventDimId = sold.InventDimId`), so a batch or serial returns to the dimension it was issued from. Verified by inspection only. | A returned batch or serial re-enters stock under its own dimension. | A test that returns a batch-tracked item and asserts the return movement's dimension and the per-batch on-hand. MD-04 verifies receipt, reservation and issue; the return half is not exercised. | `CustReturnService`, `InventoryDimensionPolicy` | Low — the code preserves the dimension by construction; only the proof is missing |
+| Fiscal-period refusal on an inventory posting | `SubledgerPostingSupport.LoadLedgerContextAsync` refuses a posting with `The fiscal period for {date:d} is not open.`, `No operating fiscal period contains {date:d}.`, `The {module} module is closed for the fiscal period containing {date:d}.` and a user-group refusal. Only the "is not open" message is asserted anywhere, and only through AP and AR tests. | Posting into a closed period, or a period whose module is closed, is refused. | An inventory-path test for each refusal, and for the module and user-group guards which no test reaches. `LedgerPeriodModuleAccessControl` is also absent from the test `CycleContext`, so the module guard is skipped there entirely. | `SubledgerPostingSupport`, `LedgerPeriodModuleAccessControl` | Medium — the guards exist and are unproven for this module (`CFG-04`) |
 | Same-period sales return close | FIFO close can settle an earlier sales issue before costing its return when receipts before the first return cover all preceding issues and the pool has no marking or purchase returns. Later non-return receipts are allowed. Other cases still require the original issue to have been settled already. | Return cost follows the original sales issue's cost. | Support and verify same-period return dependencies for other costing models, mixed pools and cases where earlier receipt quantities are insufficient. | `InventCloseService.SettlePoolAsync` | Medium — unsupported cases are refused |
 | Count quantity storage precision | Count confirmation validates against the current inventory unit and rejects quantities beyond four decimals because inventory quantities use `decimal(18,4)`. Units may be configured with up to six decimals. | Quantities should honor the configured unit precision. | Verify and expand precision across the complete inventory quantity flow before accepting five or six decimals. | Counting journals, inventory transactions and on-hand quantities | Medium — affected values are refused rather than rounded silently |
 | Weighted-average settlement representation | Close carries the remaining value into later averages using non-cancelled receipt settlement costs. If the receipt-layer value differs after a prior average close, a marked issue or purchase return against those original layers is refused. | Remaining inventory is carried into the next period at the preceding weighted-average value. D365 normally uses a weighted-average closing transfer for summarized settlements. [Microsoft weighted average](https://learn.microsoft.com/en-us/dynamics365/supply-chain/cost-management/weighted-average-physical-value-marking). | Implement and verify the standard closing-transfer representation, including linked receipt cases and cancellation. | `InventCloseService.SettlePoolAsync` | Medium — ambiguous linked-receipt cases are refused |
@@ -48,6 +52,30 @@ alters behavior:
 | Sales returns against partial invoices | `SalesLine.OriginalInvoiceTransRecId` records the invoice line a return was created from. Creation, credit costing and close all use that invoice; entitlement is counted per invoice line, falling back to the conservative origin-wide quantity only while an unattributed legacy return exists. A line created before the field existed is still refused when its origin's invoices carried different costs. | A return tied to an invoice uses its original sale cost. [Microsoft return cost price](https://learn.microsoft.com/en-us/dynamics365/supply-chain/sales-marketing/return-cost-price-and-return-lot-id). | A migration or recovery path for return lines created before the link existed. | `CustReturnService`, `SalesLine`, `InventCloseService` | Low — only pre-existing return lines are affected |
 | Marked layers competing with other issues | FIFO/LIFO close reserves the open quantity of a wholly marked issue, permits other issues to consume excess receipt quantity, and refuses ambiguous partial or split marking. Weighted-average close excludes marked quantities from the unmarked average and carries remaining value forward; it refuses a linked receipt whose value is ambiguous after a previous average close. Pools mixing marked issues and purchase returns are also refused. | Marked receipt and issue quantities are settled together ahead of the inventory model. [Microsoft inventory costing FAQ](https://learn.microsoft.com/en-us/dynamics365/supply-chain/cost-management/inventory-costing-faq). | Identify partial marked quantities and verify interactions with purchase returns and the standard weighted-average closing transfer. | `InventCloseService.SettlePoolAsync` | Medium — supported cases are protected; ambiguous cases are refused |
 | Marking a side split across movements | Marking and unmarking can select a movement by `InventTrans.RecId`. Unmarking refuses missing or ambiguous counterparts; a second pair between the same origins is refused because origin references alone do not distinguish the pairs. Close still refuses a marked receipt split across multiple open movements. | Marking is per transaction; D365 splits a transaction to mark part of a quantity and settles marked movements together. | Support split receipt settlement and multiple distinguishable marking pairs without guessing counterpart movements. Verify marking and close concurrency on SQL Server. | `InventoryMarkingService`, `InventCloseService.SettlePoolAsync` | Medium — ambiguous cases are refused |
+
+## Audited and found sound (2026-11-10)
+
+Recorded so these are not re-investigated. Each was checked and raised no defect.
+
+- **Seeder dependency graph**, `SeedingERPV2/Modules/Inventory`: 24 seeders, every `RequireAsync` type ordered
+  by a declared dependency. Five apparent gaps were false positives — four satisfied transitively through the
+  matching `FldSetup` seeder (`SeedDependencyResolver` is a depth-first topological sort with cycle detection),
+  and `InventPostingSeeder` does declare `ERPV2.DimensionAttributeValueCombinationSeeder`, whose rows are
+  written through a service rather than `EnsureAsync`. No dependency names a seeder that does not exist.
+- **On-hand bucket formulas**: all 11 `AvailPhysical` and all 16 `AvailOrdered` assignments across Finance use
+  one formula each (`PhysicalInvent - ReservPhysical - Picked`, and `AvailPhysical + Ordered - OnOrder -
+  ReservOrdered`). No divergence. `InventTransferOrderService` reuses `AvailPhysical` without recomputing it when
+  creating a transfer order, which is correct there: ordering moves only `OnOrder` and `Ordered`, neither of which
+  feeds `AvailPhysical`. The formulas are duplicated rather than shared, so a future change must be applied to all
+  of them; that is a reuse risk, not a current defect.
+- **Cost rounding in closing and settlement**: `InventCloseService` keeps layer unit cost and the pool average at
+  full decimal precision and rounds only at the adjustment boundary with
+  `decimal.Round(..., 4, MidpointRounding.AwayFromZero)`, which avoids compounding rounding error. The unrounded
+  `UnitCost` in `InventTransMapping` is a read-model projection, not a posted value.
+- **Company scoping of module queries**: `ApplicationDbContext` applies a global `DataAreaId` query filter to
+  every `IMultiCompany` entity except six shared ones, so an Inventory query without an explicit company
+  predicate — such as the batch and serial existence checks in `InventoryDimensionPolicy` — is already scoped.
+  The test `CycleContext` does not apply that filter, which is why tests set `DataAreaId` explicitly.
 
 ## Deliberate restrictions (verified in code)
 
@@ -63,6 +91,13 @@ message quoted.
 | Partially marked weighted-average issue | `A partially marked weighted-average issue cannot be costed until its marked quantity is known.` |
 | Cost adjustment without on-hand summary | `Inventory summary is missing for item '{itemId}' and inventory dimension '{dimId}'; the cost adjustment cannot be posted.` |
 | Settled models | `The basic inventory release settles {FIFO, LIFO, WeightedAvg} only.` |
+| Dimensions outside the basic scope | `Only site, warehouse, batch, and serial dimensions are supported in the basic inventory scope.` |
+| Batch required by the tracking group | `A batch number is required for item '{itemId}'.` |
+| Serial required by the tracking group | `A serial number is required for item '{itemId}'.` |
+| Undefined batch | `Batch '{batchId}' is not defined for item '{itemId}'.` |
+| Undefined serial | `Serial number '{serialId}' is not defined for item '{itemId}'.` |
+| Serial line quantity | `Each line for serial-tracked item '{itemId}' must identify one serial-numbered unit.` |
+| Batch or serial on an untracked item | `Item '{item.ItemId}' has no tracking dimension group, so a batch or serial number cannot be recorded.` |
 | Date-based models at posting | `Inventory model '{model}' has no settlement engine, so a journal cannot be posted for it. Use FIFO, LIFO or Weighted average.` |
 | Batch / serial tracking | `Batch and serial tracking are outside the basic inventory scope.` |
 | Location / advanced storage dimensions | `Location and advanced storage dimensions are outside the basic inventory scope.` |
