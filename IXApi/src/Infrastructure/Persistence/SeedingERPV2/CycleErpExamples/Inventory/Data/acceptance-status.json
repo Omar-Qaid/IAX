@@ -61,9 +61,9 @@
   },
   {
     "caseId": "CST-03",
-    "status": "Not verified by Inventory package",
+    "status": "Passed: scenario 09 recalculates the weighted average over a cutoff, asserting the run is a recalculation rather than a close, that the issue cost is lifted from 50 to 75 as a -25 adjustment with its voucher recorded, that the 75 loss reconciles to GL, and that a transaction dated before the cutoff still posts afterwards because the period remains open. Replay retains one run and four movements. Scenario added by commit 08e16d2c; verified in the regression recorded here. Isolated SQLite.",
     "reference": "Read_only.md",
-    "evidence": []
+    "evidence": [".validation/inventory-package/package-20261110-recalculation.trx", ".validation/inventory-package/20261110-rcv05-regression-cycle.trx"]
   },
   {
     "caseId": "CST-04",
@@ -157,27 +157,27 @@
   },
   {
     "caseId": "RCV-02",
-    "status": "Not verified by Inventory package",
+    "status": "Passed: receiving 70 of 100 leaves 70 on hand and 70 Received while 30 stays Ordered with RemainInventPhysical 30, and the second receipt of 30 brings on-hand to 100 with nothing still ordered. Isolated SQLite.",
     "reference": "Read_only.md",
-    "evidence": []
+    "evidence": [".validation/inventory-package/20261110-rcv0203-partial-receipt.trx"]
   },
   {
     "caseId": "RCV-03",
-    "status": "Not verified by Inventory package",
+    "status": "Passed: invoicing 40 of 100 received moves exactly 40 to Purchased and leaves 60 Received without raising physical on-hand a second time, with posted value 400; invoicing the remaining 60 leaves all 100 Purchased, on-hand still 100 and value 1,000. Isolated SQLite.",
     "reference": "Read_only.md",
-    "evidence": []
+    "evidence": [".validation/inventory-package/20261110-rcv0203-partial-receipt.trx"]
   },
   {
     "caseId": "RCV-04",
-    "status": "Not verified by Inventory package",
+    "status": "Passed: a receipt of 10 at 10 leaves 10 on hand with no financial value; invoicing the same 10 at 12 under a three-way policy with no tolerance is refused with its exact message and leaves no vendor invoice and no value; once a 25 percent tolerance admits the 20 percent variance the invoice posts and the financial receipt is 120 over the same 10 units, which are not received twice. Isolated SQLite.",
     "reference": "Read_only.md",
-    "evidence": []
+    "evidence": [".validation/inventory-package/20261110-rcv04-price-matching.trx"]
   },
   {
     "caseId": "RCV-05",
-    "status": "Not verified by Inventory package",
+    "status": "Passed: correcting a receipt of 10 down to 6 reverses 4 from the physical balance and returns it to expected supply, cancelling removes the remaining 6 and returns the full 10, and each writes its own VendPackingSlipVersion linking the corrected document to the original. A correction that would increase the quantity, and any correction of an invoiced line, are refused with their exact messages and leave quantity and value unchanged. Isolated SQLite.",
     "reference": "Read_only.md",
-    "evidence": []
+    "evidence": [".validation/inventory-package/20261110-rcv05-receipt-correction.trx"]
   },
   {
     "caseId": "REP-01",

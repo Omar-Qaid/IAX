@@ -437,4 +437,258 @@ public sealed partial class InventoryCycleTests
         Assert.Equal(20m, summary.PhysicalInvent);
         Assert.Equal(200m, summary.PostedValue);
     }
+    /// <summary>
+    /// RCV-02 of the reference: receiving 70 of 100 leaves 70 on hand with 30 still expected, and the
+    /// second receipt of 30 brings it to 100. RCV-03: invoicing part of what was received moves only
+    /// that quantity to Purchased, leaves the rest Received, and does not raise physical stock again.
+    /// </summary>
+    [Fact]
+    public async Task RCV0203_partial_receipt_then_partial_invoicing_track_quantity_and_status()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        await db.SaveChangesAsync();
+        var numbers = new TestInventNumbers();
+        var (orders, confirmations, receipts, invoices) = PurchaseServices(db, numbers);
+
+        Assert.Equal(200, (await orders.CreateAsync(
+            new PurchOrderCreateDto("V-0001", null, "SAR", new DateTime(2026, 11, 1), "S01", "WH-01", null), default)).StatusCode);
+        var order = await db.Set<PurchTable>().OrderByDescending(x => x.RecId).FirstAsync();
+        Assert.Equal(200, (await orders.AddLineAsync(order.RecId,
+            new PurchLineInputDto("ITEM-001", 100, "PCS", 10, 1, null, null, null, null), default)).StatusCode);
+        Assert.Equal(200, (await confirmations.ConfirmAsync(order.RecId, default)).StatusCode);
+        var line = await db.Set<PurchLine>().SingleAsync(x => x.PurchId == order.PurchId);
+
+        async Task<decimal> OnHand() => await db.Set<InventSum>()
+            .Where(x => x.ItemId == "ITEM-001").SumAsync(x => x.PhysicalInvent);
+        async Task<decimal> WithReceiptStatus(StatusReceipt status) => (await db.Set<InventTrans>()
+            .Where(x => x.ItemId == "ITEM-001" && x.StatusReceipt == status).ToListAsync()).Sum(x => x.Qty);
+
+        // Nothing physical before the first receipt, and the whole quantity still expected.
+        Assert.Equal(0m, await OnHand());
+        Assert.Equal(100m, await WithReceiptStatus(StatusReceipt.Ordered));
+
+        // RCV-02, first receipt: 70 of 100.
+        Assert.Equal(200, (await receipts.PostAsync(order.RecId,
+            new ProductReceiptPostDto("RCV-70", new DateTime(2026, 11, 2), [new(line.RecId, 70)]), default)).StatusCode);
+        db.ChangeTracker.Clear();
+        Assert.Equal(70m, await OnHand());
+        Assert.Equal(70m, await WithReceiptStatus(StatusReceipt.Received));
+        // The unreceived remainder stays expected rather than disappearing with the posting.
+        Assert.Equal(30m, await WithReceiptStatus(StatusReceipt.Ordered));
+        var afterFirst = await db.Set<PurchLine>().SingleAsync(x => x.RecId == line.RecId);
+        Assert.Equal(30m, afterFirst.RemainInventPhysical);
+
+        // RCV-02, second receipt: the remaining 30.
+        Assert.Equal(200, (await receipts.PostAsync(order.RecId,
+            new ProductReceiptPostDto("RCV-30", new DateTime(2026, 11, 3), [new(line.RecId, 30)]), default)).StatusCode);
+        db.ChangeTracker.Clear();
+        Assert.Equal(100m, await OnHand());
+        Assert.Equal(100m, await WithReceiptStatus(StatusReceipt.Received));
+        Assert.Equal(0m, await WithReceiptStatus(StatusReceipt.Ordered));
+        Assert.Equal(0m, (await db.Set<PurchLine>().SingleAsync(x => x.RecId == line.RecId)).RemainInventPhysical);
+
+        // RCV-03: invoice 40 of the 100 received.
+        Assert.Equal(200, (await invoices.PostAsync(order.RecId,
+            new VendorInvoicePostDto("INV-40", new DateTime(2026, 11, 4), [new(line.RecId, 40)]), default)).StatusCode);
+        db.ChangeTracker.Clear();
+        Assert.Equal(40m, await WithReceiptStatus(StatusReceipt.Purchased));
+        Assert.Equal(60m, await WithReceiptStatus(StatusReceipt.Received));
+        // Invoicing is a financial update: physical stock must not be counted a second time.
+        Assert.Equal(100m, await OnHand());
+        var summary = await db.Set<InventSum>().SingleAsync(x => x.ItemId == "ITEM-001");
+        Assert.Equal(400m, summary.PostedValue);
+
+        // Invoicing the rest leaves everything Purchased, with on-hand still 100.
+        Assert.Equal(200, (await invoices.PostAsync(order.RecId,
+            new VendorInvoicePostDto("INV-60", new DateTime(2026, 11, 5), [new(line.RecId, 60)]), default)).StatusCode);
+        db.ChangeTracker.Clear();
+        Assert.Equal(100m, await WithReceiptStatus(StatusReceipt.Purchased));
+        Assert.Equal(0m, await WithReceiptStatus(StatusReceipt.Received));
+        Assert.Equal(100m, await OnHand());
+        Assert.Equal(1000m, (await db.Set<InventSum>().SingleAsync(x => x.ItemId == "ITEM-001")).PostedValue);
+    }
+    /// <summary>
+    /// RCV-04 of the reference: receive 10 at 10, then invoice 10 at 12 "per the matching policy".
+    /// The outcome is configuration-dependent, so both sides are asserted: with no tolerance the
+    /// three-way policy requires an exact match and refuses the invoice, and once a tolerance admits
+    /// the 20% variance the invoice is accepted and the financial receipt becomes 120 over 10 units.
+    /// </summary>
+    [Fact]
+    public async Task RCV04_an_invoice_price_above_the_order_is_refused_until_a_tolerance_admits_it()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        // The fixture item carries no matching policy, and without one price matching never runs and
+        // any invoice price is accepted. A three-way policy is what brings the price gate into play.
+        db.Set<InventTable>().Local.Single(x => x.ItemId == "ITEM-001").MatchingPolicy = MatchingPolicy.ThreeWay;
+        await db.SaveChangesAsync();
+        var numbers = new TestInventNumbers();
+        var (orders, confirmations, receipts, invoices) = PurchaseServices(db, numbers);
+
+        Assert.Equal(200, (await orders.CreateAsync(
+            new PurchOrderCreateDto("V-0001", null, "SAR", new DateTime(2026, 11, 1), "S01", "WH-01", null), default)).StatusCode);
+        var order = await db.Set<PurchTable>().OrderByDescending(x => x.RecId).FirstAsync();
+        Assert.Equal(200, (await orders.AddLineAsync(order.RecId,
+            new PurchLineInputDto("ITEM-001", 10, "PCS", 10, 1, null, null, null, null), default)).StatusCode);
+        Assert.Equal(200, (await confirmations.ConfirmAsync(order.RecId, default)).StatusCode);
+        var line = await db.Set<PurchLine>().SingleAsync(x => x.PurchId == order.PurchId);
+        Assert.Equal(200, (await receipts.PostAsync(order.RecId,
+            new ProductReceiptPostDto("RCV-10", new DateTime(2026, 11, 2), [new(line.RecId, 10)]), default)).StatusCode);
+
+        // The receipt is physical only: 10 on hand at the ordered price, nothing financial yet.
+        db.ChangeTracker.Clear();
+        var received = await db.Set<InventSum>().SingleAsync(x => x.ItemId == "ITEM-001");
+        Assert.Equal(10m, received.PhysicalInvent);
+        Assert.Equal(0m, received.PostedValue);
+
+        // ITEM-001 carries a three-way policy and no VendParameters row exists, so the tolerance is
+        // zero and an exact price match is required.
+        var refused = await invoices.PostAsync(order.RecId,
+            new VendorInvoicePostDto("INV-12", new DateTime(2026, 11, 3), [new(line.RecId, 10, 12m)]), default);
+        Assert.Equal(422, refused.StatusCode);
+        // The ordered price is interpolated from the stored value, as the product does, so the
+        // decimal scale the provider returns cannot make the assertion brittle.
+        var orderedPrice = (await db.Set<PurchLine>().AsNoTracking().SingleAsync(x => x.RecId == line.RecId)).PurchPrice;
+        Assert.Equal($"Invoice price for item ITEM-001 is 12 against the ordered {orderedPrice} under the "
+            + "configured matching policy, and no price match tolerance is configured.", refused.Message);
+
+        db.ChangeTracker.Clear();
+        Assert.Empty(await db.Set<VendInvoiceJour>().ToListAsync());
+        var afterRefusal = await db.Set<InventSum>().SingleAsync(x => x.ItemId == "ITEM-001");
+        Assert.Equal(10m, afterRefusal.PhysicalInvent);
+        Assert.Equal(0m, afterRefusal.PostedValue);
+
+        // A tolerance of 25% admits the 20% variance, which is what "per the matching policy" means.
+        db.Add(new VendParameters
+        {
+            RecId = 850, DataAreaId = "dat", Key = 0, UseInvoiceMatching = NoYes.Yes,
+            UseTotalPriceMatching = NoYes.Yes, TotalPriceTolerancePercentage = 25m,
+            MatchingPolicy = MatchingPolicy.ThreeWay, MatchingPolicyAllowOverride = NoYes.Yes,
+            UseExtendedPriceMatching = NoYes.No
+        });
+        await db.SaveChangesAsync();
+
+        var accepted = await invoices.PostAsync(order.RecId,
+            new VendorInvoicePostDto("INV-12", new DateTime(2026, 11, 3), [new(line.RecId, 10, 12m)]), default);
+        Assert.True(accepted.StatusCode == 200, accepted.Message);
+
+        // The financial receipt takes the invoice price: 120 over the same 10 units, which were
+        // never received twice.
+        db.ChangeTracker.Clear();
+        var invoiced = await db.Set<InventSum>().SingleAsync(x => x.ItemId == "ITEM-001");
+        Assert.Equal(10m, invoiced.PhysicalInvent);
+        Assert.Equal(120m, invoiced.PostedValue);
+        Assert.Equal(10m, (await db.Set<InventTrans>()
+            .Where(x => x.ItemId == "ITEM-001" && x.StatusReceipt == StatusReceipt.Purchased).ToListAsync()).Sum(x => x.Qty));
+    }
+    /// <summary>
+    /// RCV-05 of the reference: a product receipt correction reverses the quantity and its physical
+    /// entry where allowed, and the corrected document keeps its link to the original. The refusals
+    /// are asserted alongside, since "where allowed" is the part of the case that carries meaning.
+    /// </summary>
+    [Fact]
+    public async Task RCV05_a_product_receipt_can_be_corrected_and_cancelled_with_its_link_preserved()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        await db.SaveChangesAsync();
+        var numbers = new TestInventNumbers();
+        var (orders, confirmations, receipts, invoices) = PurchaseServices(db, numbers);
+
+        Assert.Equal(200, (await orders.CreateAsync(
+            new PurchOrderCreateDto("V-0001", null, "SAR", new DateTime(2026, 11, 1), "S01", "WH-01", null), default)).StatusCode);
+        var order = await db.Set<PurchTable>().OrderByDescending(x => x.RecId).FirstAsync();
+        Assert.Equal(200, (await orders.AddLineAsync(order.RecId,
+            new PurchLineInputDto("ITEM-001", 10, "PCS", 10, 1, null, null, null, null), default)).StatusCode);
+        Assert.Equal(200, (await confirmations.ConfirmAsync(order.RecId, default)).StatusCode);
+        var line = await db.Set<PurchLine>().SingleAsync(x => x.PurchId == order.PurchId);
+        Assert.Equal(200, (await receipts.PostAsync(order.RecId,
+            new ProductReceiptPostDto("RCV-10", new DateTime(2026, 11, 2), [new(line.RecId, 10)]), default)).StatusCode);
+
+        async Task<decimal> OnHand() => await db.Set<InventSum>()
+            .Where(x => x.ItemId == "ITEM-001").SumAsync(x => x.PhysicalInvent);
+
+        db.ChangeTracker.Clear();
+        Assert.Equal(10m, await OnHand());
+        var receipt = await db.Set<VendPackingSlipJour>().SingleAsync();
+        var receiptLine = await db.Set<VendPackingSlipTrans>().SingleAsync();
+
+        // A correction may only reduce: asking for more than was received is refused.
+        var increase = await receipts.CorrectAsync(receipt.RecId,
+            new ProductReceiptCorrectionDto(receiptLine.RecId, 12m, new DateTime(2026, 11, 3)), default);
+        Assert.Equal(422, increase.StatusCode);
+        Assert.Equal("Correction must reduce the quantity and cannot precede the last receipt posting date.",
+            increase.Message);
+        db.ChangeTracker.Clear();
+        Assert.Equal(10m, await OnHand());
+
+        // Correcting to 6 reverses 4 from the physical balance.
+        var corrected = await receipts.CorrectAsync(receipt.RecId,
+            new ProductReceiptCorrectionDto(receiptLine.RecId, 6m, new DateTime(2026, 11, 3)), default);
+        Assert.True(corrected.StatusCode == 200, corrected.Message);
+        db.ChangeTracker.Clear();
+        Assert.Equal(6m, await OnHand());
+        // The remainder returns to expected supply rather than being lost.
+        Assert.Equal(4m, (await db.Set<PurchLine>().AsNoTracking().SingleAsync(x => x.RecId == line.RecId)).RemainInventPhysical);
+
+        // The corrected document keeps its link to the original receipt.
+        var versions = await db.Set<VendPackingSlipVersion>().AsNoTracking()
+            .Where(x => x.VendPackingSlipJour == receipt.RecId).ToListAsync();
+        Assert.NotEmpty(versions);
+
+        // Cancelling removes what is left of the receipt.
+        var cancelled = await receipts.CancelAsync(receipt.RecId, new DateTime(2026, 11, 4), default);
+        Assert.True(cancelled.StatusCode == 200, cancelled.Message);
+        db.ChangeTracker.Clear();
+        Assert.Equal(0m, await OnHand());
+        Assert.Equal(10m, (await db.Set<PurchLine>().AsNoTracking().SingleAsync(x => x.RecId == line.RecId)).RemainInventPhysical);
+        Assert.True((await db.Set<VendPackingSlipVersion>().AsNoTracking()
+            .Where(x => x.VendPackingSlipJour == receipt.RecId).ToListAsync()).Count > versions.Count,
+            "Cancelling a receipt must record its own version alongside the correction.");
+    }
+
+    [Fact]
+    public async Task RCV05_an_invoiced_receipt_line_cannot_be_corrected()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        await db.SaveChangesAsync();
+        var numbers = new TestInventNumbers();
+        var (orders, confirmations, receipts, invoices) = PurchaseServices(db, numbers);
+
+        Assert.Equal(200, (await orders.CreateAsync(
+            new PurchOrderCreateDto("V-0001", null, "SAR", new DateTime(2026, 11, 1), "S01", "WH-01", null), default)).StatusCode);
+        var order = await db.Set<PurchTable>().OrderByDescending(x => x.RecId).FirstAsync();
+        Assert.Equal(200, (await orders.AddLineAsync(order.RecId,
+            new PurchLineInputDto("ITEM-001", 10, "PCS", 10, 1, null, null, null, null), default)).StatusCode);
+        Assert.Equal(200, (await confirmations.ConfirmAsync(order.RecId, default)).StatusCode);
+        var line = await db.Set<PurchLine>().SingleAsync(x => x.PurchId == order.PurchId);
+        Assert.Equal(200, (await receipts.PostAsync(order.RecId,
+            new ProductReceiptPostDto("RCV-10", new DateTime(2026, 11, 2), [new(line.RecId, 10)]), default)).StatusCode);
+        Assert.Equal(200, (await invoices.PostAsync(order.RecId,
+            new VendorInvoicePostDto("INV-10", new DateTime(2026, 11, 3), [new(line.RecId, 10)]), default)).StatusCode);
+
+        db.ChangeTracker.Clear();
+        var receipt = await db.Set<VendPackingSlipJour>().SingleAsync();
+        var receiptLine = await db.Set<VendPackingSlipTrans>().SingleAsync();
+
+        // Once invoiced, the receipt is financially settled and correcting it is refused outright.
+        var refused = await receipts.CorrectAsync(receipt.RecId,
+            new ProductReceiptCorrectionDto(receiptLine.RecId, 6m, new DateTime(2026, 11, 4)), default);
+        Assert.Equal(422, refused.StatusCode);
+        Assert.Equal("An invoiced receipt line cannot be corrected.", refused.Message);
+
+        db.ChangeTracker.Clear();
+        Assert.Equal(10m, await db.Set<InventSum>().Where(x => x.ItemId == "ITEM-001").SumAsync(x => x.PhysicalInvent));
+        Assert.Equal(100m, (await db.Set<InventSum>().SingleAsync(x => x.ItemId == "ITEM-001")).PostedValue);
+    }
 }
