@@ -86,3 +86,6 @@ Thumbs.db
 [Bb]in/
 [Oo]bj/
 .nuget/
+
+# Compiled seeder output captured during validation runs, not evidence.
+.validation/seed-erp-v2-bin/

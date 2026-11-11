@@ -203,6 +203,7 @@ public sealed class PostingConcurrencyTests(Xunit.Abstractions.ITestOutputHelper
             {
                 await master.OpenAsync();
                 await using var create = master.CreateCommand();
+                create.CommandTimeout = 120;
                 create.CommandText = $"CREATE DATABASE [{name}]";
                 await create.ExecuteNonQueryAsync();
             }

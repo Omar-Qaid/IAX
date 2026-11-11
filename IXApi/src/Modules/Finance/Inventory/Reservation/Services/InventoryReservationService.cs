@@ -132,9 +132,20 @@ public sealed partial class InventoryReservationService : BaseService<InventTran
         }
         catch
         {
-            await _unitOfWork.RollbackTransactionAsync(ct);
-            Db.ChangeTracker.Clear();
+            await RollbackAndClearAsync();
             throw;
+        }
+    }
+
+    private async Task RollbackAndClearAsync()
+    {
+        try
+        {
+            await _unitOfWork.RollbackTransactionAsync(CancellationToken.None);
+        }
+        finally
+        {
+            Db.ChangeTracker.Clear();
         }
     }
 

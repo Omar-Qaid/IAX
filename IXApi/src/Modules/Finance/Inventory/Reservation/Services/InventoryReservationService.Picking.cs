@@ -94,8 +94,7 @@ public sealed partial class InventoryReservationService
         }
         catch
         {
-            await _unitOfWork.RollbackTransactionAsync(ct);
-            Db.ChangeTracker.Clear();
+            await RollbackAndClearAsync();
             throw;
         }
     }

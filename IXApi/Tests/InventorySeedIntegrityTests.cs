@@ -1,5 +1,7 @@
 ﻿using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Modules.Finance.Inventory;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory;
@@ -12,6 +14,7 @@ using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Shared.Application.Identity;
 using IAX.IXApi.Modules.Finance;
 using Mapster;
+using Microsoft.Data.SqlClient;
 using IAX.IXApi.Modules.Finance.Entities;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -148,8 +151,38 @@ public sealed class InventorySeedIntegrityTests(Xunit.Abstractions.ITestOutputHe
         await connection.OpenAsync();
         await using var db = new Fixture(new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlite(connection).Options);
         await db.Database.ExecuteSqlRawAsync(db.Database.GenerateCreateScript().Replace("N'", "'"));
-        TypeAdapterConfig.GlobalSettings.Scan(typeof(FinanceModule).Assembly);
+        await VerifyInventoryReplayAsync(db, new Identity());
+    }
+
+    [SqlServerPhaseOneFact]
+    public async Task All_inventory_scenarios_coexist_and_replay_on_SQLServer()
+    {
         var actor = new Identity();
+        var connection = new SqlConnectionStringBuilder
+        {
+            DataSource = Environment.GetEnvironmentVariable("IXAPI_AP_PHASE_ONE_SQLSERVER"),
+            InitialCatalog = $"IXApi_InventoryReplay_{Guid.NewGuid():N}",
+            IntegratedSecurity = true,
+            TrustServerCertificate = true
+        };
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseSqlServer(connection.ConnectionString, sql => sql.CommandTimeout(120)).Options;
+        await using var db = new ApplicationDbContext(options, companyContext: actor);
+        try
+        {
+            Assert.True(await db.Database.EnsureCreatedAsync());
+            await VerifyInventoryReplayAsync(db, actor);
+        }
+        finally
+        {
+            await using var cleanup = new ApplicationDbContext(options);
+            await cleanup.Database.EnsureDeletedAsync();
+        }
+    }
+
+    private async Task VerifyInventoryReplayAsync(ApplicationDbContext db, Identity actor)
+    {
+        TypeAdapterConfig.GlobalSettings.Scan(typeof(FinanceModule).Assembly);
         using var provider = new ServiceCollection().AddSingleton<ApplicationDbContext>(db)
             .AddSingleton<ICompanyExecutionContext>(actor).AddSingleton<ICurrentUserService>(actor)
             .AddLogging().AddInventoryTransactionExamples().BuildServiceProvider();
@@ -175,6 +208,86 @@ public sealed class InventorySeedIntegrityTests(Xunit.Abstractions.ITestOutputHe
         Assert.Equal(transferJournals, await db.Set<InventTransferJour>().CountAsync());
         Assert.Equal(counters, await db.Set<SysNumberSequence>().AsNoTracking().OrderBy(x => x.NumberSequence)
             .Select(x => new { x.NumberSequence, x.NextRec }).ToListAsync());
+    }
+
+    [SqlServerPhaseOneFact]
+    public async Task RES02_competing_reservations_cannot_both_take_the_last_stock()
+    {
+        var actor = new Identity();
+        var connection = new SqlConnectionStringBuilder
+        {
+            DataSource = Environment.GetEnvironmentVariable("IXAPI_AP_PHASE_ONE_SQLSERVER"),
+            InitialCatalog = $"IXApi_InventoryReservation_{Guid.NewGuid():N}",
+            IntegratedSecurity = true,
+            TrustServerCertificate = true
+        };
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseSqlServer(connection.ConnectionString, sql => sql.CommandTimeout(120)).Options;
+        await using var db = new ApplicationDbContext(options, companyContext: actor);
+        try
+        {
+            Assert.True(await db.Database.EnsureCreatedAsync());
+            TypeAdapterConfig.GlobalSettings.Scan(typeof(FinanceModule).Assembly);
+            using var provider = new ServiceCollection().AddSingleton<ApplicationDbContext>(db)
+                .AddSingleton<ICompanyExecutionContext>(actor).AddSingleton<ICurrentUserService>(actor)
+                .AddLogging().AddInventoryTransactionExamples().BuildServiceProvider();
+            using var scope = provider.CreateScope();
+            var report = await scope.ServiceProvider.GetRequiredService<InventoryTransactionExamples>()
+                .RunAsync(new(2026, "inventory-test", ["02"]));
+            var item = Assert.Single(report.Scenarios).ItemId;
+            var stock = await db.Set<InventSum>().SingleAsync(x => x.ItemId == item && x.PhysicalInvent > 0);
+            Assert.Equal(8m, stock.PhysicalInvent);
+            var origins = new[] { "RES02-A", "RES02-B" }.Select(id => new InventTransOrigin
+            {
+                DataAreaId = "dat", InventTransId = id, ItemId = item, ItemInventDimId = stock.InventDimId,
+                ReferenceId = id, ReferenceCategory = InventRefType.SalesTable
+            }).ToArray();
+            db.AddRange(origins);
+            await db.SaveChangesAsync();
+            db.AddRange(origins.Select(origin => new InventTrans
+            {
+                DataAreaId = "dat", InventTransOrigin = origin.RecId, ItemId = item,
+                InventDimId = stock.InventDimId, Qty = -8m, StatusIssue = StatusIssue.Ordered,
+                ValueOpen = InventTransOpen.Yes
+            }));
+            stock.OnOrder = 16m;
+            await db.SaveChangesAsync();
+            var vouchers = await db.Set<GeneralJournalEntry>().CountAsync();
+
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var requests = origins.Select(origin => ReserveAsync(origin.InventTransId)).ToArray();
+            start.SetResult();
+            var results = await Task.WhenAll(requests);
+            Assert.Equal(8m, Assert.Single(results, x => x.Error == null).Result!.Reserved);
+            Assert.Equal("There is not enough available physical stock to reserve the requested quantity.",
+                Assert.Single(results, x => x.Error != null).Error);
+
+            db.ChangeTracker.Clear();
+            var updated = await db.Set<InventSum>().SingleAsync(x => x.RecId == stock.RecId);
+            Assert.Equal(8m, updated.PhysicalInvent);
+            Assert.Equal(8m, updated.ReservPhysical);
+            Assert.Equal(8m, updated.OnOrder);
+            Assert.Equal(0m, updated.AvailPhysical);
+            Assert.Equal(vouchers, await db.Set<GeneralJournalEntry>().CountAsync());
+            var originIds = origins.Select(x => x.RecId).ToArray();
+            var issues = await db.Set<InventTrans>().Where(x => originIds.Contains(x.InventTransOrigin)).ToListAsync();
+            Assert.Equal(-8m, Assert.Single(issues, x => x.StatusIssue == StatusIssue.ReservPhysical).Qty);
+            Assert.Equal(-8m, Assert.Single(issues, x => x.StatusIssue == StatusIssue.Ordered).Qty);
+
+            async Task<(ReservationResultDto? Result, string? Error)> ReserveAsync(string demandId)
+            {
+                await using var session = new ApplicationDbContext(options, companyContext: actor);
+                using var work = new UnitOfWork(session);
+                await start.Task;
+                return await new InventoryReservationService(work, actor)
+                    .ReserveAsync(demandId, 8m, false, default);
+            }
+        }
+        finally
+        {
+            await using var cleanup = new ApplicationDbContext(options);
+            await cleanup.Database.EnsureDeletedAsync();
+        }
     }
 
     private sealed class Identity : ICompanyExecutionContext, ICurrentUserService

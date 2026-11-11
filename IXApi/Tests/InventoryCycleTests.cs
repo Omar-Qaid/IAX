@@ -3661,6 +3661,36 @@ public sealed partial class InventoryCycleTests
     }
 
     [Fact]
+    public async Task CST05_weighted_average_close_excludes_a_physically_received_uninvoiced_layer()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedMarkablePool(db);
+        var model = db.Set<InventModelGroup>().Local.Single();
+        model.InventModel = InventModel.WeightedAvg;
+        var receipt = db.Set<InventTrans>().Local.Single(x => x.RecId == 2);
+        receipt.StatusReceipt = StatusReceipt.Received;
+        receipt.DatePhysical = receipt.DateFinancial;
+        receipt.DateFinancial = default;
+        receipt.CostAmountPhysical = receipt.CostAmountPosted;
+        receipt.CostAmountPosted = 0;
+        db.Set<InventSum>().Local.Single().PostedValue = 450m;
+        await db.SaveChangesAsync();
+
+        var service = new InventCloseService(new TestUnitOfWork(db), new TestCompany(), new TestUser(), Sequence());
+        var result = await service.CloseItemAsync("ITEM", new DateTime(2026, 6, 30));
+
+        Assert.Null(result.Error);
+        var issue = await db.Set<InventTrans>().SingleAsync(x => x.RecId == 3);
+        Assert.Equal(-500m, issue.CostAmountSettled);
+        Assert.Equal(50m, issue.CostAmountAdjustment);
+        Assert.Equal(0m, receipt.QtySettled);
+        Assert.Equal(1200m, receipt.CostAmountPhysical);
+        Assert.Equal(150m, (await db.Set<InventSum>().SingleAsync()).PhysicalInvent);
+    }
+
+    [Fact]
     public async Task Weighted_average_carries_remaining_value_to_next_period_and_reverses()
     {
         await using var fixture = await Fixture.CreateAsync();

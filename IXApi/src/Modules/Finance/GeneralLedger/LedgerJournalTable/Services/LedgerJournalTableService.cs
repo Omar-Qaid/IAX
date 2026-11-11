@@ -139,11 +139,7 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
                 var header = await db.Set<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable>()
                     .SingleOrDefaultAsync(x => x.DataAreaId == area && x.RecId == recId, ct);
                 if (header == null)
-                {
-                    await _unitOfWork.RollbackTransactionAsync(ct);
-                    db.ChangeTracker.Clear();
                     return (null, null);
-                }
 
                 LedgerJournalSimulateResultDto result;
                 try
@@ -164,8 +160,7 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
                 // Always rolled back: a simulation never leaves posted accounting, a posted journal
                 // status or a consumed voucher behind. Clearing the tracker drops the in-memory
                 // mutations the posting path made, so nothing leaks into a later save.
-                await _unitOfWork.RollbackTransactionAsync(ct);
-                db.ChangeTracker.Clear();
+                await RollbackAndClearAsync(db);
             }
         }
 
@@ -211,15 +206,25 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
             }
             catch (SubledgerPostingException ex)
             {
-                await _unitOfWork.RollbackTransactionAsync(ct);
-                db.ChangeTracker.Clear();
+                await RollbackAndClearAsync(db);
                 return (null, ex.Message);
             }
             catch
             {
-                await _unitOfWork.RollbackTransactionAsync(ct);
-                db.ChangeTracker.Clear();
+                await RollbackAndClearAsync(db);
                 throw;
+            }
+        }
+
+        private async Task RollbackAndClearAsync(DbContext db)
+        {
+            try
+            {
+                await _unitOfWork.RollbackTransactionAsync(CancellationToken.None);
+            }
+            finally
+            {
+                db.ChangeTracker.Clear();
             }
         }
 

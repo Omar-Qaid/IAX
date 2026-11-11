@@ -53,15 +53,25 @@ public sealed class LedgerJournalReversalService(
         }
         catch (SubledgerPostingException ex)
         {
-            await unitOfWork.RollbackTransactionAsync(ct);
-            Db.ChangeTracker.Clear();
+            await RollbackAndClearAsync();
             return (null, ex.Message);
         }
         catch
         {
-            await unitOfWork.RollbackTransactionAsync(ct);
-            Db.ChangeTracker.Clear();
+            await RollbackAndClearAsync();
             throw;
+        }
+    }
+
+    private async Task RollbackAndClearAsync()
+    {
+        try
+        {
+            await unitOfWork.RollbackTransactionAsync(CancellationToken.None);
+        }
+        finally
+        {
+            Db.ChangeTracker.Clear();
         }
     }
 
