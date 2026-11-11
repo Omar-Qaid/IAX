@@ -340,6 +340,37 @@
     },
     "inventTrans": {
       "title": "حركات المخزون"
+    },
+    "batchGroups": {
+      "title": "المجموعات الدفعية",
+      "standardView": "العرض القياسي",
+      "groupCode": "المجموعة الدفعية",
+      "schedulingPriority": "أولوية الجدولة",
+      "maxConcurrency": "الحد الأقصى للتنفيد المتزامن",
+      "groupCodeRequired": "المجموعة الدفعية مطلوبة.",
+      "groupCodeTooLong": "لا يمكن أن تتجاوز المجموعة الدفعية 10 أحرف.",
+      "descriptionTooLong": "لا يمكن أن يتجاوز الوصف 60 حرفًا.",
+      "priorityRange": "يجب أن تكون الأولوية 0 أو 1 أو 2.",
+      "concurrencyRange": "يجب أن يكون الحد الأقصى للتنفيد المتزامن بين 1 و100.",
+      "filterByGroup": "المجموعة الدفعية",
+      "operatorContains": "يحتوي على"
+    },
+    "batchJobActivePeriods": {
+      "title": "فترات تنشيط المهام الدفعية",
+      "standardView": "العرض القياسي",
+      "periodId": "فترة التنشيط",
+      "fromTimeUtc": "من الوقت بالتوقيت العالمي",
+      "toTimeUtc": "إلى الوقت بالتوقيت العالمي",
+      "fromTimeLocal": "من الوقت المحلي",
+      "toTimeLocal": "إلى الوقت المحلي",
+      "timeZoneFollowed": "المنطقة الزمنية المتبعة",
+      "operatorContains": "يحتوي على",
+      "periodIdRequired": "فترة التنشيط مطلوبة.",
+      "periodIdTooLong": "لا يمكن أن تتجاوز فترة التنشيط 10 أحرف.",
+      "nameTooLong": "لا يمكن أن يتجاوز الاسم 150 حرفًا.",
+      "timeRange": "يجب أن تكون قيم الوقت بالثواني الكاملة بين 0 و86399.",
+      "utcOrder": "لا يمكن أن يكون وقت البداية بالتوقيت العالمي لاحقًا لوقت النهاية.",
+      "localOrder": "لا يمكن أن يكون وقت البداية المحلي لاحقًا لوقت النهاية المحلي."
     }
   },
   "inventSite": {

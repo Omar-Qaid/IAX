@@ -5,6 +5,7 @@ import type { ColumnDef } from '@shared/components/data-grid/types';
 import { queryClient } from '@core/api/queryClient';
 import { PERMISSIONS } from '@core/permissions/permissions';
 import { useNotifications } from '@shared/hooks/useNotifications';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { uiDensity } from '@shared/constants/uiDensity';
 import {
   batchJobActivePeriodApi,
@@ -18,33 +19,38 @@ const maximumTime = 86_399;
 export function BatchJobActivePeriodPage(): React.ReactElement {
   const navigate = useNavigate();
   const { notifyError, notifySuccess } = useNotifications();
+  const { t, currentLanguage } = useAppTranslation();
   const columns = useMemo<ColumnDef<BatchJobActivePeriodRecord>[]>(
     () => [
-      { field: 'periodId', headerName: 'Active period', width: 150, pinned: 'left', editable: true },
-      { field: 'name', headerName: 'Name', minWidth: 220, flex: 1, editable: true },
-      { field: 'fromTimeUtc', headerName: 'From time UTC', type: 'number', width: 145, editable: true },
-      { field: 'toTimeUtc', headerName: 'To time UTC', type: 'number', width: 145, editable: true },
-      { field: 'fromTimeLocal', headerName: 'From time local', type: 'number', width: 150, editable: true },
-      { field: 'toTimeLocal', headerName: 'To time local', type: 'number', width: 150, editable: true },
-      { field: 'timeZoneFollowed', headerName: 'Time zone followed', type: 'number', width: 165, editable: true },
-      { field: 'isActive', headerName: 'Active', type: 'boolean', width: 100, editable: true },
+      { field: 'periodId', headerName: t('pages.batchJobActivePeriods.periodId'), width: 150, pinned: 'left', editable: true },
+      { field: 'name', headerName: t('fields.name'), minWidth: 220, flex: 1, editable: true },
+      { field: 'fromTimeUtc', headerName: t('pages.batchJobActivePeriods.fromTimeUtc'), type: 'number', width: 145, editable: true },
+      { field: 'toTimeUtc', headerName: t('pages.batchJobActivePeriods.toTimeUtc'), type: 'number', width: 145, editable: true },
+      { field: 'fromTimeLocal', headerName: t('pages.batchJobActivePeriods.fromTimeLocal'), type: 'number', width: 150, editable: true },
+      { field: 'toTimeLocal', headerName: t('pages.batchJobActivePeriods.toTimeLocal'), type: 'number', width: 150, editable: true },
+      { field: 'timeZoneFollowed', headerName: t('pages.batchJobActivePeriods.timeZoneFollowed'), type: 'number', width: 165, editable: true },
+      { field: 'isActive', headerName: t('common.active'), type: 'boolean', width: 100, editable: true },
     ],
-    []
+    [t]
   );
   const refresh = () => queryClient.invalidateQueries({ queryKey });
   const config: EnterpriseListConfig<BatchJobActivePeriodRecord> = {
-    contextLabel: 'Batch job active periods', viewLabel: 'Standard view', filterLabel: 'Filter',
-    informationLabel: 'Information', searchMode: 'quick', locale: 'en',
+    contextLabel: t('pages.batchJobActivePeriods.title'),
+    viewLabel: t('pages.batchJobActivePeriods.standardView'),
+    filterLabel: t('actions.filter'),
+    informationLabel: t('common.information'),
+    searchMode: 'quick',
+    locale: currentLanguage.code,
     searchFields: [
-      { field: 'periodId', label: 'Active period' },
-      { field: 'name', label: 'Name' },
+      { field: 'periodId', label: t('pages.batchJobActivePeriods.periodId') },
+      { field: 'name', label: t('fields.name') },
     ],
-    backCommand: { label: 'Back', onClick: () => navigate(-1) },
+    backCommand: { label: t('actions.back'), onClick: () => navigate(-1) },
     showSearchCommand: true,
     recordTableName: 'BatchJobActivePeriod',
     getAuditRecordId: (record) => record.recId,
     crud: {
-      editLabel: 'Edit', newLabel: 'New', deleteLabel: 'Delete',
+      editLabel: t('actions.edit'), newLabel: t('actions.new'), deleteLabel: t('actions.delete'),
       editPermission: PERMISSIONS.BACKGROUND_JOB_EDIT,
       newPermission: PERMISSIONS.BACKGROUND_JOB_CREATE,
       deletePermission: PERMISSIONS.BACKGROUND_JOB_DELETE,
@@ -52,25 +58,35 @@ export function BatchJobActivePeriodPage(): React.ReactElement {
         try {
           await Promise.all(rows.map(batchJobActivePeriodApi.remove));
           await refresh();
-          notifySuccess('Active period deleted.');
+          notifySuccess(t('messages.deletedSuccessfully'));
         } catch (error) {
-          notifyError(error instanceof Error ? error.message : 'Delete failed.');
+          notifyError(error instanceof Error ? error.message : t('errors.deleteFailed'));
         }
       },
     },
     utilities: {
-      personalizeLabel: 'Personalize', guideLabel: 'Guide',
-      notificationsLabel: 'Notifications', refreshLabel: 'Refresh',
-      openWindowLabel: 'Open in new window', notificationCount: 0,
+      personalizeLabel: t('utilities.personalize'),
+      guideLabel: t('utilities.guide'),
+      notificationsLabel: t('common.notifications'),
+      refreshLabel: t('actions.refresh'),
+      openWindowLabel: t('utilities.openWindow'),
+      notificationCount: 0,
     },
     advancedFilter: {
-      title: 'Filter', addLabel: 'Add', fieldLabel: 'Active period', operatorLabel: 'Contains',
-      applyLabel: 'Apply', resetLabel: 'Reset', getValue: (record) => record.periodId,
-      matches: (record, value) => record.periodId.toLowerCase().includes(value.trim().toLowerCase()),
+      title: t('actions.filter'),
+      addLabel: t('actions.add'),
+      fieldLabel: t('pages.batchJobActivePeriods.periodId'),
+      operatorLabel: t('pages.batchJobActivePeriods.operatorContains'),
+      applyLabel: t('actions.apply'),
+      resetLabel: t('actions.reset'),
+      getValue: (record) => record.periodId,
+      matches: (record, value) => record.periodId
+        .toLocaleLowerCase(currentLanguage.code)
+        .includes(value.trim().toLocaleLowerCase(currentLanguage.code)),
     },
   };
 
-  return <SimpleListPage title="Batch job active periods" enterpriseConfig={config}
+  return <SimpleListPage title={t('pages.batchJobActivePeriods.title')} enterpriseConfig={config}
     dataSource={{ type: 'remote', key: 'batch-job-active-periods', load: batchJobActivePeriodApi.list }}
     columns={columns} dataGridProps={{
       storageKey: 'administration.batch-job-active-periods.reference-view', masterForm: true,
@@ -81,21 +97,21 @@ export function BatchJobActivePeriodPage(): React.ReactElement {
         toTimeLocal: maximumTime, timeZoneFollowed: 0, isActive: true }),
       onRowSave: async (values, isNew) => {
         const record = values as BatchJobActivePeriodRecord;
-        if (!record.periodId.trim()) throw new Error('Active period is required.');
-        if (record.periodId.trim().length > 10) throw new Error('Active period cannot exceed 10 characters.');
-        if ((record.name?.length ?? 0) > 150) throw new Error('Name cannot exceed 150 characters.');
+        if (!record.periodId.trim()) throw new Error(t('pages.batchJobActivePeriods.periodIdRequired'));
+        if (record.periodId.trim().length > 10) throw new Error(t('pages.batchJobActivePeriods.periodIdTooLong'));
+        if ((record.name?.length ?? 0) > 150) throw new Error(t('pages.batchJobActivePeriods.nameTooLong'));
         for (const value of [record.fromTimeUtc, record.toTimeUtc, record.fromTimeLocal, record.toTimeLocal]) {
           if (!Number.isInteger(value) || value < minimumTime || value > maximumTime)
-            throw new Error('Time values must be whole seconds between 0 and 86399.');
+            throw new Error(t('pages.batchJobActivePeriods.timeRange'));
         }
         if (record.fromTimeUtc > record.toTimeUtc)
-          throw new Error('From time UTC cannot be later than To time UTC.');
+          throw new Error(t('pages.batchJobActivePeriods.utcOrder'));
         if (record.fromTimeLocal > record.toTimeLocal)
-          throw new Error('From time local cannot be later than To time local.');
+          throw new Error(t('pages.batchJobActivePeriods.localOrder'));
         if (isNew || record.recId === 0) await batchJobActivePeriodApi.create(record);
         else await batchJobActivePeriodApi.update(record);
         await refresh();
-        notifySuccess('Active period saved.');
+        notifySuccess(t('messages.savedSuccessfully'));
       },
     }} />;
 }

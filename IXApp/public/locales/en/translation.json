@@ -340,6 +340,37 @@
     },
     "inventTrans": {
       "title": "Inventory transactions"
+    },
+    "batchGroups": {
+      "title": "Batch groups",
+      "standardView": "Standard view",
+      "groupCode": "Batch group",
+      "schedulingPriority": "Scheduling priority",
+      "maxConcurrency": "Maximum concurrency",
+      "groupCodeRequired": "Batch group is required.",
+      "groupCodeTooLong": "Batch group cannot exceed 10 characters.",
+      "descriptionTooLong": "Description cannot exceed 60 characters.",
+      "priorityRange": "Priority must be 0, 1, or 2.",
+      "concurrencyRange": "Maximum concurrency must be between 1 and 100.",
+      "filterByGroup": "Batch group",
+      "operatorContains": "Contains"
+    },
+    "batchJobActivePeriods": {
+      "title": "Batch job active periods",
+      "standardView": "Standard view",
+      "periodId": "Active period",
+      "fromTimeUtc": "From time UTC",
+      "toTimeUtc": "To time UTC",
+      "fromTimeLocal": "From time local",
+      "toTimeLocal": "To time local",
+      "timeZoneFollowed": "Time zone followed",
+      "operatorContains": "Contains",
+      "periodIdRequired": "Active period is required.",
+      "periodIdTooLong": "Active period cannot exceed 10 characters.",
+      "nameTooLong": "Name cannot exceed 150 characters.",
+      "timeRange": "Time values must be whole seconds between 0 and 86399.",
+      "utcOrder": "From time UTC cannot be later than To time UTC.",
+      "localOrder": "From time local cannot be later than To time local."
     }
   },
   "inventSite": {
