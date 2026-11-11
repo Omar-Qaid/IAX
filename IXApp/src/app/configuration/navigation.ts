@@ -48,11 +48,11 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
             path: ROUTE_PATHS.INVENTORY.JOURNAL_NAMES,
             permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
           },
-            {
-              label: 'Inventory journals',
-              path: ROUTE_PATHS.INVENTORY.JOURNALS,
-              permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
-            },
+          {
+            label: 'nav.inventoryJournals',
+            path: ROUTE_PATHS.INVENTORY.JOURNALS,
+            permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+          },
           {
             label: 'product.title',
             path: ROUTE_PATHS.INVENTORY.PRODUCTS,
@@ -187,17 +187,17 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
             permission: PERMISSIONS.CUSTOMER_VIEW,
           },
           {
-            label: 'Trade agreement journals',
+            label: 'nav.tradeAgreementJournals',
             path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.TRADE_AGREEMENT_JOURNALS,
             permission: PERMISSIONS.TRADE_AGREEMENT_JOURNAL_VIEW,
           },
           {
-            label: 'Price/discount groups',
+            label: 'nav.priceDiscountGroups',
             path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.PRICE_DISCOUNT_GROUPS,
             permission: PERMISSIONS.PRICE_DISCOUNT_GROUP_VIEW,
           },
           {
-            label: 'Trade agreement journal names',
+            label: 'nav.tradeAgreementJournalNames',
             path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.TRADE_AGREEMENT_JOURNAL_NAMES,
             permission: PERMISSIONS.TRADE_AGREEMENT_JOURNAL_NAME_VIEW,
           },
@@ -377,17 +377,17 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
             permission: PERMISSIONS.NUMBER_SEQUENCE_VIEW,
           },
           {
-            label: 'Batch jobs',
+            label: 'nav.batchJobs',
             path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.BACKGROUND_JOBS,
             permission: PERMISSIONS.BACKGROUND_JOB_VIEW,
           },
           {
-            label: 'Batch groups',
+            label: 'nav.batchGroups',
             path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.BATCH_GROUPS,
             permission: PERMISSIONS.BACKGROUND_JOB_VIEW,
           },
           {
-            label: 'Batch job active periods',
+            label: 'nav.batchJobActivePeriods',
             path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.BATCH_JOB_ACTIVE_PERIODS,
             permission: PERMISSIONS.BACKGROUND_JOB_VIEW,
           },

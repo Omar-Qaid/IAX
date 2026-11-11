@@ -118,7 +118,9 @@
     "unknown": "Unknown",
     "packingUnit": "Packing unit",
     "packingUnitQuantity": "Packing unit quantity",
-    "packingGroups": { "material": "Packing material" }
+    "packingGroups": {
+      "material": "Packing material"
+    }
   },
   "accessibility": {
     "skipToContent": "Skip to main content",
@@ -194,7 +196,14 @@
     "global_search": "Search for a page",
     "inventory": "Inventory management",
     "inquiries": "Inquiries and reports",
-    "inventoryTransactions": "Inventory transactions"
+    "inventoryTransactions": "Inventory transactions",
+    "inventoryJournals": "Inventory journals",
+    "tradeAgreementJournals": "Trade agreement journals",
+    "priceDiscountGroups": "Price/discount groups",
+    "tradeAgreementJournalNames": "Trade agreement journal names",
+    "batchJobs": "Batch jobs",
+    "batchGroups": "Batch groups",
+    "batchJobActivePeriods": "Batch job active periods"
   },
   "pages": {
     "login": {
@@ -662,9 +671,9 @@
     "toggleList": "Toggle record list",
     "download": "Download",
     "archive": "Archive",
-     "change": "Change",
-     "pinActionPane": "Pin action pane",
-     "unpinActionPane": "Collapse action pane"
+    "change": "Change",
+    "pinActionPane": "Pin action pane",
+    "unpinActionPane": "Collapse action pane"
   },
   "common": {
     "general": "General",
@@ -755,7 +764,11 @@
     "selectField": "Select {{field}}",
     "selectPlaceholder": "Select…",
     "searchOptions": "Search options…",
-    "noMatchingRecords": "No matching records found."
+    "noMatchingRecords": "No matching records found.",
+    "doubleClickToView": "Double-click to view details",
+    "openDetails": "Open details",
+    "labelDoubleClickToView": "{{label}}: double-click to view details",
+    "openLabelDetails": "Open {{label}} details"
   },
   "errors": {
     "generic": "An unexpected error occurred.",
@@ -2625,7 +2638,9 @@
   },
   "hcmShowrooms": {
     "title": "Showrooms",
-    "sections": { "details": "Showroom details" },
+    "sections": {
+      "details": "Showroom details"
+    },
     "fields": {
       "personnelNumber": "Showroom number",
       "name": "Name",
@@ -2775,9 +2790,17 @@
       "productType": "Product type",
       "productSubtype": "Product subtype"
     },
-    "sections": { "general": "General" },
-    "groups": { "identification": "IDENTIFICATION", "classification": "CLASSIFICATION" },
-    "options": { "item": "Item", "product": "Product" }
+    "sections": {
+      "general": "General"
+    },
+    "groups": {
+      "identification": "IDENTIFICATION",
+      "classification": "CLASSIFICATION"
+    },
+    "options": {
+      "item": "Item",
+      "product": "Product"
+    }
   },
   "storageDimensionGroup": {
     "title": "Storage dimension groups",
@@ -2787,8 +2810,14 @@
       "dimension": "Storage dimension",
       "active": "Active"
     },
-    "sections": { "dimensions": "Storage dimensions" },
-    "dimensions": { "site": "Site", "warehouse": "Warehouse", "location": "Location" }
+    "sections": {
+      "dimensions": "Storage dimensions"
+    },
+    "dimensions": {
+      "site": "Site",
+      "warehouse": "Warehouse",
+      "location": "Location"
+    }
   },
   "trackingDimensionGroup": {
     "title": "Tracking dimension groups",
@@ -2798,20 +2827,41 @@
       "dimension": "Tracking dimension",
       "active": "Active"
     },
-    "sections": { "dimensions": "Tracking dimensions" },
-    "dimensions": { "batchNumber": "Batch number", "serialNumber": "Serial number" }
+    "sections": {
+      "dimensions": "Tracking dimensions"
+    },
+    "dimensions": {
+      "batchNumber": "Batch number",
+      "serialNumber": "Serial number"
+    }
   },
   "inventModelGroup": {
     "title": "Item model groups",
-    "fields": { "id": "Item model group", "name": "Name" },
-    "sections": { "costing": "Costing method & cost recognition", "policies": "Inventory policies" }
+    "fields": {
+      "id": "Item model group",
+      "name": "Name"
+    },
+    "sections": {
+      "costing": "Costing method & cost recognition",
+      "policies": "Inventory policies"
+    }
   },
   "inventItemGroup": {
     "title": "Item groups",
-    "fields": { "id": "Item group", "name": "Name" },
-    "sections": { "sales": "Sales order", "purchase": "Purchase order", "inventory": "Inventory" }
+    "fields": {
+      "id": "Item group",
+      "name": "Name"
+    },
+    "sections": {
+      "sales": "Sales order",
+      "purchase": "Purchase order",
+      "inventory": "Inventory"
+    }
   },
-  "inventPosting": { "title": "Posting", "select": "Select" },
+  "inventPosting": {
+    "title": "Posting",
+    "select": "Select"
+  },
   "releasedProduct": {
     "title": "Released products",
     "fields": {
@@ -2828,8 +2878,14 @@
   "inventParameters": {
     "title": "Inventory and warehouse management parameters",
     "saved": "Inventory parameters saved.",
-    "navigation": { "general": "General", "journalNames": "Journal names" },
-    "sections": { "general": "General", "journalNames": "Journal names" },
+    "navigation": {
+      "general": "General",
+      "journalNames": "Journal names"
+    },
+    "sections": {
+      "general": "General",
+      "journalNames": "Journal names"
+    },
     "fields": {
       "defaultUnit": "Default unit",
       "defaultSite": "Default site",
@@ -2944,8 +3000,18 @@
       "deletePostedLines": "Delete lines after posting",
       "reservation": "Reservation"
     },
-    "types": { "movement": "Movement", "adjustment": "Inventory adjustment", "counting": "Counting", "transfer": "Transfer" },
-    "detail": { "detail": "Detail", "summary": "Summary" },
-    "reservation": { "automatic": "Automatic" }
+    "types": {
+      "movement": "Movement",
+      "adjustment": "Inventory adjustment",
+      "counting": "Counting",
+      "transfer": "Transfer"
+    },
+    "detail": {
+      "detail": "Detail",
+      "summary": "Summary"
+    },
+    "reservation": {
+      "automatic": "Automatic"
+    }
   }
 }

@@ -1,15 +1,18 @@
 import React from 'react';
 import { MenuItem, TextField } from '@mui/material';
 import { Controller, type FieldValues } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import type { BaseFieldProps } from './types';
 import type { SelectOption } from '@core/types/common';
 import { lookupValueSx } from '../lookups/lookupValueStyle';
 import { LookupNavigationLabel } from '../lookups/LookupNavigationLabel';
 
-const selectPlaceholder = <span className="app-select-placeholder">Select...</span>;
-const selectValue = (selected: unknown, options: SelectOption[]) =>
-  selected === '' ? selectPlaceholder
-    : options.find((option) => String(option.value) === String(selected))?.label ?? String(selected);
+const selectValue = (selected: unknown, options: SelectOption[], placeholder: string) =>
+  selected === '' ? (
+    <span className="app-select-placeholder">{placeholder}</span>
+  ) : (
+    (options.find((option) => String(option.value) === String(selected))?.label ?? String(selected))
+  );
 
 export interface AppSelectFieldProps<
   TFieldValues extends FieldValues = FieldValues,
@@ -34,6 +37,8 @@ export function AppSelectField<TFieldValues extends FieldValues = FieldValues>({
   value,
   onChange,
 }: AppSelectFieldProps<TFieldValues>): React.ReactElement | null {
+  const { t } = useTranslation();
+  const placeholder = t('lookups.selectPlaceholder', 'Select…');
   if (hidden) return null;
 
   if (!control || !name) {
@@ -41,7 +46,9 @@ export function AppSelectField<TFieldValues extends FieldValues = FieldValues>({
       <TextField
         select
         name={name}
-        label={label ? <LookupNavigationLabel label={label} masterRoute={masterRoute} /> : undefined}
+        label={
+          label ? <LookupNavigationLabel label={label} masterRoute={masterRoute} /> : undefined
+        }
         required={required}
         disabled={disabled || readOnly}
         helperText={helperText}
@@ -50,7 +57,12 @@ export function AppSelectField<TFieldValues extends FieldValues = FieldValues>({
         variant={variant}
         value={value ?? ''}
         sx={[lookupValueSx(value), { '& .app-select-placeholder': { color: 'text.disabled' } }]}
-        slotProps={{ select: { displayEmpty: true, renderValue: (selected) => selectValue(selected, options) } }}
+        slotProps={{
+          select: {
+            displayEmpty: true,
+            renderValue: (selected) => selectValue(selected, options, placeholder),
+          },
+        }}
         onChange={(e) => onChange?.(e.target.value)}
       >
         {options.map((opt) => (
@@ -70,7 +82,9 @@ export function AppSelectField<TFieldValues extends FieldValues = FieldValues>({
         <TextField
           {...field}
           select
-          label={label ? <LookupNavigationLabel label={label} masterRoute={masterRoute} /> : undefined}
+          label={
+            label ? <LookupNavigationLabel label={label} masterRoute={masterRoute} /> : undefined
+          }
           required={required}
           disabled={disabled || readOnly}
           error={!!error}
@@ -78,8 +92,16 @@ export function AppSelectField<TFieldValues extends FieldValues = FieldValues>({
           fullWidth={fullWidth}
           size="small"
           value={field.value ?? ''}
-          sx={[lookupValueSx(field.value), { '& .app-select-placeholder': { color: 'text.disabled' } }]}
-          slotProps={{ select: { displayEmpty: true, renderValue: (selected) => selectValue(selected, options) } }}
+          sx={[
+            lookupValueSx(field.value),
+            { '& .app-select-placeholder': { color: 'text.disabled' } },
+          ]}
+          slotProps={{
+            select: {
+              displayEmpty: true,
+              renderValue: (selected) => selectValue(selected, options, placeholder),
+            },
+          }}
         >
           {options.map((opt) => (
             <MenuItem key={opt.value} value={opt.value} disabled={opt.disabled}>

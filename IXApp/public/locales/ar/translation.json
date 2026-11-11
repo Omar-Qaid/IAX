@@ -196,7 +196,14 @@
     "salesTaxSettlementPeriods": "فترات تسوية ضريبة المبيعات",
     "salesTaxCodes": "أكواد ضريبة المبيعات",
     "salesTaxGroups": "مجموعات ضريبة المبيعات",
-    "itemSalesTaxGroups": "مجموعات ضريبة مبيعات الأصناف"
+    "itemSalesTaxGroups": "مجموعات ضريبة مبيعات الأصناف",
+    "inventoryJournals": "يوميات المخزون",
+    "tradeAgreementJournals": "يوميات اتفاقيات التجارة",
+    "priceDiscountGroups": "مجموعات الأسعار والخصومات",
+    "tradeAgreementJournalNames": "أسماء يوميات اتفاقيات التجارة",
+    "batchJobs": "المهام الدفعية",
+    "batchGroups": "المجموعات الدفعية",
+    "batchJobActivePeriods": "فترات تنشيط المهام الدفعية"
   },
   "pages": {
     "login": {
@@ -664,9 +671,9 @@
     "toggleList": "إظهار قائمة السجلات أو إخفاؤها",
     "download": "تنزيل",
     "archive": "أرشفة",
-     "change": "تغيير",
-     "pinActionPane": "تثبيت جزء الإجراءات",
-     "unpinActionPane": "طي جزء الإجراءات"
+    "change": "تغيير",
+    "pinActionPane": "تثبيت جزء الإجراءات",
+    "unpinActionPane": "طي جزء الإجراءات"
   },
   "common": {
     "general": "عام",
@@ -757,7 +764,11 @@
     "selectField": "اختر {{field}}",
     "selectPlaceholder": "اختر…",
     "searchOptions": "البحث في الخيارات…",
-    "noMatchingRecords": "لم يتم العثور على سجلات مطابقة."
+    "noMatchingRecords": "لم يتم العثور على سجلات مطابقة.",
+    "doubleClickToView": "انقر نقرًا مزدوجًا لعرض التفاصيل",
+    "openDetails": "عرض التفاصيل",
+    "labelDoubleClickToView": "{{label}}: انقر نقرًا مزدوجًا لعرض التفاصيل",
+    "openLabelDetails": "عرض تفاصيل {{label}}"
   },
   "errors": {
     "generic": "حدث خطأ غير متوقع.",
@@ -2627,7 +2638,9 @@
   },
   "hcmShowrooms": {
     "title": "المعارض",
-    "sections": { "details": "بيانات المعرض" },
+    "sections": {
+      "details": "بيانات المعرض"
+    },
     "fields": {
       "personnelNumber": "رقم المعرض",
       "name": "الاسم",
@@ -2777,9 +2790,17 @@
       "productType": "نوع المنتج",
       "productSubtype": "النوع الفرعي للمنتج"
     },
-    "sections": { "general": "عام" },
-    "groups": { "identification": "التعريف", "classification": "التصنيف" },
-    "options": { "item": "صنف", "product": "منتج" }
+    "sections": {
+      "general": "عام"
+    },
+    "groups": {
+      "identification": "التعريف",
+      "classification": "التصنيف"
+    },
+    "options": {
+      "item": "صنف",
+      "product": "منتج"
+    }
   },
   "storageDimensionGroup": {
     "title": "مجموعات أبعاد التخزين",
@@ -2789,8 +2810,14 @@
       "dimension": "بُعد التخزين",
       "active": "نشط"
     },
-    "sections": { "dimensions": "أبعاد التخزين" },
-    "dimensions": { "site": "الموقع", "warehouse": "المستودع", "location": "المكان" }
+    "sections": {
+      "dimensions": "أبعاد التخزين"
+    },
+    "dimensions": {
+      "site": "الموقع",
+      "warehouse": "المستودع",
+      "location": "المكان"
+    }
   },
   "trackingDimensionGroup": {
     "title": "مجموعات أبعاد التعقب",
@@ -2800,20 +2827,41 @@
       "dimension": "بُعد التعقب",
       "active": "نشط"
     },
-    "sections": { "dimensions": "أبعاد التعقب" },
-    "dimensions": { "batchNumber": "رقم الدفعة", "serialNumber": "الرقم التسلسلي" }
+    "sections": {
+      "dimensions": "أبعاد التعقب"
+    },
+    "dimensions": {
+      "batchNumber": "رقم الدفعة",
+      "serialNumber": "الرقم التسلسلي"
+    }
   },
   "inventModelGroup": {
     "title": "مجموعات نماذج الأصناف",
-    "fields": { "id": "مجموعة نموذج الصنف", "name": "الاسم" },
-    "sections": { "costing": "طريقة التكلفة والاعتراف بالتكلفة", "policies": "سياسات المخزون" }
+    "fields": {
+      "id": "مجموعة نموذج الصنف",
+      "name": "الاسم"
+    },
+    "sections": {
+      "costing": "طريقة التكلفة والاعتراف بالتكلفة",
+      "policies": "سياسات المخزون"
+    }
   },
   "inventItemGroup": {
     "title": "مجموعات الأصناف",
-    "fields": { "id": "مجموعة الصنف", "name": "الاسم" },
-    "sections": { "sales": "أمر المبيعات", "purchase": "أمر الشراء", "inventory": "المخزون" }
+    "fields": {
+      "id": "مجموعة الصنف",
+      "name": "الاسم"
+    },
+    "sections": {
+      "sales": "أمر المبيعات",
+      "purchase": "أمر الشراء",
+      "inventory": "المخزون"
+    }
   },
-  "inventPosting": { "title": "الترحيل", "select": "تحديد" },
+  "inventPosting": {
+    "title": "الترحيل",
+    "select": "تحديد"
+  },
   "releasedProduct": {
     "title": "المنتجات الصادرة",
     "fields": {
@@ -2830,8 +2878,14 @@
   "inventParameters": {
     "title": "معلمات إدارة المخزون والمستودعات",
     "saved": "تم حفظ معلمات المخزون.",
-    "navigation": { "general": "عام", "journalNames": "أسماء دفاتر اليومية" },
-    "sections": { "general": "عام", "journalNames": "أسماء دفاتر اليومية" },
+    "navigation": {
+      "general": "عام",
+      "journalNames": "أسماء دفاتر اليومية"
+    },
+    "sections": {
+      "general": "عام",
+      "journalNames": "أسماء دفاتر اليومية"
+    },
     "fields": {
       "defaultUnit": "الوحدة الافتراضية",
       "defaultSite": "الموقع الافتراضي",
@@ -2946,8 +3000,18 @@
       "deletePostedLines": "حذف البنود بعد الترحيل",
       "reservation": "الحجز"
     },
-    "types": { "movement": "حركة", "adjustment": "تسوية مخزون", "counting": "جرد", "transfer": "تحويل" },
-    "detail": { "detail": "تفصيلي", "summary": "ملخص" },
-    "reservation": { "automatic": "تلقائي" }
+    "types": {
+      "movement": "حركة",
+      "adjustment": "تسوية مخزون",
+      "counting": "جرد",
+      "transfer": "تحويل"
+    },
+    "detail": {
+      "detail": "تفصيلي",
+      "summary": "ملخص"
+    },
+    "reservation": {
+      "automatic": "تلقائي"
+    }
   }
 }
