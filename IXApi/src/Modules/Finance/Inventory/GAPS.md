@@ -1,6 +1,6 @@
 ﻿# Inventory — gap analysis against basic D365 F&O
 
-**Last updated:** 2026-11-10
+**Last updated:** 2026-11-11
 **Scope:** basic (core) D365 F&O Inventory and Cost management only. Advanced warehouse (WHS),
 production, quality, and optional features are out of scope by request and are not listed as gaps.
 
@@ -30,7 +30,7 @@ alters behavior:
 | Inventory marking (`InventTrans.MarkingRefInventTransOrigin`) | Implemented |
 | Physical and financial inventory value, inventory value report | Implemented |
 | Ledger integration (`InventPosting` profiles, subledger vouchers) | Implemented |
-| Reference cycle (`CycleErpExamples/Inventory/Read_only.md`) executed end to end | Implemented and **tested** |
+| Reference cycle (`CycleErpExamples/Inventory/Logic_Readonly.md`) executed end to end | Implemented and **tested** |
 | Batch tracking across purchase receipt and sales issue (`MD-04`) | Implemented and **tested** (SQLite); authorized explicitly |
 | Serial tracking across purchase receipt and on-hand (`MD-04`) | Implemented and **tested** (SQLite), including the one-unit-per-line rule; no serial sales-issue scenario is verified |
 | SQL Server behavior | **Unverified for this module** — SQLite tests only. Only the AP cycle has been run on SQL Server (2026-11-04); `BatchDatabaseLock` mutual exclusion is verified there, but no AR/GL/Inventory flow is. |
@@ -159,6 +159,45 @@ message quoted.
   average and LIFO settlement paths unreachable. Setup and the close engine now share one list.
 
 ## Changelog
+
+2026-11-11: **Scanned the inventory transaction (`InventTrans`) status-transition layer against
+`CycleErpExamples/Inventory/Logic_Readonly.md` and fixed five value-allocation defects.** The status
+machine itself (Ordered → Registered/Received → Purchased, Ordered → ReservPhysical → Picked →
+Deducted → Sold, and their splits on partial quantities) was traced through every writer and is
+sound, as is every `InventSum` bucket formula around it. What was wrong is the **money** carried on
+the split and transitioned rows, in two forms.
+
+*Rows that did not sum back to their own posted total.* `InventValueReportService` states the
+contract the whole module relies on — a transaction is counted on the physical side or the financial
+side, never both, and the invoice clears its physical cost — and reconciles the transaction-derived
+value against `InventSum`. Four flows broke it by rounding each transaction's share independently
+while the ledger entry and `InventSum` carried a single rounding of the total, leaving a permanent
+cent-level `PhysicalValueDifference` in the value report (`REP-02`) whenever an invoice spanned more
+than one movement: `VendorInvoiceService` (an unrounded `accountingAmount / inventQty` written into
+each `decimal(18,4)` row, plus an unrounded per-unit physical release),
+`SalesInvoiceService.IssueInventoryAsync` (per-layer `CostAmountPosted` against a once-rounded
+`cogs`), `CustReturnService.ReceiptFinancialUpdateAsync` and `PurchReturnService` (per-unit physical
+splits). All four now allocate cumulatively — the last row carries the remainder — and release the
+*exact complement* of what each row recorded, which is the pattern `ProductReceiptService`,
+`PackingSlipJournalService` and the multi-receipt settlement allocator already used.
+
+*A physical value that was never maintained at all.* `PurchReturnService` wrote
+`InventTrans.CostAmountPhysical` on the return shipment's `Deducted` rows but never moved
+`InventSum.PhysicalValue`, and the credit note then promoted those rows to `Sold` without clearing
+it. So a vendor return (`RET-03`) shipped stock out while its value stayed in physical inventory
+value, and the two sides of the value report disagreed by the returned cost for as long as the
+shipment was uncredited. Shipment now releases the shipped value and the credit hands it over to
+`PostedValue`, symmetric with the packing-slip/sales-invoice pair.
+
+Verified by a clean build and the existing suites: 147/147 `InventoryCycle.Tests` and 957/978
+`IXApi.Tests` (21 pre-existing skips), with no new failures. These are value-reconciliation
+corrections with no new tests of their own yet; a multi-movement partial invoice asserting
+`sum(CostAmountPosted) == InventSum.PostedValue` and a shipped-not-credited vendor return asserting
+a zero `PhysicalValueDifference` would prove them directly.
+
+The reference file was renamed `Read_only.md` → `Logic_Readonly.md`; live pointers to it (this file,
+the example package's README and documentation, the scenario README, the test comments) now use the
+new name. Dated validation records keep the old name because that is what they checked.
 
 2026-11-09: The user expanded Inventory acceptance to include batch/serial tracking and Include physical value. The latter was reproduced as setup rejection and a 10-unit provisional issue cost where the reference expects 15. Weighted-average setup and running-average calculation now include received/deducted physical balances when enabled; weighted-average closing remains financial-only. Retest evidence is tracked under `.validation/inventory-20261109`. Batch/serial remains unresolved and must not be counted as excluded or complete. The new opt-in Inventory example package follows the AP preparation/service-flow pattern; its initial executable scenario is the reference core cycle, not all acceptance cases.
 

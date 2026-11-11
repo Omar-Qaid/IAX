@@ -703,6 +703,93 @@ public class LedgerJournalPostingTests
             Txt = bank ? "Bank ledger control" : "Share capital"
         };
 
+    // GL-04 of the reference cycle: with a reporting currency in use, every posted amount has to be
+    // checked in the accounting *and* the reporting currency. The bank movement recorded the
+    // accounting amount in its reporting field, so the two agreed only when the currencies did.
+    [Fact]
+    public async Task A_bank_line_records_the_reporting_amount_in_the_reporting_currency_field()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        SeedSubledgers(db);
+        var date = new DateTime(2026, 1, 15);
+        // SAR is the accounting currency, USD the reporting currency, at 0.25 USD per SAR.
+        var ledger = db.Set<Ledger>().Local.Single();
+        ledger.ReportingCurrency = "USD";
+        ledger.DefaultExchangeRateType = 1;
+        ledger.ReportingCurrencyExchangeRateType = 1;
+        db.AddRange(
+            new ExchangeRateType { RecId = 1, DataAreaId = "dat", IsActive = true },
+            new ExchangeRateCurrencyPair { RecId = 1, DataAreaId = "dat", ExchangeRateType = 1,
+                FromCurrencyCode = "SAR", ToCurrencyCode = "USD", ExchangeRateDisplayFactor = ExchangeRateDisplayFactor.One,
+                IsActive = true },
+            new ExchangeRate { RecId = 1, DataAreaId = "dat", ExchangeRateCurrencyPair = 1,
+                ValidFrom = new DateTime(2026, 1, 1), ExchangeRateValue = 0.25m, IsActive = true });
+        db.Add(new LedgerJournalTrans
+        {
+            RecId = 1, DataAreaId = "dat", Company = "dat", JournalNum = "J1", LineNum = 1,
+            Voucher = "V1", TransDate = date, CurrencyCode = "SAR",
+            AccountType = LedgerJournalACType.Bank, LedgerDimensionName = "BANK-1",
+            OffsetAccountType = LedgerJournalACType.Ledger, OffsetLedgerDimension = 2,
+            AmountCurDebit = 2000m, Txt = "Customer collection"
+        });
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        await new LedgerJournalPosting(db).PostAsync("dat", await db.Set<LedgerJournalTable>().SingleAsync(), default);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var movement = await db.Set<BankAccountTrans>().AsNoTracking().SingleAsync();
+        Assert.Equal(2000m, movement.AmountCur);
+        Assert.Equal(2000m, movement.AmountMst);
+        // The whole point: the reporting field carries the reporting figure, not the accounting one.
+        Assert.Equal(500m, movement.AmountReportingCurrency);
+    }
+
+    // GL-02: an account that requires a payment reference posts, and must also reverse. The mirrored
+    // line dropped the reference, so the account's own control refused the reversal of an entry it
+    // had just accepted.
+    [Fact]
+    public async Task A_journal_on_an_account_requiring_a_payment_reference_can_be_reversed()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        var debit = Line(1, "V1", bank: true, debit: 300m);
+        debit.PaymReference = "PAY-001";
+        var credit = Line(2, "V1", bank: false, credit: 300m);
+        db.AddRange(debit, credit);
+        db.Set<MainAccount>().Local.Single(x => x.RecId == 1).MandatoryPaymentReference = NoYes.Yes;
+        await db.SaveChangesAsync();
+        await ConfigureVoucherSequenceAsync(db);
+        await new LedgerJournalPosting(db).PostAsync("dat", await db.Set<LedgerJournalTable>().SingleAsync(), default);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var (result, error) = await NewReversalService(db).ReverseAsync(1, new DateTime(2026, 1, 31), default);
+        Assert.Null(error);
+        Assert.NotNull(result);
+        db.ChangeTracker.Clear();
+
+        var reversal = await db.Set<LedgerJournalTable>().AsNoTracking()
+            .SingleAsync(x => x.OriginalJournalNum == "J1");
+        var mirrored = await db.Set<LedgerJournalTrans>().AsNoTracking()
+            .Where(x => x.JournalNum == reversal.JournalNum).ToListAsync();
+        // The mirrored line for the controlled account carries the reference forward; the other
+        // line never had one and its account requires none.
+        Assert.Equal("PAY-001", mirrored.Single(x => x.LineNum == 1).PaymReference);
+        Assert.Equal(string.Empty, mirrored.Single(x => x.LineNum == 2).PaymReference);
+        // The reversal nets the original to zero on the account that carries the control.
+        var postedOnTheControlledAccount = await db.Set<GeneralJournalAccountEntry>().AsNoTracking()
+            .Where(x => x.MainAccount == 1).ToListAsync();
+        Assert.Equal(2, postedOnTheControlledAccount.Count);
+        Assert.Equal(0m, postedOnTheControlledAccount.Sum(x => x.AccountingCurrencyAmount));
+    }
+
     [Theory]
     [InlineData("", "120100")]
     [InlineData("ALT", "120200")]

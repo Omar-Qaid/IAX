@@ -11,4 +11,4 @@ The important contracts are:
 5. Reconciliation reads persisted inventory, documents, settlements, and ledger rows. Configuration validation is not posted-balance verification.
 6. Repeated execution preserves posted documents, consumed numbering, and user modifications. Conflicts must fail without rewriting the existing row.
 
-Inventory adapts this pattern using its own fiscal-year-scoped stock/service items and the existing owners for AP, AR, ledger, tax, dimensions, and number sequences. Its acceptance source remains `Read_only.md`. Historical AP documentation is not copied as evidence that Inventory cases passed.
+Inventory adapts this pattern using its own fiscal-year-scoped stock/service items and the existing owners for AP, AR, ledger, tax, dimensions, and number sequences. Its acceptance source remains `Logic_Readonly.md`. Historical AP documentation is not copied as evidence that Inventory cases passed.

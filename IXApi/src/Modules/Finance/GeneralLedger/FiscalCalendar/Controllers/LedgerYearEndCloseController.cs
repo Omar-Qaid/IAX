@@ -107,40 +107,78 @@ public sealed class LedgerYearEndCloseController(IUnitOfWork work, ICurrentUserS
                 var delta = expected.Keys.Union(previouslyTransferred.Keys)
                     .Select(id => (Dimension: id, Amount: expected.GetValueOrDefault(id) - previouslyTransferred.GetValueOrDefault(id)))
                     .Where(x => x.Amount != 0m).ToList();
+            // The optional closing transaction, dated in the year being closed. It zeroes the
+            // **revenue and expense** accounts and books the net result to retained earnings, which
+            // is what D365's "Create closing transactions during transfer" does and what the
+            // reference cycle states: the closing voucher is for the income-statement accounts.
+            // Balance-sheet accounts are carried into the new year by the opening transaction
+            // instead, so closing them as well would erase the closed year's own balance sheet -
+            // the previous implementation posted the negative of *every* balance, which left the
+            // closed year reporting zero assets and liabilities.
+            //
+            // Amounts are posted as the delta against earlier closing runs for the same year, so a
+            // re-run after a late adjustment closes only the difference and never doubles.
+            async Task AddClosingTransactionAsync()
+            {
+                var closingPrefix = $"YEAR-CLOSE-{year.RecId}-";
+                var profitAndLoss = balances.Where(x => allAccounts.Any(a => a.RecId == x.MainAccount
+                    && a.Type is MainAccountType.Revenue or MainAccountType.Expense)).ToList();
+                if (profitAndLoss.Count == 0) return;
+                // Each income-statement balance goes to zero; the net result lands on retained
+                // earnings, so the voucher balances on its own.
+                var targets = profitAndLoss.Select(x => (Dimension: x.Dimension, Amount: -x.Amount))
+                    .Append((Dimension: retainedDimension.RecId, Amount: profit))
+                    .GroupBy(x => x.Dimension)
+                    .Select(x => (Dimension: x.Key, Amount: x.Sum(y => y.Amount)))
+                    .ToList();
+                var priorClosing = await (from line in db.Set<GeneralJournalAccountEntry>().AsNoTracking()
+                                          join journal in db.Set<GeneralJournalEntry>().AsNoTracking()
+                                              on line.GeneralJournalEntry equals journal.RecId
+                                          where journal.Ledger == ledger.RecId &&
+                                              journal.JournalCategory == LedgerJournalCategory.YearEndClosing &&
+                                              journal.JournalNumber.StartsWith(closingPrefix)
+                                          select new { line.LedgerDimension, line.AccountingCurrencyAmount }).ToListAsync(ct);
+                var closedByDimension = priorClosing.GroupBy(x => x.LedgerDimension)
+                    .ToDictionary(x => x.Key, x => x.Sum(y => y.AccountingCurrencyAmount));
+                var lines = targets
+                    .Select(x => (x.Dimension, Amount: x.Amount - closedByDimension.GetValueOrDefault(x.Dimension)))
+                    .Where(x => x.Amount != 0m).ToList();
+                if (lines.Count == 0) return;
+
+                var closingPeriod = periods.OrderByDescending(x => x.Period.EndDate).First().Period;
+                var closingRun = await db.Set<GeneralJournalEntry>().CountAsync(x => x.Ledger == ledger.RecId &&
+                    x.JournalCategory == LedgerJournalCategory.YearEndClosing &&
+                    x.JournalNumber.StartsWith(closingPrefix), ct) + 1;
+                var closingNumber = $"{closingPrefix}{closingRun}";
+                var closing = new GeneralJournalEntry
+                {
+                    DataAreaId = area, JournalNumber = closingNumber, Ledger = ledger.RecId,
+                    JournalCategory = LedgerJournalCategory.YearEndClosing,
+                    PostingLayer = CurrentToOperationsPostingLayer.Current,
+                    SubledgerVoucher = closingNumber, SubledgerVoucherDataAreaId = area,
+                    DocumentNumber = closingNumber, AccountingDate = year.EndDate.Date,
+                    DocumentDate = year.EndDate.Date, FiscalCalendarYear = year.RecId,
+                    FiscalCalendarPeriod = closingPeriod.RecId
+                };
+                db.Add(closing);
+                await db.SaveChangesAsync(ct);
+                db.Add(new SubledgerVoucherGeneralJournalEntry
+                {
+                    DataAreaId = area, GeneralJournalEntry = closing.RecId, Voucher = closingNumber,
+                    VoucherDataAreaId = area, AccountingDate = year.EndDate.Date
+                });
+                foreach (var line in lines)
+                {
+                    var dimension = line.Dimension == retainedDimension.RecId
+                        ? retainedDimension
+                        : dimensions[line.Dimension];
+                    db.Add(SubledgerPostingSupport.AccountEntry(area, closing.RecId, dimension,
+                        LedgerPostingType.LedgerJournal, line.Amount, "Year-end closing", 0m, ledger.AccountingCurrency));
+                }
+            }
                 if (delta.Count == 0)
                 {
-                    if (request.CreateClosingTransaction)
-                    {
-                        var closingPrefix = $"YEAR-CLOSE-{year.RecId}-";
-                        var alreadyClosed = await db.Set<GeneralJournalEntry>().AnyAsync(x => x.Ledger == ledger.RecId &&
-                            x.JournalCategory == LedgerJournalCategory.YearEndClosing &&
-                            x.JournalNumber.StartsWith(closingPrefix), ct);
-                        if (!alreadyClosed && balances.Count > 0)
-                        {
-                            var closingPeriod = periods.OrderByDescending(x => x.Period.EndDate).First().Period;
-                            var closingNumber = $"{closingPrefix}1";
-                            var closing = new GeneralJournalEntry
-                            {
-                                DataAreaId = area, JournalNumber = closingNumber, Ledger = ledger.RecId,
-                                JournalCategory = LedgerJournalCategory.YearEndClosing,
-                                PostingLayer = CurrentToOperationsPostingLayer.Current,
-                                SubledgerVoucher = closingNumber, SubledgerVoucherDataAreaId = area,
-                                DocumentNumber = closingNumber, AccountingDate = year.EndDate.Date,
-                                DocumentDate = year.EndDate.Date, FiscalCalendarYear = year.RecId,
-                                FiscalCalendarPeriod = closingPeriod.RecId
-                            };
-                            db.Add(closing);
-                            await db.SaveChangesAsync(ct);
-                            db.Add(new SubledgerVoucherGeneralJournalEntry
-                            {
-                                DataAreaId = area, GeneralJournalEntry = closing.RecId, Voucher = closingNumber,
-                                VoucherDataAreaId = area, AccountingDate = year.EndDate.Date
-                            });
-                            foreach (var balance in balances)
-                                db.Add(SubledgerPostingSupport.AccountEntry(area, closing.RecId, dimensions[balance.Dimension],
-                                    LedgerPostingType.LedgerJournal, -balance.Amount, "Year-end closing", 0m, ledger.AccountingCurrency));
-                        }
-                    }
+                    if (request.CreateClosingTransaction) await AddClosingTransactionAsync();
                     if (request.PermanentlyCloseYear)
                     {
                         foreach (var period in periods) period.LedgerPeriod.Status = FiscalPeriodStatus.YearClosed;
@@ -179,45 +217,7 @@ public sealed class LedgerYearEndCloseController(IUnitOfWork work, ICurrentUserS
                     db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, dimension,
                         LedgerPostingType.LedgerJournal, balance.Amount, "Year-end opening transfer", 0m, ledger.AccountingCurrency));
                 }
-                if (request.CreateClosingTransaction)
-                {
-                    var closingNumber = $"YEAR-CLOSE-{year.RecId}-{run}";
-                    var closingPeriod = periods.OrderByDescending(x => x.Period.EndDate).First().Period;
-                    var closing = new GeneralJournalEntry
-                    {
-                        DataAreaId = area, JournalNumber = closingNumber, Ledger = ledger.RecId,
-                        JournalCategory = LedgerJournalCategory.YearEndClosing,
-                        PostingLayer = CurrentToOperationsPostingLayer.Current,
-                        SubledgerVoucher = closingNumber, SubledgerVoucherDataAreaId = area,
-                        DocumentNumber = closingNumber, AccountingDate = year.EndDate.Date,
-                        DocumentDate = year.EndDate.Date, FiscalCalendarYear = year.RecId,
-                        FiscalCalendarPeriod = closingPeriod.RecId
-                    };
-                    db.Add(closing);
-                    await db.SaveChangesAsync(ct);
-                    db.Add(new SubledgerVoucherGeneralJournalEntry
-                    {
-                        DataAreaId = area, GeneralJournalEntry = closing.RecId, Voucher = closingNumber,
-                        VoucherDataAreaId = area, AccountingDate = year.EndDate.Date
-                    });
-                    var priorClosing = await (from line in db.Set<GeneralJournalAccountEntry>().AsNoTracking()
-                                              join journal in db.Set<GeneralJournalEntry>().AsNoTracking()
-                                                  on line.GeneralJournalEntry equals journal.RecId
-                                              where journal.Ledger == ledger.RecId &&
-                                                  journal.JournalCategory == LedgerJournalCategory.YearEndClosing &&
-                                                  journal.JournalNumber.StartsWith($"YEAR-CLOSE-{year.RecId}-") &&
-                                                  journal.RecId != closing.RecId
-                                              select new { line.LedgerDimension, line.AccountingCurrencyAmount }).ToListAsync(ct);
-                    var closedByDimension = priorClosing.GroupBy(x => x.LedgerDimension)
-                        .ToDictionary(x => x.Key, x => x.Sum(y => y.AccountingCurrencyAmount));
-                    foreach (var balance in balances)
-                    {
-                        var closeDelta = -balance.Amount - closedByDimension.GetValueOrDefault(balance.Dimension);
-                        if (closeDelta != 0m)
-                            db.Add(SubledgerPostingSupport.AccountEntry(area, closing.RecId, dimensions[balance.Dimension],
-                                LedgerPostingType.LedgerJournal, closeDelta, "Year-end closing", 0m, ledger.AccountingCurrency));
-                    }
-                }
+                if (request.CreateClosingTransaction) await AddClosingTransactionAsync();
                 if (request.PermanentlyCloseYear)
                 {
                     foreach (var period in periods) period.LedgerPeriod.Status = FiscalPeriodStatus.YearClosed;
@@ -234,6 +234,7 @@ public sealed class LedgerYearEndCloseController(IUnitOfWork work, ICurrentUserS
                 db.ChangeTracker.Clear();
                 throw;
             }
+
 
             async Task<IActionResult> Reject(string error)
             {

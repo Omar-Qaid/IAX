@@ -84,10 +84,13 @@ public sealed class LedgerJournalReversalService(
     {
         var parameters = await LedgerParameters.LedgerParametersService.PeekAsync(Db, area, ct);
         if (parameters?.TransactionReversalCorrection != NoYes.Yes) return;
+        // Scoped by company explicitly: a journal number comes from a company-scoped sequence, so
+        // the same number can exist in another legal entity. The reference cycle makes the same
+        // point about the posted ledger - never identify an entry by its number alone.
         var entryIds = await Db.Set<GeneralJournalEntry>().AsNoTracking()
-            .Where(x => x.JournalNumber == journalNum).Select(x => x.RecId).ToListAsync(ct);
+            .Where(x => x.DataAreaId == area && x.JournalNumber == journalNum).Select(x => x.RecId).ToListAsync(ct);
         var lines = await Db.Set<GeneralJournalAccountEntry>()
-            .Where(x => entryIds.Contains(x.GeneralJournalEntry)).ToListAsync(ct);
+            .Where(x => x.DataAreaId == area && entryIds.Contains(x.GeneralJournalEntry)).ToListAsync(ct);
         foreach (var line in lines) line.IsCorrection = NoYes.Yes;
     }
 
@@ -156,7 +159,16 @@ public sealed class LedgerJournalReversalService(
         return header;
     }
 
-    /// <summary>The mirrored line: debit and credit swap, so a line with an offset flips both sides.</summary>
+    /// <summary>
+    /// The mirrored line: debit and credit swap, so a line with an offset flips both sides.
+    ///
+    /// The payment reference travels with the mirror because a main account configured with
+    /// <c>MandatoryPaymentReference</c> refuses a posted line that has none
+    /// (<see cref="LedgerAccount.MainAccountPostingControls"/>). Dropping it made such a journal
+    /// post but never reverse. Settlement selection, the marked invoice and the vendor invoice
+    /// number are deliberately *not* carried: the reversal must not settle or re-register the
+    /// document it reverses.
+    /// </summary>
     private static LedgerJournalTrans Mirror(LedgerJournalTrans source, string journalNum, string voucher, DateTime date) => new()
     {
         DataAreaId = source.DataAreaId,
@@ -181,7 +193,8 @@ public sealed class LedgerJournalReversalService(
         AmountCurDebit = source.AmountCurCredit,
         AmountCurCredit = source.AmountCurDebit,
         Txt = source.Txt,
-        OffsetTxt = source.OffsetTxt
+        OffsetTxt = source.OffsetTxt,
+        PaymReference = source.PaymReference
     };
 
     private static string Truncate(string value, int max) =>

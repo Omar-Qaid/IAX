@@ -331,7 +331,7 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                     DataAreaId = area, AccountId = side.AccountNum, TransDate = date, Voucher = voucher,
                     Txt = line.Txt, LedgerTransType = LedgerTransType.Bank,
                     CurrencyCode = line.CurrencyCode, BankTransCurrencyCode = line.CurrencyCode,
-                    AmountCur = amount, AmountMst = accountingAmount, AmountReportingCurrency = accountingAmount,
+                    AmountCur = amount, AmountMst = accountingAmount, AmountReportingCurrency = reportingAmount,
                     BankTransAmountCur = amount, LedgerDimension = side.Bank!.LedgerDimension,
                     SourceTableId = FinanceTableNumbers.LedgerJournalTrans, SourceRecId = line.RecId,
                     PaymentMode = line.PaymMode, PaymReference = line.PaymReference

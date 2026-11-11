@@ -358,8 +358,15 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
         var site = await Db.Set<InventDim>().AsNoTracking().Where(x => x.DataAreaId == area && x.InventDimId == line.InventDimId)
             .Select(x => x.InventSiteId).FirstOrDefaultAsync(ct) ?? string.Empty;
         var unitCost = await IAX.IXApi.Modules.Finance.Inventory.InventoryMovement.SiteRunningAverageCostAsync(Db, area, line.ItemId, site, ct);
+        // The cost of goods sold is rounded once, on the whole invoiced quantity, because that single
+        // amount is what the ledger entry and InventSum.PostedValue carry. The per-transaction
+        // CostAmountPosted rows below are then allocated out of it cumulatively, so the last row
+        // carries the rounding remainder and the rows always sum back to the posted amount.
+        var cogs = decimal.Round(inventQty * unitCost, 2, MidpointRounding.AwayFromZero);
         var left = inventQty;
         var physicalReleased = 0m;
+        var allocatedQty = 0m;
+        var allocatedCost = 0m;
         var remainingBySlip = deducted.GroupBy(x => x.PackingSlipId).ToDictionary(x => x.Key, x => x.Sum(y => -y.Qty));
         var releasedBySlip = new Dictionary<string, decimal>();
         foreach (var source in deducted)
@@ -385,14 +392,17 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
             source.DateStatus = date;
             source.InvoiceId = invoiceId;
             source.Voucher = invoiceId;
-            source.CostAmountPosted = -decimal.Round(take * unitCost, 2, MidpointRounding.AwayFromZero);
+            allocatedQty += take;
+            var cumulativeCost = allocatedQty == inventQty ? cogs
+                : decimal.Round(cogs * allocatedQty / inventQty, 2, MidpointRounding.AwayFromZero);
+            source.CostAmountPosted = -(cumulativeCost - allocatedCost);
+            allocatedCost = cumulativeCost;
             physicalReleased += released;
             releasedBySlip[source.PackingSlipId] = releasedBySlip.GetValueOrDefault(source.PackingSlipId) + released;
             remainingBySlip[source.PackingSlipId] -= take;
             source.CostAmountPhysical = 0m;
             left -= take;
         }
-        var cogs = decimal.Round(inventQty * unitCost, 2, MidpointRounding.AwayFromZero);
         var summary = await Db.Set<InventSum>().SingleOrDefaultAsync(x => x.DataAreaId == area
             && x.ItemId == line.ItemId && x.InventDimId == line.InventDimId, ct)
             ?? throw new SubledgerPostingException($"Inventory summary is missing for item {line.ItemId}.");

@@ -3278,7 +3278,7 @@ public sealed partial class InventoryCycleTests
     private static ISysNumberSequenceService Sequence() =>
         DispatchProxy.Create<ISysNumberSequenceService, TestSequenceProxy>();
 
-    // ---- The inventory reference cycle (CycleErpExamples/Inventory/Read_only.md) --------------
+    // ---- The inventory reference cycle (CycleErpExamples/Inventory/Logic_Readonly.md) --------------
 
     /// <summary>
     /// Runs the eleven-step example from the inventory cycle reference end to end through the real

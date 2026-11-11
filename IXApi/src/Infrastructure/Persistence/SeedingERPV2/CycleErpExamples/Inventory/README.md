@@ -1,6 +1,6 @@
 # Inventory examples
 
-`Read_only.md` is the acceptance reference and is not modified by this package.
+`Logic_Readonly.md` is the acceptance reference and is not modified by this package.
 
 The package follows the Accounts Payable split, file for file:
 

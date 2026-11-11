@@ -1,6 +1,6 @@
 # 01 — Scope
 
-This package demonstrates the **basic** Inventory cycle of `Read_only.md` on real data, using the same split the
+This package demonstrates the **basic** Inventory cycle of `Logic_Readonly.md` on real data, using the same split the
 Accounts Payable package uses: the module owns every master write, and this package only prepares, executes and
 reconciles.
 

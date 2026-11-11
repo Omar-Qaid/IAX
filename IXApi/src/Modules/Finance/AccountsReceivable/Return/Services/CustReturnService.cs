@@ -604,7 +604,10 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
         {
             if (left <= 0) break;
             var take = Math.Min(source.Qty, left);
-            var physicalPerUnit = source.Qty == 0 ? 0m : source.CostAmountPhysical / source.Qty;
+            // The taken share of the return receipt's provisional value, with the remainder keeping
+            // the exact complement, so splitting the receipt neither creates nor loses physical value.
+            var takenPhysical = take == source.Qty ? source.CostAmountPhysical
+                : decimal.Round(source.CostAmountPhysical * take / source.Qty, 4, MidpointRounding.AwayFromZero);
             if (take < source.Qty)
                 Db.Set<InventTrans>().Add(new InventTrans
                 {
@@ -613,13 +616,13 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
                     StatusIssue = StatusIssue.None, ValueOpen = InventTransOpen.Yes, CurrencyCode = source.CurrencyCode,
                     DateExpected = source.DateExpected, DatePhysical = source.DatePhysical, DateStatus = source.DateStatus,
                     DateInvent = source.DateInvent, PackingSlipId = source.PackingSlipId, VoucherPhysical = source.VoucherPhysical,
-                    CostAmountPhysical = (source.Qty - take) * physicalPerUnit, ReturnInventTransOrigin = source.ReturnInventTransOrigin
+                    CostAmountPhysical = source.CostAmountPhysical - takenPhysical, ReturnInventTransOrigin = source.ReturnInventTransOrigin
                 });
             var portionCost = decimal.Round(take * unitCost, 2, MidpointRounding.AwayFromZero);
-            physicalReleased += take * physicalPerUnit;
+            physicalReleased += takenPhysical;
             cost += portionCost;
             source.Qty = take;
-            source.CostAmountPhysical = take * physicalPerUnit;
+            source.CostAmountPhysical = takenPhysical;
             source.StatusReceipt = StatusReceipt.Purchased;
             source.DateFinancial = date;
             source.DateStatus = date;

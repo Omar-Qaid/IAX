@@ -1,6 +1,6 @@
 ﻿# Scenario 01 — Reference cycle
 
-The eleven steps of `Read_only.md`, executed through the owning purchase, sales, reservation and closing services.
+The eleven steps of `Logic_Readonly.md`, executed through the owning purchase, sales, reservation and closing services.
 
 Buy 100 at 10. Reserve 60 against a sales order that also carries a non-stocked service line. Deliver and invoice
 40, then deliver and invoice the remaining 20 together with the service. Buy 50 more at 16 — **after** both sales —
