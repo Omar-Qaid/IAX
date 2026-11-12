@@ -24,7 +24,8 @@ cannot be verified goes under *Flagged uncertainties* rather than being guessed 
 | Journal line account types: Ledger, Customer, Vendor, Bank | Implemented — writes `CustTrans`/`CustTransOpen`, `VendTrans` + open balance, `BankAccountTrans` |
 | Journal reversal and voucher allocation at posting | Implemented and **tested** — the three long-standing failures were fixture defects, fixed 2026-11-03 |
 | Posted ledger: `GeneralJournalEntry`, `GeneralJournalAccountEntry`, subledger vouchers | Implemented |
-| Trial balance, financial statements, year-end close | Implemented |
+| Trial balance, financial statements | Implemented |
+| Year-end close: opening transfer, closing transaction, re-run after adjustment | Implemented; closing-transaction scope and close ordering corrected 2026-11-12 |
 | Ledger settlement | Implemented |
 | Bank: groups, accounts, transactions, statements, transaction types | Implemented |
 | Ledger parameters | Implemented |
@@ -56,7 +57,39 @@ cannot be verified goes under *Flagged uncertainties* rather than being guessed 
 | Ledger settlement toggle | `Ledger settlement is not enabled in the general ledger parameters.` |
 | Year-end reporting currency | `Year-end transfer requires reporting-currency balance conversion, which is not supported.` |
 
+## Audited and found sound (2026-11-12)
+
+Recorded so these are not re-investigated. Each was traced and raised no defect.
+
+- **Ledger settlement** (`LedgerSettlementService`): matching data only, no voucher and no balance
+  change, which is correct. Same main account and same transaction currency are enforced, an
+  out-of-balance selection is refused by name rather than approximated, an already-settled entry is
+  refused, reversal marks the rows instead of deleting them, and `OpenItemsAsync` excludes
+  standing (non-reversed) matches. `GL-03`'s 500/500 intermediary-account case is supported.
+- **Fiscal period status machine** (`FiscalPeriodStatusTransition`): Open ↔ On hold, either to
+  permanently Closed, Closed terminal, `YearClosed` neither set nor cleared by a manual change —
+  which matches the reference's warning not to use permanent closure as the ordinary month-end
+  switch.
+- **Period access enforcement** (`SubledgerPostingSupport.LoadLedgerContextAsync`): operating period
+  must exist and be Open, and the per-module access level (including Inventory) and its user-group
+  rule are both applied. The year-end close deliberately does not go through this path, because it
+  must post into the period it is closing.
+- **Voucher balance check** (`LedgerVoucherBalanceCheck`): groups by company, voucher, date *and*
+  currency and never nets unrelated groups. The per-currency grouping would refuse a genuinely
+  multi-currency voucher, which is consistent with the module-wide restriction that a posting's
+  document currency equals the accounting currency; it is a boundary, not a defect.
+- **Year-end single-amount `AccountEntry`**: the close records one amount as transaction,
+  accounting *and* reporting amount. That is safe only because the close refuses a differing
+  reporting currency up front, which it does, by name.
+
 ## Flagged uncertainties
+
+- **Closing vouchers in the trial balance vs. the income statement.** `LedgerTrialBalanceService`
+  includes `YearEndClosing` entries in period movement, so after closing, the closed year's trial
+  balance shows the income statement at zero. `LedgerFinancialStatementsController` **excludes**
+  them, so the same year still reports its result. Each is defensible for its own purpose and D365
+  has reporting options on both sides, but which one this module should present was not verified
+  against a live environment. No behavior was changed.
 
 - **Financial statements scope.** `LedgerFinancialStatementsController` exists, but how closely its
   output should match D365's financial reporting (which is a separate reporting tool, arguably
@@ -71,6 +104,7 @@ cannot be verified goes under *Flagged uncertainties* rather than being guessed 
 
 | Date | Change |
 | --- | --- |
+| 2026-11-12 | **Second pass over the areas the journal scan did not reach — year-end close, ledger settlement, trial balance, period access — and fixed the close.** **(1) The year-end closing transaction zeroed the balance sheet.** With *Create closing transactions* selected, `LedgerYearEndCloseController` posted the negative of **every** dimension balance, assets and liabilities included. The voucher balanced (the year's balances sum to zero), so nothing looked wrong, and the only existing test asserted the *count* of closing entries, never their lines. The effect was that the closed year reported zero assets and zero liabilities: in the test fixture the asset account's 100 netted to nothing. D365's closing transaction zeroes the **income statement** and books the net result to retained earnings — balance-sheet accounts are carried into the new year by the opening transaction, not closed — and the reference says so explicitly in §5 ("إنشاء سند إقفال **لحسابات الإيرادات والمصروفات** داخل السنة السابقة"). The closing transaction now posts the income-statement dimensions to zero plus the net result to retained earnings, still as a delta against earlier closing runs so a re-run after a late adjustment closes only the difference. The two duplicated closing blocks (one per branch) were replaced by one `AddClosingTransactionAsync`, so the zero-delta branch no longer has its own, weaker, `alreadyClosed`-gated variant. **(2) The close-ordering guard was blind to a zero-delta close.** `MostRecentYearEndClose` is what refuses closing an earlier year after a later one, and only the transfer path recorded it; a year closed through the "opening balances are current" branch left it unset, so an earlier year could then be closed behind it. It is now recorded on that branch too, and only ever moves forward. Verified by a clean build and the full suite; the new line-level assertions in `Year_end_close_transfers_profit_to_equity_and_closes_periods` were **confirmed to fail with the fix reverted**. |
 | 2026-11-12 | **Scanned the journal → posted-ledger transition against `CycleErpExamples/GeneralLedger/Logic_Readonly.md` and fixed three defects.** The transition itself — entered journal grouped into one `GeneralJournalEntry` per voucher and accounting date, balance asserted on the *posted* signed accounting and reporting amounts rather than on the entered columns (reference §79), `SubledgerVoucherGeneralJournalEntry` written with company and date so the document is never linked by voucher alone (§80), `Posted`/`NoEdit` set once under a journal-scoped lock (`GL-07`) — is sound. Three things around it were not. **(1) The bank subledger recorded the wrong currency.** `LedgerJournalPosting.WriteSubledgerAsync` wrote `BankAccountTrans.AmountReportingCurrency = accountingAmount` while the correctly computed `reportingAmount` sat unused in the same method, which the customer branch two cases above uses properly; every other bank writer in Finance (`VendPaymentService`, `CustPaymentService`) passes the reporting amount. So a bank journal line under a ledger with a reporting currency different from the accounting currency reported the accounting figure as its reporting figure (`GL-04`). **(2) A journal that posted could not be reversed.** `MainAccountPostingControls` refuses a posted line with no payment reference when the account sets `MandatoryPaymentReference`, but `LedgerJournalReversalService.Mirror` did not carry `PaymReference` onto the mirrored line — so the original posted and its reversal was refused with `requires a payment reference`, blocking `GL-02` for exactly the accounts that control is meant for. The mirror now carries it; settlement selection, the marked invoice and the vendor invoice number are still deliberately dropped, because a reversal must not settle or re-register the document it reverses. **(3) Hardening, not a production defect:** `MarkCorrectionAsync` selected the posted entries by `JournalNumber` alone. The global `DataAreaId` filter scopes that in production, but journal numbers come from a company-scoped sequence and the test context applies no filter, so the company predicate is now explicit, as it is in every other query in that service. Both behavior fixes have a new test in `LedgerJournalPostingTests` — `A_bank_line_records_the_reporting_amount_in_the_reporting_currency_field` (SAR accounting, USD reporting at 0.25, asserting the bank movement's 2,000 / 2,000 / **500**) and `A_journal_on_an_account_requiring_a_payment_reference_can_be_reversed` — and **each was confirmed to fail with the fix reverted and pass with it applied**, so neither is a test written around existing behavior. |
 | 2026-11-12 | Source scan corrections, **no behavior changed**. **Removed the inventory ledger-period-access row**, which this file still carried as an open Medium gap: `LedgerPeriodModuleAccessControl.InventAccessLevel` / `InventUserGroupInfo` exist, `SubledgerPostingSupport` reads them for `LedgerPostingModule.Inventory`, and `Inventory/GAPS.md` records the change that added them on 2026-11-01. **Narrowed the journal tax row**, which claimed general journal lines reject tax outright: the inclusive **Vend** case with both tax groups and a ledger offset is implemented through `VendorJournalTaxPosting`, writing `TaxTrans` and `TaxJournalTrans` and a balanced reclassification pair. What is actually missing is exclusive amounts, **Cust** output tax and tax on `Ledger` lines; the row now says so and stays High. |
 | 2026-11-03 | **Fixed the three `LedgerJournalPostingTests` failures**, red since at least 2026-11-02 and covering journal reversal and voucher allocation - the two things this file claimed as Implemented while nothing proved either. **All three were defects in the test fixture, not in production code; no production code was changed.** `Allocation_at_posting_replaces_each_temporary_voucher_group_from_configured_sequence` called `Seed(db)`, which only stages its rows, and then queried the database, so it read an empty store and failed with `Sequence contains no elements` before reaching any behavior - it needed a `SaveChangesAsync`. Both reversal tests failed with `Journal name 'GEN' has no voucher number sequence.` because the fixture's `LedgerJournalName` had no `NumberSequenceTable`. That refusal is **correct**: `LedgerJournalReversalService` allocates the reversing journal's voucher from the journal name's sequence, and a reversing journal needs its own number. The fixture now configures one, which leaves the original posting untouched because `AllocateForPostingAsync` returns early when every line already carries a voucher. The suite is 22/22 for this file, and the reversal assertions are substantive - the mirrored entry nets to zero against the original, carries a distinct voucher, and links back through `OriginalJournalNum`. None of that had ever actually run. |

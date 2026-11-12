@@ -72,7 +72,27 @@ public sealed class FinanceCoreCloseAndReconciliationTests
         Assert.IsType<OkObjectResult>(await controller.Close(new LedgerYearEndCloseRequest(1, 3), default));
         Assert.Single(await db.Set<GeneralJournalEntry>().Where(x => x.JournalCategory == LedgerJournalCategory.YearEndOpening).ToListAsync());
         Assert.IsType<OkObjectResult>(await controller.Close(new LedgerYearEndCloseRequest(1, 3, true), default));
-        Assert.Single(await db.Set<GeneralJournalEntry>().Where(x => x.JournalCategory == LedgerJournalCategory.YearEndClosing).ToListAsync());
+        var closing = Assert.Single(await db.Set<GeneralJournalEntry>().Where(x => x.JournalCategory == LedgerJournalCategory.YearEndClosing).ToListAsync());
+        // The closing transaction zeroes the income statement and books the result to retained
+        // earnings. It must NOT close the balance sheet: account 100 carries its 100 forward and is
+        // brought into the new year by the opening transaction, so closing it here would leave the
+        // closed year reporting no assets.
+        var closingLines = await db.Set<GeneralJournalAccountEntry>()
+            .Where(x => x.GeneralJournalEntry == closing.RecId).ToListAsync();
+        Assert.Equal(0m, closingLines.Sum(x => x.AccountingCurrencyAmount));
+        Assert.Equal(100m, closingLines.Single(x => x.MainAccount == 2).AccountingCurrencyAmount);
+        Assert.Equal(-100m, closingLines.Single(x => x.MainAccount == 3).AccountingCurrencyAmount);
+        Assert.DoesNotContain(closingLines, x => x.MainAccount == 1);
+        // Counting every posted line in the closed year, closing voucher included, the asset still
+        // holds its 100 and the revenue account is flat. This is what the earlier implementation
+        // broke: it posted the negative of every balance, so the asset netted to zero.
+        var closedYearLines = await (from line in db.Set<GeneralJournalAccountEntry>()
+                                     join entry in db.Set<GeneralJournalEntry>() on line.GeneralJournalEntry equals entry.RecId
+                                     where entry.AccountingDate >= new DateTime(2026, 1, 1) && entry.AccountingDate <= end
+                                     select new { line.MainAccount, line.AccountingCurrencyAmount }).ToListAsync();
+        Assert.Equal(100m, closedYearLines.Where(x => x.MainAccount == 1).Sum(x => x.AccountingCurrencyAmount));
+        Assert.Equal(0m, closedYearLines.Where(x => x.MainAccount == 2).Sum(x => x.AccountingCurrencyAmount));
+        Assert.Equal(-100m, closedYearLines.Where(x => x.MainAccount == 3).Sum(x => x.AccountingCurrencyAmount));
         var nextReport = Assert.IsType<OkObjectResult>(await new LedgerFinancialStatementsController(new Work(db), new User())
             .Get(new DateTime(2027, 1, 1), new DateTime(2027, 12, 31), CurrentToOperationsPostingLayer.Current, default));
         Assert.Equal(0m, nextReport.Value!.GetType().GetProperty("balanceSheetDifference")!.GetValue(nextReport.Value));
