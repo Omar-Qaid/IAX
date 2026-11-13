@@ -1,6 +1,8 @@
 using IAX.IXApi.Modules.Finance.AccountsPayable;
+using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Inventory;
+using IAX.IXApi.Shared.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
