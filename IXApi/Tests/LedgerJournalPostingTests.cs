@@ -58,6 +58,8 @@ public class LedgerJournalPostingTests
         Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
         Assert.Equal(100m, (await db.Set<CustTransOpen>().SingleAsync()).AmountCur);
 
+        // Posting reloads the persisted header under its lock, discarding the unsaved approval.
+        header.WorkflowApprovalStatus = WorkflowApprovalStatus.Approved;
         await db.SaveChangesAsync();
         await posting.PostAsync("dat", header, default);
         await db.SaveChangesAsync();
