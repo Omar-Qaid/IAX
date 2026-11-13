@@ -1,6 +1,6 @@
 ﻿# Inventory — gap analysis against basic D365 F&O
 
-**Last updated:** 2026-11-11
+**Last updated:** 2026-11-13
 **Scope:** basic (core) D365 F&O Inventory and Cost management only. Advanced warehouse (WHS),
 production, quality, and optional features are out of scope by request and are not listed as gaps.
 
@@ -190,10 +190,21 @@ shipment was uncredited. Shipment now releases the shipped value and the credit 
 `PostedValue`, symmetric with the packing-slip/sales-invoice pair.
 
 Verified by a clean build and the existing suites: 147/147 `InventoryCycle.Tests` and 957/978
-`IXApi.Tests` (21 pre-existing skips), with no new failures. These are value-reconciliation
-corrections with no new tests of their own yet; a multi-movement partial invoice asserting
-`sum(CostAmountPosted) == InventSum.PostedValue` and a shipped-not-credited vendor return asserting
-a zero `PhysicalValueDifference` would prove them directly.
+`IXApi.Tests` (21 pre-existing skips), with no new failures. 2026-11-13: both are now covered directly by
+`Tests/InventoryValueReconciliationTests.cs`.
+`A_vendor_invoice_across_receipts_allocates_a_cost_that_sums_back_to_the_posted_value` invoices
+three one-piece receipts at 33.335 in one document, where the accounting amount **100.01** cannot
+be reproduced by three equal shares, and asserts that the `CostAmountPosted` rows add back to
+`InventSum.PostedValue`.
+`A_shipped_but_uncredited_vendor_return_keeps_the_physical_value_reconciled` ships 10 of an
+invoiced 100 back to the vendor and asserts a **-600** `PhysicalValue` with a zero
+`PhysicalValueDifference` in the value report while the return is uncredited, then zero again once
+the credit note moves the value to `PostedValue`.
+Both were confirmed by reverting each service to its pre-fix version and re-running: the return
+test reports `PhysicalValue` **0** instead of -600, and the invoice test **100.0101** instead of
+100.01. The invoice residue is only visible at the column's own precision, so that assertion
+rounds each row to 4 decimals before summing: SQLite keeps the full decimal and the raw sum passes
+either way, while `decimal(18,4)` on SQL Server is where the cent was actually lost.
 
 The reference file was renamed `Read_only.md` → `Logic_Readonly.md`; live pointers to it (this file,
 the example package's README and documentation, the scenario README, the test comments) now use the

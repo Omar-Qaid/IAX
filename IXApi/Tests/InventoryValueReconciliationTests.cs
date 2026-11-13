@@ -113,6 +113,10 @@ public sealed partial class InventoryCycleTests
         var trans = await db.Set<InventTrans>().ToListAsync();
         Assert.Equal(100.01m, sum.PostedValue);
         Assert.Equal(100.01m, trans.Sum(x => x.CostAmountPosted));   // allocation adds back exactly
+        // At the column's own precision, which is where the defect became visible: a per-unit cost
+        // of 100.01/3 rounds to 33.3367 and three of those are 100.0101, a cent too much. SQLite
+        // keeps the full decimal, so without this rounding the assertion above cannot see it.
+        Assert.Equal(100.01m, trans.Sum(x => decimal.Round(x.CostAmountPosted, 4, MidpointRounding.AwayFromZero)));
         Assert.Equal(0m, sum.PhysicalValue);
         Assert.All(trans, x => Assert.Equal(StatusReceipt.Purchased, x.StatusReceipt));
 
