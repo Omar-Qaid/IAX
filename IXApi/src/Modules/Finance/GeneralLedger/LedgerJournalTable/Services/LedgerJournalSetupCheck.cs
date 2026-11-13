@@ -30,6 +30,17 @@ public sealed class LedgerJournalSetupCheck(DbContext db)
         else if (names[0].JournalType != header.JournalType) errors.Add("Journal type differs from the journal name setup.");
         else if (names[0].WorkflowApproval == NoYes.Yes && header.WorkflowApprovalStatus != WorkflowApprovalStatus.Approved)
             errors.Add("Approve the journal through workflow before posting.");
+        var fixedByName = names.Count == 1 && names[0].FixedOffsetAccount == NoYes.Yes;
+        var fixedOffset = fixedByName || header.FixedOffsetAccount == NoYes.Yes;
+        var offsetDimension = fixedByName ? names[0].OffsetLedgerDimension : header.OffsetLedgerDimension;
+        var offsetType = fixedByName ? names[0].OffsetAccountType : header.OffsetAccountType;
+        if (fixedOffset && offsetDimension == 0)
+            errors.Add("The fixed offset account is not configured.");
+        if (header.FixedExchRate == NoYes.Yes || header.ReportingCurrencyFixedExchRate == NoYes.Yes
+            || (names.Count == 1 && names[0].FixedExchRate == NoYes.Yes)
+            || header.ExchRate != 0m || header.ExchRateSecondary != 0m
+            || header.ReportingCurrencyExchRate != 0m || header.ReportingCurrencyExchRateSecondary != 0m)
+            errors.Add("Fixed or overridden journal exchange rates are not supported; posting uses the configured effective exchange rates.");
         if (string.IsNullOrWhiteSpace(ledger.AccountingCurrency)) errors.Add("Ledger accounting currency is required.");
         if (header.Posted == NoYes.Yes) errors.Add("The journal is already posted.");
         if (header.SystemBlocked == NoYes.Yes) errors.Add("The journal is system blocked.");
@@ -59,6 +70,11 @@ public sealed class LedgerJournalSetupCheck(DbContext db)
         var accounts = await db.Set<MainAccount>().AsNoTracking().Where(x => accountIds.Contains(x.RecId)).ToListAsync(ct);
         foreach (var line in lines)
         {
+            if (fixedOffset && (line.OffsetLedgerDimension != offsetDimension || line.OffsetAccountType != offsetType))
+                errors.Add($"Line {line.LineNum}: the offset account differs from the fixed offset account.");
+            if (line.ExchRate != 0m || line.ExchRateSecond != 0m
+                || line.ReportingCurrencyExchRate != 0m || line.ReportingCurrencyExchRateSecondary != 0m)
+                errors.Add($"Line {line.LineNum}: overridden journal exchange rates are not supported; posting uses the configured effective exchange rates.");
             if (string.IsNullOrWhiteSpace(line.CurrencyCode)) errors.Add($"Line {line.LineNum}: currency is required.");
             if (line.CurrencyCode != ledger.AccountingCurrency ||
                 (!string.IsNullOrWhiteSpace(ledger.ReportingCurrency) && ledger.ReportingCurrency != ledger.AccountingCurrency))

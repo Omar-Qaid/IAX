@@ -1,4 +1,5 @@
 using IAX.IXApi.Modules.Administration.NumberSequences;
+using IAX.IXApi.Modules.Finance.AccountsPayable;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
@@ -46,6 +47,7 @@ public sealed class LedgerJournalReversalService(
             var reversal = await BuildReversalAsync(area, original, (reversalDate ?? DateTime.UtcNow).Date, ct);
             var result = await new LedgerJournalPosting(Db, currentUser.GetCurrentUserId()).PostAsync(area, reversal, ct);
             await unitOfWork.CompleteAsync(ct); // The posted lines must exist before they can be marked.
+            await EnsureReversalCancelsOriginalAsync(area, original.JournalNum, reversal.JournalNum, ct);
             await MarkCorrectionAsync(area, reversal.JournalNum, ct);
             await unitOfWork.CompleteAsync(ct);
             await unitOfWork.CommitTransactionAsync(ct);
@@ -73,6 +75,29 @@ public sealed class LedgerJournalReversalService(
         {
             Db.ChangeTracker.Clear();
         }
+    }
+
+    private async Task EnsureReversalCancelsOriginalAsync(string area, string original, string reversal, CancellationToken ct)
+    {
+        var postings = await (from entry in Db.Set<GeneralJournalEntry>().AsNoTracking()
+                              join line in Db.Set<GeneralJournalAccountEntry>().AsNoTracking()
+                                  on entry.RecId equals line.GeneralJournalEntry
+                              where entry.DataAreaId == area && line.DataAreaId == area
+                                  && (entry.JournalNumber == original || entry.JournalNumber == reversal)
+                              select new { entry.JournalNumber, line.LedgerDimension, line.PostingType,
+                                  line.TransactionCurrencyCode, line.TransactionCurrencyAmount,
+                                  line.AccountingCurrencyAmount, line.ReportingCurrencyAmount }).ToListAsync(ct);
+        // Re-resolving profiles, dimensions, tax or rates on the reversal date can produce a
+        // balanced voucher that does not cancel the original. Refuse and roll back that result.
+        if (!postings.Any(x => x.JournalNumber == original)
+            || !postings.Any(x => x.JournalNumber == reversal)
+            || postings.GroupBy(x => new { x.LedgerDimension, x.PostingType, x.TransactionCurrencyCode })
+                .Any(group => group.Sum(x => x.TransactionCurrencyAmount) != 0m
+                    || group.Sum(x => x.AccountingCurrencyAmount) != 0m
+                    || group.Sum(x => x.ReportingCurrencyAmount) != 0m))
+            throw new SubledgerPostingException(
+                "The reversal does not cancel the original accounts, dimensions and currency amounts. " +
+                "Reversal with changed posting setup, exchange rates or tax requires historical posting support.");
     }
 
     /// <summary>
@@ -110,17 +135,27 @@ public sealed class LedgerJournalReversalService(
         var lines = await Db.Set<LedgerJournalTrans>().AsNoTracking()
             .Where(x => x.DataAreaId == area && x.JournalNum == original.JournalNum).ToListAsync(ct);
         if (lines.Count == 0) throw new SubledgerPostingException("The posted journal has no lines to reverse.");
-        var selectedCredits = lines.Where(x => x.AccountType == LedgerJournalACType.Cust
-            && x.SettleVoucher == SettleVoucher.Selection).ToList();
-        foreach (var account in selectedCredits.Select(x => x.LedgerDimensionName).Distinct().Order())
+        var customerLines = lines.Where(x => x.AccountType == LedgerJournalACType.Cust).ToList();
+        foreach (var account in customerLines.Select(x => x.LedgerDimensionName).Distinct().Order())
             await support.LockCustomerSettlementAsync(area, account, ct);
-        if (selectedCredits.Count > 0)
+        if (customerLines.Count > 0)
         {
-            var vouchers = selectedCredits.Select(x => x.Voucher).Distinct().ToList();
+            var vouchers = customerLines.Select(x => x.Voucher).Distinct().ToList();
             if (await Db.Set<CustTrans>().AnyAsync(x => x.DataAreaId == area
                     && x.DocumentNum == original.JournalNum && vouchers.Contains(x.Voucher)
-                    && x.SettleAmountCur != 0m, ct))
+                    && (x.SettleAmountCur != 0m || x.SettleAmountMst != 0m), ct))
                 throw new SubledgerPostingException("Reverse the customer settlement before reversing this journal.");
+        }
+        var vendorLines = lines.Where(x => x.AccountType == LedgerJournalACType.Vend).ToList();
+        foreach (var account in vendorLines.Select(x => x.LedgerDimensionName).Distinct().Order())
+            await support.LockAsync($"VendSettleOpen:{area}:{account}".ToUpperInvariant(), ct);
+        if (vendorLines.Count > 0)
+        {
+            var transactionIds = vendorLines.Select(x => x.VendTransId).ToList();
+            if (await Db.Set<VendTrans>().AnyAsync(x => x.DataAreaId == area
+                    && transactionIds.Contains(x.RecId)
+                    && (x.SettleAmountCur != 0m || x.SettleAmountMst != 0m), ct))
+                throw new SubledgerPostingException("Reverse the vendor settlement before reversing this journal.");
         }
         var journalName = await Db.Set<LedgerJournalName>().AsNoTracking()
             .SingleOrDefaultAsync(x => x.DataAreaId == area && x.JournalName == original.JournalName, ct)
@@ -183,6 +218,7 @@ public sealed class LedgerJournalReversalService(
         LedgerDimension = source.LedgerDimension,
         LedgerDimensionName = source.LedgerDimensionName,
         PostingProfile = source.PostingProfile,
+        Prepayment = source.Prepayment,
         DefaultDimension = source.DefaultDimension,
         OffsetAccountType = source.OffsetAccountType,
         OffsetLedgerDimension = source.OffsetLedgerDimension,

@@ -17,8 +17,11 @@ namespace IAX.IXApi.Tests;
 /// </summary>
 public class VendParametersPostingProfileTests
 {
-    [Fact]
-    public async Task The_default_profile_decides_which_rule_resolves()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    public async Task The_default_profile_decides_which_rule_resolves(string? enteredProfile)
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
@@ -30,7 +33,7 @@ public class VendParametersPostingProfileTests
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
 
-        var resolved = await ResolveAsync(db);
+        var resolved = await ResolveAsync(db, enteredProfile);
 
         Assert.Equal("210200", resolved.MainAccountValue);
     }
@@ -53,12 +56,10 @@ public class VendParametersPostingProfileTests
     }
 
     /// <summary>
-    /// The same fallback the customer path uses: a configured profile with no rules of its own does
-    /// not strand posting, because narrowing to nothing would refuse a document that the company's
-    /// remaining rules can still account for.
+    /// Missing configured posting rules must refuse posting, never select another profile's account.
     /// </summary>
     [Fact]
-    public async Task A_profile_with_no_rules_of_its_own_falls_back_to_every_rule()
+    public async Task A_profile_with_no_rules_of_its_own_refuses_posting()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
@@ -68,9 +69,8 @@ public class VendParametersPostingProfileTests
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
 
-        var resolved = await ResolveAsync(db);
-
-        Assert.Equal("210100", resolved.MainAccountValue);
+        var error = await Assert.ThrowsAsync<SubledgerPostingException>(() => ResolveAsync(db));
+        Assert.Contains("Vendor posting profile 'MISSING'", error.Message);
     }
 
     [Fact]
@@ -104,10 +104,10 @@ public class VendParametersPostingProfileTests
         await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
     }
 
-    private static async Task<DimensionAttributeValueCombination> ResolveAsync(DbContext db) =>
+    private static async Task<DimensionAttributeValueCombination> ResolveAsync(DbContext db, string? profile = null) =>
         await new SubledgerPostingSupport(db).ResolveVendorSummaryAsync(
             "dat", new VendTable { RecId = 1, DataAreaId = "dat", AccountNum = "V-001", VendGroup = "VG-1" },
-            CancellationToken.None);
+            CancellationToken.None, postingProfile: profile);
 
     private static void AddRule(DbContext db, long recId, string profile, AccountCode code, string num, long dimension) =>
         db.Add(new VendLedgerAccounts

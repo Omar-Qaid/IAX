@@ -19,6 +19,211 @@ namespace IAX.IXApi.Tests;
 
 public class LedgerJournalPostingTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Generic_journal_creation_cannot_forge_a_reversal_link(bool bulk)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        await db.SaveChangesAsync();
+        var service = new LedgerJournalTableService(new TestUnitOfWork(db), new TestUser());
+        var forged = new LedgerJournalTable
+        {
+            DataAreaId = "dat", JournalNum = "FAKE", JournalName = "GEN", OriginalJournalNum = "J1"
+        };
+        var error = bulk
+            ? await Assert.ThrowsAsync<InvalidOperationException>(() => service.AddRangeAsync([forged]))
+            : await Assert.ThrowsAsync<InvalidOperationException>(() => service.AddAsync(forged));
+        Assert.Contains("only by the journal reversal process", error.Message);
+        Assert.Single(await db.Set<LedgerJournalTable>().ToListAsync());
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public async Task Posting_honors_the_fixed_offset_from_header_or_journal_name(bool fixedOnName, bool matchingOffset)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        if (fixedOnName)
+        {
+            var name = db.Set<LedgerJournalName>().Local.Single();
+            name.FixedOffsetAccount = NoYes.Yes;
+            name.OffsetLedgerDimension = 2;
+        }
+        else
+        {
+            var header = db.Set<LedgerJournalTable>().Local.Single();
+            header.FixedOffsetAccount = NoYes.Yes;
+            header.OffsetLedgerDimension = 2;
+        }
+        var line = Line(1, "V1", bank: true, debit: 100m);
+        line.OffsetLedgerDimension = matchingOffset ? 2 : 1;
+        db.Add(line);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        var service = new LedgerJournalTableService(new TestUnitOfWork(db), new TestUser());
+        var validation = await service.ValidateAsync(1, default);
+        Assert.Equal(matchingOffset, validation!.Valid);
+        var (result, error) = await service.PostAsync(1, default);
+        if (matchingOffset)
+        {
+            Assert.Null(error);
+            Assert.NotNull(result);
+        }
+        else
+        {
+            Assert.Null(result);
+            Assert.Contains("fixed offset account", error);
+            Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
+        }
+    }
+
+    [Theory]
+    [InlineData("line-accounting")]
+    [InlineData("line-reporting")]
+    [InlineData("header-accounting")]
+    [InlineData("header-reporting")]
+    [InlineData("header-fixed")]
+    [InlineData("name-fixed")]
+    public async Task Posting_refuses_exchange_rate_controls_it_cannot_apply(string control)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        var line = Line(1, "V1", bank: true, debit: 100m);
+        line.OffsetLedgerDimension = 2;
+        var header = db.Set<LedgerJournalTable>().Local.Single();
+        switch (control)
+        {
+            case "line-accounting": line.ExchRate = 375m; break;
+            case "line-reporting": line.ReportingCurrencyExchRate = 90m; break;
+            case "header-accounting": header.ExchRate = 375m; break;
+            case "header-reporting": header.ReportingCurrencyExchRate = 90m; break;
+            case "header-fixed": header.FixedExchRate = NoYes.Yes; break;
+            case "name-fixed": db.Set<LedgerJournalName>().Local.Single().FixedExchRate = NoYes.Yes; break;
+        }
+        db.Add(line);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        var service = new LedgerJournalTableService(new TestUnitOfWork(db), new TestUser());
+        var validation = await service.ValidateAsync(1, default);
+        Assert.False(validation!.Valid);
+        var (result, error) = await service.PostAsync(1, default);
+        Assert.Null(result);
+        Assert.Contains("exchange rates are not supported", error);
+        Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Reversal_refuses_a_subledger_transaction_settled_after_journal_posting(bool vendor)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        SeedSubledgers(db);
+        db.Add(new LedgerJournalTrans
+        {
+            RecId = 1, DataAreaId = "dat", JournalNum = "J1", Voucher = "V1", LineNum = 1,
+            TransDate = new DateTime(2026, 1, 15), CurrencyCode = "SAR",
+            AccountType = vendor ? LedgerJournalACType.Vend : LedgerJournalACType.Cust,
+            LedgerDimensionName = vendor ? "V-001" : "C-001",
+            OffsetAccountType = LedgerJournalACType.Ledger, OffsetLedgerDimension = 2,
+            AmountCurDebit = 100m
+        });
+        await db.SaveChangesAsync();
+        await ConfigureVoucherSequenceAsync(db);
+        await new LedgerJournalPosting(db).PostAsync("dat", await db.Set<LedgerJournalTable>().SingleAsync(), default);
+        await db.SaveChangesAsync();
+        // Settlement can occur later, even though the journal line never selected an invoice.
+        if (vendor) (await db.Set<VendTrans>().SingleAsync()).SettleAmountCur = 50m;
+        else (await db.Set<CustTrans>().SingleAsync()).SettleAmountCur = 50m;
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var (result, error) = await NewReversalService(db).ReverseAsync(1, new DateTime(2026, 1, 31), default);
+        Assert.Null(result);
+        Assert.Contains(vendor ? "Reverse the vendor settlement" : "Reverse the customer settlement", error);
+        Assert.Single(await db.Set<LedgerJournalTable>().ToListAsync());
+        Assert.Single(await db.Set<GeneralJournalEntry>().ToListAsync());
+        Assert.Equal(100, (await db.Set<SysNumberSequence>().SingleAsync()).NextRec);
+    }
+
+    [Fact]
+    public async Task Vendor_prepayment_reversal_nets_the_original_advance_account_to_zero()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        SeedSubledgers(db);
+        db.Set<VendLedgerAccounts>().Local.Single().ClearingLedgerDimension = 1;
+        db.Add(new LedgerJournalTrans
+        {
+            RecId = 1, DataAreaId = "dat", JournalNum = "J1", Voucher = "V1", LineNum = 1,
+            TransDate = new DateTime(2026, 1, 15), CurrencyCode = "SAR",
+            AccountType = LedgerJournalACType.Vend, LedgerDimensionName = "V-001", Prepayment = NoYes.Yes,
+            OffsetAccountType = LedgerJournalACType.Ledger, OffsetLedgerDimension = 2, AmountCurDebit = 100m
+        });
+        await db.SaveChangesAsync();
+        await ConfigureVoucherSequenceAsync(db);
+        await new LedgerJournalPosting(db).PostAsync("dat", await db.Set<LedgerJournalTable>().SingleAsync(), default);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var (result, error) = await NewReversalService(db).ReverseAsync(1, new DateTime(2026, 1, 31), default);
+        Assert.Null(error);
+        Assert.NotNull(result);
+        var entries = await db.Set<GeneralJournalAccountEntry>().AsNoTracking().ToListAsync();
+        Assert.All(entries.GroupBy(x => x.MainAccount), account => Assert.Equal(0m, account.Sum(x => x.AccountingCurrencyAmount)));
+        Assert.DoesNotContain(entries, x => x.LedgerDimension == 4);
+        Assert.All(await db.Set<LedgerJournalTrans>().AsNoTracking().ToListAsync(), x => Assert.Equal(NoYes.Yes, x.Prepayment));
+    }
+
+    [Fact]
+    public async Task Reversal_rolls_back_when_changed_posting_setup_would_leave_original_account_uncorrected()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        SeedSubledgers(db);
+        db.Add(new LedgerJournalTrans
+        {
+            RecId = 1, DataAreaId = "dat", JournalNum = "J1", Voucher = "V1", LineNum = 1,
+            TransDate = new DateTime(2026, 1, 15), CurrencyCode = "SAR",
+            AccountType = LedgerJournalACType.Vend, LedgerDimensionName = "V-001",
+            OffsetAccountType = LedgerJournalACType.Ledger, OffsetLedgerDimension = 2, AmountCurDebit = 100m
+        });
+        await db.SaveChangesAsync();
+        await ConfigureVoucherSequenceAsync(db);
+        await new LedgerJournalPosting(db).PostAsync("dat", await db.Set<LedgerJournalTable>().SingleAsync(), default);
+        await db.SaveChangesAsync();
+        (await db.Set<VendLedgerAccounts>().SingleAsync()).SummaryLedgerDimension = 1;
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var (result, error) = await NewReversalService(db).ReverseAsync(1, new DateTime(2026, 1, 31), default);
+        Assert.Null(result);
+        Assert.Contains("does not cancel the original", error);
+        Assert.Empty(db.ChangeTracker.Entries());
+        Assert.Single(await db.Set<GeneralJournalEntry>().ToListAsync());
+        Assert.Single(await db.Set<LedgerJournalTable>().ToListAsync());
+        Assert.Single(await db.Set<VendTrans>().ToListAsync());
+        Assert.Equal(100, (await db.Set<SysNumberSequence>().SingleAsync()).NextRec);
+    }
+
     [Fact]
     public async Task A_journal_credit_closes_the_selected_invoice()
     {

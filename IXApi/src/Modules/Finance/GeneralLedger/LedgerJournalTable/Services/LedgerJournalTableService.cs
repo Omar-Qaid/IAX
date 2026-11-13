@@ -15,6 +15,8 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
 
         protected override async Task OnBeforeAddAsync(IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable entity, CancellationToken ct)
         {
+            if (!string.IsNullOrWhiteSpace(entity.OriginalJournalNum) || !string.IsNullOrWhiteSpace(entity.OriginalCompany))
+                throw new InvalidOperationException("Reversal links are created only by the journal reversal process.");
             var area = string.IsNullOrWhiteSpace(entity.DataAreaId) ? _currentUser.GetDataAreaId() : entity.DataAreaId;
             if (string.IsNullOrWhiteSpace(area)) throw new InvalidOperationException("A company must be selected.");
             var setup = await _unitOfWork.Context.Set<LedgerJournalName>().AsNoTracking()
