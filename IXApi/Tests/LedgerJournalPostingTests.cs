@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.AccountsPayable;
@@ -465,8 +465,10 @@ public class LedgerJournalPostingTests
 
     // Section 9.4 of the cycle: the reversal is its own journal and its own voucher; the original
     // stays posted and traceable, and nothing posted is edited or removed.
-    [Fact]
-    public async Task Reversal_posts_a_mirrored_journal_linked_to_the_original()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Reversal_posts_a_mirrored_journal_linked_to_the_original(bool nextPeriod)
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
@@ -481,8 +483,18 @@ public class LedgerJournalPostingTests
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
 
+        var reversalDate = nextPeriod ? new DateTime(2026, 2, 1) : new DateTime(2026, 1, 31);
+        if (nextPeriod)
+        {
+            (await db.Set<LedgerFiscalCalendarPeriod>().SingleAsync()).Status = FiscalPeriodStatus.OnHold;
+            db.Add(new FiscalCalendarPeriod { RecId = 2, FiscalCalendar = 1, Type = FiscalPeriodType.Operating,
+                StartDate = reversalDate, EndDate = new DateTime(2026, 2, 28) });
+            db.Add(new LedgerFiscalCalendarPeriod { RecId = 2, Ledger = 1, FiscalCalendarPeriod = 2, Status = FiscalPeriodStatus.Open });
+            await db.SaveChangesAsync();
+            db.ChangeTracker.Clear();
+        }
         var service = NewReversalService(db);
-        var (result, error) = await service.ReverseAsync(1, new DateTime(2026, 1, 31), default);
+        var (result, error) = await service.ReverseAsync(1, reversalDate, default);
 
         Assert.Null(error);
         Assert.NotNull(result);
@@ -505,7 +517,9 @@ public class LedgerJournalPostingTests
 
         var entries = await db.Set<GeneralJournalEntry>().AsNoTracking().OrderBy(x => x.RecId).ToListAsync();
         Assert.Equal(2, entries.Count);
-        Assert.Equal(new DateTime(2026, 1, 31), entries[1].AccountingDate);
+        Assert.Equal(reversalDate, entries[1].AccountingDate);
+        Assert.Equal(new DateTime(2026, 1, 1), entries[0].AccountingDate);
+        Assert.Equal(nextPeriod ? 2L : 1L, entries[1].FiscalCalendarPeriod);
         Assert.NotEqual(entries[0].SubledgerVoucher, entries[1].SubledgerVoucher);
 
         var reversed = await db.Set<GeneralJournalAccountEntry>().AsNoTracking()
@@ -519,7 +533,7 @@ public class LedgerJournalPostingTests
             .Sum(x => x.AccountingCurrencyAmount));
 
         // A journal is reversed once, and a reversal is not itself reversible.
-        var (_, second) = await service.ReverseAsync(1, new DateTime(2026, 1, 31), default);
+        var (_, second) = await service.ReverseAsync(1, reversalDate, default);
         Assert.Contains("already been reversed", second);
         var (_, third) = await service.ReverseAsync(reversal.RecId, new DateTime(2026, 1, 31), default);
         Assert.Contains("itself a reversal", third);
