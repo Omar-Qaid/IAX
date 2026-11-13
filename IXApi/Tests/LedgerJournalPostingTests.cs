@@ -342,6 +342,46 @@ public class LedgerJournalPostingTests
         Assert.Equal(0m, postings.Sum(x => x.AccountingCurrencyAmount));
         Assert.Equal(-20000m, postings.Single(x => x.LedgerDimension == 2).AccountingCurrencyAmount);
         Assert.Equal("Service revenue", postings.Single(x => x.LedgerDimension == 2).Text);
+        Assert.Equal(20000m, result.TotalDebit);
+        Assert.Equal(20000m, result.TotalCredit);
+        var postedHeader = await db.Set<LedgerJournalTable>().AsNoTracking().SingleAsync();
+        Assert.Equal(0m, postedHeader.JournalBalance);
+        Assert.Equal(20000m, postedHeader.JournalTotalDebitReportingCurrency);
+        Assert.Equal(20000m, postedHeader.JournalTotalCreditReportingCurrency);
+    }
+
+    [Fact]
+    public async Task Posting_refreshes_header_controls_changed_since_it_was_loaded()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        db.AddRange(Line(1, "V1", bank: true, debit: 100m), Line(2, "V1", bank: false, credit: 100m));
+        await db.SaveChangesAsync();
+        var header = await db.Set<LedgerJournalTable>().SingleAsync();
+        await db.Set<LedgerJournalTable>().ExecuteUpdateAsync(s => s.SetProperty(x => x.ReverseEntry, NoYes.Yes));
+
+        var error = await Assert.ThrowsAsync<SubledgerPostingException>(
+            () => new LedgerJournalPosting(db).PostAsync("dat", header, default));
+        Assert.Contains("Automatic reversal", error.Message);
+        Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
+    }
+
+    [Fact]
+    public async Task Missing_ledger_is_a_posting_refusal()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        db.AddRange(Line(1, "V1", bank: true, debit: 100m), Line(2, "V1", bank: false, credit: 100m));
+        await db.SaveChangesAsync();
+        await db.Set<Ledger>().ExecuteDeleteAsync();
+        var error = await Assert.ThrowsAsync<SubledgerPostingException>(() =>
+            new LedgerJournalPosting(db).PostAsync("dat", db.Set<LedgerJournalTable>().Local.Single(), default));
+        Assert.Contains("Exactly one ledger", error.Message);
+        Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
     }
 
     [Fact]
@@ -973,6 +1013,64 @@ public class LedgerJournalPostingTests
         });
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task Bulk_mutations_cannot_change_posted_journals(bool lines, bool delete)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        db.AddRange(Line(1, "V1", bank: true, debit: 100m), Line(2, "V1", bank: false, credit: 100m));
+        await db.SaveChangesAsync();
+        var header = await db.Set<LedgerJournalTable>().SingleAsync();
+        await new LedgerJournalPosting(db).PostAsync("dat", header, default);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        var work = new TestUnitOfWork(db);
+        if (lines)
+        {
+            var service = new LedgerJournalTransService(work, new TestUser());
+            var row = await db.Set<LedgerJournalTrans>().AsNoTracking().FirstAsync();
+            row.AmountCurDebit = 999m;
+            if (delete) await Assert.ThrowsAsync<InvalidOperationException>(() => service.RemoveRangeAsync([row]));
+            else await Assert.ThrowsAsync<InvalidOperationException>(() => service.UpdateRangeAsync([row]));
+        }
+        else
+        {
+            var service = new LedgerJournalTableService(work, new TestUser());
+            var row = await db.Set<LedgerJournalTable>().AsNoTracking().SingleAsync();
+            row.Posted = NoYes.No;
+            if (delete) await Assert.ThrowsAsync<InvalidOperationException>(() => service.RemoveRangeAsync([row]));
+            else await Assert.ThrowsAsync<InvalidOperationException>(() => service.UpdateRangeAsync([row]));
+        }
+        Assert.Equal(NoYes.Yes, (await db.Set<LedgerJournalTable>().AsNoTracking().SingleAsync()).Posted);
+        Assert.Equal(2, await db.Set<LedgerJournalTrans>().CountAsync());
+        Assert.Equal(100m, (await db.Set<LedgerJournalTrans>().AsNoTracking().SingleAsync(x => x.RecId == 1)).AmountCurDebit);
+    }
+
+    [Fact]
+    public async Task Voucher_allocation_refreshes_stale_counter_and_preserves_pending_increments()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        await db.SaveChangesAsync();
+        await ConfigureVoucherSequenceAsync(db);
+        await db.Set<SysNumberSequence>().SingleAsync();
+        await db.Set<SysNumberSequence>().ExecuteUpdateAsync(s => s.SetProperty(x => x.NextRec, 105));
+        var first = await LedgerJournalVoucherNumberSequence.NextAsync(db, "dat", 90, default);
+        var second = await LedgerJournalVoucherNumberSequence.NextAsync(db, "dat", 90, default);
+        Assert.NotEqual(first, second);
+        Assert.Equal(107, db.Set<SysNumberSequence>().Local.Single().NextRec);
+        await db.SaveChangesAsync();
+        Assert.Equal(107, (await db.Set<SysNumberSequence>().AsNoTracking().SingleAsync()).NextRec);
     }
 
     private static void Seed(PostingContext db)

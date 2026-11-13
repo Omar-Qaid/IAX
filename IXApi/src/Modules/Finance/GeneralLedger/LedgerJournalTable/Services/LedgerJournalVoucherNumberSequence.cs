@@ -50,13 +50,22 @@ internal static class LedgerJournalVoucherNumberSequence
 
     public static async Task<string> NextAsync(DbContext db, string area, long sequenceRecId, CancellationToken ct)
     {
+        // Different journals can allocate from the same sequence in concurrent transactions.
+        await new SubledgerPostingSupport(db).LockAsync($"LedgerJournalVoucher:{area}:{sequenceRecId}", ct);
         var sequence = await db.Set<SysNumberSequence>().IgnoreQueryFilters()
             .SingleOrDefaultAsync(x => x.RecId == sequenceRecId && x.DataAreaId == area && !x.IsDeleted, ct)
             ?? throw new SubledgerPostingException("The journal voucher number sequence was not found in the selected company.");
+        // Preserve increments staged by this transaction, but refresh an earlier read snapshot.
+        if (db.Entry(sequence).State == EntityState.Unchanged)
+            await db.Entry(sequence).ReloadAsync(ct);
+        if (db.Entry(sequence).State == EntityState.Detached || sequence.IsDeleted || sequence.DataAreaId != area)
+            throw new SubledgerPostingException("The journal voucher number sequence was not found in the selected company.");
         if (!sequence.IsActive || sequence.Blocked == 1 || sequence.InUse == 0 || sequence.Manual == 1 || sequence.NoIncrement == 1)
             throw new SubledgerPostingException($"Voucher number sequence '{sequence.NumberSequence}' is unavailable for automatic allocation.");
         var next = sequence.NextRec ?? sequence.Lowest ?? 1;
-        if (next > (sequence.Highest ?? int.MaxValue))
+        if (next < (sequence.Lowest ?? 1))
+            throw new SubledgerPostingException($"Voucher number sequence '{sequence.NumberSequence}' is below its configured minimum.");
+        if (next > (sequence.Highest ?? int.MaxValue) || next == int.MaxValue)
             throw new SubledgerPostingException($"Voucher number sequence '{sequence.NumberSequence}' is exhausted.");
         sequence.NextRec = next + 1;
         return SysNumberSequenceService.FormatCode(sequence, next);

@@ -36,12 +36,33 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
 
         public override async Task<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans> UpdateAsync(IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans entity, CancellationToken ct = default)
         {
+            await PrepareUpdateAsync(entity, ct);
+            return await base.UpdateAsync(entity, ct);
+        }
+
+        private async Task PrepareUpdateAsync(IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans entity, CancellationToken ct)
+        {
             var current = await EnsureEditableAsync(entity.RecId, ct);
             entity.DataAreaId = current.DataAreaId;
             entity.JournalNum = current.JournalNum;
             entity.Company = current.Company;
             entity.NoEdit = current.NoEdit;
-            return await base.UpdateAsync(entity, ct);
+        }
+
+        public override async Task<IEnumerable<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans>> UpdateRangeAsync(
+            IEnumerable<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans> entities, CancellationToken ct = default)
+        {
+            var rows = entities.ToList();
+            foreach (var row in rows) await PrepareUpdateAsync(row, ct);
+            return await base.UpdateRangeAsync(rows, ct);
+        }
+
+        public override async Task RemoveRangeAsync(
+            IEnumerable<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans> entities, CancellationToken ct = default)
+        {
+            var rows = entities.ToList();
+            foreach (var row in rows) await EnsureEditableAsync(row.RecId, ct);
+            await base.RemoveRangeAsync(rows, ct);
         }
 
         public override async Task RemoveAsync(IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans entity, CancellationToken ct = default)

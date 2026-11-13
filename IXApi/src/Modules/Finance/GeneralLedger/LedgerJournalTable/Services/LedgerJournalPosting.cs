@@ -29,15 +29,20 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
         var support = new SubledgerPostingSupport(db);
         await support.LockAsync($"GeneralJournal:{area}:{header.JournalNum}", ct);
 
+        // The caller may have loaded this header before waiting for the posting lock.
+        // Use persisted controls and status after acquiring it, not the tracked snapshot.
+        await db.Entry(header).ReloadAsync(ct);
+        if (db.Entry(header).State == EntityState.Detached || header.DataAreaId != area)
+            throw new SubledgerPostingException("The journal was not found in the selected company.");
+
         if (header.Posted == NoYes.Yes) throw new SubledgerPostingException("The journal is already posted.");
         if (header.SystemBlocked == NoYes.Yes) throw new SubledgerPostingException("The journal is system blocked.");
         if (header.ReverseEntry == NoYes.Yes)
             throw new SubledgerPostingException("Automatic reversal journals are not supported; post the reversal as its own journal.");
-        var ledger = await db.Set<Entities.Ledger>().AsNoTracking().FirstAsync(x => x.DataAreaId == area, ct);
-
         var setup = await new LedgerJournalSetupCheck(db).CheckAsync(area, header.RecId, ct)
             ?? throw new SubledgerPostingException("The journal setup could not be verified.");
         if (setup.Errors.Count > 0) throw new SubledgerPostingException(setup.Errors[0]);
+        var ledger = await db.Set<Entities.Ledger>().AsNoTracking().SingleAsync(x => x.DataAreaId == area, ct);
 
         // A posting control the company switched on must not be silently skipped. The setup check
         // reports this too; posting does not rely on a diagnostic for its own correctness.
@@ -112,10 +117,6 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                         line.OffsetTxt.Length > 0 ? line.OffsetTxt : line.Txt, 0m, line.CurrencyCode, line.PaymReference));
                     posted.AddRange(await new VendorJournalTaxPosting(db).BuildAsync(area, header, line, entry.RecId, offset, ct));
                 }
-                totalDebit += line.AmountCurDebit;
-                totalCredit += line.AmountCurCredit;
-                if (reportingAmount >= 0) totalReportingDebit += reportingAmount;
-                else totalReportingCredit += -reportingAmount;
             }
 
             // The account's own controls are judged on the posted signed amount, so a line and its
@@ -129,6 +130,10 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
             if (posted.Sum(x => x.ReportingCurrencyAmount) != 0m)
                 throw new SubledgerPostingException(
                     $"Voucher {voucher.Key.Voucher} on {voucher.Key.Date:yyyy-MM-dd} does not balance in the reporting currency.");
+            totalDebit += posted.Where(x => x.AccountingCurrencyAmount > 0m).Sum(x => x.AccountingCurrencyAmount);
+            totalCredit -= posted.Where(x => x.AccountingCurrencyAmount < 0m).Sum(x => x.AccountingCurrencyAmount);
+            totalReportingDebit += posted.Where(x => x.ReportingCurrencyAmount > 0m).Sum(x => x.ReportingCurrencyAmount);
+            totalReportingCredit -= posted.Where(x => x.ReportingCurrencyAmount < 0m).Sum(x => x.ReportingCurrencyAmount);
             db.AddRange(posted);
             db.Add(new SubledgerVoucherGeneralJournalEntry
             {

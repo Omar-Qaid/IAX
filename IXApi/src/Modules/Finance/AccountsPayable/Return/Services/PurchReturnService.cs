@@ -274,9 +274,6 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                 if (ordered.Sum(x => -x.Qty) < inventQty)
                     return await Fail(422, $"Return demand does not cover the shipment for item {line.ItemId}.", ct);
                 var left = inventQty;
-                // The shipped value, accumulated from the per-transaction amounts actually written,
-                // so InventSum.PhysicalValue moves by exactly the sum of the rows behind it.
-                var shippedPhysical = 0m;
                 foreach (var source in ordered)
                 {
                     if (left <= 0) break;
@@ -298,17 +295,11 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                     source.PackingSlipId = internalId;
                     source.VoucherPhysical = internalId;
                     source.CostAmountPhysical = -decimal.Round(take * unitCost, 2, MidpointRounding.AwayFromZero);
-                    shippedPhysical += source.CostAmountPhysical;
                     left -= take;
                 }
                 summary.OnOrder -= inventQty;
                 summary.Deducted += inventQty;
                 summary.PhysicalInvent -= inventQty;
-                // A shipped, not yet credited return is physically but not financially updated, so
-                // its provisional value leaves physical inventory value now and comes back when the
-                // credit note posts the financial update. Without this the inventory value report's
-                // physical side never matches the transactions behind it.
-                summary.PhysicalValue += shippedPhysical;
                 summary.AvailPhysical = summary.PhysicalInvent - summary.ReservPhysical - summary.Picked;
                 summary.AvailOrdered = summary.AvailPhysical + summary.Ordered - summary.OnOrder - summary.ReservOrdered;
                 summary.LastUpdDatePhysical = date;
@@ -431,17 +422,11 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                 if (deducted.Sum(x => -x.Qty) < inventQty)
                     return await Fail(422, $"Shipped return quantity does not cover the credit for item {line.ItemId}.", ct);
                 var left = inventQty;
-                // The credit amount is allocated cumulatively so the last transaction carries the
-                // rounding remainder and the CostAmountPosted rows sum back to the posted value; the
-                // shipment's provisional value is released from exactly what each row recorded.
-                decimal allocatedQty = 0m, allocatedCost = 0m, releasedPhysical = 0m;
                 foreach (var source in deducted)
                 {
                     if (left <= 0) break;
                     var available = -source.Qty;
                     var take = Math.Min(available, left);
-                    var takenPhysical = take == available ? source.CostAmountPhysical
-                        : decimal.Round(source.CostAmountPhysical * take / available, 2, MidpointRounding.AwayFromZero);
                     if (take < available)
                         Db.Set<InventTrans>().Add(new InventTrans
                         {
@@ -450,7 +435,7 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                             StatusReceipt = StatusReceipt.None, ValueOpen = InventTransOpen.Yes, CurrencyCode = source.CurrencyCode,
                             DateExpected = source.DateExpected, DatePhysical = source.DatePhysical, DateStatus = source.DateStatus,
                             DateInvent = source.DateInvent, PackingSlipId = source.PackingSlipId, VoucherPhysical = source.VoucherPhysical,
-                            CostAmountPhysical = source.CostAmountPhysical - takenPhysical,
+                            CostAmountPhysical = -decimal.Round((available - take) * unitCost, 2, MidpointRounding.AwayFromZero),
                             ReturnInventTransOrigin = source.ReturnInventTransOrigin
                         });
                     source.Qty = -take;
@@ -459,15 +444,7 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                     source.DateStatus = date;
                     source.InvoiceId = internalId;
                     source.Voucher = internalId;
-                    allocatedQty += take;
-                    var cumulativeCost = allocatedQty == inventQty ? cost
-                        : decimal.Round(cost * allocatedQty / inventQty, 2, MidpointRounding.AwayFromZero);
-                    source.CostAmountPosted = -(cumulativeCost - allocatedCost);
-                    allocatedCost = cumulativeCost;
-                    // The row is financially updated now, so its provisional physical cost is handed
-                    // over to the posted value, exactly as the sales invoice does for a delivery.
-                    releasedPhysical += takenPhysical;
-                    source.CostAmountPhysical = 0m;
+                    source.CostAmountPosted = -decimal.Round(take * unitCost, 2, MidpointRounding.AwayFromZero);
                     left -= take;
                 }
                 var countError = await InventoryCountProtection.CheckAsync(Db, area, line.ItemId, line.InventDimId, ct);
@@ -477,7 +454,6 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                 summary.Deducted -= inventQty;
                 summary.PostedQty -= inventQty;
                 summary.PostedValue -= cost;
-                summary.PhysicalValue -= releasedPhysical;
 
                 var vendorScope = await support.VendorScopeAsync(area, order.InvoiceAccount.Length > 0 ? order.InvoiceAccount : order.OrderAccount, ct);
                 var inventoryAccount = await support.ResolveInventPostingAsync(area, line.ItemId, InventAccountType.PurchReceipt, ct,

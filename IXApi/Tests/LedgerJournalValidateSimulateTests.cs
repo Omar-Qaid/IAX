@@ -27,14 +27,24 @@ public class LedgerJournalValidateSimulateTests
     /// T15: the whole point. Simulation reports what would post and leaves nothing behind — no
     /// posted entry, no voucher association, and the journal still unposted and editable.
     /// </summary>
-    [Fact]
-    public async Task Simulating_reports_what_would_post_and_keeps_no_posted_accounting()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Simulating_reports_what_would_post_and_keeps_no_posted_accounting(bool useOffset)
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
         await using var db = await NewContextAsync(connection);
         Seed(db);
-        db.AddRange(Line(1, "V1", bank: true, debit: 400m), Line(2, "V1", bank: false, credit: 400m));
+        var debit = Line(1, "V1", bank: true, debit: 400m);
+        if (useOffset)
+        {
+            debit.OffsetAccountType = LedgerJournalACType.Ledger;
+            debit.OffsetLedgerDimension = 2;
+            db.Add(debit);
+        }
+        else
+            db.AddRange(debit, Line(2, "V1", bank: false, credit: 400m));
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
 

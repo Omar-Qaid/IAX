@@ -143,6 +143,7 @@ public sealed partial class VendorInvoiceService : BaseService<VendInvoiceJour>,
                 // InventTrans.CostAmountPosted and InventSum.PostedValue are kept in that currency
                 // and every later settlement reads them.
                 var accountingAmount = translation.ToAccounting(amount);
+                var unitCost = inventQty == 0 ? 0m : accountingAmount / inventQty;
 
                 var model = await support.ResolveItemModelPolicyAsync(area, line.ItemId, ct)
                     ?? throw new SubledgerPostingException("The item model group is required.");
@@ -160,10 +161,6 @@ public sealed partial class VendorInvoiceService : BaseService<VendInvoiceJour>,
 
                 var left = inventQty;
                 decimal physicalReleased = 0m;
-                // The invoiced amount is allocated across the received transactions cumulatively, so
-                // the last one carries the rounding remainder and the CostAmountPosted rows sum back
-                // to the accounting amount that InventSum.PostedValue and the ledger entry carry.
-                decimal allocatedQty = 0m, allocatedCost = 0m;
 
                 foreach (var source in received)
                 {
@@ -174,11 +171,7 @@ public sealed partial class VendorInvoiceService : BaseService<VendInvoiceJour>,
                         && x.OrigPurchId == order.PurchId && x.InventDimId == source.InventDimId, ct);
                     if (receipt == null) return await Fail(422, "The received inventory has no matching product-receipt line.", ct);
                     receiptMatches[receipt.RecId] = receiptMatches.GetValueOrDefault(receipt.RecId) + take;
-                    // The taken share of the receipt's provisional value, with the remainder keeping
-                    // the exact complement, so splitting a receipt neither creates nor loses physical
-                    // value and a fully invoiced receipt releases exactly what it recorded.
-                    var takenPhysical = take == source.Qty ? source.CostAmountPhysical
-                        : decimal.Round(source.CostAmountPhysical * take / source.Qty, 4, MidpointRounding.AwayFromZero);
+                    var physicalPerUnit = source.Qty == 0 ? 0m : source.CostAmountPhysical / source.Qty;
                     if (take < source.Qty)
                     {
                         var remainder = source.Qty - take;
@@ -189,22 +182,18 @@ public sealed partial class VendorInvoiceService : BaseService<VendInvoiceJour>,
                             StatusIssue = StatusIssue.None, ValueOpen = InventTransOpen.Yes, CurrencyCode = source.CurrencyCode,
                             DateExpected = source.DateExpected, DatePhysical = source.DatePhysical, DateStatus = source.DateStatus,
                             DateInvent = source.DateInvent, PackingSlipId = source.PackingSlipId, VoucherPhysical = source.VoucherPhysical,
-                            CostAmountPhysical = source.CostAmountPhysical - takenPhysical
+                            CostAmountPhysical = remainder * physicalPerUnit
                         });
                     }
-                    physicalReleased += takenPhysical;
+                    physicalReleased += take * physicalPerUnit;
                     source.Qty = take;
-                    source.CostAmountPhysical = takenPhysical;
+                    source.CostAmountPhysical = take * physicalPerUnit;
                     source.StatusReceipt = StatusReceipt.Purchased;
                     source.DateFinancial = date;
                     source.DateStatus = date;
                     source.InvoiceId = internalId;
                     source.Voucher = internalId;
-                    allocatedQty += take;
-                    var cumulativeCost = allocatedQty == inventQty ? accountingAmount
-                        : decimal.Round(accountingAmount * allocatedQty / inventQty, 4, MidpointRounding.AwayFromZero);
-                    source.CostAmountPosted = cumulativeCost - allocatedCost;
-                    allocatedCost = cumulativeCost;
+                    source.CostAmountPosted = take * unitCost;
                     left -= take;
                 }
 
