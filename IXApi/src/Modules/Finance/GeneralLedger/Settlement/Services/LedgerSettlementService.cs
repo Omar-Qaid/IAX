@@ -37,6 +37,8 @@ public sealed class LedgerSettlementService(
         await unitOfWork.BeginTransactionAsync(ct);
         try
         {
+            if (Db.ChangeTracker.HasChanges())
+                throw new SubledgerPostingException("Save or discard pending changes before changing ledger settlement.");
             var support = new SubledgerPostingSupport(Db);
             await support.LockAsync($"LedgerSettlement:{area}", ct);
 
@@ -61,11 +63,28 @@ public sealed class LedgerSettlementService(
             if (settled.Count > 0)
                 throw new SubledgerPostingException($"Entry {settled[0]} is already settled; reverse that settlement first.");
 
+            // Both sides must net to zero. Entries in one foreign currency can carry accounting
+            // amounts translated at different rates, so an accounting-currency match alone would
+            // accept a selection whose open amounts differ (100 USD at 3.75 against -125 USD at
+            // 3.00). The difference between them is exchange adjustment, which this path states it
+            // does not post, so it is refused in the currency the difference appears in.
             var balance = entries.Sum(x => x.AccountingCurrencyAmount);
+            if (balance == 0m)
+            {
+                var transactionBalance = entries.Sum(x => x.TransactionCurrencyAmount);
+                if (transactionBalance != 0m)
+                    balance = transactionBalance;
+            }
             if (balance != 0m)
                 throw new SubledgerPostingException(
                     $"The selection is out of balance by {balance}; settle the matched portion or post the approved write-off first." +
                     " Partial settlement is a separate parameter-gated feature that this path does not perform.");
+
+            var reportingBalance = entries.Sum(x => x.ReportingCurrencyAmount);
+            if (reportingBalance != 0m)
+                throw new SubledgerPostingException(
+                    $"The selection is out of balance by {reportingBalance} in the reporting currency; " +
+                    "post the required adjustment before settling. This settlement path does not post currency adjustments.");
 
             var settleDate = (input.SettleDate ?? DateTime.UtcNow).Date;
             var settleId = (await numbers.NextAsync("LedgerTransSettlement", area, ct)).Code;
@@ -116,6 +135,8 @@ public sealed class LedgerSettlementService(
         await unitOfWork.BeginTransactionAsync(ct);
         try
         {
+            if (Db.ChangeTracker.HasChanges())
+                throw new SubledgerPostingException("Save or discard pending changes before changing ledger settlement.");
             await new SubledgerPostingSupport(Db).LockAsync($"LedgerSettlement:{area}", ct);
             var rows = await Db.Set<LedgerTransSettlement>()
                 .Where(x => x.DataAreaId == area && x.SettleId == id).ToListAsync(ct);
@@ -123,6 +144,13 @@ public sealed class LedgerSettlementService(
             {
                 await unitOfWork.RollbackTransactionAsync(ct);
                 return (null, null);
+            }
+            foreach (var row in rows)
+            {
+                // Tracking queries can return state loaded before the settlement lock.
+                await Db.Entry(row).ReloadAsync(ct);
+                if (Db.Entry(row).State == EntityState.Detached || row.DataAreaId != area || row.SettleId != id)
+                    throw new SubledgerPostingException("The settlement changed; reload it before reversing.");
             }
             if (rows.All(x => x.IsReversed == NoYes.Yes))
                 throw new SubledgerPostingException($"Settlement '{id}' is already reversed.");

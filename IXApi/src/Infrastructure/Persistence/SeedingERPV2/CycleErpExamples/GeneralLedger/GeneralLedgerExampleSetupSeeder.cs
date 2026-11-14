@@ -21,6 +21,6 @@ public sealed class GeneralLedgerExampleSetupSeeder : IDataSeeder
             nameof(SysNumberSequence.Format), nameof(SysNumberSequence.AnnotatedFormat));
         await context.EnsureAsync<LedgerJournalName>(x => x.JournalName == JournalName,
             new() { JournalName = JournalName, Name = "GL example daily journal", JournalType = LedgerJournalType.Daily,
-                CurrencyCode = "SAR", NumberSequenceTable = sequence.RecId }, ct);
+                CurrencyCode = "SAR", NumberSequenceTable = sequence.RecId, VoucherAllocatedAtPosting = NoYes.Yes }, ct);
     }
 }

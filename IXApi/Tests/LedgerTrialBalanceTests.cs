@@ -12,6 +12,115 @@ namespace IAX.IXApi.Tests;
 
 public class LedgerTrialBalanceTests
 {
+    [Fact]
+    public async Task Refuses_an_ambiguous_company_ledger_instead_of_reporting_an_arbitrary_one()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        db.Add(new IAX.IXApi.Modules.Finance.Entities.Ledger { RecId = 2, DataAreaId = "dat", AccountingCurrency = "SAR" });
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var (result, error) = await NewService(db).GetAsync(new DateTime(2026, 1, 1),
+            new DateTime(2026, 1, 31), CurrentToOperationsPostingLayer.Current, default);
+
+        Assert.Null(result);
+        Assert.Contains("exactly one ledger", error, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Opening_entries_with_a_time_on_the_start_date_are_opening_balances()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        db.Set<IAX.IXApi.Modules.Finance.Entities.Ledger>().Local.Single().FiscalCalendar = 1;
+        db.Add(new FiscalCalendarYear { RecId = 1, FiscalCalendar = 1,
+            StartDate = new DateTime(2026, 1, 1), EndDate = new DateTime(2026, 12, 31) });
+        var opening = Entry(900, new DateTime(2026, 1, 1, 13, 30, 0));
+        opening.FiscalCalendarYear = 1;
+        opening.JournalCategory = LedgerJournalCategory.YearEndOpening;
+        db.Add(opening);
+        db.AddRange(Line(900, 900, 11, 500m), Line(901, 900, 7, -500m));
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var (result, error) = await NewService(db).GetAsync(new DateTime(2026, 1, 1),
+            new DateTime(2026, 1, 1), CurrentToOperationsPostingLayer.Current, default);
+
+        Assert.Null(error);
+        Assert.NotNull(result);
+        var utilities = Assert.Single(result.Lines, x => x.MainAccountId == "613000");
+        Assert.Equal(500m, utilities.OpeningDebit);
+        Assert.Equal(0m, utilities.Debit);
+        Assert.Equal(500m, utilities.DebitBalance);
+        Assert.True(result.Balanced);
+    }
+
+    [Fact]
+    public async Task A_future_opening_transfer_does_not_erase_prior_balances_from_an_earlier_report()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        db.Set<IAX.IXApi.Modules.Finance.Entities.Ledger>().Local.Single().FiscalCalendar = 1;
+        db.Add(new FiscalCalendarYear { RecId = 1, FiscalCalendar = 1,
+            StartDate = new DateTime(2026, 2, 1), EndDate = new DateTime(2026, 12, 31) });
+        var futureOpening = Entry(900, new DateTime(2026, 2, 2));
+        futureOpening.FiscalCalendarYear = 1;
+        futureOpening.JournalCategory = LedgerJournalCategory.YearEndOpening;
+        db.Add(futureOpening);
+        db.AddRange(Line(900, 900, 1, 100m), Line(901, 900, 7, -100m));
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var (result, error) = await NewService(db).GetAsync(new DateTime(2026, 2, 1),
+            new DateTime(2026, 2, 1), CurrentToOperationsPostingLayer.Current, default);
+
+        Assert.Null(error);
+        Assert.NotNull(result);
+        Assert.Equal(131000m, result.TotalDebitBalance);
+        Assert.Equal(131000m, result.TotalCreditBalance);
+        Assert.Equal(131000m, result.Lines.Sum(x => x.OpeningDebit));
+        Assert.True(result.Balanced);
+    }
+
+    [Theory]
+    [InlineData(2026, 1, 31)]
+    [InlineData(9999, 12, 31)]
+    public async Task Includes_the_entire_end_date_without_including_the_next_day(int year, int month, int day)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        var date = new DateTime(year, month, day);
+        db.Add(Entry(900, date.AddTicks(TimeSpan.TicksPerDay - 1)));
+        db.AddRange(Line(900, 900, 11, 500m), Line(901, 900, 1, -500m));
+        if (year < 9999)
+        {
+            db.Add(Entry(901, date.AddDays(1)));
+            db.AddRange(Line(902, 901, 11, 700m), Line(903, 901, 1, -700m));
+        }
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var (result, error) = await NewService(db).GetAsync(date, date.AddHours(12),
+            CurrentToOperationsPostingLayer.Current, default);
+
+        Assert.Null(error);
+        Assert.NotNull(result);
+        var utilities = Assert.Single(result.Lines, x => x.MainAccountId == "613000");
+        Assert.Equal(year == 2026 ? 4500m : 500m, utilities.Debit);
+        Assert.Equal(2500m, utilities.DebitBalance);
+        Assert.True(result.Balanced);
+        Assert.Equal(date, result.ToDate);
+    }
+
     // Section 8 of the cycle: the January trial balance after Cases A through N.
     // Totals are 131,000 on each side and profit is 13,900.
     [Fact]

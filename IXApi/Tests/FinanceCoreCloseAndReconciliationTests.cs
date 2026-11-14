@@ -129,6 +129,99 @@ public sealed class FinanceCoreCloseAndReconciliationTests
         Assert.Equal(FiscalPeriodStatus.YearClosed, (await db.Set<LedgerFiscalCalendarPeriod>().SingleAsync()).Status);
     }
 
+    /// <summary>
+    /// With a reporting currency on the ledger, the close used to refuse outright. It now carries
+    /// the posted reporting balances through: the opening transfer and the closing voucher each
+    /// balance in both currencies, with the reporting side summed from what was posted, never
+    /// re-translated. A later adjustment that moves only the reporting side — accounting nets to
+    /// zero — still produces its own opening transfer, because a dimension is due an adjustment
+    /// when either currency drifted.
+    /// </summary>
+    [Fact]
+    public async Task Year_end_close_carries_reporting_currency_balances()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContext(connection);
+        var end = new DateTime(2026, 12, 31);
+        db.Add(new IAX.IXApi.Modules.Finance.Entities.Ledger { RecId = 1, DataAreaId = "dat",
+            FiscalCalendar = 1, ChartOfAccounts = 1, AccountingCurrency = "SAR", ReportingCurrency = "USD" });
+        db.Add(new FiscalCalendarYear { RecId = 1, FiscalCalendar = 1,
+            StartDate = new DateTime(2026, 1, 1), EndDate = end });
+        db.Add(new FiscalCalendarYear { RecId = 2, FiscalCalendar = 1,
+            StartDate = new DateTime(2027, 1, 1), EndDate = new DateTime(2027, 12, 31) });
+        db.Add(new FiscalCalendarPeriod { RecId = 1, FiscalCalendar = 1, FiscalCalendarYear = 1,
+            StartDate = new DateTime(2026, 1, 1), EndDate = end, Type = FiscalPeriodType.Operating });
+        db.Add(new FiscalCalendarPeriod { RecId = 2, FiscalCalendar = 1, FiscalCalendarYear = 2,
+            StartDate = new DateTime(2027, 1, 1), EndDate = new DateTime(2027, 12, 31), Type = FiscalPeriodType.Opening });
+        db.Add(new LedgerFiscalCalendarYear { RecId = 1, Ledger = 1, FiscalCalendarYear = 1, Status = FiscalPeriodStatus.OnHold });
+        db.Add(new LedgerFiscalCalendarPeriod { RecId = 1, Ledger = 1, FiscalCalendarPeriod = 1, Status = FiscalPeriodStatus.OnHold });
+        db.AddRange(
+            new MainAccount { RecId = 1, DataAreaId = "dat", LedgerChartOfAccounts = 1, Type = MainAccountType.Asset, MainAccountId = "100" },
+            new MainAccount { RecId = 2, DataAreaId = "dat", LedgerChartOfAccounts = 1, Type = MainAccountType.Revenue, MainAccountId = "400" },
+            new MainAccount { RecId = 3, DataAreaId = "dat", LedgerChartOfAccounts = 1, Type = MainAccountType.Equity, MainAccountId = "300" });
+        db.AddRange(
+            new DimensionAttributeValueCombination { RecId = 1, DataAreaId = "dat", MainAccount = 1, DisplayValue = "100" },
+            new DimensionAttributeValueCombination { RecId = 2, DataAreaId = "dat", MainAccount = 2, DisplayValue = "400" },
+            new DimensionAttributeValueCombination { RecId = 3, DataAreaId = "dat", MainAccount = 3, DisplayValue = "300" });
+        // 100 SAR posted at 0.25: the asset holds 100 / 25, the revenue -100 / -25.
+        db.Add(new GeneralJournalEntry { RecId = 1, DataAreaId = "dat", Ledger = 1,
+            PostingLayer = CurrentToOperationsPostingLayer.Current, AccountingDate = end,
+            JournalNumber = "J1", SubledgerVoucher = "V1" });
+        db.AddRange(
+            new GeneralJournalAccountEntry { RecId = 1, DataAreaId = "dat", GeneralJournalEntry = 1,
+                MainAccount = 1, LedgerDimension = 1, AccountingCurrencyAmount = 100m, ReportingCurrencyAmount = 25m },
+            new GeneralJournalAccountEntry { RecId = 2, DataAreaId = "dat", GeneralJournalEntry = 1,
+                MainAccount = 2, LedgerDimension = 2, AccountingCurrencyAmount = -100m, ReportingCurrencyAmount = -25m });
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var controller = new LedgerYearEndCloseController(new Work(db), new User());
+        Assert.IsType<OkObjectResult>(await controller.Close(new LedgerYearEndCloseRequest(1, 3, true), default));
+
+        var opening = await db.Set<GeneralJournalEntry>().SingleAsync(x => x.JournalCategory == LedgerJournalCategory.YearEndOpening);
+        var lines = await db.Set<GeneralJournalAccountEntry>().Where(x => x.GeneralJournalEntry == opening.RecId).ToListAsync();
+        Assert.Equal(0m, lines.Sum(x => x.AccountingCurrencyAmount));
+        Assert.Equal(0m, lines.Sum(x => x.ReportingCurrencyAmount));
+        Assert.Contains(lines, x => x.MainAccount == 1 && x.AccountingCurrencyAmount == 100m && x.ReportingCurrencyAmount == 25m);
+        Assert.Contains(lines, x => x.MainAccount == 3 && x.AccountingCurrencyAmount == -100m && x.ReportingCurrencyAmount == -25m);
+
+        var closing = Assert.Single(await db.Set<GeneralJournalEntry>()
+            .Where(x => x.JournalCategory == LedgerJournalCategory.YearEndClosing).ToListAsync());
+        var closingLines = await db.Set<GeneralJournalAccountEntry>().Where(x => x.GeneralJournalEntry == closing.RecId).ToListAsync();
+        Assert.Equal(0m, closingLines.Sum(x => x.ReportingCurrencyAmount));
+        Assert.Equal(25m, closingLines.Single(x => x.MainAccount == 2).ReportingCurrencyAmount);
+        Assert.Equal(-25m, closingLines.Single(x => x.MainAccount == 3).ReportingCurrencyAmount);
+
+        // Nothing drifted, so a re-run transfers nothing more in either currency.
+        Assert.IsType<OkObjectResult>(await controller.Close(new LedgerYearEndCloseRequest(1, 3, true), default));
+        Assert.Single(await db.Set<GeneralJournalEntry>()
+            .Where(x => x.JournalCategory == LedgerJournalCategory.YearEndOpening).ToListAsync());
+
+        // An adjustment that moves only the reporting side: accounting nets to zero on each
+        // dimension, the reporting value of the asset is revalued by 5 against the revenue.
+        db.Add(new GeneralJournalEntry { RecId = 10, DataAreaId = "dat", Ledger = 1,
+            PostingLayer = CurrentToOperationsPostingLayer.Current, AccountingDate = end,
+            JournalNumber = "ADJ1", SubledgerVoucher = "ADJ1" });
+        db.AddRange(
+            new GeneralJournalAccountEntry { RecId = 10, DataAreaId = "dat", GeneralJournalEntry = 10,
+                MainAccount = 1, LedgerDimension = 1, AccountingCurrencyAmount = 0m, ReportingCurrencyAmount = 5m },
+            new GeneralJournalAccountEntry { RecId = 11, DataAreaId = "dat", GeneralJournalEntry = 10,
+                MainAccount = 2, LedgerDimension = 2, AccountingCurrencyAmount = 0m, ReportingCurrencyAmount = -5m });
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        Assert.IsType<OkObjectResult>(await controller.Close(new LedgerYearEndCloseRequest(1, 3), default));
+        var openings = await db.Set<GeneralJournalEntry>()
+            .Where(x => x.JournalCategory == LedgerJournalCategory.YearEndOpening).ToListAsync();
+        Assert.Equal(2, openings.Count);
+        var reportingOpeningId = openings.Max(y => y.RecId);
+        var adjusted = await db.Set<GeneralJournalAccountEntry>()
+            .Where(x => x.GeneralJournalEntry == reportingOpeningId).ToListAsync();
+        Assert.Contains(adjusted, x => x.MainAccount == 1 && x.AccountingCurrencyAmount == 0m && x.ReportingCurrencyAmount == 5m);
+        Assert.Contains(adjusted, x => x.MainAccount == 3 && x.AccountingCurrencyAmount == 0m && x.ReportingCurrencyAmount == -5m);
+    }
+
     [Fact]
     public async Task Reconciliation_requires_statement_balance_and_marks_selected_movements()
     {

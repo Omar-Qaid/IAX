@@ -28,19 +28,25 @@ public sealed class LedgerTrialBalanceService(IUnitOfWork unitOfWork, ICurrentUs
         var start = fromDate.Date;
         var end = toDate.Date;
         if (end < start) return (null, "The end date cannot precede the start date.");
+        // Include the entire selected accounting day, including imported timestamps.
+        // Adding ticks also supports DateTime.MaxValue's date without overflowing.
+        var endOfDay = end.AddTicks(TimeSpan.TicksPerDay - 1);
 
-        var ledger = await Db.Set<Entities.Ledger>().AsNoTracking().FirstOrDefaultAsync(x => x.DataAreaId == area, ct);
-        if (ledger == null) return (null, "A ledger is required for the selected company.");
+        var ledgers = await Db.Set<Entities.Ledger>().AsNoTracking().Where(x => x.DataAreaId == area).Take(2).ToListAsync(ct);
+        if (ledgers.Count == 0) return (null, "A ledger is required for the selected company.");
+        if (ledgers.Count > 1) return (null, "Exactly one ledger is required for the selected company.");
+        var ledger = ledgers[0];
         var fiscalYear = await Db.Set<FiscalCalendarYear>().AsNoTracking()
             .FirstOrDefaultAsync(x => x.FiscalCalendar == ledger.FiscalCalendar && x.StartDate <= start && x.EndDate >= start, ct);
         var hasOpeningTransfer = fiscalYear != null && await Db.Set<GeneralJournalEntry>().AsNoTracking().AnyAsync(x =>
             x.Ledger == ledger.RecId && x.FiscalCalendarYear == fiscalYear.RecId &&
-            x.JournalCategory == LedgerJournalCategory.YearEndOpening && x.PostingLayer == postingLayer, ct);
+            x.JournalCategory == LedgerJournalCategory.YearEndOpening && x.PostingLayer == postingLayer &&
+            x.AccountingDate <= endOfDay, ct);
 
         var rows = await (from line in Db.Set<GeneralJournalAccountEntry>().AsNoTracking()
                           join entry in Db.Set<GeneralJournalEntry>().AsNoTracking() on line.GeneralJournalEntry equals entry.RecId
                           where entry.Ledger == ledger.RecId && entry.PostingLayer == postingLayer
-                              && entry.AccountingDate <= end
+                              && entry.AccountingDate <= endOfDay
                           select new { line.MainAccount, line.LedgerAccount, line.AccountingCurrencyAmount,
                               entry.AccountingDate, entry.JournalCategory })
             .ToListAsync(ct);
@@ -58,10 +64,10 @@ public sealed class LedgerTrialBalanceService(IUnitOfWork unitOfWork, ICurrentUs
             {
                 var account = accounts.FirstOrDefault(x => x.RecId == group.Key);
                 var opening = group.Where(x => x.AccountingDate < start ||
-                    (x.AccountingDate == start && x.JournalCategory == LedgerJournalCategory.YearEndOpening))
+                    (x.AccountingDate.Date == start && x.JournalCategory == LedgerJournalCategory.YearEndOpening))
                     .Sum(x => x.AccountingCurrencyAmount);
                 var period = group.Where(x => x.AccountingDate >= start &&
-                    !(x.AccountingDate == start && x.JournalCategory == LedgerJournalCategory.YearEndOpening)).ToList();
+                    !(x.AccountingDate.Date == start && x.JournalCategory == LedgerJournalCategory.YearEndOpening)).ToList();
                 var debit = period.Where(x => x.AccountingCurrencyAmount > 0).Sum(x => x.AccountingCurrencyAmount);
                 var credit = -period.Where(x => x.AccountingCurrencyAmount < 0).Sum(x => x.AccountingCurrencyAmount);
                 var net = opening + debit - credit;

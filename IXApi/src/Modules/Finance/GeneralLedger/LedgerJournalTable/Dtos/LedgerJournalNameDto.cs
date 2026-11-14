@@ -26,5 +26,7 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger
         public string CurrencyCode { get; set; } = string.Empty;
 
         public NoYes FixedExchRate { get; set; }
+        public NoYes WorkflowApproval { get; set; }
+        public NoYes LedgerJournalInclTax { get; set; }
     }
 }

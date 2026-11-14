@@ -37,6 +37,10 @@ public sealed class LedgerJournalReversalService(
         await unitOfWork.BeginTransactionAsync(ct);
         try
         {
+            // Building the reversal saves the shared context before the posting guard runs.
+            // Do not let that save commit changes that belong to another operation.
+            if (Db.ChangeTracker.HasChanges())
+                throw new SubledgerPostingException("Save or discard pending changes before reversing a journal.");
             var original = await Db.Set<JournalHeader>().AsNoTracking()
                 .SingleOrDefaultAsync(x => x.DataAreaId == area && x.RecId == recId, ct);
             if (original == null)

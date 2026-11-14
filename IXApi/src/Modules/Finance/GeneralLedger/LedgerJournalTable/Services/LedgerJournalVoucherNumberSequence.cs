@@ -30,7 +30,19 @@ internal static class LedgerJournalVoucherNumberSequence
 
         if (lines.All(x => !string.IsNullOrWhiteSpace(x.Voucher))) return;
         EnsureConfigured(name);
-        string? shared = null;
+        // "Voucher change: none" on the journal name means a line entered without a voucher
+        // continues the voucher the journal is already using instead of starting another. It does
+        // not make the journal one voucher only: the core cycle reference (§4 step 6) states
+        // outright not to assume that every journal gets a single voucher, so lines that carry
+        // their own vouchers are left as entered. When they carry more than one, which voucher a
+        // blank line belongs to is ambiguous, so it is allocated its own rather than guessed at.
+        var entered = lines.Where(x => !string.IsNullOrWhiteSpace(x.Voucher))
+            .OrderBy(x => x.LineNum).ThenBy(x => x.RecId)
+            .Select(x => x.Voucher).ToList();
+        string? shared = name.NewVoucher == LedgerJournalVoucherChange.None
+            && entered.Distinct(StringComparer.Ordinal).Count() == 1
+                ? entered[0]
+                : null;
         foreach (var line in lines.Where(x => string.IsNullOrWhiteSpace(x.Voucher)))
         {
             if (name.NewVoucher == LedgerJournalVoucherChange.None && shared != null) line.Voucher = shared;

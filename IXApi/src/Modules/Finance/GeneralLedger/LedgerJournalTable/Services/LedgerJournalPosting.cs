@@ -29,6 +29,10 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
         var support = new SubledgerPostingSupport(db);
         await support.LockAsync($"GeneralJournal:{area}:{header.JournalNum}", ct);
 
+        db.ChangeTracker.DetectChanges();
+        if (db.Entry(header).State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+            throw new SubledgerPostingException("Save journal header changes before posting.");
+
         // The caller may have loaded this header before waiting for the posting lock.
         // Use persisted controls and status after acquiring it, not the tracked snapshot.
         await db.Entry(header).ReloadAsync(ct);
@@ -39,6 +43,16 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
         if (header.SystemBlocked == NoYes.Yes) throw new SubledgerPostingException("The journal is system blocked.");
         if (header.ReverseEntry == NoYes.Yes)
             throw new SubledgerPostingException("Automatic reversal journals are not supported; post the reversal as its own journal.");
+        if (db.ChangeTracker.Entries<LedgerJournalTrans>().Any(x =>
+            (x.State is EntityState.Added or EntityState.Modified or EntityState.Deleted) &&
+            ((x.Entity.JournalNum == header.JournalNum &&
+                (x.Entity.DataAreaId == area || (x.State == EntityState.Added && string.IsNullOrWhiteSpace(x.Entity.DataAreaId)))) ||
+             (x.State != EntityState.Added &&
+                x.OriginalValues.GetValue<string>(nameof(LedgerJournalTrans.DataAreaId)) == area &&
+                x.OriginalValues.GetValue<string>(nameof(LedgerJournalTrans.JournalNum)) == header.JournalNum))))
+            throw new SubledgerPostingException("Save journal line changes before posting.");
+        if (db.ChangeTracker.HasChanges())
+            throw new SubledgerPostingException("Save or discard other pending changes before posting.");
         var setup = await new LedgerJournalSetupCheck(db).CheckAsync(area, header.RecId, ct)
             ?? throw new SubledgerPostingException("The journal setup could not be verified.");
         if (setup.Errors.Count > 0) throw new SubledgerPostingException(setup.Errors[0]);
@@ -52,6 +66,12 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
 
         var lines = await db.Set<LedgerJournalTrans>()
             .Where(x => x.DataAreaId == area && x.JournalNum == header.JournalNum).ToListAsync(ct);
+        foreach (var line in lines)
+        {
+            await db.Entry(line).ReloadAsync(ct);
+            if (db.Entry(line).State == EntityState.Detached || line.DataAreaId != area || line.JournalNum != header.JournalNum)
+                throw new SubledgerPostingException("The journal lines changed while posting; reload the journal and retry.");
+        }
         lines = lines.OrderBy(x => x.LineNum).ThenBy(x => x.RecId).ToList();
         if (lines.Any(x => x.AccountType == LedgerJournalACType.Cust && x.Prepayment == NoYes.Yes))
             throw new SubledgerPostingException("Customer prepayment journals require advance-liability posting and application, which are not implemented.");
@@ -234,6 +254,9 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                 var customer = await db.Set<CustTable>().AsNoTracking()
                     .FirstOrDefaultAsync(x => x.DataAreaId == area && x.AccountNum == accountNum, ct)
                     ?? throw new SubledgerPostingException($"Customer '{accountNum}' was not found for {what}.");
+                if (customer.Blocked == CustVendorBlocked.All
+                    || (customer.Blocked == CustVendorBlocked.Invoicing && !string.IsNullOrWhiteSpace(line.Invoice)))
+                    throw new SubledgerPostingException("The customer is blocked for this journal transaction.");
                 var dimension = await support.ResolveCustomerSummaryAsync(area, line.PostingProfile, customer, ct, applyDefaults);
                 return new PostingSide(dimension, LedgerPostingType.CustBalance, line.AccountType, customer.AccountNum, null);
             }
@@ -284,7 +307,9 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                 var custTrans = new CustTrans
                 {
                     DataAreaId = area, AccountNum = side.AccountNum, OrderAccount = side.AccountNum,
-                    TransDate = date, Voucher = voucher, DocumentNum = header.JournalNum, DocumentDate = date,
+                    TransDate = date, Voucher = voucher, DocumentNum = header.JournalNum,
+                    DocumentDate = line.DocumentDate == default ? date : line.DocumentDate.Date,
+                    Invoice = line.Invoice, PaymReference = line.PaymReference,
                     Txt = line.Txt, TransType = LedgerTransType.Cust, CurrencyCode = line.CurrencyCode,
                     AmountCur = amount, AmountMst = accountingAmount, ReportingCurrencyAmount = reportingAmount,
                     DueDate = due, PaymTermId = line.Payment, PaymMode = line.PaymMode,
@@ -292,6 +317,7 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                 };
                 db.Add(custTrans);
                 await db.SaveChangesAsync(ct); // The open row references the transaction key.
+                line.CustTransId = custTrans.RecId;
                 var open = new CustTransOpen
                 {
                     DataAreaId = area, AccountNum = side.AccountNum, RefRecId = custTrans.RecId,
@@ -337,7 +363,7 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                     Txt = line.Txt, LedgerTransType = LedgerTransType.Bank,
                     CurrencyCode = line.CurrencyCode, BankTransCurrencyCode = line.CurrencyCode,
                     AmountCur = amount, AmountMst = accountingAmount, AmountReportingCurrency = reportingAmount,
-                    BankTransAmountCur = amount, LedgerDimension = side.Bank!.LedgerDimension,
+                    BankTransAmountCur = amount, LedgerDimension = side.Dimension.RecId,
                     SourceTableId = FinanceTableNumbers.LedgerJournalTrans, SourceRecId = line.RecId,
                     PaymentMode = line.PaymMode, PaymReference = line.PaymReference
                 });
@@ -360,7 +386,17 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
             where debit.RecId == line.MarkedInvoiceRecId && debit.DataAreaId == area && open.DataAreaId == area
                 && debit.AccountNum == credit.AccountNum && open.AccountNum == credit.AccountNum
             select new { Debit = debit, Open = open }).SingleOrDefaultAsync(ct);
+        if (marked != null)
+        {
+            // A tracking query can reuse balances loaded before the settlement lock.
+            await db.Entry(marked.Debit).ReloadAsync(ct);
+            await db.Entry(marked.Open).ReloadAsync(ct);
+        }
         if (marked == null || string.IsNullOrWhiteSpace(marked.Debit.Invoice)
+            || db.Entry(marked.Debit).State == EntityState.Detached || db.Entry(marked.Open).State == EntityState.Detached
+            || marked.Debit.DataAreaId != area || marked.Open.DataAreaId != area
+            || marked.Debit.AccountNum != credit.AccountNum || marked.Open.AccountNum != credit.AccountNum
+            || marked.Open.RefRecId != marked.Debit.RecId
             || marked.Debit.CurrencyCode != credit.CurrencyCode || marked.Debit.TransDate.Date > credit.TransDate
             || marked.Open.AmountCur != -creditOpen.AmountCur)
             throw new SubledgerPostingException("The marked invoice must have an open balance matching the credit amount and currency.");
@@ -393,9 +429,17 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
             throw new SubledgerPostingException($"{label}: intercompany journal posting is not supported.");
         if (string.IsNullOrWhiteSpace(line.CurrencyCode))
             throw new SubledgerPostingException($"{label}: a transaction currency is required.");
-        if (line.TaxCode.Length > 0 || (header.LedgerJournalInclTax == NoYes.Yes &&
-            (line.AccountType != LedgerJournalACType.Vend || line.TaxGroup.Length == 0 || line.TaxItemGroup.Length == 0 || line.OffsetLedgerDimension == 0)))
+        var taxRequested = header.LedgerJournalInclTax == NoYes.Yes || !string.IsNullOrWhiteSpace(line.TaxCode)
+            || !string.IsNullOrWhiteSpace(line.TaxGroup) || !string.IsNullOrWhiteSpace(line.TaxItemGroup);
+        var supportedTax = line.AccountType == LedgerJournalACType.Vend && header.LedgerJournalInclTax == NoYes.Yes
+            && !string.IsNullOrWhiteSpace(line.TaxGroup) && !string.IsNullOrWhiteSpace(line.TaxItemGroup)
+            && line.OffsetLedgerDimension != 0 && string.IsNullOrWhiteSpace(line.TaxCode);
+        if (taxRequested && !supportedTax)
             throw new SubledgerPostingException($"{label}: journal tax calculation is not supported; post tax through its own process.");
+        if (line.SettleVoucher != SettleVoucher.PostedVoucher
+            && !(line.AccountType == LedgerJournalACType.Cust && line.SettleVoucher == SettleVoucher.Selection))
+            throw new SubledgerPostingException(
+                $"{label}: {line.SettleVoucher} settlement for {line.AccountType} journal lines is not supported; use the settlement process.");
         if (line.ReverseEntry == NoYes.Yes)
             throw new SubledgerPostingException($"{label}: automatic reversal is not supported; post the reversal as its own journal.");
     }

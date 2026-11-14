@@ -40,15 +40,22 @@ internal sealed class SubledgerPostingSupport(DbContext db)
     public async Task<SubledgerLedgerContext> LoadLedgerContextAsync(string area, DateTime date,
         LedgerPostingModule module, string userId, CancellationToken ct)
     {
-        var ledger = await db.Set<Ledger>().AsNoTracking().FirstOrDefaultAsync(x => x.DataAreaId == area, ct)
-            ?? throw new SubledgerPostingException("A ledger is required for the selected company.");
+        var ledgers = await db.Set<Ledger>().AsNoTracking().Where(x => x.DataAreaId == area).Take(2).ToListAsync(ct);
+        if (ledgers.Count == 0) throw new SubledgerPostingException("A ledger is required for the selected company.");
+        if (ledgers.Count > 1) throw new SubledgerPostingException("Exactly one ledger is required for the selected company.");
+        var ledger = ledgers[0];
         if (string.IsNullOrWhiteSpace(ledger.AccountingCurrency))
             throw new SubledgerPostingException("The ledger accounting currency is required.");
-        var period = await db.Set<FiscalCalendarPeriod>().AsNoTracking().FirstOrDefaultAsync(
-            x => x.FiscalCalendar == ledger.FiscalCalendar && x.StartDate <= date && x.EndDate >= date && x.Type == FiscalPeriodType.Operating, ct)
-            ?? throw new SubledgerPostingException($"No operating fiscal period contains {date:d}.");
-        var ledgerPeriod = await db.Set<LedgerFiscalCalendarPeriod>().AsNoTracking().FirstOrDefaultAsync(
-            x => x.Ledger == ledger.RecId && x.FiscalCalendarPeriod == period.RecId, ct);
+        var periods = await db.Set<FiscalCalendarPeriod>().AsNoTracking().Where(
+            x => x.FiscalCalendar == ledger.FiscalCalendar && x.StartDate <= date && x.EndDate >= date && x.Type == FiscalPeriodType.Operating)
+            .Take(2).ToListAsync(ct);
+        if (periods.Count == 0) throw new SubledgerPostingException($"No operating fiscal period contains {date:d}.");
+        if (periods.Count > 1) throw new SubledgerPostingException($"The operating fiscal period for {date:d} is ambiguous.");
+        var period = periods[0];
+        var statuses = await db.Set<LedgerFiscalCalendarPeriod>().AsNoTracking().Where(
+            x => x.Ledger == ledger.RecId && x.FiscalCalendarPeriod == period.RecId).Take(2).ToListAsync(ct);
+        if (statuses.Count > 1) throw new SubledgerPostingException($"The ledger period status for {date:d} is ambiguous.");
+        var ledgerPeriod = statuses.SingleOrDefault();
         if (ledgerPeriod == null || ledgerPeriod.Status != FiscalPeriodStatus.Open)
             throw new SubledgerPostingException($"The fiscal period for {date:d} is not open.");
         if (db.Model.FindEntityType(typeof(LedgerPeriodModuleAccessControl)) != null)
@@ -67,6 +74,8 @@ internal sealed class SubledgerPostingSupport(DbContext db)
                     LedgerPostingModule.Inventory => (access.InventAccessLevel, access.InventUserGroupInfo),
                     _ => throw new SubledgerPostingException($"Unsupported fiscal-period posting module '{module}'.")
                 };
+                if (rule.Item1 is not (LedgerPeriodAccessLevel.All or LedgerPeriodAccessLevel.None or LedgerPeriodAccessLevel.UserGroup))
+                    throw new SubledgerPostingException($"The {module} module has an invalid fiscal-period access level.");
                 if (rule.Item1 == LedgerPeriodAccessLevel.None)
                     throw new SubledgerPostingException($"The {module} module is closed for the fiscal period containing {date:d}.");
                 if (rule.Item1 == LedgerPeriodAccessLevel.UserGroup &&

@@ -21,6 +21,20 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
         public override async Task<IAX.IXApi.Modules.Finance.Entities.LedgerJournalName> UpdateAsync(
             IAX.IXApi.Modules.Finance.Entities.LedgerJournalName entity, CancellationToken ct = default)
         {
+            await PrepareUpdateAsync(entity, ct);
+            return await base.UpdateAsync(entity, ct);
+        }
+
+        public override async Task<IEnumerable<IAX.IXApi.Modules.Finance.Entities.LedgerJournalName>> UpdateRangeAsync(
+            IEnumerable<IAX.IXApi.Modules.Finance.Entities.LedgerJournalName> entities, CancellationToken ct = default)
+        {
+            var rows = entities.ToList();
+            foreach (var row in rows) await PrepareUpdateAsync(row, ct);
+            return await base.UpdateRangeAsync(rows, ct);
+        }
+
+        private async Task PrepareUpdateAsync(IAX.IXApi.Modules.Finance.Entities.LedgerJournalName entity, CancellationToken ct)
+        {
             var current = await _unitOfWork.Context.Set<IAX.IXApi.Modules.Finance.Entities.LedgerJournalName>()
                 .AsNoTracking().SingleOrDefaultAsync(x => x.RecId == entity.RecId, ct)
                 ?? throw new InvalidOperationException("Journal name was not found.");
@@ -28,7 +42,33 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
             if (!string.Equals(entity.JournalName, current.JournalName, StringComparison.Ordinal))
                 throw new InvalidOperationException("A journal name identifier cannot be changed after it is created.");
             await ValidateSetupAsync(entity, ct);
-            return await base.UpdateAsync(entity, ct);
+        }
+
+        public override async Task RemoveAsync(IAX.IXApi.Modules.Finance.Entities.LedgerJournalName entity, CancellationToken ct = default)
+        {
+            await EnsureRemovableAsync(entity.RecId, ct);
+            await base.RemoveAsync(entity, ct);
+        }
+
+        public override async Task RemoveRangeAsync(IEnumerable<IAX.IXApi.Modules.Finance.Entities.LedgerJournalName> entities, CancellationToken ct = default)
+        {
+            var rows = entities.ToList();
+            foreach (var row in rows) await EnsureRemovableAsync(row.RecId, ct);
+            await base.RemoveRangeAsync(rows, ct);
+        }
+
+        private async Task EnsureRemovableAsync(long recId, CancellationToken ct)
+        {
+            var current = await _unitOfWork.Context.Set<IAX.IXApi.Modules.Finance.Entities.LedgerJournalName>()
+                .AsNoTracking().SingleOrDefaultAsync(x => x.RecId == recId, ct)
+                ?? throw new InvalidOperationException("Journal name was not found.");
+            if (_unitOfWork.Context.ChangeTracker.Entries<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable>().Any(x =>
+                    x.State is EntityState.Added or EntityState.Modified && x.Entity.JournalName == current.JournalName &&
+                    (x.Entity.DataAreaId == current.DataAreaId ||
+                        (string.IsNullOrWhiteSpace(x.Entity.DataAreaId) && _currentUser.GetDataAreaId() == current.DataAreaId)))
+                || await _unitOfWork.Context.Set<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable>().AsNoTracking()
+                .AnyAsync(x => x.DataAreaId == current.DataAreaId && x.JournalName == current.JournalName, ct))
+                throw new InvalidOperationException("The journal name is in use by a journal and cannot be deleted.");
         }
 
         private async Task ValidateSetupAsync(IAX.IXApi.Modules.Finance.Entities.LedgerJournalName entity, CancellationToken ct)

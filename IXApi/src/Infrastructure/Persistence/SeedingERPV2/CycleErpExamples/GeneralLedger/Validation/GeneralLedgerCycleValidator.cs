@@ -17,7 +17,7 @@ public sealed class GeneralLedgerCycleValidator : ISeedValidator
         var sequence = await context.RequireAsync<SysNumberSequence>(
             x => x.RecId == journal.NumberSequenceTable, ct);
         if (journal.JournalType != LedgerJournalType.Daily || journal.CurrencyCode != "SAR"
-            || sequence.Blocked != 0 || sequence.Manual != 0 || sequence.InUse != 1
+            || (sequence.Blocked ?? 0) != 0 || (sequence.Manual ?? 0) != 0 || sequence.InUse != 1
             || sequence.NextRec < sequence.Lowest || sequence.NextRec > sequence.Highest)
             throw new InvalidOperationException("GL preparation has invalid journal or voucher sequence configuration.");
         foreach (var code in definition.Accounts)

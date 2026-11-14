@@ -29,9 +29,6 @@ public sealed class LedgerYearEndCloseController(IUnitOfWork work, ICurrentUserS
                 var ledger = await db.Set<Entities.Ledger>()
                     .SingleOrDefaultAsync(x => x.DataAreaId == area, ct);
                 if (ledger == null) return await Reject("A ledger is required for the selected company.");
-                if (!string.IsNullOrWhiteSpace(ledger.ReportingCurrency) &&
-                    !string.Equals(ledger.ReportingCurrency, ledger.AccountingCurrency, StringComparison.OrdinalIgnoreCase))
-                    return await Reject("Year-end transfer requires reporting-currency balance conversion, which is not supported.");
                 var year = await db.Set<FiscalCalendarYear>().AsNoTracking()
                     .SingleOrDefaultAsync(x => x.RecId == request.FiscalCalendarYearId && x.FiscalCalendar == ledger.FiscalCalendar, ct);
                 if (year == null) return await Reject("Fiscal year was not found on the selected ledger calendar.");
@@ -69,7 +66,8 @@ public sealed class LedgerYearEndCloseController(IUnitOfWork work, ICurrentUserS
                                         journal.PostingLayer == CurrentToOperationsPostingLayer.Current &&
                                         journal.AccountingDate >= year.StartDate.Date && journal.AccountingDate <= year.EndDate.Date &&
                                         journal.JournalCategory != LedgerJournalCategory.YearEndClosing
-                                    select new { line.LedgerDimension, line.MainAccount, line.AccountingCurrencyAmount })
+                                    select new { line.LedgerDimension, line.MainAccount,
+                                        line.AccountingCurrencyAmount, line.ReportingCurrencyAmount })
                     .ToListAsync(ct);
                 var accountIds = posted.Select(x => x.MainAccount).Distinct().ToList();
                 var allAccounts = await db.Set<MainAccount>().AsNoTracking()
@@ -77,13 +75,19 @@ public sealed class LedgerYearEndCloseController(IUnitOfWork work, ICurrentUserS
                     .Select(x => new { x.RecId, x.Type }).ToListAsync(ct);
                 if (allAccounts.Count != accountIds.Count)
                     return await Reject("A posted main account is missing from the ledger chart of accounts.");
+                // Balances are carried in the accounting *and* the reporting currency: the close
+                // transfers what was posted, so the reporting side is the sum of the posted
+                // reporting amounts, never a re-translation at some later rate.
                 var balances = posted
                     .GroupBy(x => x.LedgerDimension)
                     .Select(x => new { Dimension = x.Key, MainAccount = x.First().MainAccount,
-                        Amount = x.Sum(y => y.AccountingCurrencyAmount) })
-                    .Where(x => x.Amount != 0m).ToList();
+                        Amount = x.Sum(y => y.AccountingCurrencyAmount),
+                        Reporting = x.Sum(y => y.ReportingCurrencyAmount) })
+                    .Where(x => x.Amount != 0m || x.Reporting != 0m).ToList();
                 if (balances.Sum(x => x.Amount) != 0m)
                     return await Reject("The fiscal-year ledger balances are not balanced.");
+                if (balances.Sum(x => x.Reporting) != 0m)
+                    return await Reject("The fiscal-year ledger balances are not balanced in the reporting currency.");
                 var dimensionIds = balances.Select(x => x.Dimension).ToList();
                 var dimensions = await db.Set<DimensionAttributeValueCombination>().AsNoTracking()
                     .Where(x => x.DataAreaId == area && dimensionIds.Contains(x.RecId)).ToDictionaryAsync(x => x.RecId, ct);
@@ -95,18 +99,29 @@ public sealed class LedgerYearEndCloseController(IUnitOfWork work, ICurrentUserS
                                           where journal.Ledger == ledger.RecId &&
                                               journal.JournalCategory == LedgerJournalCategory.YearEndOpening &&
                                               journal.JournalNumber.StartsWith(openingPrefix)
-                                          select new { line.LedgerDimension, line.AccountingCurrencyAmount }).ToListAsync(ct);
+                                          select new { line.LedgerDimension,
+                                              line.AccountingCurrencyAmount, line.ReportingCurrencyAmount }).ToListAsync(ct);
                 var expected = balances.Where(x => allAccounts.Any(a => a.RecId == x.MainAccount &&
                         a.Type is MainAccountType.Asset or MainAccountType.Liability or MainAccountType.Equity))
-                    .ToDictionary(x => x.Dimension, x => x.Amount);
-                var profit = balances.Where(x => allAccounts.Any(a => a.RecId == x.MainAccount &&
-                        a.Type is MainAccountType.Revenue or MainAccountType.Expense)).Sum(x => x.Amount);
-                expected[retainedDimension.RecId] = expected.GetValueOrDefault(retainedDimension.RecId) + profit;
+                    .ToDictionary(x => x.Dimension, x => (x.Amount, x.Reporting));
+                var profitAndLossBalances = balances.Where(x => allAccounts.Any(a => a.RecId == x.MainAccount &&
+                        a.Type is MainAccountType.Revenue or MainAccountType.Expense)).ToList();
+                var profit = profitAndLossBalances.Sum(x => x.Amount);
+                var reportingProfit = profitAndLossBalances.Sum(x => x.Reporting);
+                var retained = expected.GetValueOrDefault(retainedDimension.RecId);
+                expected[retainedDimension.RecId] = (retained.Amount + profit, retained.Reporting + reportingProfit);
                 var previouslyTransferred = priorOpening.GroupBy(x => x.LedgerDimension)
-                    .ToDictionary(x => x.Key, x => x.Sum(y => y.AccountingCurrencyAmount));
+                    .ToDictionary(x => x.Key, x => (Amount: x.Sum(y => y.AccountingCurrencyAmount),
+                        Reporting: x.Sum(y => y.ReportingCurrencyAmount)));
                 var delta = expected.Keys.Union(previouslyTransferred.Keys)
-                    .Select(id => (Dimension: id, Amount: expected.GetValueOrDefault(id) - previouslyTransferred.GetValueOrDefault(id)))
-                    .Where(x => x.Amount != 0m).ToList();
+                    .Select(id =>
+                    {
+                        var target = expected.GetValueOrDefault(id);
+                        var carried = previouslyTransferred.GetValueOrDefault(id);
+                        return (Dimension: id, Amount: target.Amount - carried.Amount,
+                            Reporting: target.Reporting - carried.Reporting);
+                    })
+                    .Where(x => x.Amount != 0m || x.Reporting != 0m).ToList();
                 // The optional closing transaction, dated in the year being closed. It zeroes the
                 // **revenue and expense** accounts and books the net result to retained earnings, which
                 // is what D365's "Create closing transactions during transfer" does and what the
@@ -121,15 +136,14 @@ public sealed class LedgerYearEndCloseController(IUnitOfWork work, ICurrentUserS
                 async Task AddClosingTransactionAsync()
                 {
                     var closingPrefix = $"YEAR-CLOSE-{year.RecId}-";
-                    var profitAndLoss = balances.Where(x => allAccounts.Any(a => a.RecId == x.MainAccount
-                        && a.Type is MainAccountType.Revenue or MainAccountType.Expense)).ToList();
-                    if (profitAndLoss.Count == 0) return;
+                    if (profitAndLossBalances.Count == 0) return;
                     // Each income-statement balance goes to zero; the net result lands on retained
-                    // earnings, so the voucher balances on its own.
-                    var targets = profitAndLoss.Select(x => (Dimension: x.Dimension, Amount: -x.Amount))
-                        .Append((Dimension: retainedDimension.RecId, Amount: profit))
+                    // earnings, so the voucher balances on its own, in both currencies.
+                    var targets = profitAndLossBalances
+                        .Select(x => (Dimension: x.Dimension, Amount: -x.Amount, Reporting: -x.Reporting))
+                        .Append((Dimension: retainedDimension.RecId, Amount: profit, Reporting: reportingProfit))
                         .GroupBy(x => x.Dimension)
-                        .Select(x => (Dimension: x.Key, Amount: x.Sum(y => y.Amount)))
+                        .Select(x => (Dimension: x.Key, Amount: x.Sum(y => y.Amount), Reporting: x.Sum(y => y.Reporting)))
                         .ToList();
                     var priorClosing = await (from line in db.Set<GeneralJournalAccountEntry>().AsNoTracking()
                                               join journal in db.Set<GeneralJournalEntry>().AsNoTracking()
@@ -137,12 +151,18 @@ public sealed class LedgerYearEndCloseController(IUnitOfWork work, ICurrentUserS
                                               where journal.Ledger == ledger.RecId &&
                                                   journal.JournalCategory == LedgerJournalCategory.YearEndClosing &&
                                                   journal.JournalNumber.StartsWith(closingPrefix)
-                                              select new { line.LedgerDimension, line.AccountingCurrencyAmount }).ToListAsync(ct);
+                                              select new { line.LedgerDimension,
+                                                  line.AccountingCurrencyAmount, line.ReportingCurrencyAmount }).ToListAsync(ct);
                     var closedByDimension = priorClosing.GroupBy(x => x.LedgerDimension)
-                        .ToDictionary(x => x.Key, x => x.Sum(y => y.AccountingCurrencyAmount));
+                        .ToDictionary(x => x.Key, x => (Amount: x.Sum(y => y.AccountingCurrencyAmount),
+                            Reporting: x.Sum(y => y.ReportingCurrencyAmount)));
                     var lines = targets
-                        .Select(x => (x.Dimension, Amount: x.Amount - closedByDimension.GetValueOrDefault(x.Dimension)))
-                        .Where(x => x.Amount != 0m).ToList();
+                        .Select(x =>
+                        {
+                            var closed = closedByDimension.GetValueOrDefault(x.Dimension);
+                            return (x.Dimension, Amount: x.Amount - closed.Amount, Reporting: x.Reporting - closed.Reporting);
+                        })
+                        .Where(x => x.Amount != 0m || x.Reporting != 0m).ToList();
                     if (lines.Count == 0) return;
 
                     var closingPeriod = periods.OrderByDescending(x => x.Period.EndDate).First().Period;
@@ -173,7 +193,8 @@ public sealed class LedgerYearEndCloseController(IUnitOfWork work, ICurrentUserS
                             ? retainedDimension
                             : dimensions[line.Dimension];
                         db.Add(SubledgerPostingSupport.AccountEntry(area, closing.RecId, dimension,
-                            LedgerPostingType.LedgerJournal, line.Amount, "Year-end closing", 0m, ledger.AccountingCurrency));
+                            LedgerPostingType.LedgerJournal, line.Amount, line.Amount, line.Reporting,
+                            "Year-end closing", 0m, ledger.AccountingCurrency));
                     }
                 }
                 if (delta.Count == 0)
@@ -195,7 +216,8 @@ public sealed class LedgerYearEndCloseController(IUnitOfWork work, ICurrentUserS
                     await work.CommitTransactionAsync(ct);
                     return Ok(new { message = "Opening balances are current; no adjustment transfer was needed." });
                 }
-                if (delta.Sum(x => x.Amount) != 0m) return await Reject("The opening transfer is not balanced.");
+                if (delta.Sum(x => x.Amount) != 0m || delta.Sum(x => x.Reporting) != 0m)
+                    return await Reject("The opening transfer is not balanced.");
                 var run = await db.Set<GeneralJournalEntry>().CountAsync(x => x.Ledger == ledger.RecId &&
                     x.JournalCategory == LedgerJournalCategory.YearEndOpening && x.JournalNumber.StartsWith(openingPrefix), ct) + 1;
                 var number = $"{openingPrefix}{run}";
@@ -222,7 +244,8 @@ public sealed class LedgerYearEndCloseController(IUnitOfWork work, ICurrentUserS
                         dimensions.GetValueOrDefault(balance.Dimension);
                     if (dimension == null) return await Reject("An opening ledger dimension is missing.");
                     db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, dimension,
-                        LedgerPostingType.LedgerJournal, balance.Amount, "Year-end opening transfer", 0m, ledger.AccountingCurrency));
+                        LedgerPostingType.LedgerJournal, balance.Amount, balance.Amount, balance.Reporting,
+                        "Year-end opening transfer", 0m, ledger.AccountingCurrency));
                 }
                 if (request.CreateClosingTransaction) await AddClosingTransactionAsync();
                 if (request.PermanentlyCloseYear)

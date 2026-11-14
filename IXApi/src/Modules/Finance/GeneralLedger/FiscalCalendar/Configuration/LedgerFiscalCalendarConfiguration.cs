@@ -14,6 +14,8 @@ namespace IAX.IXApi.Modules.Finance.Entities
 
                 builder.HasKey(x => x.RecId);
 
+                builder.HasIndex(x => new { x.Ledger, x.FiscalCalendarPeriod }).IsUnique();
+
                 builder.HasOne(x => x.FiscalCalendarPeriodTable)
                    .WithMany()
                    .HasForeignKey(x => x.FiscalCalendarPeriod)

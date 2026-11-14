@@ -28,13 +28,17 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger
         public long OffsetLedgerDimension { get; set; }
         public LedgerJournalACType OffsetAccountType { get; set; }
         public NoYes FixedOffsetAccount { get; set; }
+        public NoYes LedgerJournalInclTax { get; set; }
 
         [StringLength(FieldLengths.CurrencyCode)]
         public string CurrencyCode { get; set; } = string.Empty;
 
         public decimal ExchRate { get; set; }
+        public decimal ExchRateSecondary { get; set; }
         public decimal ReportingCurrencyExchRate { get; set; }
+        public decimal ReportingCurrencyExchRateSecondary { get; set; }
         public NoYes FixedExchRate { get; set; }
+        public NoYes ReportingCurrencyFixedExchRate { get; set; }
         public DateTime PostedDateTime { get; set; }
         public NoYes Posted { get; set; }
         public NoYes SystemBlocked { get; set; }

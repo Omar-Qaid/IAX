@@ -19,6 +19,8 @@ public sealed class LedgerJournalNameDtoValidator : BaseValidator<LedgerJournalN
         RuleFor(x => x.FixedOffsetAccount).IsInEnum();
         RuleFor(x => x.CurrencyCode).NotEmpty();
         RuleFor(x => x.FixedExchRate).IsInEnum();
+        RuleFor(x => x.WorkflowApproval).IsInEnum();
+        RuleFor(x => x.LedgerJournalInclTax).IsInEnum();
         RuleFor(x => x.OffsetLedgerDimension)
             .GreaterThan(0)
             .When(x => x.FixedOffsetAccount == NoYes.Yes);

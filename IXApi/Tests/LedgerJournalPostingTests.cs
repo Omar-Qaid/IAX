@@ -19,6 +19,412 @@ namespace IAX.IXApi.Tests;
 
 public class LedgerJournalPostingTests
 {
+    [Fact]
+    public async Task Validation_groups_a_blank_line_with_the_single_entered_voucher()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        db.AddRange(Line(1, "EXISTING", bank: true, debit: 100m), Line(2, "", bank: false, credit: 100m));
+        await db.SaveChangesAsync();
+        await ConfigureVoucherSequenceAsync(db);
+        db.ChangeTracker.Clear();
+        var service = new LedgerJournalTableService(new TestUnitOfWork(db), new TestUser());
+        var validation = await service.ValidateAsync(1, default);
+        Assert.NotNull(validation);
+        Assert.True(validation!.Valid, string.Join("; ", validation.Errors));
+        var (posted, error) = await service.PostAsync(1, default);
+        Assert.Null(error);
+        Assert.NotNull(posted);
+        Assert.Equal(1, posted!.VouchersPosted);
+    }
+
+    [Theory]
+    [InlineData(LedgerJournalVoucherChange.None, true)]
+    [InlineData(LedgerJournalVoucherChange.Change, false)]
+    public async Task Validation_predicts_blank_voucher_grouping_without_allocating_numbers(LedgerJournalVoucherChange change, bool valid)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        db.Set<LedgerJournalName>().Local.Single().NewVoucher = change;
+        db.AddRange(Line(1, "", bank: true, debit: 100m), Line(2, "", bank: false, credit: 100m));
+        await db.SaveChangesAsync();
+        await ConfigureVoucherSequenceAsync(db);
+        db.ChangeTracker.Clear();
+        var before = (await db.Set<SysNumberSequence>().AsNoTracking().SingleAsync()).NextRec;
+        var result = await new LedgerJournalTableService(new TestUnitOfWork(db), new TestUser()).ValidateAsync(1, default);
+        Assert.NotNull(result);
+        Assert.Equal(valid, result!.Valid);
+        Assert.DoesNotContain(result.Errors, error => error.Contains("voucher is required"));
+        Assert.Equal(before, (await db.Set<SysNumberSequence>().AsNoTracking().SingleAsync()).NextRec);
+        Assert.All(await db.Set<LedgerJournalTrans>().AsNoTracking().ToListAsync(), line => Assert.Equal("", line.Voucher));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Reversal_does_not_commit_unrelated_pending_changes(bool added)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        db.AddRange(Line(1, "V1", bank: true, debit: 100m), Line(2, "V1", bank: false, credit: 100m));
+        await db.SaveChangesAsync();
+        await ConfigureVoucherSequenceAsync(db);
+        await new LedgerJournalPosting(db).PostAsync("dat", await db.Set<LedgerJournalTable>().SingleAsync(), default);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        if (added)
+        {
+            var other = Line(0, "V2", bank: true, debit: 50m);
+            other.JournalNum = "J2";
+            db.Add(other);
+        }
+        else (await db.Set<MainAccount>().SingleAsync(x => x.RecId == 1)).Name = "Unsaved account change";
+
+        var (result, error) = await NewReversalService(db).ReverseAsync(1, new DateTime(2026, 1, 31), default);
+
+        Assert.Null(result);
+        Assert.Equal("Save or discard pending changes before reversing a journal.", error);
+        Assert.Single(await db.Set<LedgerJournalTable>().AsNoTracking().ToListAsync());
+        Assert.Single(await db.Set<GeneralJournalEntry>().AsNoTracking().ToListAsync());
+        Assert.Equal(2, await db.Set<LedgerJournalTrans>().AsNoTracking().CountAsync());
+        Assert.NotEqual("Unsaved account change", (await db.Set<MainAccount>().AsNoTracking().SingleAsync(x => x.RecId == 1)).Name);
+    }
+
+    [Fact]
+    public async Task Bank_movement_uses_the_same_defaulted_dimension_as_the_posted_ledger_entry()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new DimensionPostingContext(
+            new DbContextOptionsBuilder<DimensionPostingContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        Seed(db);
+        SeedSubledgers(db);
+        db.AddRange(new DimensionAttribute { RecId = 1, DataAreaId = "dat", Name = "BusinessUnit" },
+            new DimensionAttributeValue { RecId = 1, DataAreaId = "dat", DimensionAttribute = 1, DisplayValue = "BU-01" },
+            new DimensionAttributeValueSetItem { DataAreaId = "dat", DimensionAttributeValueSet = 1,
+                DisplayValue = "BU-01", DimensionAttributeValue = 1 },
+            new LedgerJournalTrans { RecId = 1, DataAreaId = "dat", JournalNum = "J1", Voucher = "V1", LineNum = 1,
+                TransDate = new DateTime(2026, 1, 15), CurrencyCode = "SAR", AccountType = LedgerJournalACType.Bank,
+                LedgerDimensionName = "BANK-1", OffsetAccountType = LedgerJournalACType.Ledger,
+                OffsetLedgerDimension = 2, AmountCurDebit = 100m });
+        db.Set<LedgerJournalTable>().Local.Single().DefaultDimension = 1;
+        await db.SaveChangesAsync();
+        var builder = new AccountStructureBuilder(db);
+        await builder.DefineAsync("dat", new("BU", "Required business unit",
+            [new(AccountStructureBuilder.MainAccountSegment, "*"), new("BusinessUnit", "BU-01")]), default);
+        await builder.ActivateAsync("dat", "BU", default);
+        await builder.AssignToLedgerAsync("dat", "BU", default);
+        db.ChangeTracker.Clear();
+
+        var (result, error) = await new LedgerJournalTableService(new TestUnitOfWork(db), new TestUser()).PostAsync(1, default);
+
+        Assert.Null(error);
+        Assert.NotNull(result);
+        var posted = await db.Set<GeneralJournalAccountEntry>().SingleAsync(x => x.PostingType == LedgerPostingType.Bank);
+        var movement = await db.Set<BankAccountTrans>().SingleAsync();
+        Assert.NotEqual(1, posted.LedgerDimension);
+        Assert.Equal(posted.LedgerDimension, movement.LedgerDimension);
+    }
+
+    [Theory]
+    [InlineData("other-journal")]
+    [InlineData("account")]
+    public async Task Posting_does_not_commit_unrelated_pending_changes(string pending)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        db.AddRange(Line(1, "V1", bank: true, debit: 100m), Line(2, "V1", bank: false, credit: 100m));
+        await db.SaveChangesAsync();
+        if (pending == "other-journal")
+        {
+            var other = Line(3, "V2", bank: true, debit: 50m);
+            other.JournalNum = "J2";
+            db.Add(other);
+        }
+        else
+            (await db.Set<MainAccount>().SingleAsync(x => x.RecId == 1)).Name = "Unsaved account change";
+
+        var (result, error) = await new LedgerJournalTableService(new TestUnitOfWork(db), new TestUser()).PostAsync(1, default);
+
+        Assert.Null(result);
+        Assert.Contains("other pending changes", error);
+        Assert.Empty(await db.Set<GeneralJournalEntry>().AsNoTracking().ToListAsync());
+        Assert.Equal(2, await db.Set<LedgerJournalTrans>().AsNoTracking().CountAsync());
+        Assert.NotEqual("Unsaved account change", (await db.Set<MainAccount>().AsNoTracking().SingleAsync(x => x.RecId == 1)).Name);
+    }
+
+    [Fact]
+    public async Task Posting_refuses_unsaved_header_changes_instead_of_discarding_them()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        db.AddRange(Line(1, "V1", bank: true, debit: 100m), Line(2, "V1", bank: false, credit: 100m));
+        await db.SaveChangesAsync();
+        var header = await db.Set<LedgerJournalTable>().SingleAsync();
+        header.Name = "Unsaved description";
+
+        var (result, error) = await new LedgerJournalTableService(new TestUnitOfWork(db), new TestUser()).PostAsync(1, default);
+
+        Assert.Null(result);
+        Assert.Contains("Save journal header changes", error);
+        Assert.Empty(await db.Set<GeneralJournalEntry>().AsNoTracking().ToListAsync());
+        Assert.NotEqual("Unsaved description", (await db.Set<LedgerJournalTable>().AsNoTracking().SingleAsync()).Name);
+    }
+
+    [Fact]
+    public async Task A_customer_journal_invoice_preserves_metadata_and_can_be_selected_for_settlement()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        SeedSubledgers(db);
+        var invoiceLine = Line(1, "V1", bank: true, debit: 100m);
+        invoiceLine.AccountType = LedgerJournalACType.Cust;
+        invoiceLine.LedgerDimensionName = "C-001";
+        invoiceLine.OffsetLedgerDimension = 2;
+        invoiceLine.Invoice = "INV-J1";
+        invoiceLine.DocumentDate = new DateTime(2026, 1, 10);
+        invoiceLine.PaymReference = "REF-J1";
+        db.Add(invoiceLine);
+        await db.SaveChangesAsync();
+        var service = new LedgerJournalTableService(new TestUnitOfWork(db), new TestUser());
+        var (invoiceResult, invoiceError) = await service.PostAsync(1, default);
+        Assert.Null(invoiceError);
+        Assert.NotNull(invoiceResult);
+        var invoice = await db.Set<CustTrans>().AsNoTracking().SingleAsync();
+        Assert.Equal("INV-J1", invoice.Invoice);
+        Assert.Equal(invoiceLine.DocumentDate, invoice.DocumentDate);
+        Assert.Equal("REF-J1", invoice.PaymReference);
+
+        db.Add(new LedgerJournalTable { RecId = 2, DataAreaId = "dat", JournalNum = "J2", JournalName = "GEN" });
+        var credit = Line(2, "V2", bank: true, credit: 100m);
+        credit.JournalNum = "J2";
+        credit.AccountType = LedgerJournalACType.Cust;
+        credit.LedgerDimensionName = "C-001";
+        credit.OffsetLedgerDimension = 2;
+        credit.SettleVoucher = SettleVoucher.Selection;
+        credit.MarkedInvoiceRecId = invoice.RecId;
+        db.Add(credit);
+        await db.SaveChangesAsync();
+        var (result, error) = await service.PostAsync(2, default);
+        Assert.Null(error);
+        Assert.NotNull(result);
+        Assert.Empty(await db.Set<CustTransOpen>().ToListAsync());
+        Assert.Equal(2, await db.Set<CustSettlement>().CountAsync());
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Customer_invoicing_hold_blocks_invoice_journals_but_allows_unmarked_credits(bool invoice)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        SeedSubledgers(db);
+        db.Set<CustTable>().Local.Single().Blocked = CustVendorBlocked.Invoicing;
+        var line = Line(1, "V1", bank: true, credit: 100m);
+        line.AccountType = LedgerJournalACType.Cust;
+        line.LedgerDimensionName = "C-001";
+        line.OffsetLedgerDimension = 2;
+        line.Invoice = invoice ? "INV-J1" : "";
+        db.Add(line);
+        await db.SaveChangesAsync();
+        var (result, error) = await new LedgerJournalTableService(new TestUnitOfWork(db), new TestUser()).PostAsync(1, default);
+        if (invoice)
+        {
+            Assert.Null(result);
+            Assert.Contains("customer is blocked", error);
+            Assert.Empty(await db.Set<CustTrans>().ToListAsync());
+            Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
+        }
+        else
+        {
+            Assert.Null(error);
+            Assert.NotNull(result);
+        }
+    }
+
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(false, false)]
+    public async Task Customer_journals_respect_the_all_transactions_block(bool blocked, bool debit)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        SeedSubledgers(db);
+        db.Set<CustTable>().Local.Single().Blocked = blocked ? CustVendorBlocked.All : CustVendorBlocked.No;
+        var line = Line(1, "V1", bank: true, debit: debit ? 100m : 0m, credit: debit ? 0m : 100m);
+        line.AccountType = LedgerJournalACType.Cust;
+        line.LedgerDimensionName = "C-001";
+        line.LedgerDimension = 0;
+        line.OffsetLedgerDimension = 2;
+        db.Add(line);
+        await db.SaveChangesAsync();
+        var (result, error) = await new LedgerJournalTableService(new TestUnitOfWork(db), new TestUser()).PostAsync(1, default);
+        if (blocked)
+        {
+            Assert.Null(result);
+            Assert.Contains("customer is blocked", error);
+            Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
+            Assert.Empty(await db.Set<CustTrans>().ToListAsync());
+            Assert.Empty(await db.Set<CustTransOpen>().ToListAsync());
+            Assert.Equal(NoYes.No, (await db.Set<LedgerJournalTable>().SingleAsync()).Posted);
+        }
+        else
+        {
+            Assert.Null(error);
+            Assert.NotNull(result);
+            var open = await db.Set<CustTransOpen>().SingleAsync();
+            var transaction = await db.Set<CustTrans>().SingleAsync();
+            var postedLine = await db.Set<LedgerJournalTrans>().AsNoTracking().SingleAsync();
+            Assert.Equal(debit ? 100m : -100m, open.AmountCur);
+            Assert.Equal(transaction.RecId, open.RefRecId);
+            Assert.Equal(transaction.RecId, postedLine.CustTransId);
+        }
+    }
+
+    [Fact]
+    public async Task Posting_refreshes_tracked_lines_to_match_the_persisted_journal()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        db.AddRange(Line(1, "V1", bank: true, debit: 100m), Line(2, "V1", bank: false, credit: 100m));
+        await db.SaveChangesAsync();
+        await db.Set<LedgerJournalTrans>().Where(x => x.RecId == 1).ExecuteUpdateAsync(s => s.SetProperty(x => x.AmountCurDebit, 200m));
+        await db.Set<LedgerJournalTrans>().Where(x => x.RecId == 2).ExecuteUpdateAsync(s => s.SetProperty(x => x.AmountCurCredit, 200m));
+        var (result, error) = await new LedgerJournalTableService(new TestUnitOfWork(db), new TestUser()).PostAsync(1, default);
+        Assert.Null(error);
+        Assert.NotNull(result);
+        Assert.Equal(200m, result.TotalDebit);
+        Assert.Equal(200m, result.TotalCredit);
+        var entries = await db.Set<GeneralJournalAccountEntry>().AsNoTracking().ToListAsync();
+        Assert.Equal(200m, entries.Single(x => x.LedgerDimension == 1).AccountingCurrencyAmount);
+        Assert.Equal(-200m, entries.Single(x => x.LedgerDimension == 2).AccountingCurrencyAmount);
+    }
+
+    [Theory]
+    [InlineData("add")]
+    [InlineData("add-blank-company")]
+    [InlineData("edit")]
+    [InlineData("edit-away-journal")]
+    [InlineData("edit-away-company")]
+    [InlineData("delete")]
+    public async Task Posting_refuses_unsaved_line_changes(string operation)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        db.AddRange(Line(1, "V1", bank: true, debit: 100m), Line(2, "V1", bank: false, credit: 100m));
+        await db.SaveChangesAsync();
+        var line = await db.Set<LedgerJournalTrans>().SingleAsync(x => x.RecId == 1);
+        if (operation == "add") db.Add(Line(3, "V2", bank: true, debit: 50m));
+        else if (operation == "add-blank-company")
+        {
+            var added = Line(3, "V2", bank: true, debit: 50m);
+            added.DataAreaId = "";
+            db.Add(added);
+        }
+        else if (operation == "edit") line.AmountCurDebit = 200m;
+        else if (operation == "edit-away-journal") line.JournalNum = "J2";
+        else if (operation == "edit-away-company") line.DataAreaId = "other";
+        else db.Remove(line);
+        var (result, error) = await new LedgerJournalTableService(new TestUnitOfWork(db), new TestUser()).PostAsync(1, default);
+        Assert.Null(result);
+        Assert.Contains("Save journal line changes", error);
+        Assert.Empty(db.ChangeTracker.Entries());
+        Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
+        Assert.Equal(2, await db.Set<LedgerJournalTrans>().CountAsync());
+        Assert.Equal(100m, (await db.Set<LedgerJournalTrans>().AsNoTracking().SingleAsync(x => x.RecId == 1)).AmountCurDebit);
+    }
+
+    [Theory]
+    [InlineData("ledger")]
+    [InlineData("customer")]
+    [InlineData("vendor-exclusive")]
+    [InlineData("vendor-group-only")]
+    [InlineData("vendor-item-only")]
+    [InlineData("vendor-no-offset")]
+    public async Task Unsupported_tax_groups_are_refused_instead_of_posting_without_tax(string scenario)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        SeedSubledgers(db);
+        var line = Line(1, "V1", bank: true, debit: 100m);
+        line.OffsetLedgerDimension = 2;
+        line.TaxGroup = "VAT";
+        line.TaxItemGroup = "VAT15";
+        if (scenario != "ledger")
+        {
+            line.AccountType = scenario == "customer" ? LedgerJournalACType.Cust : LedgerJournalACType.Vend;
+            line.LedgerDimensionName = scenario == "customer" ? "C-001" : "V-001";
+            line.LedgerDimension = 0;
+        }
+        if (scenario == "vendor-group-only") line.TaxItemGroup = "";
+        if (scenario == "vendor-item-only") line.TaxGroup = "";
+        if (scenario == "vendor-no-offset")
+        {
+            db.Set<LedgerJournalTable>().Local.Single().LedgerJournalInclTax = NoYes.Yes;
+            line.OffsetLedgerDimension = 0;
+            db.Add(Line(2, "V1", bank: false, credit: 100m));
+        }
+        db.Add(line);
+        await db.SaveChangesAsync();
+        var (result, error) = await new LedgerJournalTableService(new TestUnitOfWork(db), new TestUser()).PostAsync(1, default);
+        Assert.Null(result);
+        Assert.Contains("journal tax calculation is not supported", error);
+        Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
+        Assert.Empty(await db.Set<CustTrans>().ToListAsync());
+        Assert.Empty(await db.Set<VendTrans>().ToListAsync());
+    }
+
+    [Theory]
+    [InlineData(LedgerJournalACType.Cust, SettleVoucher.Automatic)]
+    [InlineData(LedgerJournalACType.Vend, SettleVoucher.Automatic)]
+    [InlineData(LedgerJournalACType.Vend, SettleVoucher.Selection)]
+    [InlineData(LedgerJournalACType.Ledger, SettleVoucher.Selection)]
+    public async Task Unsupported_journal_settlement_requests_are_not_silently_ignored(LedgerJournalACType accountType, SettleVoucher settlement)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        SeedSubledgers(db);
+        var line = Line(1, "V1", bank: true, debit: 100m);
+        line.AccountType = accountType;
+        line.LedgerDimensionName = accountType == LedgerJournalACType.Cust ? "C-001" : "V-001";
+        line.OffsetLedgerDimension = 2;
+        line.SettleVoucher = settlement;
+        db.Add(line);
+        await db.SaveChangesAsync();
+        var (result, error) = await new LedgerJournalTableService(new TestUnitOfWork(db), new TestUser()).PostAsync(1, default);
+        Assert.Null(result);
+        Assert.Contains("use the settlement process", error);
+        Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -259,11 +665,11 @@ public class LedgerJournalPostingTests
         Assert.Contains("Approve the journal through workflow before posting.", setup!.Errors);
         var errorBeforeApproval = await Assert.ThrowsAsync<SubledgerPostingException>(
             () => posting.PostAsync("dat", header, default));
-        Assert.Contains("Approve the journal", errorBeforeApproval.Message);
+        Assert.Contains("Save journal header changes", errorBeforeApproval.Message);
         Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
         Assert.Equal(100m, (await db.Set<CustTransOpen>().SingleAsync()).AmountCur);
 
-        // Posting reloads the persisted header under its lock, discarding the unsaved approval.
+        // Save the approval before retrying; an unsaved approval must not authorize posting.
         header.WorkflowApprovalStatus = WorkflowApprovalStatus.Approved;
         await db.SaveChangesAsync();
         await posting.PostAsync("dat", header, default);
@@ -280,8 +686,10 @@ public class LedgerJournalPostingTests
         Assert.Contains("Reverse the customer settlement", error);
     }
 
-    [Fact]
-    public async Task A_stale_marked_balance_rolls_back_journal_posting()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task A_stale_marked_balance_rolls_back_journal_posting(bool cachedBalance)
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
@@ -293,7 +701,8 @@ public class LedgerJournalPostingTests
             Voucher = "IV-90", CurrencyCode = "SAR", TransDate = date, AmountCur = 100m, AmountMst = 100m,
             ReportingCurrencyAmount = 100m });
         db.Add(new CustTransOpen { DataAreaId = "dat", AccountNum = "C-001", RefRecId = 90,
-            AmountCur = 75m, AmountMst = 75m, ReportingCurrencyAmount = 75m });
+            AmountCur = cachedBalance ? 100m : 75m, AmountMst = cachedBalance ? 100m : 75m,
+            ReportingCurrencyAmount = cachedBalance ? 100m : 75m });
         db.Add(new LedgerJournalTrans
         {
             RecId = 1, DataAreaId = "dat", JournalNum = "J1", Voucher = "V1", LineNum = 1,
@@ -302,7 +711,14 @@ public class LedgerJournalPostingTests
             AmountCurCredit = 100m, MarkedInvoiceRecId = 90, SettleVoucher = SettleVoucher.Selection
         });
         await db.SaveChangesAsync();
-        db.ChangeTracker.Clear();
+        if (cachedBalance)
+        {
+            // Another operation reduced the persisted balance while this context retained 100.
+            await db.Set<CustTransOpen>().ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.AmountCur, 75m).SetProperty(x => x.AmountMst, 75m)
+                .SetProperty(x => x.ReportingCurrencyAmount, 75m));
+        }
+        else db.ChangeTracker.Clear();
 
         var service = new LedgerJournalTableService(new TestUnitOfWork(db), new TestUser(),
             DispatchProxy.Create<ISysNumberSequenceService, TestSequenceProxy>());
@@ -1292,6 +1708,43 @@ public class LedgerJournalPostingTests
         Assert.Equal(107, db.Set<SysNumberSequence>().Local.Single().NextRec);
         await db.SaveChangesAsync();
         Assert.Equal(107, (await db.Set<SysNumberSequence>().AsNoTracking().SingleAsync()).NextRec);
+    }
+
+    /// <summary>
+    /// "Voucher change: none" is the journal name default, and it means a line entered without a
+    /// voucher continues the one the journal already carries. Such a line used to be allocated a
+    /// number of its own, which split a balanced two-line entry into two single-line vouchers and
+    /// refused the posting as unbalanced. It does not make the journal one voucher only: the core
+    /// cycle reference says outright not to assume a journal gets a single voucher, and
+    /// <see cref="Allocation_at_posting_replaces_each_temporary_voucher_group_from_configured_sequence"/>
+    /// still posts two.
+    /// </summary>
+    [Fact]
+    public async Task A_line_without_a_voucher_continues_the_one_the_journal_already_carries()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        await db.SaveChangesAsync();
+        await ConfigureVoucherSequenceAsync(db);
+        Assert.Equal(LedgerJournalVoucherChange.None,
+            (await db.Set<LedgerJournalName>().AsNoTracking().SingleAsync()).NewVoucher);
+        db.AddRange(
+            Line(1, "GV-000001", bank: true, debit: 100m),
+            Line(2, string.Empty, bank: false, credit: 100m));
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var result = await new LedgerJournalPosting(db).PostAsync(
+            "dat", await db.Set<LedgerJournalTable>().SingleAsync(), default);
+        await db.SaveChangesAsync();
+
+        Assert.Equal(1, result.VouchersPosted);
+        var lines = await db.Set<LedgerJournalTrans>().AsNoTracking().OrderBy(x => x.RecId).ToListAsync();
+        Assert.All(lines, x => Assert.Equal("GV-000001", x.Voucher));
+        // Nothing was drawn from the sequence, because no new voucher was needed.
+        Assert.Equal(100, (await db.Set<SysNumberSequence>().AsNoTracking().SingleAsync()).NextRec);
     }
 
     private static void Seed(PostingContext db)

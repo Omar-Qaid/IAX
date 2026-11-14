@@ -17,11 +17,12 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
                 .SingleOrDefaultAsync(x => x.DataAreaId == area && x.JournalNum == entity.JournalNum, ct)
                 ?? throw new InvalidOperationException("Journal header was not found.");
             if (header.Posted == NoYes.Yes) throw new InvalidOperationException("Lines cannot be added to a posted journal.");
+            if (header.SystemBlocked == NoYes.Yes) throw new InvalidOperationException("The journal is system blocked.");
             entity.DataAreaId = area!;
             entity.Company = string.IsNullOrWhiteSpace(entity.Company) ? area! : entity.Company;
             entity.OffsetCompany = string.IsNullOrWhiteSpace(entity.OffsetCompany) ? area! : entity.OffsetCompany;
             entity.CurrencyCode = string.IsNullOrWhiteSpace(entity.CurrencyCode) ? header.CurrencyCode : entity.CurrencyCode;
-            if (header.FixedOffsetAccount == NoYes.Yes)
+            if (header.FixedOffsetAccount == NoYes.Yes || entity.OffsetLedgerDimension == 0)
             {
                 entity.OffsetAccountType = header.OffsetAccountType;
                 entity.OffsetLedgerDimension = header.OffsetLedgerDimension;
@@ -32,6 +33,24 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
                 entity.LineNum = (await _unitOfWork.Context.Set<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans>()
                     .Where(x => x.DataAreaId == area && x.JournalNum == entity.JournalNum)
                     .Select(x => x.LineNum).ToListAsync(ct)).DefaultIfEmpty(0m).Max() + 1;
+        }
+
+        public override async Task<IEnumerable<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans>> AddRangeAsync(
+            IEnumerable<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans> entities, CancellationToken ct = default)
+        {
+            var rows = entities.ToList();
+            // BaseService runs every add hook before tracking any row. Reserve distinct line
+            // numbers for the whole batch, including explicit numbers supplied by the caller.
+            foreach (var group in rows.GroupBy(x => new
+                { Area = string.IsNullOrWhiteSpace(x.DataAreaId) ? _currentUser.GetDataAreaId() : x.DataAreaId, x.JournalNum }))
+            {
+                var existing = await _unitOfWork.Context.Set<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans>()
+                    .Where(x => x.DataAreaId == group.Key.Area && x.JournalNum == group.Key.JournalNum)
+                    .Select(x => x.LineNum).ToListAsync(ct);
+                var next = existing.Concat(group.Select(x => x.LineNum)).DefaultIfEmpty(0m).Max();
+                foreach (var row in group.Where(x => x.LineNum == 0)) row.LineNum = ++next;
+            }
+            return await base.AddRangeAsync(rows, ct);
         }
 
         public override async Task<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans> UpdateAsync(IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans entity, CancellationToken ct = default)
@@ -76,9 +95,11 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
             var row = await _unitOfWork.Context.Set<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans>().AsNoTracking()
                 .SingleOrDefaultAsync(x => x.RecId == recId, ct)
                 ?? throw new InvalidOperationException("Journal line was not found.");
-            var posted = await _unitOfWork.Context.Set<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable>().AsNoTracking()
-                .AnyAsync(x => x.DataAreaId == row.DataAreaId && x.JournalNum == row.JournalNum && x.Posted == NoYes.Yes, ct);
-            if (row.NoEdit == NoYes.Yes || posted) throw new InvalidOperationException("Posted journal lines cannot be changed or deleted.");
+            var header = await _unitOfWork.Context.Set<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable>().AsNoTracking()
+                .SingleOrDefaultAsync(x => x.DataAreaId == row.DataAreaId && x.JournalNum == row.JournalNum, ct)
+                ?? throw new InvalidOperationException("Journal header was not found.");
+            if (row.NoEdit == NoYes.Yes || header.Posted == NoYes.Yes) throw new InvalidOperationException("Posted journal lines cannot be changed or deleted.");
+            if (header.SystemBlocked == NoYes.Yes) throw new InvalidOperationException("The journal is system blocked.");
             return row;
         }
 

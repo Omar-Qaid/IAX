@@ -34,8 +34,13 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.FiscalCalendar
         public async Task<(LedgerFiscalCalendarPeriodStatusResultDto? Result, string? Error)> SetStatusAsync(
             long recId, FiscalPeriodStatus status, CancellationToken ct = default)
         {
-            var row = await Db.Set<LedgerFiscalCalendarPeriod>().SingleOrDefaultAsync(x => x.RecId == recId, ct);
+            var area = _currentUser.GetDataAreaId();
+            if (Db.ChangeTracker.HasChanges())
+                return (null, "Save or discard pending changes before changing ledger period status.");
+            var row = await Db.Set<LedgerFiscalCalendarPeriod>().SingleOrDefaultAsync(x => x.RecId == recId && x.DataAreaId == area, ct);
             if (row == null) return (null, null); // Not found in the selected company; the caller reports 404.
+            await Db.Entry(row).ReloadAsync(ct);
+            if (Db.Entry(row).State == EntityState.Detached || row.DataAreaId != area) return (null, null);
 
             var refusal = FiscalPeriodStatusTransition.Check(row.Status, status);
             if (refusal != null) return (null, refusal);
@@ -55,14 +60,27 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.FiscalCalendar
         /// <summary>One status row per ledger and period, so posting resolves it unambiguously.</summary>
         protected override async Task OnBeforeAddAsync(LedgerFiscalCalendarPeriod entity, CancellationToken cancellationToken)
         {
-            if (await Db.Set<LedgerFiscalCalendarPeriod>().AnyAsync(
+            if (Db.ChangeTracker.Entries<LedgerFiscalCalendarPeriod>().Any(x =>
+                    x.State == EntityState.Added && !ReferenceEquals(x.Entity, entity)
+                    && x.Entity.Ledger == entity.Ledger && x.Entity.FiscalCalendarPeriod == entity.FiscalCalendarPeriod)
+                || await Db.Set<LedgerFiscalCalendarPeriod>().AnyAsync(
                     x => x.Ledger == entity.Ledger && x.FiscalCalendarPeriod == entity.FiscalCalendarPeriod, cancellationToken))
                 throw new InvalidOperationException(
                     "This ledger period already has a status row. Change its status instead of adding another.");
-            if (entity.Status is FiscalPeriodStatus.Closed or FiscalPeriodStatus.YearClosed)
+            if (entity.Status is not (FiscalPeriodStatus.Open or FiscalPeriodStatus.OnHold))
                 throw new InvalidOperationException(
                     $"A ledger period cannot be created as {entity.Status}; create it Open or On hold and close it afterwards.");
             await base.OnBeforeAddAsync(entity, cancellationToken);
+        }
+
+        public override async Task<IEnumerable<LedgerFiscalCalendarPeriod>> AddRangeAsync(
+            IEnumerable<LedgerFiscalCalendarPeriod> entities, CancellationToken cancellationToken = default)
+        {
+            var rows = entities.ToList();
+            if (rows.GroupBy(x => new { x.Ledger, x.FiscalCalendarPeriod }).Any(group => group.Count() > 1))
+                throw new InvalidOperationException(
+                    "This ledger period already has a status row. Change its status instead of adding another.");
+            return await base.AddRangeAsync(rows, cancellationToken);
         }
 
         private static NotSupportedException Guarded() =>

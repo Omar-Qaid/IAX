@@ -14,7 +14,9 @@ public sealed class LedgerJournalTableDtoValidator : BaseValidator<LedgerJournal
         RuleFor(x => x.VoucherAllocatedAtPosting).IsInEnum();
         RuleFor(x => x.OffsetAccountType).IsInEnum();
         RuleFor(x => x.FixedOffsetAccount).IsInEnum();
+        RuleFor(x => x.LedgerJournalInclTax).IsInEnum();
         RuleFor(x => x.FixedExchRate).IsInEnum();
+        RuleFor(x => x.ReportingCurrencyFixedExchRate).IsInEnum();
         RuleFor(x => x.Posted).IsInEnum();
         RuleFor(x => x.SystemBlocked).IsInEnum();
         RuleFor(x => x.ReverseEntry).IsInEnum();

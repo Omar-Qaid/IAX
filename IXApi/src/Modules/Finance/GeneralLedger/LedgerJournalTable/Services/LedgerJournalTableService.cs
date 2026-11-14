@@ -90,14 +90,26 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
             IEnumerable<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable> entities, CancellationToken ct = default)
         {
             var rows = entities.ToList();
-            foreach (var row in rows) await EnsureEditableAsync(row.RecId, ct);
+            foreach (var row in rows) await EnsureRemovableAsync(row.RecId, ct);
             await base.RemoveRangeAsync(rows, ct);
         }
 
         public override async Task RemoveAsync(IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable entity, CancellationToken ct = default)
         {
-            await EnsureEditableAsync(entity.RecId, ct);
+            await EnsureRemovableAsync(entity.RecId, ct);
             await base.RemoveAsync(entity, ct);
+        }
+
+        private async Task EnsureRemovableAsync(long recId, CancellationToken ct)
+        {
+            var header = await EnsureEditableAsync(recId, ct);
+            if (_unitOfWork.Context.ChangeTracker.Entries<LedgerJournalTrans>().Any(x =>
+                    x.State == EntityState.Added && x.Entity.JournalNum == header.JournalNum &&
+                    (x.Entity.DataAreaId == header.DataAreaId ||
+                        (string.IsNullOrWhiteSpace(x.Entity.DataAreaId) && _currentUser.GetDataAreaId() == header.DataAreaId)))
+                || await _unitOfWork.Context.Set<LedgerJournalTrans>().AsNoTracking()
+                .AnyAsync(x => x.DataAreaId == header.DataAreaId && x.JournalNum == header.JournalNum, ct))
+                throw new InvalidOperationException("Remove the journal lines before deleting its header.");
         }
 
         private async Task<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable> EnsureEditableAsync(long recId, CancellationToken ct)
@@ -106,6 +118,7 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
                 .AsNoTracking().SingleOrDefaultAsync(x => x.RecId == recId, ct)
                 ?? throw new InvalidOperationException("Journal header was not found.");
             if (current.Posted == NoYes.Yes) throw new InvalidOperationException("Posted journals cannot be changed or deleted.");
+            if (current.SystemBlocked == NoYes.Yes) throw new InvalidOperationException("The journal is system blocked.");
             return current;
         }
         public Task<LedgerJournalSetupCheckDto?> CheckSetupAsync(long recId, CancellationToken ct) =>
@@ -140,6 +153,23 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
             var lines = await db.Set<LedgerJournalTrans>().AsNoTracking()
                 .Where(x => x.DataAreaId == area && x.JournalNum == header.JournalNum).ToListAsync(ct);
             var errors = new List<string>(setup?.Errors ?? []);
+            if (header.VoucherAllocatedAtPosting != NoYes.Yes && lines.Any(x => string.IsNullOrWhiteSpace(x.Voucher)))
+            {
+                var name = await db.Set<LedgerJournalName>().AsNoTracking()
+                    .SingleOrDefaultAsync(x => x.DataAreaId == area && x.JournalName == header.JournalName, ct);
+                if (name != null && name.NumberSequenceTable != 0)
+                {
+                    var entered = lines.Where(x => !string.IsNullOrWhiteSpace(x.Voucher))
+                        .OrderBy(x => x.LineNum).ThenBy(x => x.RecId).Select(x => x.Voucher).ToList();
+                    string? shared = name.NewVoucher == LedgerJournalVoucherChange.None
+                        && entered.Distinct(StringComparer.Ordinal).Count() == 1 ? entered[0] : null;
+                    foreach (var line in lines.Where(x => string.IsNullOrWhiteSpace(x.Voucher)))
+                    {
+                        if (name.NewVoucher == LedgerJournalVoucherChange.None && shared != null) line.Voucher = shared;
+                        else { line.Voucher = $"<pending:{Guid.NewGuid():N}>"; shared ??= line.Voucher; }
+                    }
+                }
+            }
             errors.AddRange(LedgerVoucherBalanceCheck.Check(lines));
             return new(header.JournalNum, errors.Distinct().ToList(), setup?.UnverifiedChecks ?? []);
         }

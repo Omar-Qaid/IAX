@@ -21704,7 +21704,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasIndex("FiscalCalendarPeriod");
 
-                    b.HasIndex("Ledger");
+                    b.HasIndex("Ledger", "FiscalCalendarPeriod")
+                        .IsUnique();
 
                     b.ToTable("LedgerFiscalCalendarPeriod", (string)null);
                 });

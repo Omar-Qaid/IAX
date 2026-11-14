@@ -14,6 +14,93 @@ namespace IAX.IXApi.Tests;
 
 public class LedgerSettlementTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Settlement_actions_refuse_unrelated_pending_changes(bool reverse)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        var service = NewService(db);
+        string? settleId = null;
+        if (reverse)
+        {
+            var (settled, error) = await service.SettleAsync(new([1, 2], null), default);
+            Assert.Null(error);
+            settleId = settled!.SettleId;
+            db.ChangeTracker.Clear();
+        }
+        var account = await db.Set<MainAccount>().FirstAsync();
+        var accountId = account.RecId;
+        var original = account.Name;
+        account.Name = "unsaved unrelated change";
+        var (result, refusal) = reverse
+            ? await service.ReverseAsync(settleId!, default)
+            : await service.SettleAsync(new([1, 2], null), default);
+        Assert.Null(result);
+        Assert.Equal("Save or discard pending changes before changing ledger settlement.", refusal);
+        Assert.Equal(original, (await db.Set<MainAccount>().AsNoTracking().SingleAsync(x => x.RecId == accountId)).Name);
+        var rows = await db.Set<LedgerTransSettlement>().AsNoTracking().ToListAsync();
+        if (reverse) Assert.All(rows, row => Assert.Equal(NoYes.No, row.IsReversed));
+        else Assert.Empty(rows);
+    }
+
+    [Fact]
+    public async Task Refuses_a_reporting_currency_difference_without_adjustment_accounting()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        db.Set<GeneralJournalAccountEntry>().Local.Single(x => x.RecId == 2).ReportingCurrencyAmount = 3100m;
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        var service = NewService(db);
+
+        var (result, error) = await service.SettleAsync(new([1, 2], null), default);
+
+        Assert.Null(result);
+        Assert.Contains("reporting currency", error);
+        Assert.Contains("100", error);
+        Assert.Empty(await db.Set<LedgerTransSettlement>().ToListAsync());
+        Assert.Equal(4, (await service.OpenItemsAsync("250100", default)).Items!.Count);
+        Assert.Equal(2, await db.Set<GeneralJournalEntry>().CountAsync());
+    }
+
+    [Fact]
+    public async Task Reversal_refreshes_a_settlement_reversed_after_it_was_cached()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        await db.SaveChangesAsync();
+        var service = NewService(db);
+        var (settled, settleError) = await service.SettleAsync(new([1, 2], null), default);
+        Assert.Null(settleError);
+        Assert.NotNull(settled);
+        // Keep the active rows tracked while another operation reverses the persisted rows.
+        var reversedAt = new DateTime(2026, 1, 25);
+        await db.Set<LedgerTransSettlement>().ExecuteUpdateAsync(setters => setters
+            .SetProperty(x => x.IsReversed, NoYes.Yes)
+            .SetProperty(x => x.OriginalSettleId, settled.SettleId)
+            .SetProperty(x => x.UserId, "other-user")
+            .SetProperty(x => x.DateProcessed, reversedAt));
+
+        var (result, error) = await service.ReverseAsync(settled.SettleId, default);
+
+        Assert.Null(result);
+        Assert.Contains("already reversed", error);
+        var rows = await db.Set<LedgerTransSettlement>().AsNoTracking().ToListAsync();
+        Assert.All(rows, row => Assert.Equal("other-user", row.UserId));
+        Assert.All(rows, row => Assert.Equal(reversedAt, row.DateProcessed));
+        Assert.Equal(4, (await service.OpenItemsAsync("250100", default)).Items!.Count);
+    }
+
     // Cases J and K of the cycle: a receipt is parked in clearing, then identified. Settling the
     // two clearing entries changes matching data only; the account balance is untouched.
     [Fact]
@@ -144,6 +231,36 @@ public class LedgerSettlementTests
         Assert.Contains("one transaction currency", currencyError);
 
         Assert.Contains("was not found", (await service.OpenItemsAsync("999999", default)).Error);
+    }
+
+    /// <summary>
+    /// Two entries in the same foreign currency, translated at different rates: 100 USD at 3.75
+    /// against -125 USD at 3.00. They net to zero in the accounting currency but not in the
+    /// currency the open amounts are held in, so they are not an equal match. The difference is
+    /// exchange adjustment, which this path does not post, so the selection is refused.
+    /// </summary>
+    [Fact]
+    public async Task Refuses_a_selection_that_nets_to_zero_only_in_the_accounting_currency()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        var atHighRate = Entry(6, entry: 1, account: 1, amount: 100m, text: "USD at 3.75", currency: "USD");
+        atHighRate.AccountingCurrencyAmount = 375m;
+        atHighRate.ReportingCurrencyAmount = 375m;
+        var atLowRate = Entry(7, entry: 2, account: 1, amount: -125m, text: "USD at 3.00", currency: "USD");
+        atLowRate.AccountingCurrencyAmount = -375m;
+        atLowRate.ReportingCurrencyAmount = -375m;
+        db.AddRange(atHighRate, atLowRate);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var (result, error) = await NewService(db).SettleAsync(new([6, 7], null), default);
+
+        Assert.Null(result);
+        Assert.Contains("out of balance by -25", error);
+        Assert.Empty(await db.Set<LedgerTransSettlement>().AsNoTracking().ToListAsync());
     }
 
     private static async Task<decimal> ClearingBalanceAsync(DbContext db) =>

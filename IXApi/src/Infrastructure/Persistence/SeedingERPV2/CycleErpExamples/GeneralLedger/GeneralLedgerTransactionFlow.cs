@@ -39,7 +39,7 @@ public sealed class GeneralLedgerTransactionFlow(
         if (entered == null && header.Posted != NoYes.Yes)
             entered = await lines.AddAsync(new LedgerJournalTrans
             {
-                DataAreaId = company, JournalNum = header.JournalNum, TransDate = date,
+                DataAreaId = company, JournalNum = header.JournalNum, Voucher = key, TransDate = date,
                 AccountType = LedgerJournalACType.Ledger, LedgerDimension = debit,
                 OffsetAccountType = LedgerJournalACType.Ledger, OffsetLedgerDimension = credit,
                 CurrencyCode = "SAR", AmountCurDebit = amount, DocumentNum = key, Txt = "GL expense reclassification example"
@@ -55,7 +55,7 @@ public sealed class GeneralLedgerTransactionFlow(
         {
             var validation = await journals.ValidateAsync(header.RecId, ct);
             if (validation == null || !validation.Valid)
-                throw new InvalidOperationException("GL example validation failed.");
+                throw new InvalidOperationException($"GL example validation failed: {string.Join("; ", validation?.Errors ?? [])}");
             var entryCount = await db.Set<GeneralJournalEntry>().CountAsync(x => x.DataAreaId == company, ct);
             var (simulation, simulationError) = await journals.SimulateAsync(header.RecId, ct);
             if (simulation == null || !simulation.WouldPost || simulation.TotalDebit != amount

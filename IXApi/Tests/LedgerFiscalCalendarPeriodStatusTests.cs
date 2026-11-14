@@ -21,6 +21,274 @@ namespace IAX.IXApi.Tests;
 public class LedgerFiscalCalendarPeriodStatusTests
 {
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Changing_period_status_refuses_pending_changes_without_discarding_them(bool periodChange)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        if (periodChange)
+            (await db.Set<LedgerFiscalCalendarPeriod>().SingleAsync(x => x.RecId == 1)).Status = FiscalPeriodStatus.OnHold;
+        else
+            (await db.Set<FiscalCalendarPeriod>().SingleAsync(x => x.RecId == 1)).Name = "Unsaved period name";
+        var (result, error) = await new LedgerFiscalCalendarPeriodService(new TestUnitOfWork(db), new TestUser())
+            .SetStatusAsync(1, FiscalPeriodStatus.Closed);
+        Assert.Null(result);
+        Assert.Equal("Save or discard pending changes before changing ledger period status.", error);
+        Assert.True(db.ChangeTracker.HasChanges());
+        Assert.Equal(FiscalPeriodStatus.Open, (await db.Set<LedgerFiscalCalendarPeriod>().AsNoTracking().SingleAsync(x => x.RecId == 1)).Status);
+        Assert.Equal("January 2026", (await db.Set<FiscalCalendarPeriod>().AsNoTracking().SingleAsync(x => x.RecId == 1)).Name);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Module_access_update_can_hold_posting_for_its_period(bool bulk)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        var row = new LedgerPeriodModuleAccessControl { RecId = 1, DataAreaId = "dat", LedgerFiscalCalendarPeriod = 1 };
+        db.Add(row);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        row.LedgerAccessLevel = LedgerPeriodAccessLevel.None;
+        var service = new LedgerPeriodModuleAccessControlService(new TestUnitOfWork(db), new TestUser());
+        if (bulk) await service.UpdateRangeAsync([row]);
+        else await service.UpdateAsync(row);
+        Assert.Equal(LedgerPeriodAccessLevel.None,
+            (await db.Set<LedgerPeriodModuleAccessControl>().AsNoTracking().SingleAsync()).LedgerAccessLevel);
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task Module_access_update_requires_a_period_in_the_same_company(bool bulk, bool otherCompany)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        var row = new LedgerPeriodModuleAccessControl { RecId = 1, DataAreaId = "dat", LedgerFiscalCalendarPeriod = 1 };
+        db.Add(row);
+        if (otherCompany) db.Add(new LedgerFiscalCalendarPeriod
+            { RecId = 9, DataAreaId = "other", Ledger = 9, FiscalCalendarPeriod = 1, Status = FiscalPeriodStatus.Open });
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        row.LedgerFiscalCalendarPeriod = 9;
+        var service = new LedgerPeriodModuleAccessControlService(new TestUnitOfWork(db), new TestUser());
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            if (bulk) await service.UpdateRangeAsync([row]);
+            else await service.UpdateAsync(row);
+        });
+        Assert.Equal("The ledger fiscal period was not found.", error.Message);
+        Assert.Equal(1, (await db.Set<LedgerPeriodModuleAccessControl>().AsNoTracking().SingleAsync()).LedgerFiscalCalendarPeriod);
+    }
+
+    public static IEnumerable<object[]> InvalidModuleAccessCases()
+    {
+        foreach (var field in new[] { "LedgerAccessLevel", "TaxAccessLevel", "BankAccessLevel", "CustAccessLevel", "VendAccessLevel", "InventAccessLevel" })
+            foreach (var operation in new[] { "add", "addRange", "update", "updateRange" })
+                yield return new object[] { field, operation };
+    }
+
+    [Theory]
+    [MemberData(nameof(InvalidModuleAccessCases))]
+    public async Task Module_access_writes_refuse_undefined_levels(string field, string operation)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        var service = new LedgerPeriodModuleAccessControlService(new TestUnitOfWork(db), new TestUser());
+        var row = new LedgerPeriodModuleAccessControl { RecId = 1, DataAreaId = "dat", LedgerFiscalCalendarPeriod = 1 };
+        if (operation.StartsWith("update"))
+        {
+            db.Add(row);
+            await db.SaveChangesAsync();
+            db.ChangeTracker.Clear();
+        }
+        typeof(LedgerPeriodModuleAccessControl).GetProperty(field)!.SetValue(row, (LedgerPeriodAccessLevel)99);
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            switch (operation)
+            {
+                case "add": await service.AddAsync(row); break;
+                case "addRange": await service.AddRangeAsync([row]); break;
+                case "update": await service.UpdateAsync(row); break;
+                case "updateRange": await service.UpdateRangeAsync([row]); break;
+            }
+        });
+        Assert.Equal("Module access levels must be All, None, or UserGroup.", error.Message);
+        var persisted = await db.Set<LedgerPeriodModuleAccessControl>().AsNoTracking().SingleOrDefaultAsync();
+        if (operation.StartsWith("update"))
+            Assert.Equal((LedgerPeriodAccessLevel)0, typeof(LedgerPeriodModuleAccessControl).GetProperty(field)!.GetValue(persisted));
+        else Assert.Null(persisted);
+    }
+
+    [Fact]
+    public async Task Module_access_creation_defaults_to_the_current_company()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        var service = new LedgerPeriodModuleAccessControlService(new TestUnitOfWork(db), new TestUser());
+        var row = await service.AddAsync(new LedgerPeriodModuleAccessControl
+            { DataAreaId = "", LedgerFiscalCalendarPeriod = 1 });
+        Assert.Equal("dat", row.DataAreaId);
+        Assert.Single(await db.Set<LedgerPeriodModuleAccessControl>().ToListAsync());
+    }
+
+    [Theory]
+    [InlineData(false, "")]
+    [InlineData(true, "")]
+    [InlineData(false, "dat")]
+    [InlineData(true, "dat")]
+    public async Task Module_access_creation_refuses_duplicate_pending_or_batch_rows(bool pending, string area)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        var service = new LedgerPeriodModuleAccessControlService(new TestUnitOfWork(db), new TestUser());
+        var first = new LedgerPeriodModuleAccessControl { RecId = 1, DataAreaId = "dat", LedgerFiscalCalendarPeriod = 1 };
+        var second = new LedgerPeriodModuleAccessControl { RecId = 2, DataAreaId = area, LedgerFiscalCalendarPeriod = 1 };
+        if (pending) db.Add(first);
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            if (pending) await service.AddAsync(second);
+            else await service.AddRangeAsync([first, second]);
+        });
+        Assert.Contains("Module access is already configured", error.Message);
+        Assert.Empty(await db.Set<LedgerPeriodModuleAccessControl>().AsNoTracking().ToListAsync());
+    }
+
+    [Fact]
+    public void Production_period_configuration_has_a_unique_ledger_period_index()
+    {
+        var model = new ModelBuilder();
+        model.ApplyConfiguration(new LedgerFiscalCalendarConfiguration.LedgerFiscalCalendarPeriodConfiguration());
+        var entity = model.Model.FindEntityType(typeof(LedgerFiscalCalendarPeriod));
+        Assert.NotNull(entity);
+        Assert.Contains(entity!.GetIndexes(), index => index.IsUnique &&
+            index.Properties.Select(property => property.Name).SequenceEqual(
+                new[] { nameof(LedgerFiscalCalendarPeriod.Ledger), nameof(LedgerFiscalCalendarPeriod.FiscalCalendarPeriod) }));
+    }
+
+    [Fact]
+    public async Task Database_rejects_duplicate_periods_even_when_service_checks_are_bypassed()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        db.Add(new LedgerFiscalCalendarPeriod { RecId = 2, DataAreaId = "dat", Ledger = 1,
+            FiscalCalendarPeriod = 1, Status = FiscalPeriodStatus.OnHold });
+        await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+    }
+
+    [Fact]
+    public async Task Creation_refuses_a_duplicate_period_already_pending_in_the_context()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        db.Add(new LedgerFiscalCalendarPeriod { RecId = 2, DataAreaId = "dat", Ledger = 1,
+            FiscalCalendarPeriod = 2, Status = FiscalPeriodStatus.Open });
+        var service = new LedgerFiscalCalendarPeriodService(new TestUnitOfWork(db), new TestUser());
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => service.AddAsync(
+            new LedgerFiscalCalendarPeriod { RecId = 3, DataAreaId = "dat", Ledger = 1,
+                FiscalCalendarPeriod = 2, Status = FiscalPeriodStatus.OnHold }));
+        Assert.Contains("already has a status row", error.Message);
+        Assert.Single(await db.Set<LedgerFiscalCalendarPeriod>().AsNoTracking().ToListAsync());
+    }
+
+    [Fact]
+    public async Task Bulk_create_rejects_duplicate_ledger_period_pairs_without_saving_any_rows()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        var service = new LedgerFiscalCalendarPeriodService(new TestUnitOfWork(db), new TestUser());
+        var rows = new[]
+        {
+            new LedgerFiscalCalendarPeriod { RecId = 2, DataAreaId = "dat", Ledger = 1, FiscalCalendarPeriod = 2, Status = FiscalPeriodStatus.Open },
+            new LedgerFiscalCalendarPeriod { RecId = 3, DataAreaId = "dat", Ledger = 1, FiscalCalendarPeriod = 2, Status = FiscalPeriodStatus.OnHold }
+        };
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => service.AddRangeAsync(rows));
+
+        Assert.Contains("already has a status row", error.Message);
+        Assert.Single(await db.Set<LedgerFiscalCalendarPeriod>().AsNoTracking().ToListAsync());
+    }
+
+    [Fact]
+    public async Task Bulk_create_accepts_distinct_ledger_period_pairs()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        var service = new LedgerFiscalCalendarPeriodService(new TestUnitOfWork(db), new TestUser());
+
+        await service.AddRangeAsync([
+            new LedgerFiscalCalendarPeriod { RecId = 2, DataAreaId = "dat", Ledger = 1, FiscalCalendarPeriod = 2, Status = FiscalPeriodStatus.Open },
+            new LedgerFiscalCalendarPeriod { RecId = 3, DataAreaId = "dat", Ledger = 2, FiscalCalendarPeriod = 2, Status = FiscalPeriodStatus.OnHold }
+        ]);
+
+        Assert.Equal(3, await db.Set<LedgerFiscalCalendarPeriod>().CountAsync());
+    }
+
+    [Fact]
+    public async Task A_stale_tracked_open_period_cannot_reopen_a_persisted_closed_period()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        await db.Set<LedgerFiscalCalendarPeriod>().SingleAsync(x => x.RecId == 1);
+        await db.Set<LedgerFiscalCalendarPeriod>().Where(x => x.RecId == 1)
+            .ExecuteUpdateAsync(s => s.SetProperty(x => x.Status, FiscalPeriodStatus.Closed));
+
+        var (result, error) = await new LedgerFiscalCalendarPeriodService(new TestUnitOfWork(db), new TestUser())
+            .SetStatusAsync(1, FiscalPeriodStatus.Open);
+        Assert.Null(result);
+        Assert.Contains("cannot be reopened", error);
+        Assert.Equal(FiscalPeriodStatus.Closed,
+            (await db.Set<LedgerFiscalCalendarPeriod>().AsNoTracking().SingleAsync(x => x.RecId == 1)).Status);
+    }
+
+    [Fact]
+    public async Task A_period_in_another_company_cannot_be_changed()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        db.Add(new LedgerFiscalCalendarPeriod { RecId = 9, DataAreaId = "other", Ledger = 9,
+            FiscalCalendarPeriod = 1, Status = FiscalPeriodStatus.Open });
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        var (result, error) = await new LedgerFiscalCalendarPeriodService(new TestUnitOfWork(db), new TestUser())
+            .SetStatusAsync(9, FiscalPeriodStatus.Closed);
+        Assert.Null(result);
+        Assert.Null(error);
+        Assert.Equal(FiscalPeriodStatus.Open,
+            (await db.Set<LedgerFiscalCalendarPeriod>().AsNoTracking().SingleAsync(x => x.RecId == 9)).Status);
+    }
+
+    [Fact]
+    public async Task A_period_cannot_be_created_with_an_undefined_status()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            new LedgerFiscalCalendarPeriodService(new TestUnitOfWork(db), new TestUser()).AddAsync(
+                new LedgerFiscalCalendarPeriod { DataAreaId = "dat", Ledger = 1,
+                    FiscalCalendarPeriod = 2, Status = (FiscalPeriodStatus)99 }));
+        Assert.Contains("create it Open or On hold", error.Message);
+        Assert.Single(await db.Set<LedgerFiscalCalendarPeriod>().ToListAsync());
+    }
+
+    [Theory]
     // On hold is the reversible month-end restriction, so it converts both ways.
     [InlineData(FiscalPeriodStatus.Open, FiscalPeriodStatus.OnHold, null)]
     [InlineData(FiscalPeriodStatus.OnHold, FiscalPeriodStatus.Open, null)]
@@ -207,8 +475,12 @@ public class LedgerFiscalCalendarPeriodStatusTests
     {
         protected override void OnModelCreating(ModelBuilder builder)
         {
+            var access = builder.Entity<LedgerPeriodModuleAccessControl>();
+            access.HasKey(x => x.RecId);
+            access.Ignore(x => x.RowVersion);
             var period = builder.Entity<LedgerFiscalCalendarPeriod>();
             period.HasKey(x => x.RecId);
+            period.HasIndex(x => new { x.Ledger, x.FiscalCalendarPeriod }).IsUnique();
             period.Ignore(x => x.RowVersion);
             period.Ignore(x => x.LedgerTable);
             period.Ignore(x => x.FiscalCalendarPeriodTable);
@@ -253,7 +525,15 @@ public class LedgerFiscalCalendarPeriodStatusTests
             {
                 case "GetQueryable": return Context.Set<T>().AsQueryable();
                 case "AddAsync": Context.Add((T)args![0]!); return Task.FromResult((T)args[0]!);
-                case "UpdateAsync": return Task.FromResult((T)args![0]!);
+                case "AddRangeAsync":
+                    var rows = ((IEnumerable<T>)args![0]!).ToList();
+                    Context.AddRange(rows);
+                    return Task.FromResult<IEnumerable<T>>(rows);
+                case "UpdateAsync": Context.Update((T)args![0]!); return Task.FromResult((T)args[0]!);
+                case "UpdateRangeAsync":
+                    var updates = ((IEnumerable<T>)args![0]!).ToList();
+                    Context.UpdateRange(updates);
+                    return Task.FromResult<IEnumerable<T>>(updates);
                 case "RemoveAsync": Context.Remove((T)args![0]!); return Task.CompletedTask;
                 default: throw new NotSupportedException(method?.Name);
             }
