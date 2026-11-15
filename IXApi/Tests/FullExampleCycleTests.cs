@@ -596,6 +596,111 @@ public sealed class FullExampleCycleTests
         Assert.Equal(10m, (await PostedBalancesAsync(db, new DateTime(2026, 12, 1), new DateTime(2026, 12, 31)))[AdminExpense]);
     }
 
+    /// <summary>
+    /// The plan's standalone weighted-average case (<c>PlanTestForFullEmaple.md</c> §3): invoice
+    /// 10 at 40, sell and invoice 5, then invoice 10 at 60 in the same period without marking.
+    /// The sale issues at the provisional 40 (cost 200); the close averages the period to 50, so
+    /// the issue settles at 250 and the remaining 15 pieces are worth 750.
+    /// </summary>
+    [Fact]
+    public async Task Standalone_weighted_average_close_moves_the_issue_from_two_hundred_to_two_hundred_fifty()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        Seed(db);
+        await db.SaveChangesAsync();
+
+        var work = new TestUnitOfWork(db);
+        var company = new TestCompany();
+        var user = new TestUser();
+        var numbers = new TestNumbers();
+        var sequence = Sequence();
+        var resolver = new InventDimensionResolver(work, numbers);
+        var orders = new PurchOrderService(work, company, sequence,
+            new PurchInventorySupplyService(work, numbers, resolver), new SalesUnitConversionService(work));
+        var confirmations = new PurchConfirmationService(work, company, sequence);
+        var receipts = new ProductReceiptService(work, company, sequence);
+        var vendorInvoices = new VendorInvoiceService(work, company, sequence);
+        var demand = new SalesInventoryDemandService(work, numbers, resolver);
+        var salesConfirmations = new SalesOrderConfirmationService(work, sequence, company, new SalesOrderConfirmationValidator());
+        var packingSlips = new PackingSlipJournalService(work, company, sequence);
+        var salesInvoices = new SalesInvoiceService(work, company, sequence);
+        var close = new InventCloseService(work, company, user, sequence);
+
+        // First receipt: 10 at 40, received and invoiced.
+        Assert.Equal(200, (await orders.CreateAsync(
+            new PurchOrderCreateDto("V-001", null, "SAR", Nov(3), "S1", "A", null, Nov(2)), default)).StatusCode);
+        var po1 = await db.Set<PurchTable>().SingleAsync();
+        Assert.Equal(200, (await orders.AddLineAsync(po1.RecId,
+            new PurchLineInputDto("ITEM-01", 10, "EA", 40, 1, null, null, null, null), default)).StatusCode);
+        Assert.Equal(200, (await confirmations.ConfirmAsync(po1.RecId, default)).StatusCode);
+        var po1Line = await db.Set<PurchLine>().SingleAsync(x => x.PurchId == po1.PurchId);
+        Assert.Equal(200, (await receipts.PostAsync(po1.RecId,
+            new ProductReceiptPostDto("WA-PR1", Nov(3), [new(po1Line.RecId, 10)]), default)).StatusCode);
+        Assert.Equal(200, (await vendorInvoices.PostAsync(po1.RecId,
+            new VendorInvoicePostDto("WA-VI1", Nov(4), [new(po1Line.RecId, 10)]), default)).StatusCode);
+        Assert.Equal(400m, (await db.Set<InventSum>().ToListAsync()).Sum(x => x.PostedValue));
+
+        // Sell 5: the issue carries the provisional running average, 40 a piece.
+        var order = new SalesTable
+        {
+            DataAreaId = "dat", SalesId = "SO-WA1", CustAccount = "C-001", InvoiceAccount = "C-001", CurrencyCode = "SAR",
+            SalesStatus = SalesStatus.Backorder, InventSiteId = "S1", InventLocationId = "A",
+            OrderDate = Nov(10), PaymTerm = "NET30"
+        };
+        db.Set<SalesTable>().Add(order);
+        await db.SaveChangesAsync();
+        var itemLine = new SalesLine
+        {
+            DataAreaId = "dat", SalesId = order.SalesId, LineNum = 1, ItemId = "ITEM-01", SalesQty = 5, QtyOrdered = 5,
+            RemainSalesPhysical = 5, RemainSalesFinancial = 5, SalesUnit = "EA", SalesPrice = 100, PriceUnit = 1,
+            LineAmount = 500, SalesStatus = SalesStatus.Backorder, StockedProduct = NoYes.Yes, CurrencyCode = "SAR",
+            ReceiptDateRequested = Nov(11)
+        };
+        await demand.CreateAsync(order, itemLine, "S1", "A");
+        db.Set<SalesLine>().Add(itemLine);
+        await db.SaveChangesAsync();
+        var confirmed = await salesConfirmations.PostAsync(order.RecId, new PostConfirmationRequest(Nov(10), true, "WA-CONF"), default);
+        Assert.True(confirmed.StatusCode == 200, confirmed.Message);
+        Assert.Equal(200, (await packingSlips.PostAsync(order.RecId, new PostPackingSlipRequest(
+            Nov(11), "All", true, "WA-PS1", [new PackingSlipPostingLineRequest(itemLine.RecId.ToString(), 5)]), default)).StatusCode);
+        var invoice = await salesInvoices.PostAsync(order.RecId, new SalesInvoicePostDto(Nov(12), "WA-SI1", [new(itemLine.RecId, 5)]), default);
+        Assert.True(invoice.StatusCode == 200, invoice.Message);
+        Assert.Equal(-200m, (await SalesIssuesAsync(db, itemLine.InventTransId)).Sum(x => x.CostAmountPosted));
+        Assert.Equal(200m, (await PostedBalancesAsync(db))[CostOfSales]);
+
+        // Second receipt: 10 at 60, in the same period, no marking.
+        Assert.Equal(200, (await orders.CreateAsync(
+            new PurchOrderCreateDto("V-001", null, "SAR", Nov(20), "S1", "A", null, Nov(19)), default)).StatusCode);
+        var po2 = await db.Set<PurchTable>().OrderByDescending(x => x.RecId).FirstAsync();
+        Assert.NotEqual(po1.RecId, po2.RecId);
+        Assert.Equal(200, (await orders.AddLineAsync(po2.RecId,
+            new PurchLineInputDto("ITEM-01", 10, "EA", 60, 1, null, null, null, null), default)).StatusCode);
+        Assert.Equal(200, (await confirmations.ConfirmAsync(po2.RecId, default)).StatusCode);
+        var po2Line = await db.Set<PurchLine>().SingleAsync(x => x.PurchId == po2.PurchId);
+        Assert.Equal(200, (await receipts.PostAsync(po2.RecId,
+            new ProductReceiptPostDto("WA-PR2", Nov(20), [new(po2Line.RecId, 10)]), default)).StatusCode);
+        Assert.Equal(200, (await vendorInvoices.PostAsync(po2.RecId,
+            new VendorInvoicePostDto("WA-VI2", Nov(20), [new(po2Line.RecId, 10)]), default)).StatusCode);
+        Assert.Equal(800m, (await db.Set<InventSum>().ToListAsync()).Sum(x => x.PostedValue)); // 400 + 600 - 200 issued
+
+        // Close: the period average is (400 + 600) / 20 = 50, so the issue of 5 moves from 200 to 250.
+        db.ChangeTracker.Clear();
+        var closed = await close.CloseAsync(Nov(30), default);
+        Assert.True(closed.Error == null, closed.Error);
+        var issues = await SalesIssuesAsync(db, itemLine.InventTransId);
+        Assert.Equal(-250m, issues.Sum(x => x.CostAmountPosted + x.CostAmountAdjustment));
+        Assert.DoesNotContain(issues, x => x.ValueOpen != InventTransOpen.No);
+        Assert.Equal(15m, (await db.Set<InventSum>().ToListAsync()).Sum(x => x.PhysicalInvent));
+        Assert.Equal(750m, (await db.Set<InventSum>().ToListAsync()).Sum(x => x.PostedValue));
+        var balances = await PostedBalancesAsync(db);
+        Assert.Equal(250m, balances[CostOfSales]);
+        Assert.Equal(750m, balances[Inventory]);
+        // The settlement rows explain the adjustment, and every voucher stays balanced.
+        Assert.Equal(-50m, (await db.Set<InventSettlement>().ToListAsync()).Sum(x => x.CostAmountAdjustment));
+        Assert.Equal(0m, (await db.Set<GeneralJournalAccountEntry>().ToListAsync()).Sum(x => x.AccountingCurrencyAmount));
+    }
+
     // ---- Helpers ----------------------------------------------------------------------------
 
     /// <summary>Posts one general journal through the real engine; returns the refusal, or null when it posted.</summary>
