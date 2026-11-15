@@ -278,6 +278,31 @@ public sealed partial class InventCloseService : IInventCloseService
             }
         }
 
+        // Weighted average has the same dependency but no chronological prefix to settle: the
+        // period average costs every issue, so the pool is settled once without the return
+        // receipts whose sale is still open, and those receipts are then built below at their
+        // issue's settled cost. A return receipt is linked to the sale it came from, not a free
+        // receipt, so leaving it out of the average is what keeps that link. Marked issues keep
+        // the refusal, since a marking could point at one of the receipts being deferred.
+        if (isClose && pool.Model == InventModel.WeightedAvg && openDependencies.Count > 0
+            && !pool.Rows.Any(x => x.Transaction.Qty < 0 && x.Transaction.MarkingRefInventTransOrigin != 0))
+        {
+            var deferredReturns = returnReceipts.Where(x =>
+            {
+                var dependency = salesReturns[x.InventTransId];
+                return openDependencies.Any(open => open.InventTransId == dependency.OriginId
+                    && (string.IsNullOrEmpty(dependency.InvoiceId) || dependency.InvoiceId == open.Transaction.InvoiceId));
+            }).Select(x => x.InventTransId).ToHashSet();
+            var rest = pool.Rows.Where(x => !(x.Transaction.Qty > 0 && deferredReturns.Contains(x.InventTransId))).ToList();
+            var available = rest.Where(x => x.Transaction.Qty > 0)
+                .Sum(x => Math.Max(0m, x.Transaction.Qty - x.Transaction.QtySettled));
+            var needed = rest.Where(x => x.Transaction.Qty < 0)
+                .Sum(x => Math.Max(0m, x.Transaction.QtySettled - x.Transaction.Qty));
+            if (deferredReturns.Count > 0 && available >= needed)
+                await SettlePoolAsync(companyId, new Pool(pool.ItemId, pool.Site, pool.ItemGroupId, pool.Model, rest),
+                    true, voucher, cutoffDate, context, salesReturns, vendorReturns, run, ct);
+        }
+
         var layers = new LinkedList<Layer>();
         foreach (var row in pool.Rows.Where(x => x.Transaction.Qty > 0))
         {
@@ -373,6 +398,14 @@ public sealed partial class InventCloseService : IInventCloseService
             var history = await Db.Set<InventSettlement>().AsNoTracking().Where(x => x.DataAreaId == companyId
                 && x.Cancelled == NoYes.No && x.SettleType == InventSettleType.FinancialClose
                 && x.ReceiptTransRecId != null && receiptIds.Contains(x.ReceiptTransRecId.Value)).ToListAsync(ct);
+            // Settlements written earlier in this same run are tracked but not yet saved. The
+            // carry-forward has to see them too, or a receipt settled a moment ago by the
+            // return pre-pass above looks unexplained and the pool is refused.
+            history.AddRange(Db.ChangeTracker.Entries<InventSettlement>()
+                .Where(x => x.State == EntityState.Added).Select(x => x.Entity)
+                .Where(x => x.DataAreaId == companyId && x.Cancelled == NoYes.No
+                    && x.SettleType == InventSettleType.FinancialClose
+                    && x.ReceiptTransRecId != null && receiptIds.Contains(x.ReceiptTransRecId.Value)));
             foreach (var receipt in receipts)
             {
                 if (receipt.QtySettled != -history.Where(x => x.ReceiptTransRecId == receipt.RecId).Sum(x => x.QtySettled))

@@ -1,6 +1,6 @@
 ﻿# Inventory — gap analysis against basic D365 F&O
 
-**Last updated:** 2026-11-13
+**Last updated:** 2026-11-15
 **Scope:** basic (core) D365 F&O Inventory and Cost management only. Advanced warehouse (WHS),
 production, quality, and optional features are out of scope by request and are not listed as gaps.
 
@@ -41,7 +41,7 @@ alters behavior:
 | --- | --- | --- | --- | --- | --- |
 | Tracking dimensions on a sales return | `CustReturnService` copies the sold movement's dimension onto the return line (`InventDimId = sold.InventDimId`), so a batch or serial returns to the dimension it was issued from. Verified by inspection only. | A returned batch or serial re-enters stock under its own dimension. | A test that returns a batch-tracked item and asserts the return movement's dimension and the per-batch on-hand. MD-04 verifies receipt, reservation and issue; the return half is not exercised. | `CustReturnService`, `InventoryDimensionPolicy` | Low — the code preserves the dimension by construction; only the proof is missing |
 | Fiscal-period refusal on an inventory posting | `SubledgerPostingSupport.LoadLedgerContextAsync` refuses a posting with `The fiscal period for {date:d} is not open.`, `No operating fiscal period contains {date:d}.`, `The {module} module is closed for the fiscal period containing {date:d}.` and a user-group refusal. Only the "is not open" message is asserted anywhere, and only through AP and AR tests. | Posting into a closed period, or a period whose module is closed, is refused. | An inventory-path test for each refusal, and for the module and user-group guards which no test reaches. `LedgerPeriodModuleAccessControl` is also absent from the test `CycleContext`, so the module guard is skipped there entirely. | `SubledgerPostingSupport`, `LedgerPeriodModuleAccessControl` | Medium — the guards exist and are unproven for this module (`CFG-04`) |
-| Same-period sales return close | FIFO close can settle an earlier sales issue before costing its return when receipts before the first return cover all preceding issues and the pool has no marking or purchase returns. Later non-return receipts are allowed. Other cases still require the original issue to have been settled already. | Return cost follows the original sales issue's cost. | Support and verify same-period return dependencies for other costing models, mixed pools and cases where earlier receipt quantities are insufficient. | `InventCloseService.SettlePoolAsync` | Medium — unsupported cases are refused |
+| Same-period sales return close | FIFO and weighted-average close can settle a same-period sales issue before costing its return. FIFO requires receipts before the first return to cover all preceding issues, no marking and no purchase returns; weighted average settles the pool once without the dependent return receipts (close only, no marked issues, and available receipt quantity must cover the issues). Other cases — recalculation, marked pools, insufficient receipts — still require the original issue to have been settled already. | Return cost follows the original sales issue's cost. | Support and verify same-period return dependencies for LIFO, mixed pools and cases where receipt quantities are insufficient. | `InventCloseService.SettlePoolAsync` | Medium — unsupported cases are refused |
 | Count quantity storage precision | Count confirmation validates against the current inventory unit and rejects quantities beyond four decimals because inventory quantities use `decimal(18,4)`. Units may be configured with up to six decimals. | Quantities should honor the configured unit precision. | Verify and expand precision across the complete inventory quantity flow before accepting five or six decimals. | Counting journals, inventory transactions and on-hand quantities | Medium — affected values are refused rather than rounded silently |
 | Weighted-average settlement representation | Close carries the remaining value into later averages using non-cancelled receipt settlement costs. If the receipt-layer value differs after a prior average close, a marked issue or purchase return against those original layers is refused. | Remaining inventory is carried into the next period at the preceding weighted-average value. D365 normally uses a weighted-average closing transfer for summarized settlements. [Microsoft weighted average](https://learn.microsoft.com/en-us/dynamics365/supply-chain/cost-management/weighted-average-physical-value-marking). | Implement and verify the standard closing-transfer representation, including linked receipt cases and cancellation. | `InventCloseService.SettlePoolAsync` | Medium — ambiguous linked-receipt cases are refused |
 | Legacy moving-average seed | New setup seeds supported FIFO and weighted-average groups. An existing `MA` group retains its moving-average model and is not usable by basic inventory posting. | Existing costing models must not be silently changed. | A deployment that used the legacy group needs a separately verified costing-model transition before posting. | `InventorySeeder.SeedSetupGroupsAsync` | Medium — explicitly unsupported; existing valuation configuration is preserved |
@@ -159,6 +159,18 @@ message quoted.
   average and LIFO settlement paths unreachable. Setup and the close engine now share one list.
 
 ## Changelog
+
+2026-11-15: **Weighted-average close now settles a same-period sales return's original issue
+first.** The core cycle reference (`Finance/FullExmaple.md`, AR-02 then INV-09) posts a customer
+return and then closes the period under weighted average; close refused the pool with *A customer
+return requires its original financially settled sales issue in the same pool.* because only FIFO
+had a pre-settlement path. `InventCloseService` now, for a close (not a recalculation) of a
+weighted-average pool with open return dependencies and no marked issues, settles the pool once
+without the dependent return receipts and then costs those returns at their issue's settled unit
+cost; the history check also reads settlements pending in the change tracker. Recalculation and
+marked pools keep the existing refusal. Covered by
+`InventoryWeightedAverageReturnCloseTests` (both-direction adjustments, later-receipt average,
+cancel symmetry, recalculation refusal) and the end-to-end `FullExampleCycleTests`.
 
 2026-11-11: **Scanned the inventory transaction (`InventTrans`) status-transition layer against
 `CycleErpExamples/Inventory/Logic_Readonly.md` and fixed five value-allocation defects.** The status
