@@ -150,6 +150,21 @@ public sealed class FullExampleCycleTests
         Assert.Empty(await db.Set<VendTrans>().ToListAsync());
 
         // ---- PO-03: invoice VI-001 for the 60. Purchased 60, remaining 40/40, accrual reversed, vendor 3,000.
+        // Plan §3: a rejected 61-piece invoice must leave no financial footprint, and the
+        // corrected request must succeed using the same external invoice reference.
+        var receiptVoucherCount = await db.Set<GeneralJournalEntry>().CountAsync();
+        var overReceipt = await vendorInvoices.PostAsync(po.RecId,
+            new VendorInvoicePostDto("VI-001", Nov(4), [new(poLine.RecId, 61)]), default);
+        Assert.Equal(422, overReceipt.StatusCode);
+        Assert.Contains("received, uninvoiced", overReceipt.Message);
+        Assert.Empty(await db.Set<VendInvoiceJour>().ToListAsync());
+        Assert.Empty(await db.Set<VendInvoiceTrans>().ToListAsync());
+        Assert.Empty(await db.Set<VendTrans>().ToListAsync());
+        Assert.Empty(await db.Set<VendTransOpen>().ToListAsync());
+        Assert.Equal(receiptVoucherCount, await db.Set<GeneralJournalEntry>().CountAsync());
+        Assert.Equal(60m, await OnHandAsync(db, "A"));
+        poLine = await db.Set<PurchLine>().SingleAsync(x => x.ItemId == "ITEM-01");
+        Assert.Equal((40m, 100m), (poLine.RemainPurchPhysical, poLine.RemainPurchFinancial));
         Assert.Equal(200, (await vendorInvoices.PostAsync(po.RecId,
             new VendorInvoicePostDto("VI-001", Nov(4), [new(poLine.RecId, 60)]), default)).StatusCode);
         Assert.Equal(60m, await OnHandAsync(db, "A"));
@@ -163,6 +178,8 @@ public sealed class FullExampleCycleTests
         Assert.Equal(3000m, balances[Inventory]);
         Assert.Equal(-3000m, balances[Vendors]);
         Assert.Equal(-3000m, await VendorOpenAsync(db));
+        Assert.Equal(Nov(4).AddDays(30), (await db.Set<VendTrans>().SingleAsync()).DueDate);
+        Assert.Equal(Nov(4).AddDays(30), (await db.Set<VendTransOpen>().SingleAsync()).DueDate);
         var stock = await db.Set<InventSum>().SingleAsync(x => x.InventLocationId == "A");
         Assert.Equal(3000m, stock.PostedValue);
         Assert.Equal(0m, stock.PhysicalValue);
@@ -244,32 +261,20 @@ public sealed class FullExampleCycleTests
         Assert.Equal(5000m, balances[Inventory]);                        // no ledger effect inside one site
 
         // ---- SO-01: SO-001, 40 of the item at 100 plus the 300 service, confirmed. No receivable yet.
-        var order = new SalesTable
-        {
-            DataAreaId = "dat", SalesId = "SO-001", CustAccount = "C-001", InvoiceAccount = "C-001", CurrencyCode = "SAR",
-            SalesStatus = SalesStatus.Backorder, InventSiteId = "S1", InventLocationId = "A",
-            OrderDate = Nov(10), PaymTerm = "NET30"
-        };
-        db.Set<SalesTable>().Add(order);
-        await db.SaveChangesAsync();
-        var itemLine = new SalesLine
-        {
-            DataAreaId = "dat", SalesId = order.SalesId, LineNum = 1, ItemId = "ITEM-01", SalesQty = 40, QtyOrdered = 40,
-            RemainSalesPhysical = 40, RemainSalesFinancial = 40, SalesUnit = "EA", SalesPrice = 100, PriceUnit = 1,
-            LineAmount = 4000, SalesStatus = SalesStatus.Backorder, StockedProduct = NoYes.Yes, CurrencyCode = "SAR",
-            ReceiptDateRequested = Nov(11)
-        };
-        await demand.CreateAsync(order, itemLine, "S1", "A");
-        db.Set<SalesLine>().Add(itemLine);
-        var serviceLine = new SalesLine
-        {
-            DataAreaId = "dat", SalesId = order.SalesId, LineNum = 2, ItemId = "SRV-01", SalesQty = 1, QtyOrdered = 1,
-            RemainSalesPhysical = 1, RemainSalesFinancial = 1, SalesUnit = "EA", SalesPrice = 300, PriceUnit = 1,
-            LineAmount = 300, SalesStatus = SalesStatus.Backorder, StockedProduct = NoYes.No, CurrencyCode = "SAR",
-            ReceiptDateRequested = Nov(11)
-        };
-        db.Set<SalesLine>().Add(serviceLine);
-        await db.SaveChangesAsync();
+        var order = await CreateSalesOrderAsync(work, company, sequence);
+        var salesLines = new SalesOrderLineService(work, company,
+            new SalesOrderValidationService(work, company), demand, new SalesUnitConversionService(work));
+        var addedItem = await salesLines.AddAsync(order.RecId, new SalesLineInputDto
+        { ItemNumber = "ITEM-01", Quantity = 40, UnitPrice = 100, Unit = "EA", DeliveryDate = Nov(11) }, default);
+        Assert.True(addedItem.Status == SalesLineWriteStatus.Success, addedItem.Error);
+        var itemLine = await db.Set<SalesLine>().SingleAsync(x => x.SalesId == order.SalesId && x.ItemId == "ITEM-01");
+        var addedService = await salesLines.AddAsync(order.RecId, new SalesLineInputDto
+        { ItemNumber = "SRV-01", Quantity = 1, UnitPrice = 300, Unit = "EA", DeliveryDate = Nov(11) }, default);
+        Assert.True(addedService.Status == SalesLineWriteStatus.Success, addedService.Error);
+        var serviceLine = await db.Set<SalesLine>().SingleAsync(x => x.SalesId == order.SalesId && x.ItemId == "SRV-01");
+        Assert.Equal(NoYes.Yes, itemLine.StockedProduct);
+        Assert.Equal(NoYes.No, serviceLine.StockedProduct);
+        Assert.Equal(4300m, (await db.Set<SalesTable>().SingleAsync(x => x.RecId == order.RecId)).SmmSalesAmountTotal);
         Assert.Equal(-40m, (await db.Set<InventTrans>().SingleAsync(x => x.StatusIssue == StatusIssue.Ordered)).Qty);
         var confirmed = await salesConfirmations.PostAsync(order.RecId, new PostConfirmationRequest(Nov(10), true, "CONF-001"), default);
         Assert.True(confirmed.StatusCode == 200, confirmed.Message);
@@ -312,6 +317,8 @@ public sealed class FullExampleCycleTests
         Assert.Equal(0m, balances[CogsDelivered]);
         Assert.Equal(0m, balances[DeliveredNotInvoiced]);
         Assert.Equal(2500m, (await db.Set<CustTransOpen>().ToListAsync()).Sum(x => x.AmountCur));
+        Assert.Equal(Nov(12).AddDays(30), (await db.Set<CustTrans>().SingleAsync()).DueDate);
+        Assert.Equal(Nov(12).AddDays(30), (await db.Set<CustTransOpen>().SingleAsync()).DueDate);
 
         // ---- SO-04: deliver the last 15 then invoice them with the service. Customer 1,800: 1,500 goods, 300 service, cost 750.
         Assert.Equal(200, (await packingSlips.PostAsync(order.RecId, new PostPackingSlipRequest(
@@ -395,11 +402,13 @@ public sealed class FullExampleCycleTests
         // ---- AR-03: credit only, 50 on the sale. Quantity, inventory value and cost of sales stay put.
         // The return line carries no price of its own here, so the 50 is half a unit of the 100 line.
         Assert.Equal(200, (await customerReturns.CreateAsync(new CustReturnCreateDto(si002, null, [new(si002ItemLine.RecId, 0.5m, "CREDITONLY")]), default)).StatusCode);
+        var movementsBeforeCreditOnly = await db.Set<InventTrans>().CountAsync();
         var creditOnly = await db.Set<SalesTable>().SingleAsync(x => x.SalesType == SalesType.ReturnItem && x.RecId != rma.RecId);
         var cn2 = await customerReturns.CreditAsync(creditOnly.RecId, new CustCreditNoteDto(Nov(20), "CN-002"), default);
         Assert.True(cn2.StatusCode == 200, cn2.Message);
         var cn2Invoice = (await db.Set<CustInvoiceJour>().SingleAsync(x => x.ParmId == "CN-002")).InvoiceId;
         Assert.Equal(-50m, (await db.Set<CustTrans>().SingleAsync(x => x.Invoice == cn2Invoice)).AmountCur);
+        Assert.Equal(movementsBeforeCreditOnly, await db.Set<InventTrans>().CountAsync());
         Assert.Equal(27m, await OnHandAsync(db, "A"));
         balances = await PostedBalancesAsync(db);
         Assert.Equal(4150m, balances[Receivables]);
@@ -418,6 +427,7 @@ public sealed class FullExampleCycleTests
         // ---- AP-04: pay 1,000 on account, then settle it and the 250 credit note against VI-002. VI-002 keeps 750; vendor 1,030.
         Assert.Equal(200, (await vendorPayments.PostAsync(new VendPaymentPostDto("V-001", "BANK-SAR", 1000m, "PAY-002", Nov(22), null, null, false), default)).StatusCode);
         var pay2 = await db.Set<VendTrans>().SingleAsync(x => x.AmountCur == 1000m && (x.Invoice == null || x.Invoice == ""));
+        Assert.Equal(1000m, (await db.Set<VendTransOpen>().SingleAsync(x => x.RefRecId == pay2.RecId)).AmountCur);
         var vi002Trans = await db.Set<VendTrans>().SingleAsync(x => x.Invoice == "VI-002");
         var vcnTrans = await db.Set<VendTrans>().SingleAsync(x => x.Invoice == "VCN-001");
         Assert.Equal(-1030m, await VendorOpenAsync(db));                 // the payment is open until settled
@@ -446,6 +456,7 @@ public sealed class FullExampleCycleTests
         // ---- AR-05: collect 1,000 on account, allocate 500 to SI-001 and 500 to SI-002, then settle both credit notes against SI-002.
         Assert.Equal(200, (await customerPayments.PostAsync(new CustPaymentPostDto("C-001", "BANK-SAR", 1000m, Nov(24), null, null, "RCPT-002", false), default)).StatusCode);
         var rcpt2 = await db.Set<CustTrans>().SingleAsync(x => x.AmountCur == -1000m && (x.Invoice == null || x.Invoice == ""));
+        Assert.Equal(-1000m, (await db.Set<CustTransOpen>().SingleAsync(x => x.RefRecId == rcpt2.RecId)).AmountCur);
         var si002Trans = await db.Set<CustTrans>().SingleAsync(x => x.Invoice == si002);
         Assert.Equal(1150m, (await db.Set<CustTransOpen>().ToListAsync()).Sum(x => x.AmountCur));
         db.ChangeTracker.Clear();
@@ -642,23 +653,13 @@ public sealed class FullExampleCycleTests
         Assert.Equal(400m, (await db.Set<InventSum>().ToListAsync()).Sum(x => x.PostedValue));
 
         // Sell 5: the issue carries the provisional running average, 40 a piece.
-        var order = new SalesTable
-        {
-            DataAreaId = "dat", SalesId = "SO-WA1", CustAccount = "C-001", InvoiceAccount = "C-001", CurrencyCode = "SAR",
-            SalesStatus = SalesStatus.Backorder, InventSiteId = "S1", InventLocationId = "A",
-            OrderDate = Nov(10), PaymTerm = "NET30"
-        };
-        db.Set<SalesTable>().Add(order);
-        await db.SaveChangesAsync();
-        var itemLine = new SalesLine
-        {
-            DataAreaId = "dat", SalesId = order.SalesId, LineNum = 1, ItemId = "ITEM-01", SalesQty = 5, QtyOrdered = 5,
-            RemainSalesPhysical = 5, RemainSalesFinancial = 5, SalesUnit = "EA", SalesPrice = 100, PriceUnit = 1,
-            LineAmount = 500, SalesStatus = SalesStatus.Backorder, StockedProduct = NoYes.Yes, CurrencyCode = "SAR",
-            ReceiptDateRequested = Nov(11)
-        };
-        await demand.CreateAsync(order, itemLine, "S1", "A");
-        db.Set<SalesLine>().Add(itemLine);
+        var order = await CreateSalesOrderAsync(work, company, sequence);
+        var salesLines = new SalesOrderLineService(work, company,
+            new SalesOrderValidationService(work, company), demand, new SalesUnitConversionService(work));
+        var addedItem = await salesLines.AddAsync(order.RecId, new SalesLineInputDto
+        { ItemNumber = "ITEM-01", Quantity = 5, UnitPrice = 100, Unit = "EA", DeliveryDate = Nov(11) }, default);
+        Assert.True(addedItem.Status == SalesLineWriteStatus.Success, addedItem.Error);
+        var itemLine = await db.Set<SalesLine>().SingleAsync(x => x.SalesId == order.SalesId && x.ItemId == "ITEM-01");
         await db.SaveChangesAsync();
         var confirmed = await salesConfirmations.PostAsync(order.RecId, new PostConfirmationRequest(Nov(10), true, "WA-CONF"), default);
         Assert.True(confirmed.StatusCode == 200, confirmed.Message);
@@ -763,6 +764,27 @@ public sealed class FullExampleCycleTests
             .Where(x => x.InventTransOrigin == origin && x.StatusIssue == StatusIssue.Sold).ToListAsync();
     }
 
+    private static async Task<SalesTable> CreateSalesOrderAsync(TestUnitOfWork work,
+        TestCompany company, ISysNumberSequenceService sequence)
+    {
+        var validation = new SalesOrderValidationService(work, company);
+        var created = await new SalesOrderQuickCreateService(work, company, sequence, validation)
+            .CreateAsync(new SalesOrderQuickCreateDto
+            {
+                CustomerAccount = "C-001", CurrencyCode = "SAR", PaymentTerms = "NET30",
+                InventSiteId = "S1", InventLocationId = "A", RequestedReceiptDate = Nov(11)
+            }, default);
+        Assert.Null(created.Error);
+        var order = await work.Context.Set<SalesTable>().SingleAsync();
+        var updated = await new SalesOrderHeaderService(work, company, validation).UpdateAsync(order.RecId,
+            new UpdateSalesHeaderInputDto
+            {
+                OrderDate = Nov(10), InvoiceAccount = "C-001", CurrencyCode = "SAR", PaymentTerms = "NET30", TaxGroupId = "ZERO",
+                InventSiteId = "S1", InventLocationId = "A", DeliveryDate = Nov(11)
+            }, default);
+        Assert.True(updated.Status == SalesHeaderUpdateStatus.Saved, updated.Error);
+        return await work.Context.Set<SalesTable>().SingleAsync();
+    }
     private static async Task<decimal> VendorOpenAsync(DbContext db) =>
         (await db.Set<VendTransOpen>().AsNoTracking().ToListAsync()).Sum(x => x.AmountCur);
 
@@ -827,8 +849,8 @@ public sealed class FullExampleCycleTests
         db.Set<DirPartyTable>().AddRange(
             new DirPartyTable { RecId = 1, Name = "Reference customer" },
             new DirPartyTable { RecId = 2, Name = "Reference vendor" });
-        db.Set<CustTable>().Add(new CustTable { RecId = 1, DataAreaId = "dat", AccountNum = "C-001", CustGroupId = "DOM", CurrencyCode = "SAR", PaymTermId = "NET30" });
-        db.Set<VendTable>().Add(new VendTable { RecId = 1, DataAreaId = "dat", AccountNum = "V-001", Currency = "SAR", VendGroup = "LOCAL" });
+        db.Set<CustTable>().Add(new CustTable { RecId = 1, DataAreaId = "dat", AccountNum = "C-001", CustGroupId = "DOM", CurrencyCode = "SAR", PaymTermId = "NET30", TaxGroupId = "ZERO" });
+        db.Set<VendTable>().Add(new VendTable { RecId = 1, DataAreaId = "dat", AccountNum = "V-001", Currency = "SAR", VendGroup = "LOCAL", PaymTermId = "NET30" });
         db.Set<VendLedgerAccounts>().Add(new VendLedgerAccounts { RecId = 1, DataAreaId = "dat", PostingProfile = "GEN", AccountCode = AccountCode.All, SummaryLedgerDimension = Vendors });
         db.Set<CustLedgerAccounts>().Add(new CustLedgerAccounts { RecId = 1, DataAreaId = "dat", PostingProfile = "GEN", AccountCode = AccountCode.All, SummaryLedgerDimension = Receivables });
         db.Set<BankAccountTable>().Add(new BankAccountTable { RecId = 1, DataAreaId = "dat", AccountId = "BANK-SAR", LedgerDimension = Bank, CurrencyCode = "SAR", BankAccountStatus = BankAccountStatus.Active });
@@ -845,6 +867,15 @@ public sealed class FullExampleCycleTests
         });
         db.Set<InventJournalName>().Add(new InventJournalName { RecId = 1, DataAreaId = "dat", JournalNameId = "COUNT", Description = "Counting", JournalType = InventJournalType.Counting, VoucherNumberSequenceTable = 1 });
 
+        // Explicit zero-rated setup keeps the reference amounts unchanged while sales lines
+        // pass the same tax configuration validation as application-created orders.
+        db.Add(new TaxGroupHeading { RecId = 1, DataAreaId = "dat", TaxGroup = "ZERO", TaxGroupName = "Reference zero rate" });
+        db.Add(new TaxItemGroupHeading { RecId = 1, DataAreaId = "dat", TaxItemGroup = "ZERO", Name = "Reference zero rate" });
+        db.Add(new TaxTable { RecId = 1, DataAreaId = "dat", TaxCode = "ZERO", TaxName = "Reference zero rate" });
+        db.Add(new TaxGroupData { RecId = 1, DataAreaId = "dat", TaxGroup = "ZERO", TaxCode = "ZERO" });
+        db.Add(new TaxOnItem { RecId = 1, DataAreaId = "dat", TaxItemGroup = "ZERO", TaxCode = "ZERO" });
+        db.Add(new TaxData { RecId = 1, DataAreaId = "dat", TaxCode = "ZERO", TaxValue = 0,
+            TaxFromDate = new DateTime(2026, 1, 1), TaxToDate = new DateTime(2026, 12, 31) });
         // §1 inventory: site S1 with A, B and a transit warehouse; the stocked item on weighted
         // average with physical posting on both sides, and two non-stocked services.
         db.Set<InventSite>().Add(new InventSite { RecId = 1, DataAreaId = "dat", SiteId = "S1", Name = "Main site" });
@@ -860,10 +891,12 @@ public sealed class FullExampleCycleTests
         db.Set<InventTableModule>().AddRange(
             new InventTableModule { RecId = 1, DataAreaId = "dat", ItemId = "ITEM-01", ModuleType = ModuleInventPurchSales.Inventory, UnitId = "EA" },
             new InventTableModule { RecId = 2, DataAreaId = "dat", ItemId = "ITEM-01", ModuleType = ModuleInventPurchSales.Purchase, UnitId = "EA" },
-            new InventTableModule { RecId = 3, DataAreaId = "dat", ItemId = "ITEM-01", ModuleType = ModuleInventPurchSales.Sales, UnitId = "EA" },
-            new InventTableModule { RecId = 4, DataAreaId = "dat", ItemId = "SRV-01", ModuleType = ModuleInventPurchSales.Sales, UnitId = "EA" },
+            new InventTableModule { RecId = 3, DataAreaId = "dat", ItemId = "ITEM-01", ModuleType = ModuleInventPurchSales.Sales, UnitId = "EA", TaxItemGroupId = "ZERO" },
+            new InventTableModule { RecId = 4, DataAreaId = "dat", ItemId = "SRV-01", ModuleType = ModuleInventPurchSales.Sales, UnitId = "EA", TaxItemGroupId = "ZERO" },
             new InventTableModule { RecId = 5, DataAreaId = "dat", ItemId = "SRV-MAINT", ModuleType = ModuleInventPurchSales.Inventory, UnitId = "EA" },
             new InventTableModule { RecId = 6, DataAreaId = "dat", ItemId = "SRV-MAINT", ModuleType = ModuleInventPurchSales.Purchase, UnitId = "EA" });
+        db.Set<InventTableModule>().Add(new InventTableModule
+        { RecId = 7, DataAreaId = "dat", ItemId = "SRV-01", ModuleType = ModuleInventPurchSales.Inventory, UnitId = "EA" });
         db.Set<InventModelGroup>().AddRange(
             new InventModelGroup
             {
@@ -873,7 +906,8 @@ public sealed class FullExampleCycleTests
             new InventModelGroup { RecId = 2, DataAreaId = "dat", ModelGroupId = "SRV", InventModel = InventModel.WeightedAvg, StockedProduct = NoYes.No });
         db.Set<InventModelGroupItem>().AddRange(
             new InventModelGroupItem { RecId = 1, ItemDataAreaId = "dat", ModelGroupDataAreaId = "dat", ModelGroupId = "WAVG", ItemId = "ITEM-01" },
-            new InventModelGroupItem { RecId = 2, ItemDataAreaId = "dat", ModelGroupDataAreaId = "dat", ModelGroupId = "SRV", ItemId = "SRV-MAINT" });
+            new InventModelGroupItem { RecId = 2, ItemDataAreaId = "dat", ModelGroupDataAreaId = "dat", ModelGroupId = "SRV", ItemId = "SRV-MAINT" },
+            new InventModelGroupItem { RecId = 3, ItemDataAreaId = "dat", ModelGroupDataAreaId = "dat", ModelGroupId = "SRV", ItemId = "SRV-01" });
         db.Set<InventItemGroupItem>().AddRange(
             new InventItemGroupItem { RecId = 1, ItemDataAreaId = "dat", ItemId = "ITEM-01", ItemGroupId = "TRADE" },
             new InventItemGroupItem { RecId = 2, ItemDataAreaId = "dat", ItemId = "SRV-MAINT", ItemGroupId = "SERVICES" },

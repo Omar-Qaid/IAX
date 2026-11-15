@@ -3044,5 +3044,41 @@
     "reservation": {
       "automatic": "تلقائي"
     }
+  },
+  "partyBalance": {
+    "customer": "العميل",
+    "vendor": "المورد",
+    "customerBalance": "رصيد العميل",
+    "vendorBalance": "رصيد المورد",
+    "accountNumber": "رقم الحساب",
+    "name": "الاسم",
+    "currency": "العملة",
+    "balance": "الرصيد",
+    "currencies": "العملات",
+    "description": "الوصف",
+    "balanceCurrency": "الرصيد بعملة الحركة",
+    "balanceReporting": "الرصيد بعملة التقارير",
+    "balanceInCurrency": "الرصيد بالعملة",
+    "accountingBalance": "الرصيد بالعملة المحاسبية",
+    "reportingBalance": "الرصيد بعملة التقارير",
+    "creditLimit": "حد الائتمان",
+    "creditRemaining": "الائتمان المتبقي",
+    "notReconciled": "الأرصدة المفتوحة لا تتطابق مع حركات المصدر.",
+    "relatedUnavailable": "رصيد الحساب المرتبط غير متاح أو ليس لديك صلاحية لعرضه.",
+    "accessDenied": "ليس لديك صلاحية لعرض هذه الحركات.",
+    "accountRequired": "حدد حساباً لعرض رصيده.",
+    "openTransactions": "الحركات المفتوحة"
+  },
+  "customerInquiry": {
+    "openTransactions": "حركات العميل المفتوحة",
+    "date": "التاريخ",
+    "voucher": "الإيصال",
+    "invoice": "الفاتورة",
+    "dueDate": "تاريخ الاستحقاق",
+    "amountCur": "المبلغ بعملة الحركة",
+    "settleAmountCur": "المبلغ المسوى",
+    "openAmountCur": "المبلغ المفتوح بعملة الحركة",
+    "openAmountMst": "المبلغ المفتوح بعملة المحاسبة",
+    "relatedInformation": "المعلومات ذات الصلة"
   }
 }

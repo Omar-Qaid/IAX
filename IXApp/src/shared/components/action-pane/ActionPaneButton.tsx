@@ -30,6 +30,7 @@ export const ActionPaneButton: React.FC<ActionPaneButtonProps> = ({
 
   const buttonElement = (
     <Button
+      aria-label={label}
       variant="text"
       size="small"
       startIcon={loading ? <CircularProgress size={14} color="inherit" /> : icon}

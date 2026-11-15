@@ -1,4 +1,12 @@
 export const PERMISSIONS = {
+  PAYMENT_TERM_VIEW: 'AccountsReceivable.PaymTerm.View',
+  PAYMENT_TERM_CREATE: 'AccountsReceivable.PaymTerm.Create',
+  PAYMENT_TERM_EDIT: 'AccountsReceivable.PaymTerm.Edit',
+  PAYMENT_TERM_DELETE: 'AccountsReceivable.PaymTerm.Delete',
+  PAYMENT_METHOD_VIEW: 'AccountsReceivable.PaymentMethods.View',
+  PAYMENT_METHOD_CREATE: 'AccountsReceivable.PaymentMethods.Create',
+  PAYMENT_METHOD_EDIT: 'AccountsReceivable.PaymentMethods.Edit',
+  PAYMENT_METHOD_DELETE: 'AccountsReceivable.PaymentMethods.Delete',
   ORGANIZATION_STRUCTURE_VIEW: 'Organization.Structure.View',
   HCM_WORKER_VIEW: 'Organization.Employees.View',
   HCM_WORKER_CREATE: 'Organization.Employees.Create',
@@ -8,6 +16,8 @@ export const PERMISSIONS = {
   DASHBOARD_VIEW: 'Application.Dashboard.View',
 
   CUSTOMER_VIEW: 'AccountsReceivable.Customers.View',
+  CUSTOMER_TRANSACTION_VIEW: 'AccountsReceivable.Transactions.View',
+  VENDOR_TRANSACTION_VIEW: 'AccountsPayable.Transactions.View',
   CUSTOMER_CREATE: 'AccountsReceivable.Customers.Create',
   CUSTOMER_UPDATE: 'AccountsReceivable.Customers.Edit',
   CUSTOMER_DELETE: 'AccountsReceivable.Customers.Delete',

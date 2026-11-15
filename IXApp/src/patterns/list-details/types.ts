@@ -43,6 +43,8 @@ export interface DetailFieldGroup {
   width?: number | string;
 }
 export interface DetailSectionConfig {
+  expanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
   id: string;
   title: string;
   groups?: DetailFieldGroup[];
@@ -112,6 +114,7 @@ export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
   initialSelectedId?: string;
   detailHeader?: ReactNode;
   onSearch?: () => void;
+  backCommand?: { onClick: () => void };
   dataSource: ListDetailsDataSource<T>;
   createRecord: () => T;
   getPrimaryText: (record: T) => string;

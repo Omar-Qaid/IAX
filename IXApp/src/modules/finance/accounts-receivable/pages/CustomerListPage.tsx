@@ -1,4 +1,5 @@
 import { localizedName } from '@shared/utilities/localizedName';
+import { useCompanyStore } from '@core/company/useCompanyStore';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Typography } from '@mui/material';
 import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
@@ -10,15 +11,18 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { customerQuickCreateApi, type CustomerRecord } from '../api/customerQuickCreateApi';
 import { useNavigate } from 'react-router-dom';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
+import { PERMISSIONS } from '@core/permissions/permissions';
+import { PARTY_BALANCE_ROUTE_PATHS } from '@modules/finance/party-balances/routes/partyBalanceRoutePaths';
 import { useNotifications } from '@shared/hooks/useNotifications';
 
 export function CustomerListPage(): React.ReactElement {
+  const company = useCompanyStore(state => state.currentCompany);
   const { t, currentLanguage, isRtl } = useAppTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { notifyError, notifySuccess } = useNotifications();
   const customerQuery = useQuery({
-    queryKey: ['accounts-receivable', 'customers'],
+    queryKey: ['accounts-receivable', 'customers', company],
     queryFn: ({ signal }) => customerQuickCreateApi.list(signal),
   });
   const customers = customerQuery.data ?? [];
@@ -62,18 +66,6 @@ export function CustomerListPage(): React.ReactElement {
     [isRtl]
   );
 
-  const commandIds = [
-    'customer',
-    'sell',
-    'invoice',
-    'collect',
-    'service',
-    'market',
-    'commerce',
-    'general',
-    'creditManagement',
-    'options',
-  ] as const;
   const config: EnterpriseListConfig<CustomerRecord> = {
     backCommand: { label: t('actions.back'), onClick: () => navigate(-1) },
     showSearchCommand: true,
@@ -95,6 +87,7 @@ export function CustomerListPage(): React.ReactElement {
     defaultSearchField: 'phone',
     locale: currentLanguage.code,
     crud: {
+      editPermission: PERMISSIONS.CUSTOMER_UPDATE, newPermission: PERMISSIONS.CUSTOMER_CREATE, deletePermission: PERMISSIONS.CUSTOMER_DELETE,
       editLabel: t('actions.edit'),
       newLabel: t('actions.new'),
       deleteLabel: t('actions.delete'),
@@ -112,14 +105,19 @@ export function CustomerListPage(): React.ReactElement {
         }
       },
     },
-    commands: commandIds.map((id) => ({ id, label: t(`customerCommands.${id}`) })),
+    getCommands: customer => [
+      {id: 'customer', label: t('customerCommands.customer'), disabled: !customer, onClick: () => customer && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customer(customer.id))},
+      {id: 'open-transactions', label: t('partyBalance.openTransactions'), permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW, disabled: !customer, onClick: () => customer && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customerOpenTransactions(customer.accountNumber))},
+      {id: 'balance', label: t('partyBalance.balance'), permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW, disabled: !customer, onClick: () => customer && navigate(PARTY_BALANCE_ROUTE_PATHS.customerBalance(customer.accountNumber))},
+      {id: 'sales-orders', label: t('pages.salesOrders.title'), permission: PERMISSIONS.SALES_ORDER_VIEW, disabled: !customer, onClick: () => customer && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customerSalesOrders(customer.accountNumber))},
+    ],
     utilities: {
       personalizeLabel: t('utilities.personalize'),
       guideLabel: t('utilities.guide'),
       notificationsLabel: t('common.notifications'),
       refreshLabel: t('actions.refresh'),
       openWindowLabel: t('utilities.openWindow'),
-      notificationCount: 1,
+      notificationCount: 0,
     },
     advancedFilter: {
       title: t('filters.title'),
@@ -144,30 +142,7 @@ export function CustomerListPage(): React.ReactElement {
     },
     relatedInformation: {
       title: t('relatedInformation.title'),
-      sections: (customer) => [
-        {
-          id: 'primaryAddress',
-          label: t('relatedInformation.primaryAddress'),
-          defaultExpanded: true,
-          content: (
-            <Typography
-              sx={{ fontSize: '0.75rem', color: 'text.secondary', whiteSpace: 'pre-line' }}
-            >
-              {customer
-                ? t('relatedInformation.noAddressFor', { customer: localizedName({ name: customer.name, nameAlias: customer.nameAr }, isRtl) })
-                : t('relatedInformation.selectCustomer')}
-            </Typography>
-          ),
-        },
-        { id: 'recentActivity', label: t('relatedInformation.recentActivity') },
-        { id: 'relationships', label: t('relatedInformation.relationships') },
-        { id: 'statistics', label: t('relatedInformation.statistics') },
-        { id: 'creditStatistics', label: t('relatedInformation.creditStatistics') },
-        { id: 'contacts', label: t('relatedInformation.contacts') },
-        { id: 'recurringInvoice', label: t('relatedInformation.recurringInvoice') },
-        { id: 'classificationBalances', label: t('relatedInformation.classificationBalances') },
-        { id: 'insuranceGuarantees', label: t('relatedInformation.insuranceGuarantees') },
-      ],
+      sections: customer => [{id: 'statistics', label: t('relatedInformation.statistics'), content: <Typography sx={{fontSize: '0.75rem'}}>{customer ? [customer.accountNumber, customer.customerGroupId, customer.currencyCode].filter(Boolean).join(' · ') : t('relatedInformation.selectCustomer')}</Typography>}],
     },
   };
 
@@ -175,7 +150,7 @@ export function CustomerListPage(): React.ReactElement {
     <SimpleListPage
       title={t('pages.customers.title')}
       enterpriseConfig={config}
-      dataSource={{ type: 'controlled', rows: customers }}
+      dataSource={{ type: 'controlled', rows: customers, refresh: () => void customerQuery.refetch() }}
       columns={columns}
       loading={customerQuery.isLoading}
       error={customerQuery.error instanceof Error ? customerQuery.error.message : null}

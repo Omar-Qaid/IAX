@@ -10,14 +10,20 @@ public sealed class LocalBatchSqlFactAttribute : FactAttribute
     public LocalBatchSqlFactAttribute()
     {
         if (Environment.GetEnvironmentVariable("IAX_BATCH_SQL_TESTS") != "1")
-            Skip = "Opt in to session-lock tests against local ERM with IAX_BATCH_SQL_TESTS=1.";
+            Skip = "Opt in to SQL Server session-lock tests with IAX_BATCH_SQL_TESTS=1.";
     }
 }
 
 public class BatchDatabaseLockTests
 {
     private static ApplicationDbContext Context() => new(new DbContextOptionsBuilder<ApplicationDbContext>()
-        .UseSqlServer("Server=.;Database=ERM;Integrated Security=true;TrustServerCertificate=true").Options);
+        // These tests only acquire uniquely named application locks; no application schema
+        // or data is needed. Use master rather than requiring the hosted ERM database.
+        .UseSqlServer(new Microsoft.Data.SqlClient.SqlConnectionStringBuilder
+        {
+            DataSource = Environment.GetEnvironmentVariable("IXAPI_AP_PHASE_ONE_SQLSERVER") ?? ".",
+            InitialCatalog = "master", IntegratedSecurity = true, TrustServerCertificate = true
+        }.ConnectionString).Options);
 
     [LocalBatchSqlFact]
     public async Task SeparateConnectionsExcludeSameResourceAndReleaseOnDispose()

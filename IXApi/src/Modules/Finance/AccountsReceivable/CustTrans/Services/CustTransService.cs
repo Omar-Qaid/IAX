@@ -9,6 +9,9 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
 
 public class CustTransService : BaseService<CustTrans>, ICustTransService
 {
+    public Task<PartyOpenBalanceCurrencyDto?> GetBalanceCurrencyAsync(string accountNum, CancellationToken ct) =>
+        PartyOpenBalanceCurrencyReader.ReadAsync(_unitOfWork.Context, _user.GetDataAreaId(), accountNum, false, ct);
+
     private readonly ICurrentUserService _user;
 
     public CustTransService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)

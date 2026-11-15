@@ -17,10 +17,7 @@ const groupQueryKey = (company: string) =>
   ['accounts-receivable', 'customer-groups', company] as const;
 const lookupsQueryKey = (company: string) =>
   ['accounts-receivable', 'customer-groups', 'field-lookups', company] as const;
-// Deliberately not company-suffixed: CustomerQuickCreate and CustTablePage cache these
-// lookups under this exact key, and invalidation matches by prefix, so the shorter key
-// clears theirs as well as any company-scoped variant. (That those two are not themselves
-// company-scoped is a separate defect, recorded rather than changed from here.)
+// Invalidate by prefix so changes refresh all company-scoped customer-editor lookup caches.
 const quickCreateLookupsKey = ['accounts-receivable', 'customer-quick-create', 'lookups'] as const;
 
 export function CustomerGroupListPage(): React.ReactElement {

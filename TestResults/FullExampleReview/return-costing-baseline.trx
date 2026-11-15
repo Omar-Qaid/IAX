@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="42d38937-127e-483a-bd61-bf15be48e222" name="Omar.Qaid@IKK-IT-JD-L-OMQ 2026-11-15 14:04:55" runUser="IKKGROUP\Omar.Qaid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-15T14:04:55.4627746+03:00" queuing="2026-11-15T14:04:55.4627763+03:00" start="2026-11-15T14:03:52.5588936+03:00" finish="2026-11-15T14:05:02.7617342+03:00" />
+  <TestSettings name="default" id="8b408892-9d3e-41ea-86a6-48583c4ca386">
+    <Deployment runDeploymentRoot="Omar.Qaid_IKK-IT-JD-L-OMQ_2026-11-15_14_04_55" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="c65685af-851d-471d-99a7-1d96a1cc6948" testId="23d80ebf-5810-120b-4ec2-940d1313b7ff" testName="IAX.IXApi.Tests.InventoryCycleTests.Weighted_average_close_settles_same_period_sale_before_costing_its_return_and_reverses_both(laterReceipt: True)" computerName="IKK-IT-JD-L-OMQ" duration="00:00:01.5655180" startTime="2026-11-15T14:05:00.6741373+03:00" endTime="2026-11-15T14:05:02.2274090+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c65685af-851d-471d-99a7-1d96a1cc6948" />
+    <UnitTestResult executionId="1ac6c278-4c69-4ffd-aed0-e4e53622c2d9" testId="9e165b83-0703-8dfb-b88b-f6a13d63b9b0" testName="IAX.IXApi.Tests.InventoryCycleTests.Weighted_average_recalculation_still_refuses_an_unsettled_same_period_return" computerName="IKK-IT-JD-L-OMQ" duration="00:00:42.7718115" startTime="2026-11-15T14:04:12.5395266+03:00" endTime="2026-11-15T14:04:55.2323023+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1ac6c278-4c69-4ffd-aed0-e4e53622c2d9" />
+    <UnitTestResult executionId="c63c4d44-136a-49b2-bdb9-3b3cbea66a90" testId="6bae6b8f-79ba-c2d8-50fc-0b1eafab5bf0" testName="IAX.IXApi.Tests.InventoryCycleTests.Weighted_average_close_settles_same_period_sale_before_costing_its_return_and_reverses_both(laterReceipt: False)" computerName="IKK-IT-JD-L-OMQ" duration="00:00:05.4252928" startTime="2026-11-15T14:04:55.3053802+03:00" endTime="2026-11-15T14:05:00.6620788+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c63c4d44-136a-49b2-bdb9-3b3cbea66a90" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IAX.IXApi.Tests.InventoryCycleTests.Weighted_average_close_settles_same_period_sale_before_costing_its_return_and_reverses_both(laterReceipt: False)" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="6bae6b8f-79ba-c2d8-50fc-0b1eafab5bf0">
+      <Execution id="c63c4d44-136a-49b2-bdb9-3b3cbea66a90" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.InventoryCycleTests" name="Weighted_average_close_settles_same_period_sale_before_costing_its_return_and_reverses_both" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.InventoryCycleTests.Weighted_average_recalculation_still_refuses_an_unsettled_same_period_return" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="9e165b83-0703-8dfb-b88b-f6a13d63b9b0">
+      <Execution id="1ac6c278-4c69-4ffd-aed0-e4e53622c2d9" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.InventoryCycleTests" name="Weighted_average_recalculation_still_refuses_an_unsettled_same_period_return" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.InventoryCycleTests.Weighted_average_close_settles_same_period_sale_before_costing_its_return_and_reverses_both(laterReceipt: True)" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="23d80ebf-5810-120b-4ec2-940d1313b7ff">
+      <Execution id="c65685af-851d-471d-99a7-1d96a1cc6948" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.InventoryCycleTests" name="Weighted_average_close_settles_same_period_sale_before_costing_its_return_and_reverses_both" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="23d80ebf-5810-120b-4ec2-940d1313b7ff" executionId="c65685af-851d-471d-99a7-1d96a1cc6948" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9e165b83-0703-8dfb-b88b-f6a13d63b9b0" executionId="1ac6c278-4c69-4ffd-aed0-e4e53622c2d9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6bae6b8f-79ba-c2d8-50fc-0b1eafab5bf0" executionId="c63c4d44-136a-49b2-bdb9-3b3cbea66a90" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="3" executed="3" passed="3" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.09] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.23)&#xD;
+[xUnit.net 00:00:04.87]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:07.35]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:07.61]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:00:57.66]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

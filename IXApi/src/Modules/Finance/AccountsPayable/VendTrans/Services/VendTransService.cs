@@ -9,6 +9,9 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 
 public class VendTransService : BaseService<VendTrans>, IVendTransService
 {
+    public Task<PartyOpenBalanceCurrencyDto?> GetBalanceCurrencyAsync(string accountNum, CancellationToken ct) =>
+        PartyOpenBalanceCurrencyReader.ReadAsync(_unitOfWork.Context, _company.GetDataAreaId(), accountNum, true, ct);
+
     private readonly ICompanyExecutionContext _company;
 
     public VendTransService(

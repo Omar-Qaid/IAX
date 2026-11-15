@@ -2,6 +2,7 @@ import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
 import { matchPath } from 'react-router-dom';
 import { PERMISSIONS, type PermissionCode } from '@core/permissions/permissions';
 import { ROUTE_PATHS } from './routePaths';
+import { PARTY_BALANCE_ROUTE_PATHS } from '@modules/finance/party-balances/routes/partyBalanceRoutePaths';
 
 export interface AppPageDefinition {
   id: string;
@@ -16,6 +17,18 @@ const lazyPage = <TModule extends object>(
 ) => lazy(async () => ({ default: select(await importer()) }));
 
 export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
+  {id: 'customer-open-transactions', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_OPEN_TRANSACTIONS, permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW,
+    component: lazyPage(() => import('@modules/finance/accounts-receivable/pages/CustomerOpenTransactionsPage'), module => module.CustomerOpenTransactionsPage)},
+  {
+    id: 'cust-open-balance-currency', path: PARTY_BALANCE_ROUTE_PATHS.CUSTOMER_BALANCE,
+    permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW,
+    component: lazyPage(() => import('@modules/finance/party-balances/pages/PartyBalancePage'), (module) => module.CustOpenBalanceCurrency),
+  },
+  {
+    id: 'vend-open-balance-currency', path: PARTY_BALANCE_ROUTE_PATHS.VENDOR_BALANCE,
+    permission: PERMISSIONS.VENDOR_TRANSACTION_VIEW,
+    component: lazyPage(() => import('@modules/finance/party-balances/pages/PartyBalancePage'), (module) => module.VendOpenBalanceCurrency),
+  },
   {
     id: 'customer-posting-profiles',
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_POSTING_PROFILES,
@@ -100,7 +113,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
   {
     id: 'customer-payment-methods',
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_METHODS,
-    permission: PERMISSIONS.CUSTOMER_VIEW,
+    permission: PERMISSIONS.PAYMENT_METHOD_VIEW,
     component: lazyPage(
       () => import('@modules/finance/accounts-receivable/pages/CustPaymModePage'),
       (module) => module.CustPaymMode
@@ -109,7 +122,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
   {
     id: 'customer-payment-terms',
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_TERMS,
-    permission: PERMISSIONS.CUSTOMER_VIEW,
+    permission: PERMISSIONS.PAYMENT_TERM_VIEW,
     component: lazyPage(
       () => import('@modules/finance/accounts-receivable/pages/CustPaymTermPage'),
       (module) => module.CustPaymTerm

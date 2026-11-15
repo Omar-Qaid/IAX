@@ -12,6 +12,7 @@ export interface TabularDetailAction {
   ariaLabel?: string;
   onClick?: () => void;
   disabled?: boolean;
+  allowWhenReadOnly?: boolean;
   icon?: React.ReactNode;
 }
 
@@ -91,7 +92,7 @@ export function TabularDetailPanel<T extends { id: string }>({
             aria-label={action.ariaLabel}
             size="small"
             startIcon={action.icon}
-            disabled={disabled || action.disabled}
+            disabled={(disabled && !action.allowWhenReadOnly) || action.disabled || !action.onClick}
             onClick={action.onClick}
             sx={actionSx}
           >

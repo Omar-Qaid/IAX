@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="7701dfbd-3337-4c1a-8596-a6cf65085e02" name="Omar.Qaid@IKK-IT-JD-L-OMQ 2026-11-15 14:46:08" runUser="IKKGROUP\Omar.Qaid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-15T14:46:08.9541570+03:00" queuing="2026-11-15T14:46:08.9541575+03:00" start="2026-11-15T14:45:40.5891996+03:00" finish="2026-11-15T14:47:34.0619995+03:00" />
+  <TestSettings name="default" id="6cd72e93-c395-434e-ab83-65a1f23212b2">
+    <Deployment runDeploymentRoot="Omar.Qaid_IKK-IT-JD-L-OMQ_2026-11-15_14_46_08" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="dbb740c2-63cc-41cf-b42c-e3d288fab69d" testId="11e421e0-0035-f456-3d73-bdb757036c56" testName="IXApi.Tests.PostingConcurrencyTests.The_posting_lock_is_keyed_so_a_different_key_is_not_blocked" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.6795530" startTime="2026-11-15T14:47:25.0093896+03:00" endTime="2026-11-15T14:47:25.6915330+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="dbb740c2-63cc-41cf-b42c-e3d288fab69d" />
+    <UnitTestResult executionId="458c2fc7-32d8-4c83-8903-8ca9e226227f" testId="19b02146-85bc-e84e-9383-e889947d4710" testName="IXApi.Tests.BatchDatabaseLockTests.SeparateConnectionsExcludeSameResourceAndReleaseOnDispose" computerName="IKK-IT-JD-L-OMQ" duration="00:00:23.7328363" startTime="2026-11-15T14:45:45.1509038+03:00" endTime="2026-11-15T14:46:08.7582929+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="458c2fc7-32d8-4c83-8903-8ca9e226227f" />
+    <UnitTestResult executionId="c8007a33-3529-4bc5-99c1-817555e1b7a8" testId="f8d8c0b1-9e0e-b1c2-d5a3-b075fd37b1d6" testName="IXApi.Tests.PostingConcurrencyTests.Concurrent_number_sequence_allocation_never_hands_out_the_same_number_twice" computerName="IKK-IT-JD-L-OMQ" duration="00:00:23.2461200" startTime="2026-11-15T14:47:01.1479933+03:00" endTime="2026-11-15T14:47:24.3911905+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c8007a33-3529-4bc5-99c1-817555e1b7a8">
+      <Output>
+        <StdOut>8 concurrent allocations: 8 succeeded (2,3,4,5,6,7,8,9), 0 refused</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="3b2d50b2-2559-4e3f-8719-e4ec7e617334" testId="7a2d5b0a-91b0-4249-0064-7ce40a4d13b3" testName="IAX.IXApi.Tests.FullExampleCycleTests.Standalone_weighted_average_close_moves_the_issue_from_two_hundred_to_two_hundred_fifty" computerName="IKK-IT-JD-L-OMQ" duration="00:00:43.8398376" startTime="2026-11-15T14:45:45.1459732+03:00" endTime="2026-11-15T14:46:28.8462323+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3b2d50b2-2559-4e3f-8719-e4ec7e617334" />
+    <UnitTestResult executionId="7afff5b8-1a87-412c-bd72-f7e4eb1b066c" testId="b91a3072-01a2-3857-4b2e-b4d1f74f8c10" testName="IXApi.Tests.BatchDatabaseLockTests.CancelledAcquisitionDoesNotRetainLock" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.3259278" startTime="2026-11-15T14:46:08.8319070+03:00" endTime="2026-11-15T14:46:09.0955370+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7afff5b8-1a87-412c-bd72-f7e4eb1b066c" />
+    <UnitTestResult executionId="e1e3f234-ca72-4c0b-9e00-9ccc30c7427b" testId="da60c086-e07d-bcd1-bbeb-21e2d91710c2" testName="IAX.IXApi.Tests.FullExampleCycleTests.Core_erp_reference_cycle_closes_at_fifty_six_pieces_and_a_profit_of_nineteen_hundred" computerName="IKK-IT-JD-L-OMQ" duration="00:00:21.1793004" startTime="2026-11-15T14:46:28.8477879+03:00" endTime="2026-11-15T14:46:50.0245004+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e1e3f234-ca72-4c0b-9e00-9ccc30c7427b" />
+    <UnitTestResult executionId="5bec5f90-403c-47ba-98ff-f5e4c1de14e5" testId="201350b9-d1fd-2276-a80f-1cd83aef0fee" testName="IXApi.Tests.PostingConcurrencyTests.On_SQLite_the_posting_lock_does_not_exclude_anything" computerName="IKK-IT-JD-L-OMQ" duration="00:00:07.9195293" startTime="2026-11-15T14:47:25.6924176+03:00" endTime="2026-11-15T14:47:33.6110856+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5bec5f90-403c-47ba-98ff-f5e4c1de14e5" />
+    <UnitTestResult executionId="2665b3e4-c2d2-4ebf-a854-a3285f15e514" testId="bf9f821c-db12-3269-8694-2a7047c1d2df" testName="IXApi.Tests.PostingConcurrencyTests.A_rolled_back_poster_releases_the_lock_rather_than_holding_it" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.6145273" startTime="2026-11-15T14:47:24.3956446+03:00" endTime="2026-11-15T14:47:25.0087036+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2665b3e4-c2d2-4ebf-a854-a3285f15e514" />
+    <UnitTestResult executionId="7b7cfde7-cd44-4453-b709-c8cce9898f9b" testId="b4251edf-9b53-0e33-eb76-e9dfa125a045" testName="IXApi.Tests.PostingConcurrencyTests.The_posting_lock_excludes_a_second_poster_of_the_same_key_until_the_first_commits" computerName="IKK-IT-JD-L-OMQ" duration="00:00:11.1035190" startTime="2026-11-15T14:46:50.0292090+03:00" endTime="2026-11-15T14:47:01.1368085+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7b7cfde7-cd44-4453-b709-c8cce9898f9b" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IAX.IXApi.Tests.FullExampleCycleTests.Standalone_weighted_average_close_moves_the_issue_from_two_hundred_to_two_hundred_fifty" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="7a2d5b0a-91b0-4249-0064-7ce40a4d13b3">
+      <Execution id="3b2d50b2-2559-4e3f-8719-e4ec7e617334" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.FullExampleCycleTests" name="Standalone_weighted_average_close_moves_the_issue_from_two_hundred_to_two_hundred_fifty" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.BatchDatabaseLockTests.CancelledAcquisitionDoesNotRetainLock" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="b91a3072-01a2-3857-4b2e-b4d1f74f8c10">
+      <Execution id="7afff5b8-1a87-412c-bd72-f7e4eb1b066c" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.BatchDatabaseLockTests" name="CancelledAcquisitionDoesNotRetainLock" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.PostingConcurrencyTests.A_rolled_back_poster_releases_the_lock_rather_than_holding_it" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="bf9f821c-db12-3269-8694-2a7047c1d2df">
+      <Execution id="2665b3e4-c2d2-4ebf-a854-a3285f15e514" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.PostingConcurrencyTests" name="A_rolled_back_poster_releases_the_lock_rather_than_holding_it" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.FullExampleCycleTests.Core_erp_reference_cycle_closes_at_fifty_six_pieces_and_a_profit_of_nineteen_hundred" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="da60c086-e07d-bcd1-bbeb-21e2d91710c2">
+      <Execution id="e1e3f234-ca72-4c0b-9e00-9ccc30c7427b" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.FullExampleCycleTests" name="Core_erp_reference_cycle_closes_at_fifty_six_pieces_and_a_profit_of_nineteen_hundred" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.BatchDatabaseLockTests.SeparateConnectionsExcludeSameResourceAndReleaseOnDispose" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="19b02146-85bc-e84e-9383-e889947d4710">
+      <Execution id="458c2fc7-32d8-4c83-8903-8ca9e226227f" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.BatchDatabaseLockTests" name="SeparateConnectionsExcludeSameResourceAndReleaseOnDispose" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.PostingConcurrencyTests.Concurrent_number_sequence_allocation_never_hands_out_the_same_number_twice" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="f8d8c0b1-9e0e-b1c2-d5a3-b075fd37b1d6">
+      <Execution id="c8007a33-3529-4bc5-99c1-817555e1b7a8" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.PostingConcurrencyTests" name="Concurrent_number_sequence_allocation_never_hands_out_the_same_number_twice" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.PostingConcurrencyTests.On_SQLite_the_posting_lock_does_not_exclude_anything" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="201350b9-d1fd-2276-a80f-1cd83aef0fee">
+      <Execution id="5bec5f90-403c-47ba-98ff-f5e4c1de14e5" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.PostingConcurrencyTests" name="On_SQLite_the_posting_lock_does_not_exclude_anything" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.PostingConcurrencyTests.The_posting_lock_is_keyed_so_a_different_key_is_not_blocked" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="11e421e0-0035-f456-3d73-bdb757036c56">
+      <Execution id="dbb740c2-63cc-41cf-b42c-e3d288fab69d" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.PostingConcurrencyTests" name="The_posting_lock_is_keyed_so_a_different_key_is_not_blocked" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.PostingConcurrencyTests.The_posting_lock_excludes_a_second_poster_of_the_same_key_until_the_first_commits" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="b4251edf-9b53-0e33-eb76-e9dfa125a045">
+      <Execution id="7b7cfde7-cd44-4453-b709-c8cce9898f9b" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.PostingConcurrencyTests" name="The_posting_lock_excludes_a_second_poster_of_the_same_key_until_the_first_commits" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="11e421e0-0035-f456-3d73-bdb757036c56" executionId="dbb740c2-63cc-41cf-b42c-e3d288fab69d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="19b02146-85bc-e84e-9383-e889947d4710" executionId="458c2fc7-32d8-4c83-8903-8ca9e226227f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f8d8c0b1-9e0e-b1c2-d5a3-b075fd37b1d6" executionId="c8007a33-3529-4bc5-99c1-817555e1b7a8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7a2d5b0a-91b0-4249-0064-7ce40a4d13b3" executionId="3b2d50b2-2559-4e3f-8719-e4ec7e617334" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b91a3072-01a2-3857-4b2e-b4d1f74f8c10" executionId="7afff5b8-1a87-412c-bd72-f7e4eb1b066c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="da60c086-e07d-bcd1-bbeb-21e2d91710c2" executionId="e1e3f234-ca72-4c0b-9e00-9ccc30c7427b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="201350b9-d1fd-2276-a80f-1cd83aef0fee" executionId="5bec5f90-403c-47ba-98ff-f5e4c1de14e5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bf9f821c-db12-3269-8694-2a7047c1d2df" executionId="2665b3e4-c2d2-4ebf-a854-a3285f15e514" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b4251edf-9b53-0e33-eb76-e9dfa125a045" executionId="7b7cfde7-cd44-4453-b709-c8cce9898f9b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="9" executed="9" passed="9" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.23)&#xD;
+[xUnit.net 00:00:00.64]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:01.76]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:01.99]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:01:50.72]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

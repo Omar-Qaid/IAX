@@ -313,7 +313,7 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
       >
         <ActionPaneBackButton
           label={t('actions.back')}
-          onClick={() => navigate(-1)}
+          onClick={config.backCommand?.onClick ?? (() => navigate(-1))}
           disabled={state.editing}
         />
         <IconButton
@@ -346,7 +346,8 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
             canDelete={
               Boolean(state.selected) && canDelete && !state.saving && !config.interactionLocked
             }
-            editPermission={state.isNew ? config.permissions?.create : config.permissions?.edit}
+            editPermission={config.permissions?.edit}
+            savePermission={state.isNew ? config.permissions?.create : config.permissions?.edit}
             newPermission={config.permissions?.create}
             deletePermission={config.permissions?.delete}
             onEdit={state.startEdit}
@@ -403,7 +404,7 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
             label={t('common.search', 'Search')}
             icon={<SearchIcon />}
             disabled={state.editing}
-            onClick={config.onSearch ?? state.toggleFilter}
+            onClick={config.onSearch ?? (() => {setListPaneVisible(true); if (!state.filterVisible) state.toggleFilter();})}
           />
           {config.showOptionsMenu !== false && (
             <OptionsMenu
@@ -429,7 +430,7 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
           alignItems: 'stretch',
         }}
       >
-        {state.error ? (
+        {state.error && !state.records.length && !state.editing ? (
           <ErrorState message={state.error} onRetry={state.refresh} />
         ) : state.loading && !state.records.length ? (
           <LoadingState />
@@ -477,6 +478,7 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
                     onChange={record ? state.changeHeader : () => undefined}
                   />
                 )}
+                {state.error && <Alert severity="error" sx={{mb: 1}}>{state.error}</Alert>}
                 {record && Object.keys(state.validationErrors).length > 0 && (
                   <Alert severity="error" sx={{ mb: 1 }}>
                     <Typography sx={{ fontWeight: 600, fontSize: '0.75rem' }}>

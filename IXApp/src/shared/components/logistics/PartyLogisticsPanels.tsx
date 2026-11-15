@@ -205,6 +205,7 @@ export function PartyPostalAddressPanel({
       setDrawerOpen(false);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : String(reason));
+      throw reason;
     }
   };
   return (
@@ -229,8 +230,7 @@ export function PartyPostalAddressPanel({
         }}
         onRemove={() =>
           selected &&
-          validPartyId !== null &&
-          void run(() => partyLogisticsApi.deleteAddress(validPartyId, selected.location))
+          validPartyId !== null && void run(() => partyLogisticsApi.deleteAddress(validPartyId, selected.location)).catch(() => undefined)
         }
         actions={[
           {
@@ -242,6 +242,7 @@ export function PartyPostalAddressPanel({
           },
           {
             id: 'map',
+            allowWhenReadOnly: true,
             label: t('legalEntities.actions.map'),
             icon: <MapOutlinedIcon />,
             disabled: !selected?.address,
@@ -262,14 +263,13 @@ export function PartyPostalAddressPanel({
         open={drawerOpen && validPartyId !== null}
         onClose={() => setDrawerOpen(false)}
         onSave={(draft) =>
-          validPartyId !== null &&
-          void run(() =>
+          validPartyId !== null ? run(() =>
             partyLogisticsApi.saveAddress(
               validPartyId,
               selected ? { ...draft, id: selected.id, location: selected.location } : draft,
               Boolean(selected)
             )
-          )
+          ) : undefined
         }
         initialData={selected}
       />
@@ -349,13 +349,12 @@ export function PartyElectronicAddressPanel({
         }}
         onRemove={() =>
           selected &&
-          validPartyId !== null &&
-          void run(() => partyLogisticsApi.deleteContact(validPartyId, selected.location))
+          validPartyId !== null && void run(() => partyLogisticsApi.deleteContact(validPartyId, selected.location)).catch(() => undefined)
         }
         actions={[
           {
             id: 'edit',
-            label: t('legalEntities.actions.advanced'),
+            label: t('actions.edit'),
             icon: <EditOutlinedIcon />,
             disabled: !selected || validPartyId === null,
             onClick: () => setDrawerOpen(true),
@@ -369,14 +368,13 @@ export function PartyElectronicAddressPanel({
         open={drawerOpen && validPartyId !== null}
         onClose={() => setDrawerOpen(false)}
         onSave={(draft) =>
-          validPartyId !== null &&
-          void run(() =>
+          validPartyId !== null ? run(() =>
             partyLogisticsApi.saveContact(
               validPartyId,
               selected ? { ...draft, id: selected.id, location: selected.location } : draft,
               Boolean(selected)
             )
-          )
+          ) : undefined
         }
         initialData={selected}
       />

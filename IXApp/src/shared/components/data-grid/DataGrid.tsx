@@ -83,6 +83,7 @@ function DataGridInternal<T>(
     hideSidebar = false,
     hideSidebarTabs = false,
     hideFooter = false,
+    mobilePresentation = 'cards',
   }: DataGridProps<T>,
   ref: React.Ref<DataGridHandle>
 ) {
@@ -909,7 +910,8 @@ function DataGridInternal<T>(
   ]);
 
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const compactViewport = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = mobilePresentation === 'cards' && compactViewport;
 
   return (
     <Paper

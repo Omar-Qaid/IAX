@@ -3044,5 +3044,41 @@
     "reservation": {
       "automatic": "Automatic"
     }
+  },
+  "partyBalance": {
+    "customer": "Customer",
+    "vendor": "Vendor",
+    "customerBalance": "Customer balance",
+    "vendorBalance": "Vendor balance",
+    "accountNumber": "Account number",
+    "name": "Name",
+    "currency": "Currency",
+    "balance": "Balance",
+    "currencies": "Currencies",
+    "description": "Description",
+    "balanceCurrency": "Balance currency",
+    "balanceReporting": "Balance in reporting currency",
+    "balanceInCurrency": "Balance in currency",
+    "accountingBalance": "Accounting currency balance",
+    "reportingBalance": "Reporting currency balance",
+    "creditLimit": "Credit limit",
+    "creditRemaining": "Credit remaining",
+    "notReconciled": "The open balances do not reconcile with the source transactions.",
+    "relatedUnavailable": "The linked account balance is unavailable or you do not have permission to view it.",
+    "accessDenied": "You do not have permission to view these transactions.",
+    "accountRequired": "Select an account to view its balance.",
+    "openTransactions": "Open transactions"
+  },
+  "customerInquiry": {
+    "openTransactions": "Open customer transactions",
+    "date": "Date",
+    "voucher": "Voucher",
+    "invoice": "Invoice",
+    "dueDate": "Due date",
+    "amountCur": "Amount in transaction currency",
+    "settleAmountCur": "Settled amount",
+    "openAmountCur": "Open amount in transaction currency",
+    "openAmountMst": "Open amount in accounting currency",
+    "relatedInformation": "Related information"
   }
 }

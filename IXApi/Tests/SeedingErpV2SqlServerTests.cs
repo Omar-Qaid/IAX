@@ -34,8 +34,13 @@ public sealed class SeedingErpV2SqlServerTests(ITestOutputHelper output)
     {
         var database = $"IAX_SeedErpV2_{Guid.NewGuid():N}";
         output.WriteLine($"Disposable SQL Server fixture: {database}");
+        var connection = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder
+        {
+            DataSource = Environment.GetEnvironmentVariable("IXAPI_AP_PHASE_ONE_SQLSERVER") ?? ".",
+            InitialCatalog = database, IntegratedSecurity = true, TrustServerCertificate = true
+        };
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseSqlServer($"Server=.;Database={database};Integrated Security=true;TrustServerCertificate=true",
+            .UseSqlServer(connection.ConnectionString,
                 sql => sql.CommandTimeout(120))
             .Options;
         var actor = new SeedIdentity();
@@ -177,7 +182,7 @@ public sealed class SeedingErpV2SqlServerTests(ITestOutputHelper output)
                 .Select(x => x.NextRec).SingleAsync();
             var fault = new FailAfterJournalEntryInsert();
             var faultOptions = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseSqlServer($"Server=.;Database={database};Integrated Security=true;TrustServerCertificate=true")
+                .UseSqlServer(connection.ConnectionString)
                 .AddInterceptors(fault).Options;
             var faultServices = new ServiceCollection().AddLogging()
                 .AddSingleton<ICompanyExecutionContext>(actor).AddSingleton<ICurrentUserService>(actor)

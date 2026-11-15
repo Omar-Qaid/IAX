@@ -1,3 +1,4 @@
+import { useCompanyStore } from '@core/company/useCompanyStore';
 import React, { useCallback, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
@@ -12,10 +13,11 @@ interface CustomerQuickCreateProps { open: boolean; nextAccount: string; onClose
 const initialValues = (accountNumber: string): Record<string, FastTabValue> => ({ accountNumber, name: '', nameAr: '', customerGroupId: '', currencyCode: 'SAR', termsOfPayment: '', paymentMethod: '', deliveryMode: '', salesTaxGroup: '', customerCategory: '', vatNumber: '', notes: '', country: '', street: '' });
 
 export function CustomerQuickCreate({ open, nextAccount, onClose, onSave }: CustomerQuickCreateProps): React.ReactElement {
+  const company = useCompanyStore(state => state.currentCompany);
   const { t } = useAppTranslation();
   const option = useCallback((value: string, key: string) => ({ value, label: t(key) }), [t]);
   const lookups = useQuery({
-    queryKey: ['accounts-receivable', 'customer-quick-create', 'lookups'],
+    queryKey: ['accounts-receivable', 'customer-quick-create', 'lookups', company],
     queryFn: ({ signal }) => customerQuickCreateApi.lookups(signal),
     enabled: open,
     staleTime: 5 * 60 * 1000,

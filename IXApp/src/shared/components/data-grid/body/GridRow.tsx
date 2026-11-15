@@ -208,7 +208,7 @@ export const GridRow = memo(function GridRowInner<T>({
           flexShrink: 0,
           minWidth: 0,
           height: rowHeight,
-          borderBottom: `1px solid ${theme.palette.divider}`,
+          borderBottom: showCellBorders ? `1px solid ${theme.palette.divider}` : 'none',
           bgcolor: 'inherit',
         }}
       />

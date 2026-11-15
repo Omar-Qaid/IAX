@@ -264,6 +264,8 @@ export function ListDetailsLayout({
               <Accordion
                 key={section.id}
                 defaultExpanded={section.defaultExpanded ?? true}
+                expanded={section.expanded}
+                onChange={(_, expanded) => section.onExpandedChange?.(expanded)}
                 disableGutters
                 elevation={0}
                 sx={{

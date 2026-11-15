@@ -90,6 +90,7 @@ export interface EnterpriseListConfig<T> {
   locale?: string;
   crud: EnterpriseListCrudConfig<T>;
   commands?: EnterpriseListCommand[];
+  getCommands?: (selectedRow: T | null) => EnterpriseListCommand[];
   attachments?: { refTableId: number; getRefRecId?: (record: T) => number };
   utilities: {
     personalizeLabel: string;
@@ -393,9 +394,9 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
             onCancel={() => gridRef.current?.cancelEdit()}
           />
         )}
-        {config.commands && (
+        {(config.commands || config.getCommands) && (
           <ActionPaneGroup>
-            {config.commands.map((command) => (
+            {(config.getCommands?.(selectedRow) ?? config.commands ?? []).map((command) => (
               <ActionPaneButton
                 key={command.id}
                 label={command.label}

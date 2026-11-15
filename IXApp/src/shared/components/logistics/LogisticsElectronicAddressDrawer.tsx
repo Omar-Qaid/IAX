@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
+  Alert,
   Box,
   Typography,
   Button,
@@ -19,7 +20,7 @@ import { useLogicalDrawerAnchor } from '@shared/hooks/useLogicalDrawerAnchor';
 export interface LogisticsElectronicAddressDrawerProps {
   open: boolean;
   onClose: () => void;
-  onSave: (address: LogisticsElectronicAddress) => void;
+  onSave: (address: LogisticsElectronicAddress) => void | Promise<void>;
   initialData?: LogisticsElectronicAddress | null;
   addressTypes?: ElectronicAddressType[];
 }
@@ -42,6 +43,8 @@ export function LogisticsElectronicAddressDrawer({
 }: LogisticsElectronicAddressDrawerProps) {
   const { t } = useTranslation();
   const drawerAnchor = useLogicalDrawerAnchor('end');
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<LogisticsElectronicAddress>(() => ({
     id: initialData?.id ?? null,
@@ -69,6 +72,8 @@ export function LogisticsElectronicAddressDrawer({
         primary: initialData?.primary ?? false,
       });
       setErrors({});
+      setSaveError(null);
+      setSaveError(null);
     }
   }, [open, initialData]);
 
@@ -77,7 +82,8 @@ export function LogisticsElectronicAddressDrawer({
     return !val || val === key ? fallback : val;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (saving) return;
     const newErrors = {
       description: !formData.description.trim(),
       number: !formData.number.trim(),
@@ -88,15 +94,23 @@ export function LogisticsElectronicAddressDrawer({
       return;
     }
 
-    onSave(formData);
-    onClose();
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await onSave(formData);
+      onClose();
+    } catch (reason) {
+      setSaveError(reason instanceof Error ? reason.message : String(reason));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <Drawer
       anchor={drawerAnchor}
       open={open}
-      onClose={onClose}
+      onClose={saving ? undefined : onClose}
       sx={{ zIndex: (theme) => theme.zIndex.drawer + 2 }}
       ModalProps={{ keepMounted: false }}
       slotProps={{
@@ -110,6 +124,7 @@ export function LogisticsElectronicAddressDrawer({
         },
       }}
     >
+      {saveError && <Alert severity="error" sx={{m: 2}}>{saveError}</Alert>}
       <Box
         sx={{
           p: 2.5,
@@ -123,7 +138,7 @@ export function LogisticsElectronicAddressDrawer({
         <Typography variant="h6" sx={{ fontWeight: 600 }}>
           {tText('logistics.contactInformation', 'Contact information')}
         </Typography>
-        <IconButton size="small" onClick={onClose} aria-label={tText('common.close', 'Close')}>
+        <IconButton size="small" disabled={saving} onClick={onClose} aria-label={tText('common.close', 'Close')}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </Box>
@@ -210,10 +225,10 @@ export function LogisticsElectronicAddressDrawer({
           bgcolor: 'grey.50',
         }}
       >
-        <Button variant="outlined" size="small" onClick={onClose}>
+        <Button variant="outlined" size="small" disabled={saving} onClick={onClose}>
           {tText('common.cancel', 'Cancel')}
         </Button>
-        <Button variant="contained" size="small" onClick={handleSave}>
+        <Button variant="contained" size="small" disabled={saving} onClick={() => void handleSave()}>
           {tText('common.ok', 'OK')}
         </Button>
       </Box>

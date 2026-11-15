@@ -36,7 +36,14 @@ export function ActionPaneRibbonTrigger({
       render: (pinned, onPinnedChange) => (
         <div id={controlsId}>
           <ActionPaneRibbon
-            groups={groups}
+            groups={
+              disabled
+                ? groups.map((group) => ({
+                    ...group,
+                    actions: group.actions.map((action) => ({ ...action, disabled: true })),
+                  }))
+                : groups
+            }
             pinned={pinned}
             onPinnedChange={onPinnedChange}
             pinLabel={pinLabel}
@@ -45,7 +52,7 @@ export function ActionPaneRibbonTrigger({
         </div>
       ),
     }),
-    [controlsId, groups, id, persistenceKey, pinLabel, unpinLabel]
+    [controlsId, disabled, groups, id, persistenceKey, pinLabel, unpinLabel]
   );
 
   useEffect(() => {

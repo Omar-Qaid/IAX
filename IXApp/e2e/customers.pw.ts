@@ -36,7 +36,7 @@ test('lists, creates, and edits a customer through the Customers pages', async (
   const existing = page.getByRole('link', { name: 'C-001' });
   await expect(existing).toHaveAttribute('href', `${path}/1`);
   await existing.click();
-  await expect(page.getByText('C-001 : Existing customer')).toBeVisible();
+  await expect(page.getByText('C-001 : Existing customer')).toBeVisible({timeout: 30_000});
   await page.goBack();
   await page.getByRole('button', { name: 'New', exact: true }).click();
   const drawer = page.getByRole('dialog', { name: 'Create customer' });

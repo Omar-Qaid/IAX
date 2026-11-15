@@ -1,13 +1,17 @@
 import { localizedName } from '@shared/utilities/localizedName';
+import { useCompanyStore } from '@core/company/useCompanyStore';
 import React from 'react';
-import { Typography } from '@mui/material';
+import { Box, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
 import type { DetailSectionConfig, DetailValues, EnterpriseListDetailsConfig } from '@patterns/list-details/types';
-import type { ActionPaneRibbonGroup } from '@shared/components/action-pane/ActionPaneRibbon';
+import { buildCustomerRibbonGroups } from '../components/customerRibbon';
+import { useAuth } from '@core/auth/useAuth';
+import { documentTableIds } from '@shared/components/documents/recordTableIds';
+import { PARTY_BALANCE_ROUTE_PATHS } from '@modules/finance/party-balances/routes/partyBalanceRoutePaths';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { PERMISSIONS } from '@core/permissions/permissions';
 import { customerQuickCreateApi, type CustomerRecord } from '../api/customerQuickCreateApi';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { PartyPostalAddressPanel, PartyElectronicAddressPanel } from '@shared/components/logistics/PartyLogisticsPanels';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { CustomerLookupOption } from '../api/customerQuickCreateApi';
@@ -22,86 +26,6 @@ const includingSelected = (options: CustomerLookupOption[], selected: string): C
     : options;
 
 const CUSTOMER_RIBBON_PINNED_KEY = 'accounts-receivable.customers.customer-ribbon-pinned';
-
-/**
- * The Customer tab of the D365 customer action pane. Actions are disabled until the pages they
- * open exist; the groups are kept so the pane matches the standard layout.
- */
-const buildCustomerRibbonGroups = (
-  tr: (key: string, fallback: string) => string
-): ActionPaneRibbonGroup[] => [
-  {
-    id: 'accounts',
-    label: tr('customerRibbon.groups.accounts', 'Accounts'),
-    actions: [
-      { id: 'contacts', label: tr('customerRibbon.actions.contacts', 'Contacts'), disabled: true },
-      { id: 'change-party-association', label: tr('customerRibbon.actions.changePartyAssociation', 'Change party association'), disabled: true },
-    ],
-  },
-  {
-    id: 'transactions',
-    label: tr('customerRibbon.groups.transactions', 'Transactions'),
-    actions: [
-      { id: 'transactions', label: tr('customerRibbon.actions.transactions', 'Transactions'), disabled: true },
-      { id: 'global-transactions', label: tr('customerRibbon.actions.globalTransactions', 'Global transactions'), disabled: true },
-    ],
-  },
-  {
-    id: 'balance',
-    label: tr('customerRibbon.groups.balance', 'Balance'),
-    actions: [{ id: 'balance', label: tr('customerRibbon.actions.balance', 'Balance'), disabled: true }],
-  },
-  {
-    id: 'forecast',
-    label: tr('customerRibbon.groups.forecast', 'Forecast'),
-    actions: [{ id: 'forecast', label: tr('customerRibbon.actions.forecast', 'Forecast'), disabled: true }],
-  },
-  {
-    id: 'set-up',
-    label: tr('customerRibbon.groups.setUp', 'Set up'),
-    actions: [
-      { id: 'bank-accounts', label: tr('customerRibbon.actions.bankAccounts', 'Bank accounts'), disabled: true },
-      { id: 'summary-update', label: tr('customerRibbon.actions.summaryUpdate', 'Summary update'), disabled: true },
-      { id: 'credit-cards', label: tr('customerRibbon.actions.creditCards', 'Credit cards'), disabled: true },
-      { id: 'product-filters', label: tr('customerRibbon.actions.productFilters', 'Product filters'), disabled: true },
-      { id: 'customers-advanced-notes-setup', label: tr('customerRibbon.actions.customersAdvancedNotesSetup', 'Customers advanced notes setup'), disabled: true },
-    ],
-  },
-  {
-    id: 'attachments',
-    label: tr('customerRibbon.groups.attachments', 'Attachments'),
-    actions: [{ id: 'attachments', label: tr('customerRibbon.actions.attachments', 'Attachments'), disabled: true }],
-  },
-  {
-    id: 'catalogs',
-    label: tr('customerRibbon.groups.catalogs', 'Catalogs'),
-    actions: [{ id: 'send-catalog', label: tr('customerRibbon.actions.sendCatalog', 'Send catalog'), disabled: true }],
-  },
-  {
-    id: 'customer-service',
-    label: tr('customerRibbon.groups.customerService', 'Customer service'),
-    actions: [{ id: 'customer-service', label: tr('customerRibbon.actions.customerService', 'Customer service'), disabled: true }],
-  },
-  {
-    id: 'registration',
-    label: tr('customerRibbon.groups.registration', 'Registration'),
-    actions: [
-      { id: 'registration-ids', label: tr('customerRibbon.actions.registrationIds', 'Registration IDs'), disabled: true },
-      { id: 'registration-id-search', label: tr('customerRibbon.actions.registrationIdSearch', 'Registration ID search'), disabled: true },
-      { id: 'tax-exempt-number-search', label: tr('customerRibbon.actions.taxExemptNumberSearch', 'Tax exempt number search'), disabled: true },
-    ],
-  },
-  {
-    id: 'properties',
-    label: tr('customerRibbon.groups.properties', 'Properties'),
-    actions: [{ id: 'electronic-document-properties', label: tr('customerRibbon.actions.electronicDocumentProperties', 'Electronic document properties'), disabled: true }],
-  },
-  {
-    id: 'rebate-management',
-    label: tr('customerRibbon.groups.rebateManagement', 'Rebate management'),
-    actions: [{ id: 'rebate-management-groups', label: tr('customerRibbon.actions.rebateManagementGroups', 'Rebate management groups'), disabled: true }],
-  },
-];
 
 const emptyCustomer = (): CustomerRecord => ({
   id: `new-${crypto.randomUUID()}`,
@@ -155,26 +79,35 @@ const createCustomer = (record: CustomerRecord) => customerQuickCreateApi.create
 });
 
 export function CustTablePage(): React.ReactElement {
+  const compactViewport = useMediaQuery(useTheme().breakpoints.down('md'));
+  const company = useCompanyStore(state => state.currentCompany);
   const { t, isRtl } = useAppTranslation();
-  const customerRibbonGroups = React.useMemo(
-    () => buildCustomerRibbonGroups((key, fallback) => t(key, fallback)),
-    [t]
-  );
+  const navigate = useNavigate();
+  const { hasPermission } = useAuth();
+  const contactAnchor = React.useRef<HTMLDivElement>(null);
+  const [contactsExpanded, setContactsExpanded] = React.useState(true);
+  const showContacts = () => {
+    setContactsExpanded(true);
+    requestAnimationFrame(() => {
+      contactAnchor.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      contactAnchor.current?.focus({ preventScroll: true });
+    });
+  };
   const { customerId } = useParams<{ customerId: string }>();
   const queryClient = useQueryClient();
   const lookupsQuery = useQuery({
-    queryKey: ['accounts-receivable', 'customer-quick-create', 'lookups'],
+    queryKey: ['accounts-receivable', 'customer-quick-create', 'lookups', company],
     queryFn: ({ signal }) => customerQuickCreateApi.lookups(signal),
     staleTime: 5 * 60 * 1000,
   });
   const lookups = lookupsQuery.data;
   const customersQuery = useQuery({
-    queryKey: ['accounts-receivable', 'customers'],
+    queryKey: ['accounts-receivable', 'customers', company],
     queryFn: ({ signal }) => customerQuickCreateApi.list(signal),
     staleTime: 5 * 60 * 1000,
   });
   const dimensionsQuery = useQuery({
-    queryKey: ['sales-order-inventory-dimensions'],
+    queryKey: ['sales-order-inventory-dimensions', company],
     queryFn: ({ signal }) => salesOrderLinesApi.inventoryDimensions(signal),
     staleTime: 5 * 60 * 1000,
   });
@@ -220,11 +153,11 @@ export function CustTablePage(): React.ReactElement {
       groups: [
         { id: 'salesOrder', title: 'Sales order', fields: [
           { name: 'inventSiteId', label: 'Site', type: 'select', masterRoute: INVENTORY_ROUTE_PATHS.SITES, options: choices(dimensionsQuery.data?.sites.map((site) => ({ value: site.id, label: `${site.code} - ${site.name}` })), record.inventSiteId) },
-          { name: 'inventLocationId', label: 'Warehouse', type: 'select', masterRoute: INVENTORY_ROUTE_PATHS.WAREHOUSES, options: choices(dimensionsQuery.data?.warehouses.map((warehouse) => ({ value: warehouse.id, label: `${warehouse.code} - ${warehouse.name}` })), record.inventLocationId) },
+          { name: 'inventLocationId', label: 'Warehouse', type: 'select', masterRoute: INVENTORY_ROUTE_PATHS.WAREHOUSES, options: choices(dimensionsQuery.data?.warehouses.filter(warehouse => !record.inventSiteId || warehouse.siteId === record.inventSiteId).map((warehouse) => ({ value: warehouse.id, label: `${warehouse.code} - ${warehouse.name}` })), record.inventLocationId) },
         ] },
         { id: 'salesOrderPool', fields: [
           { name: 'salesPoolId', label: 'Sales order pool', type: 'select', options: choices(lookups?.salesPools, record.salesPoolId ?? '') },
-          { name: 'invoiceAccount', label: 'Invoice account', type: 'select', masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMERS, options: choices(customersQuery.data?.map((customer) => ({ value: customer.accountNumber, label: `${customer.accountNumber} - ${customer.name}` })), record.invoiceAccount) },
+          { name: 'invoiceAccount', label: 'Invoice account', type: 'select', masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMERS, options: choices(customersQuery.data?.map((customer) => ({ value: customer.accountNumber, label: `${customer.accountNumber} - ${localizedName({name: customer.name, nameAlias: customer.nameAr}, isRtl)}` })), record.invoiceAccount) },
         ] },
       ],
     },
@@ -254,7 +187,9 @@ export function CustTablePage(): React.ReactElement {
       id: 'contacts',
       title: t('customerDetails.sections.contacts', 'Contact information'),
       minHeight: 145,
-      content: <PartyElectronicAddressPanel partyId={record.party} editing={editing} storageKey="accounts-receivable.customer.contacts" />,
+      expanded: contactsExpanded,
+      onExpandedChange: setContactsExpanded,
+      content: <Box ref={contactAnchor} tabIndex={-1}><PartyElectronicAddressPanel partyId={record.party} editing={editing} storageKey="accounts-receivable.customer.contacts" /></Box>,
     },
     {
       id: 'miscellaneous',
@@ -267,7 +202,7 @@ export function CustTablePage(): React.ReactElement {
     recordTableName: 'CustTable',
     dataSource: {
       type: 'remote',
-      key: `accounts-receivable-customer-details:${customerId ?? ''}`,
+      key: `accounts-receivable-customer-details:${company}:${customerId ?? ''}`,
       load: async (signal) => {
         const records = await customerQuickCreateApi.list(signal);
         if (!customerId) return records;
@@ -308,7 +243,7 @@ export function CustTablePage(): React.ReactElement {
       countryRegionId: String(values.countryRegionId), memo: String(values.memo),
       invoiceAccount: String(values.invoiceAccount ?? ''),
       inventSiteId: String(values.inventSiteId ?? ''),
-      inventLocationId: String(values.inventLocationId ?? ''),
+      inventLocationId: String(values.inventSiteId ?? '') !== record.inventSiteId && !dimensionsQuery.data?.warehouses.some(warehouse => warehouse.id === String(values.inventLocationId ?? '') && warehouse.siteId === String(values.inventSiteId ?? '')) ? '' : String(values.inventLocationId ?? ''),
       salesPoolId: String(values.salesPoolId ?? ''),
       cashDiscBaseDays: Number(values.cashDiscBaseDays ?? 0),
       blockFloorLimitUseInChannel: Number(Boolean(values.blockFloorLimitUseInChannel)),
@@ -320,13 +255,18 @@ export function CustTablePage(): React.ReactElement {
       setValue: (record) => record,
     }],
     sections,
-    commands: ['customer', 'sell', 'invoice', 'collect', 'service', 'market', 'commerce', 'general', 'creditManagement', 'options'].map((id) => ({
-      id,
-      label: t(`customerCommands.${id}`),
-      ...(id === 'customer'
-        ? { groups: customerRibbonGroups, ribbonPersistenceKey: CUSTOMER_RIBBON_PINNED_KEY }
-        : {}),
-    })),
+    commands: (record) => [{
+      id: 'customer', label: t('customerCommands.customer'), requiresSelection: true,
+      ribbonPersistenceKey: CUSTOMER_RIBBON_PINNED_KEY,
+      groups: buildCustomerRibbonGroups((key, fallback) => t(key, fallback), {
+        saved: Boolean(record && record.recId > 0), hasParty: Boolean(record?.party),
+        canReadBalances: hasPermission(PERMISSIONS.CUSTOMER_TRANSACTION_VIEW),
+        onContacts: showContacts,
+        onOpenTransactions: () => { if (record && record.recId > 0) navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customerOpenTransactions(record.accountNumber)); },
+        onBalance: () => { if (record && record.recId > 0) navigate(PARTY_BALANCE_ROUTE_PATHS.customerBalance(record.accountNumber)); },
+        onAttachments: () => { if (record && record.recId > 0) navigate('/documents/docu-view?refTableId=' + documentTableIds.custTable + '&refRecId=' + record.recId); },
+      }),
+    }, ...(hasPermission(PERMISSIONS.SALES_ORDER_VIEW) ? [{id: 'sell', label: t('customerCommands.sell'), requiresSelection: true, groups: [{id: 'related-information', label: t('customerInquiry.relatedInformation'), actions: [{id: 'sales-orders', label: t('pages.salesOrders.title'), disabled: !record || record.recId <= 0, onClick: () => { if (record && record.recId > 0) navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customerSalesOrders(record.accountNumber)); }}]}]}] : [])],
     permissions: { view: PERMISSIONS.CUSTOMER_VIEW, create: PERMISSIONS.CUSTOMER_CREATE, edit: PERMISSIONS.CUSTOMER_UPDATE, delete: PERMISSIONS.CUSTOMER_DELETE },
     validate: (record) => ({
       ...(!record.name.trim() ? { name: t('validation.required', { field: t('fields.customerName') }) } : {}),
@@ -348,32 +288,13 @@ export function CustTablePage(): React.ReactElement {
     },
     relatedInformation: {
       title: t('relatedInformation.title'),
-      sections: (record) => [
-        {
-          id: 'primaryAddress',
-          label: t('relatedInformation.primaryAddress'),
-          defaultExpanded: true,
-          content: <RelatedValue value={record?.countryRegionId} empty={t('customerDetails.noAddresses', 'No addresses are registered for this customer.')} />,
-        },
-        { id: 'recentActivity', label: t('relatedInformation.recentActivity') },
-        { id: 'relationships', label: t('relatedInformation.relationships') },
-        {
-          id: 'statistics',
-          label: t('relatedInformation.statistics'),
-          content: <RelatedValue value={record ? `${record.currencyCode} · ${record.customerGroupId}` : ''} empty={t('relatedInformation.selectCustomer')} />,
-        },
-        { id: 'creditStatistics', label: t('relatedInformation.creditStatistics') },
-        { id: 'contacts', label: t('relatedInformation.contacts') },
-        { id: 'recurringInvoice', label: t('relatedInformation.recurringInvoice') },
-        { id: 'classificationBalances', label: t('relatedInformation.classificationBalances') },
-        { id: 'insuranceGuarantees', label: t('relatedInformation.insuranceGuarantees') },
-      ],
+      sections: record => [{id: 'statistics', label: t('relatedInformation.statistics'), content: <RelatedValue value={record ? [record.accountNumber, record.currencyCode, record.customerGroupId].filter(Boolean).join(' · ') : ''} empty={t('relatedInformation.selectCustomer')} />}],
     },
     showInformation: true,
-    presentation: { mode: 'list', listWidth: 232, listMinWidth: 200, listMaxWidth: 360, listResizable: true, compactRecordHeader: true, recordHeaderMinHeight: 42 },
+    presentation: { mode: 'list', listInitiallyVisible: !customerId || !compactViewport, listWidth: 232, listMinWidth: 200, listMaxWidth: 360, listResizable: true, compactRecordHeader: true, recordHeaderMinHeight: 42 },
   };
 
-  return <ListDetailsPage key={customerId} variant="enterprise" title={t('pages.customers.title')} config={config} />;
+  return <ListDetailsPage key={`${company}:${customerId ?? ''}`} variant="enterprise" title={t('pages.customers.title')} config={config} />;
 }
 
 function RelatedValue({ value, empty }: { value?: string | null; empty: string }): React.ReactElement {

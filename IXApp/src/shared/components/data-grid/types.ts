@@ -89,6 +89,8 @@ export interface FetchRowsParams {
 // ─── Component props ──────────────────────────────────────────────────────────
 
 export interface DataGridProps<T> {
+  /** Keep comparison matrices as scrollable tables on narrow viewports. Default: cards. */
+  mobilePresentation?: 'cards' | 'table';
   rows: T[];
   columns: ColumnDef<T>[];
   getRowId?: (row: T) => string | number;

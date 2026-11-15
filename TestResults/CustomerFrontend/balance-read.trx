@@ -1,0 +1,118 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="cc7579b7-dfa3-44d7-99ff-b758777cdf2b" name="Omar.Qaid@IKK-IT-JD-L-OMQ 2026-11-15 16:28:02" runUser="IKKGROUP\Omar.Qaid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-15T16:28:03.0596617+03:00" queuing="2026-11-15T16:28:03.0596625+03:00" start="2026-11-15T16:27:52.2082701+03:00" finish="2026-11-15T16:28:05.9074122+03:00" />
+  <TestSettings name="default" id="31c8defb-17d1-43f6-9ae0-9211ee9bdf26">
+    <Deployment runDeploymentRoot="Omar.Qaid_IKK-IT-JD-L-OMQ_2026-11-15_16_28_02" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="af770d2e-e86b-4e20-8c5f-f9ec7ab4ad2d" testId="c8ecc727-e869-8539-2f56-1befccd4351a" testName="IAX.IXApi.Tests.OpenBalanceReadTests.Transactions_come_back_due_first_with_the_days_overdue" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0755972" startTime="2026-11-15T16:28:04.2117321+03:00" endTime="2026-11-15T16:28:04.2850944+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="af770d2e-e86b-4e20-8c5f-f9ec7ab4ad2d" />
+    <UnitTestResult executionId="e0247e59-dd13-4eee-a7b1-37bbeeac5dfe" testId="0fadf5ce-9fda-6f18-5bbc-41423e734503" testName="IAX.IXApi.Tests.OpenBalanceReadTests.A_customer_with_nothing_open_reads_as_zero" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0589882" startTime="2026-11-15T16:28:04.3606822+03:00" endTime="2026-11-15T16:28:04.4194381+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e0247e59-dd13-4eee-a7b1-37bbeeac5dfe" />
+    <UnitTestResult executionId="e66bb16b-f37f-482e-bcd0-c40ff1d8eadc" testId="5490e003-ad6e-e044-9cb1-fd87de22d339" testName="IAX.IXApi.Tests.OpenBalanceReadTests.The_vendor_read_excludes_later_transactions_and_orders_by_due_date" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0748080" startTime="2026-11-15T16:28:04.5641828+03:00" endTime="2026-11-15T16:28:04.6387051+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e66bb16b-f37f-482e-bcd0-c40ff1d8eadc" />
+    <UnitTestResult executionId="6ade3007-7415-4d92-b371-2c9c5b30bb04" testId="924d1657-02ed-674d-fb16-8f21929da29a" testName="IAX.IXApi.Tests.OpenBalanceReadTests.Vendor_aging_puts_each_open_row_in_its_bucket" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.4274922" startTime="2026-11-15T16:28:03.6364197+03:00" endTime="2026-11-15T16:28:04.0636922+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6ade3007-7415-4d92-b371-2c9c5b30bb04" />
+    <UnitTestResult executionId="6d9e58e2-9839-4871-9ebd-f23d469b3bef" testId="14a2d5bc-115e-a9f4-4d41-86a732f98830" testName="IAX.IXApi.Tests.OpenBalanceReadTests.The_vendor_balance_is_negative_and_sums_the_open_rows" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0590305" startTime="2026-11-15T16:28:04.1501799+03:00" endTime="2026-11-15T16:28:04.2089207+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6d9e58e2-9839-4871-9ebd-f23d469b3bef" />
+    <UnitTestResult executionId="f05f08e3-4ee6-4d8c-bf68-d70ff370d101" testId="c58e3022-9f53-8825-4a33-6533667c7bd7" testName="IAX.IXApi.Tests.PartyOpenBalanceCurrencyTests.Currency_rows_do_not_mix_units_and_keep_stored_reporting_and_accounting_amounts" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.8553961" startTime="2026-11-15T16:28:04.3291514+03:00" endTime="2026-11-15T16:28:05.1745210+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f05f08e3-4ee6-4d8c-bf68-d70ff370d101" />
+    <UnitTestResult executionId="30247323-dfb2-45ec-ae58-5fbdc2d01e6c" testId="b0b0f434-5505-afbf-e9e9-cc40891ef747" testName="IAX.IXApi.Tests.OpenBalanceReadTests.Vendor_aging_without_an_account_ages_every_vendor_and_breaks_it_down" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0749305" startTime="2026-11-15T16:28:04.2855872+03:00" endTime="2026-11-15T16:28:04.3601835+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="30247323-dfb2-45ec-ae58-5fbdc2d01e6c" />
+    <UnitTestResult executionId="0ea891b6-314f-4871-a216-35535aad2f51" testId="786e8cfa-5da5-dd88-fb26-a97ad1835ff5" testName="IAX.IXApi.Tests.PartyOpenBalanceCurrencyTests.Vendor_balances_preserve_credit_sign_and_do_not_invent_missing_reporting_amounts" computerName="IKK-IT-JD-L-OMQ" duration="00:00:06.8125172" startTime="2026-11-15T16:27:57.5826834+03:00" endTime="2026-11-15T16:28:04.3189145+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0ea891b6-314f-4871-a216-35535aad2f51" />
+    <UnitTestResult executionId="d0c2d0eb-a3d0-4891-9f03-488f12916afc" testId="3929d69a-b877-efba-eba3-824a3dab9e7c" testName="IAX.IXApi.Tests.OpenBalanceReadTests.An_open_row_that_disagrees_with_its_transaction_is_reported_unreconciled" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.2978759" startTime="2026-11-15T16:28:03.0684371+03:00" endTime="2026-11-15T16:28:03.3642727+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d0c2d0eb-a3d0-4891-9f03-488f12916afc" />
+    <UnitTestResult executionId="5d850ffb-39c4-4c1d-8486-5a0fdd2e79c1" testId="10231fc6-f9e3-d6a1-37ea-82e4ba96fb9d" testName="IAX.IXApi.Tests.OpenBalanceReadTests.Omitting_the_account_reads_every_customer_in_the_company" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.2713223" startTime="2026-11-15T16:28:03.3654198+03:00" endTime="2026-11-15T16:28:03.6358428+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5d850ffb-39c4-4c1d-8486-5a0fdd2e79c1" />
+    <UnitTestResult executionId="a55f25c3-5a1e-4841-9398-b11e1dac5e37" testId="4f615c47-c120-e5d2-53a3-c226785d272b" testName="IAX.IXApi.Tests.OpenBalanceReadTests.A_transaction_after_the_as_of_date_is_excluded" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.4376652" startTime="2026-11-15T16:28:02.6639103+03:00" endTime="2026-11-15T16:28:03.0666964+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a55f25c3-5a1e-4841-9398-b11e1dac5e37" />
+    <UnitTestResult executionId="7beadd99-4a45-42fc-bbca-62db6717e2c4" testId="20e981ac-2cc1-e9d3-d7e9-ee2aea05ecd4" testName="IAX.IXApi.Tests.OpenBalanceReadTests.The_customer_balance_is_the_sum_of_the_open_rows" computerName="IKK-IT-JD-L-OMQ" duration="00:00:05.1242192" startTime="2026-11-15T16:27:57.5762059+03:00" endTime="2026-11-15T16:28:02.6281517+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7beadd99-4a45-42fc-bbca-62db6717e2c4" />
+    <UnitTestResult executionId="73a221f4-e92c-4eb8-9b49-00f543fd3889" testId="826e099f-0242-8055-f907-f0e11774a3d8" testName="IAX.IXApi.Tests.OpenBalanceReadTests.An_unsettled_payment_remainder_nets_against_the_invoices" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0858006" startTime="2026-11-15T16:28:04.0642945+03:00" endTime="2026-11-15T16:28:04.1496638+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="73a221f4-e92c-4eb8-9b49-00f543fd3889" />
+    <UnitTestResult executionId="265dae9c-2a71-4152-8b0e-d096ee9a51a0" testId="e313610c-5fe7-90a9-6a91-2a531eab9f61" testName="IAX.IXApi.Tests.OpenBalanceReadTests.A_vendor_open_row_that_disagrees_is_reported_unreconciled" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.1437534" startTime="2026-11-15T16:28:04.4199705+03:00" endTime="2026-11-15T16:28:04.5636962+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="265dae9c-2a71-4152-8b0e-d096ee9a51a0" />
+    <UnitTestResult executionId="a45e7338-13c2-4bec-a399-adf36b4775c7" testId="fa31541d-b5f5-443c-532b-105a5b51f526" testName="IAX.IXApi.Tests.PartyOpenBalanceCurrencyTests.Shared_party_does_not_imply_a_customer_vendor_link_and_inconsistent_open_rows_are_flagged" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.2102274" startTime="2026-11-15T16:28:05.1750788+03:00" endTime="2026-11-15T16:28:05.3848363+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a45e7338-13c2-4bec-a399-adf36b4775c7" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IAX.IXApi.Tests.PartyOpenBalanceCurrencyTests.Vendor_balances_preserve_credit_sign_and_do_not_invent_missing_reporting_amounts" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="786e8cfa-5da5-dd88-fb26-a97ad1835ff5">
+      <Execution id="0ea891b6-314f-4871-a216-35535aad2f51" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.PartyOpenBalanceCurrencyTests" name="Vendor_balances_preserve_credit_sign_and_do_not_invent_missing_reporting_amounts" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.PartyOpenBalanceCurrencyTests.Currency_rows_do_not_mix_units_and_keep_stored_reporting_and_accounting_amounts" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="c58e3022-9f53-8825-4a33-6533667c7bd7">
+      <Execution id="f05f08e3-4ee6-4d8c-bf68-d70ff370d101" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.PartyOpenBalanceCurrencyTests" name="Currency_rows_do_not_mix_units_and_keep_stored_reporting_and_accounting_amounts" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.OpenBalanceReadTests.A_transaction_after_the_as_of_date_is_excluded" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="4f615c47-c120-e5d2-53a3-c226785d272b">
+      <Execution id="a55f25c3-5a1e-4841-9398-b11e1dac5e37" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.OpenBalanceReadTests" name="A_transaction_after_the_as_of_date_is_excluded" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.OpenBalanceReadTests.A_vendor_open_row_that_disagrees_is_reported_unreconciled" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="e313610c-5fe7-90a9-6a91-2a531eab9f61">
+      <Execution id="265dae9c-2a71-4152-8b0e-d096ee9a51a0" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.OpenBalanceReadTests" name="A_vendor_open_row_that_disagrees_is_reported_unreconciled" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.PartyOpenBalanceCurrencyTests.Shared_party_does_not_imply_a_customer_vendor_link_and_inconsistent_open_rows_are_flagged" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="fa31541d-b5f5-443c-532b-105a5b51f526">
+      <Execution id="a45e7338-13c2-4bec-a399-adf36b4775c7" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.PartyOpenBalanceCurrencyTests" name="Shared_party_does_not_imply_a_customer_vendor_link_and_inconsistent_open_rows_are_flagged" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.OpenBalanceReadTests.Vendor_aging_without_an_account_ages_every_vendor_and_breaks_it_down" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="b0b0f434-5505-afbf-e9e9-cc40891ef747">
+      <Execution id="30247323-dfb2-45ec-ae58-5fbdc2d01e6c" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.OpenBalanceReadTests" name="Vendor_aging_without_an_account_ages_every_vendor_and_breaks_it_down" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.OpenBalanceReadTests.The_customer_balance_is_the_sum_of_the_open_rows" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="20e981ac-2cc1-e9d3-d7e9-ee2aea05ecd4">
+      <Execution id="7beadd99-4a45-42fc-bbca-62db6717e2c4" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.OpenBalanceReadTests" name="The_customer_balance_is_the_sum_of_the_open_rows" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.OpenBalanceReadTests.Transactions_come_back_due_first_with_the_days_overdue" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="c8ecc727-e869-8539-2f56-1befccd4351a">
+      <Execution id="af770d2e-e86b-4e20-8c5f-f9ec7ab4ad2d" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.OpenBalanceReadTests" name="Transactions_come_back_due_first_with_the_days_overdue" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.OpenBalanceReadTests.A_customer_with_nothing_open_reads_as_zero" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="0fadf5ce-9fda-6f18-5bbc-41423e734503">
+      <Execution id="e0247e59-dd13-4eee-a7b1-37bbeeac5dfe" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.OpenBalanceReadTests" name="A_customer_with_nothing_open_reads_as_zero" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.OpenBalanceReadTests.An_open_row_that_disagrees_with_its_transaction_is_reported_unreconciled" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="3929d69a-b877-efba-eba3-824a3dab9e7c">
+      <Execution id="d0c2d0eb-a3d0-4891-9f03-488f12916afc" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.OpenBalanceReadTests" name="An_open_row_that_disagrees_with_its_transaction_is_reported_unreconciled" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.OpenBalanceReadTests.Omitting_the_account_reads_every_customer_in_the_company" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="10231fc6-f9e3-d6a1-37ea-82e4ba96fb9d">
+      <Execution id="5d850ffb-39c4-4c1d-8486-5a0fdd2e79c1" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.OpenBalanceReadTests" name="Omitting_the_account_reads_every_customer_in_the_company" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.OpenBalanceReadTests.The_vendor_read_excludes_later_transactions_and_orders_by_due_date" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="5490e003-ad6e-e044-9cb1-fd87de22d339">
+      <Execution id="e66bb16b-f37f-482e-bcd0-c40ff1d8eadc" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.OpenBalanceReadTests" name="The_vendor_read_excludes_later_transactions_and_orders_by_due_date" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.OpenBalanceReadTests.Vendor_aging_puts_each_open_row_in_its_bucket" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="924d1657-02ed-674d-fb16-8f21929da29a">
+      <Execution id="6ade3007-7415-4d92-b371-2c9c5b30bb04" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.OpenBalanceReadTests" name="Vendor_aging_puts_each_open_row_in_its_bucket" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.OpenBalanceReadTests.An_unsettled_payment_remainder_nets_against_the_invoices" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="826e099f-0242-8055-f907-f0e11774a3d8">
+      <Execution id="73a221f4-e92c-4eb8-9b49-00f543fd3889" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.OpenBalanceReadTests" name="An_unsettled_payment_remainder_nets_against_the_invoices" />
+    </UnitTest>
+    <UnitTest name="IAX.IXApi.Tests.OpenBalanceReadTests.The_vendor_balance_is_negative_and_sums_the_open_rows" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\debug\net9.0\ixapi.tests.dll" id="14a2d5bc-115e-a9f4-4d41-86a732f98830">
+      <Execution id="6d9e58e2-9839-4871-9ebd-f23d469b3bef" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\Debug\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IAX.IXApi.Tests.OpenBalanceReadTests" name="The_vendor_balance_is_negative_and_sums_the_open_rows" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="c8ecc727-e869-8539-2f56-1befccd4351a" executionId="af770d2e-e86b-4e20-8c5f-f9ec7ab4ad2d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0fadf5ce-9fda-6f18-5bbc-41423e734503" executionId="e0247e59-dd13-4eee-a7b1-37bbeeac5dfe" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5490e003-ad6e-e044-9cb1-fd87de22d339" executionId="e66bb16b-f37f-482e-bcd0-c40ff1d8eadc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="924d1657-02ed-674d-fb16-8f21929da29a" executionId="6ade3007-7415-4d92-b371-2c9c5b30bb04" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="14a2d5bc-115e-a9f4-4d41-86a732f98830" executionId="6d9e58e2-9839-4871-9ebd-f23d469b3bef" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c58e3022-9f53-8825-4a33-6533667c7bd7" executionId="f05f08e3-4ee6-4d8c-bf68-d70ff370d101" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b0b0f434-5505-afbf-e9e9-cc40891ef747" executionId="30247323-dfb2-45ec-ae58-5fbdc2d01e6c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="786e8cfa-5da5-dd88-fb26-a97ad1835ff5" executionId="0ea891b6-314f-4871-a216-35535aad2f51" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3929d69a-b877-efba-eba3-824a3dab9e7c" executionId="d0c2d0eb-a3d0-4891-9f03-488f12916afc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="10231fc6-f9e3-d6a1-37ea-82e4ba96fb9d" executionId="5d850ffb-39c4-4c1d-8486-5a0fdd2e79c1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4f615c47-c120-e5d2-53a3-c226785d272b" executionId="a55f25c3-5a1e-4841-9398-b11e1dac5e37" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="20e981ac-2cc1-e9d3-d7e9-ee2aea05ecd4" executionId="7beadd99-4a45-42fc-bbca-62db6717e2c4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="826e099f-0242-8055-f907-f0e11774a3d8" executionId="73a221f4-e92c-4eb8-9b49-00f543fd3889" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e313610c-5fe7-90a9-6a91-2a531eab9f61" executionId="265dae9c-2a71-4152-8b0e-d096ee9a51a0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="fa31541d-b5f5-443c-532b-105a5b51f526" executionId="a45e7338-13c2-4bec-a399-adf36b4775c7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="15" executed="15" passed="15" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.02] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.23)&#xD;
+[xUnit.net 00:00:00.88]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:01.84]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:01.92]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:00:09.88]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

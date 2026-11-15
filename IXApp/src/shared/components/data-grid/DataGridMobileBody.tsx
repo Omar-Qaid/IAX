@@ -255,7 +255,10 @@ export function DataGridMobileBodyInternal<T>({
               data-index={virtualRow.index}
             >
               <Card
-                onClick={() => onRowClick?.(row)}
+                onClick={() => {
+                  if (selectionMode !== 'none') onToggleRow(rowId);
+                  onRowClick?.(row);
+                }}
                 onDoubleClick={() => onRowDoubleClick?.(row)}
                 sx={{
                   p: 2,
@@ -264,7 +267,7 @@ export function DataGridMobileBodyInternal<T>({
                   border: '1px solid',
                   borderColor: isSelected ? 'primary.main' : 'divider',
                   bgcolor: isSelected ? 'primary.50' : 'background.paper',
-                  cursor: onRowClick ? 'pointer' : 'default',
+                  cursor: onRowClick || selectionMode !== 'none' ? 'pointer' : 'default',
                   transition: 'all 0.2s',
                   position: 'relative',
                   textAlign: 'center',

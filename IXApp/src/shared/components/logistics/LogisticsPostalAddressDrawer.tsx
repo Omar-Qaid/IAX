@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
+  Alert,
   Box,
   Typography,
   Button,
@@ -21,7 +22,7 @@ import { useLogicalDrawerAnchor } from '@shared/hooks/useLogicalDrawerAnchor';
 export interface LogisticsPostalAddressDrawerProps {
   open: boolean;
   onClose: () => void;
-  onSave: (address: LogisticsPostalAddress) => void;
+  onSave: (address: LogisticsPostalAddress) => void | Promise<void>;
   initialData?: LogisticsPostalAddress | null;
 }
 
@@ -33,6 +34,8 @@ export function LogisticsPostalAddressDrawer({
 }: LogisticsPostalAddressDrawerProps) {
   const { t } = useTranslation();
   const drawerAnchor = useLogicalDrawerAnchor('end');
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const defaultValidFrom = new Date().toISOString().split('T')[0];
   const defaultValidTo = '2154-12-31';
@@ -83,6 +86,8 @@ export function LogisticsPostalAddressDrawer({
         primaryForCountry: initialData?.primaryForCountry ?? true,
       });
       setErrors({});
+      setSaveError(null);
+      setSaveError(null);
     }
   }, [open, initialData, defaultValidFrom]);
 
@@ -91,7 +96,8 @@ export function LogisticsPostalAddressDrawer({
   const { data: cities = [] } = useCities(formData.countryRegionId, formData.state);
   const { data: counties = [] } = useCounties(formData.countryRegionId, formData.state);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (saving) return;
     const newErrors = {
       description: !formData.description.trim(),
       countryRegionId: !formData.countryRegionId,
@@ -102,8 +108,16 @@ export function LogisticsPostalAddressDrawer({
       return;
     }
 
-    onSave(formData);
-    onClose();
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await onSave(formData);
+      onClose();
+    } catch (reason) {
+      setSaveError(reason instanceof Error ? reason.message : String(reason));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const tText = (key: string, fallback: string) => {
@@ -115,7 +129,7 @@ export function LogisticsPostalAddressDrawer({
     <Drawer
       anchor={drawerAnchor}
       open={open}
-      onClose={onClose}
+      onClose={saving ? undefined : onClose}
       sx={{ zIndex: (theme) => theme.zIndex.drawer + 2 }}
       ModalProps={{ keepMounted: false }}
       slotProps={{
@@ -129,11 +143,12 @@ export function LogisticsPostalAddressDrawer({
         },
       }}
     >
+      {saveError && <Alert severity="error" sx={{m: 2}}>{saveError}</Alert>}
       <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid', borderColor: 'divider' }}>
         <Typography variant="h6" sx={{ fontWeight: 600 }}>
           {initialData ? tText('logistics.editAddress', 'Edit address') : tText('logistics.newAddress', 'New address')}
         </Typography>
-        <IconButton size="small" onClick={onClose} aria-label={t('common.close') || 'Close'}>
+        <IconButton size="small" disabled={saving} onClick={onClose} aria-label={t('common.close') || 'Close'}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </Box>
@@ -342,10 +357,10 @@ export function LogisticsPostalAddressDrawer({
       </Box>
 
       <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider', display: 'flex', gap: 1, justifyContent: 'flex-end', bgcolor: 'grey.50' }}>
-        <Button variant="outlined" size="small" onClick={onClose}>
+        <Button variant="outlined" size="small" disabled={saving} onClick={onClose}>
           {tText('common.cancel', 'Cancel')}
         </Button>
-        <Button variant="contained" size="small" onClick={handleSave}>
+        <Button variant="contained" size="small" disabled={saving} onClick={() => void handleSave()}>
           {tText('common.ok', 'OK')}
         </Button>
       </Box>

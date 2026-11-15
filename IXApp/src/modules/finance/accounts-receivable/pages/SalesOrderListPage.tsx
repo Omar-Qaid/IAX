@@ -6,19 +6,23 @@ import { StatusBadge } from '@shared/components/status/StatusBadge';
 import type { ColumnDef } from '@shared/components/data-grid/types';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { salesOrderListApi, type SalesOrderListRecord } from '../api/salesOrderListApi';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useCompanyStore } from '@core/company/useCompanyStore';
 import { SalesOrderQuickCreate } from '../components/SalesOrderQuickCreate';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
 
 export function SalesOrderListPage(): React.ReactElement {
   const { t, currentLanguage } = useAppTranslation();
   const navigate = useNavigate();
+  const company = useCompanyStore(state => state.currentCompany);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const orderQuery = useQuery({
-    queryKey: ['accounts-receivable', 'sales-orders'],
+    queryKey: ['accounts-receivable', 'sales-orders', company],
     queryFn: ({ signal }) => salesOrderListApi.list(signal),
   });
-  const orders = orderQuery.data ?? [];
+  const [searchParams] = useSearchParams();
+  const customerAccount = searchParams.get('customerAccount');
+  const orders = (orderQuery.data ?? []).filter(order => !customerAccount || order.customerAccount === customerAccount);
   const columns = useMemo<ColumnDef<SalesOrderListRecord>[]>(
     () => [
       { field: 'salesId', headerName: 'fields.salesOrderNumber', width: 145, pinned: 'left',
@@ -52,7 +56,7 @@ export function SalesOrderListPage(): React.ReactElement {
     showSearchCommand: true,
     recordTableName: 'SalesTable',
     getAuditRecordId: (order) => order.recId,
-    contextLabel: t('pages.salesOrders.title'),
+    contextLabel: customerAccount ? `${t('pages.salesOrders.title')} | ${customerAccount}` : t('pages.salesOrders.title'),
     viewLabel: t('pages.customers.standardView'),
     filterLabel: t('actions.filter'),
     informationLabel: t('common.information'),

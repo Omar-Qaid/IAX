@@ -4,6 +4,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
 
 public interface ICustTransService : IBaseService<CustTrans>
 {
+    Task<Common.PartyOpenBalanceCurrencyDto?> GetBalanceCurrencyAsync(string accountNum, CancellationToken ct);
     /// <summary>
     /// Reads the open customer balance from CustTransOpen, for one customer or for all of them.
     /// </summary>

@@ -2,6 +2,7 @@
 
 public interface IVendTransReadService
 {
+    Task<Common.PartyOpenBalanceCurrencyDto?> GetBalanceCurrencyAsync(string accountNum, CancellationToken ct);
     Task<VendTransDto?> GetAsync(long recId, CancellationToken ct);
     Task<VendTransPageDto> SearchAsync(VendTransQueryDto query, CancellationToken ct);
 

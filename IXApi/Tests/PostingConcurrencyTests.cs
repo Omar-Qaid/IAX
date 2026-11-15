@@ -224,6 +224,7 @@ public sealed class PostingConcurrencyTests(Xunit.Abstractions.ITestOutputHelper
             await using var master = new SqlConnection(Master(server));
             await master.OpenAsync();
             await using var drop = master.CreateCommand();
+            drop.CommandTimeout = 120;
             // The name is this class's own generated name, never caller input.
             Assert.StartsWith("IXApi_APV2_Lock_", _name);
             drop.CommandText = $"ALTER DATABASE [{_name}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [{_name}];";
