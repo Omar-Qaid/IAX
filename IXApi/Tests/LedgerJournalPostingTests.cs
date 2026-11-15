@@ -1041,7 +1041,7 @@ public class LedgerJournalPostingTests
     [InlineData("reporting", "Reporting: no exchange rate type is configured")]
     [InlineData("tax", "journal tax calculation")]
     [InlineData("company", "intercompany")]
-    [InlineData("offsetAccountType", "offset account must be a Ledger account")]
+    [InlineData("offsetAccountType", "must reference a Vend account, not a main account combination")]
     [InlineData("canceled", "canceled")]
     [InlineData("unbalanced", "unbalanced")]
     public async Task Rejects_what_this_journal_path_does_not_implement(string scenario, string expected)
@@ -1061,7 +1061,7 @@ public class LedgerJournalPostingTests
             // Both lines carry the foreign company so the voucher still balances within its group
             // and the intercompany guard is what refuses it.
             case "company": debit.Company = "other"; credit.Company = "other"; break;
-            // One line with an offset balances on its own, so the offset guard is what refuses it.
+            // A vendor offset must name a vendor; a main account combination is refused, not guessed at.
             case "offsetAccountType":
                 debit.OffsetLedgerDimension = 2;
                 debit.OffsetAccountType = LedgerJournalACType.Vend;
@@ -1370,6 +1370,150 @@ public class LedgerJournalPostingTests
         Assert.All(original, x => Assert.Equal(NoYes.No, x.IsCorrection));
     }
 
+    /// <summary>
+    /// The account combinations an offset customer, vendor or bank account is named through: the
+    /// display value is the account number and there is no main account, because that comes from
+    /// the posting setup of the account named.
+    /// </summary>
+    private static void SeedOffsetAccounts(PostingContext db) => db.AddRange(
+        new DimensionAttributeValueCombination { RecId = 10, DataAreaId = "dat", DisplayValue = "C-001" },
+        new DimensionAttributeValueCombination { RecId = 11, DataAreaId = "dat", DisplayValue = "V-001" },
+        new DimensionAttributeValueCombination { RecId = 12, DataAreaId = "dat", DisplayValue = "BANK-1" });
+
+    // An offset account may be any of the types the account side accepts, so one line can move an
+    // amount between a ledger account and a customer, vendor or bank account. The offset side owes
+    // its subledger movement exactly as the account side does.
+    [Theory]
+    [InlineData(LedgerJournalACType.Cust, 10L, 3L, LedgerPostingType.CustBalance)]
+    [InlineData(LedgerJournalACType.Vend, 11L, 4L, LedgerPostingType.VendBalance)]
+    [InlineData(LedgerJournalACType.Bank, 12L, 1L, LedgerPostingType.Bank)]
+    public async Task A_subledger_offset_posts_its_ledger_entry_and_its_subledger_movement(
+        LedgerJournalACType offsetType, long offsetAccount, long summaryDimension, LedgerPostingType postingType)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        SeedSubledgers(db);
+        SeedOffsetAccounts(db);
+        var line = Line(1, "V1", bank: false, debit: 100m);
+        line.OffsetAccountType = offsetType;
+        line.OffsetLedgerDimension = offsetAccount;
+        line.OffsetTxt = "Offset side";
+        line.Invoice = "INV-ACCOUNT-SIDE";
+        db.Add(line);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var result = await new LedgerJournalPosting(db).PostAsync("dat", await db.Set<LedgerJournalTable>().SingleAsync(), default);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        Assert.Equal(1, result.VouchersPosted);
+        var entries = await db.Set<GeneralJournalAccountEntry>().AsNoTracking().ToListAsync();
+        Assert.Equal(2, entries.Count);
+        Assert.Equal(0m, entries.Sum(x => x.AccountingCurrencyAmount));
+        var offset = Assert.Single(entries, x => x.PostingType == postingType);
+        Assert.Equal(summaryDimension, offset.LedgerDimension);
+        Assert.Equal(-100m, offset.AccountingCurrencyAmount);
+
+        // The line still names the offset account; the summary account is derived, not stored.
+        var posted = await db.Set<LedgerJournalTrans>().AsNoTracking().SingleAsync();
+        Assert.Equal(offsetAccount, posted.OffsetLedgerDimension);
+        Assert.Equal(0, posted.CustTransId);
+        Assert.Equal(0, posted.VendTransId);
+
+        switch (offsetType)
+        {
+            case LedgerJournalACType.Cust:
+                var customer = await db.Set<CustTrans>().AsNoTracking().SingleAsync();
+                Assert.Equal("C-001", customer.AccountNum);
+                Assert.Equal(-100m, customer.AmountCur);
+                Assert.Equal("Offset side", customer.Txt);
+                Assert.Equal(string.Empty, customer.Invoice); // the invoice describes the account side
+                Assert.Equal(-100m, (await db.Set<CustTransOpen>().AsNoTracking().SingleAsync()).AmountCur);
+                break;
+            case LedgerJournalACType.Vend:
+                var vendor = await db.Set<VendTrans>().AsNoTracking().SingleAsync();
+                Assert.Equal("V-001", vendor.AccountNum);
+                Assert.Equal(-100m, vendor.AmountCur);
+                Assert.Equal(string.Empty, vendor.Invoice);
+                break;
+            default:
+                var bank = await db.Set<BankAccountTrans>().AsNoTracking().SingleAsync();
+                Assert.Equal("BANK-1", bank.AccountId);
+                Assert.Equal(-100m, bank.AmountCur);
+                break;
+        }
+    }
+
+    // The one-line customer payment: the customer is credited and the bank offset is debited, and
+    // reversing the journal cancels both subledger movements as well as the ledger entries.
+    [Fact]
+    public async Task A_customer_payment_with_a_bank_offset_posts_and_reverses_on_both_subledgers()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        SeedSubledgers(db);
+        SeedOffsetAccounts(db);
+        var line = Line(1, "V1", bank: false, credit: 100m);
+        line.AccountType = LedgerJournalACType.Cust;
+        line.LedgerDimension = 0;
+        line.LedgerDimensionName = "C-001";
+        line.OffsetAccountType = LedgerJournalACType.Bank;
+        line.OffsetLedgerDimension = 12;
+        db.Add(line);
+        await db.SaveChangesAsync();
+        await ConfigureVoucherSequenceAsync(db);
+        await new LedgerJournalPosting(db).PostAsync("dat", await db.Set<LedgerJournalTable>().SingleAsync(), default);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        Assert.Equal(-100m, (await db.Set<CustTrans>().AsNoTracking().SingleAsync()).AmountCur);
+        Assert.Equal(100m, (await db.Set<BankAccountTrans>().AsNoTracking().SingleAsync()).AmountCur);
+
+        var (result, error) = await NewReversalService(db).ReverseAsync(1, new DateTime(2026, 1, 31), default);
+
+        Assert.Null(error);
+        Assert.NotNull(result);
+        Assert.Equal(0m, (await db.Set<CustTrans>().AsNoTracking().ToListAsync()).Sum(x => x.AmountCur));
+        Assert.Equal(0m, (await db.Set<BankAccountTrans>().AsNoTracking().ToListAsync()).Sum(x => x.AmountCur));
+        var entries = await db.Set<GeneralJournalAccountEntry>().AsNoTracking().ToListAsync();
+        Assert.All(entries.GroupBy(x => x.LedgerDimension), account => Assert.Equal(0m, account.Sum(x => x.AccountingCurrencyAmount)));
+    }
+
+    // The settlement guard on reversal covers a vendor on the offset side, which the line does not
+    // record by transaction id.
+    [Fact]
+    public async Task Reversal_is_refused_while_an_offset_vendor_transaction_is_settled()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        SeedSubledgers(db);
+        SeedOffsetAccounts(db);
+        var line = Line(1, "V1", bank: false, debit: 100m);
+        line.OffsetAccountType = LedgerJournalACType.Vend;
+        line.OffsetLedgerDimension = 11;
+        db.Add(line);
+        await db.SaveChangesAsync();
+        await ConfigureVoucherSequenceAsync(db);
+        await new LedgerJournalPosting(db).PostAsync("dat", await db.Set<LedgerJournalTable>().SingleAsync(), default);
+        await db.SaveChangesAsync();
+        (await db.Set<VendTrans>().SingleAsync()).SettleAmountCur = -50m;
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var (result, error) = await NewReversalService(db).ReverseAsync(1, new DateTime(2026, 1, 31), default);
+
+        Assert.Null(result);
+        Assert.Contains("Reverse the vendor settlement", error);
+        Assert.Single(await db.Set<GeneralJournalEntry>().AsNoTracking().ToListAsync());
+    }
+
     private static LedgerJournalTrans Line(long recId, string voucher, bool bank,
         decimal debit = 0m, decimal credit = 0m, DateTime? date = null) => new()
         {
@@ -1604,7 +1748,7 @@ public class LedgerJournalPostingTests
             () => new LedgerJournalPosting(db).PostAsync("dat", reloaded, default));
         Assert.Contains("account is required", missing.Message);
 
-        // A subledger offset has no account field on the line, so it is refused by name.
+        // A customer offset pointing at a main account combination names no customer, so it is refused.
         db.ChangeTracker.Clear();
         line = await db.Set<LedgerJournalTrans>().SingleAsync();
         line.AccountType = LedgerJournalACType.Ledger;
@@ -1617,7 +1761,7 @@ public class LedgerJournalPostingTests
         var reloadedAgain = await db.Set<LedgerJournalTable>().SingleAsync();
         var offset = await Assert.ThrowsAsync<SubledgerPostingException>(
             () => new LedgerJournalPosting(db).PostAsync("dat", reloadedAgain, default));
-        Assert.Contains("offset account must be a Ledger account", offset.Message);
+        Assert.Contains("must reference a Cust account, not a main account combination", offset.Message);
 
         Assert.Empty(await db.Set<CustTrans>().AsNoTracking().ToListAsync());
     }

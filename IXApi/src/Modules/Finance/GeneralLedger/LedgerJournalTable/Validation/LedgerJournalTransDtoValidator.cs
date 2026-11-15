@@ -24,9 +24,10 @@ public sealed class LedgerJournalTransDtoValidator : BaseValidator<LedgerJournal
             .WithMessage("Enter a nonzero debit or credit, not both.");
         RuleFor(x => x.OffsetAccountType).IsInEnum();
         RuleFor(x => x.OffsetAccountType)
-            .Equal(LedgerJournalACType.Ledger)
+            .Must(x => x is LedgerJournalACType.Ledger or LedgerJournalACType.Cust
+                         or LedgerJournalACType.Vend or LedgerJournalACType.Bank)
             .When(x => x.OffsetLedgerDimension > 0)
-            .WithMessage("The basic general journal accepts Ledger offset accounts only.");
+            .WithMessage("The basic general journal accepts Ledger, Cust, Vend and Bank offset accounts.");
         RuleFor(x => x.ReverseEntry).IsInEnum();
         RuleFor(x => x.Prepayment).IsInEnum();
         RuleFor(x => x.Cancel).IsInEnum();

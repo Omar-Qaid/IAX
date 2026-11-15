@@ -139,25 +139,50 @@ public sealed class LedgerJournalReversalService(
         var lines = await Db.Set<LedgerJournalTrans>().AsNoTracking()
             .Where(x => x.DataAreaId == area && x.JournalNum == original.JournalNum).ToListAsync(ct);
         if (lines.Count == 0) throw new SubledgerPostingException("The posted journal has no lines to reverse.");
+        // A customer or vendor can sit on the account side or on the offset side of a line. The
+        // offset names its account through the combination it references, not a line field.
+        var offsetIds = lines.Where(x => x.OffsetLedgerDimension != 0
+                && x.OffsetAccountType is LedgerJournalACType.Cust or LedgerJournalACType.Vend)
+            .Select(x => x.OffsetLedgerDimension).Distinct().ToList();
+        var offsetAccounts = await Db.Set<DimensionAttributeValueCombination>().AsNoTracking()
+            .Where(x => x.DataAreaId == area && offsetIds.Contains(x.RecId))
+            .ToDictionaryAsync(x => x.RecId, x => x.DisplayValue.Trim(), ct);
+        var offsetLines = lines.Where(x => offsetAccounts.ContainsKey(x.OffsetLedgerDimension)).ToList();
+
         var customerLines = lines.Where(x => x.AccountType == LedgerJournalACType.Cust).ToList();
-        foreach (var account in customerLines.Select(x => x.LedgerDimensionName).Distinct().Order())
+        var offsetCustomerLines = offsetLines.Where(x => x.OffsetAccountType == LedgerJournalACType.Cust).ToList();
+        foreach (var account in customerLines.Select(x => x.LedgerDimensionName)
+                     .Concat(offsetCustomerLines.Select(x => offsetAccounts[x.OffsetLedgerDimension])).Distinct().Order())
             await support.LockCustomerSettlementAsync(area, account, ct);
-        if (customerLines.Count > 0)
+        if (customerLines.Count > 0 || offsetCustomerLines.Count > 0)
         {
-            var vouchers = customerLines.Select(x => x.Voucher).Distinct().ToList();
+            var vouchers = customerLines.Concat(offsetCustomerLines).Select(x => x.Voucher).Distinct().ToList();
             if (await Db.Set<CustTrans>().AnyAsync(x => x.DataAreaId == area
                     && x.DocumentNum == original.JournalNum && vouchers.Contains(x.Voucher)
                     && (x.SettleAmountCur != 0m || x.SettleAmountMst != 0m), ct))
                 throw new SubledgerPostingException("Reverse the customer settlement before reversing this journal.");
         }
         var vendorLines = lines.Where(x => x.AccountType == LedgerJournalACType.Vend).ToList();
-        foreach (var account in vendorLines.Select(x => x.LedgerDimensionName).Distinct().Order())
+        var offsetVendorLines = offsetLines.Where(x => x.OffsetAccountType == LedgerJournalACType.Vend).ToList();
+        foreach (var account in vendorLines.Select(x => x.LedgerDimensionName)
+                     .Concat(offsetVendorLines.Select(x => offsetAccounts[x.OffsetLedgerDimension])).Distinct().Order())
             await support.LockAsync($"VendSettleOpen:{area}:{account}".ToUpperInvariant(), ct);
         if (vendorLines.Count > 0)
         {
             var transactionIds = vendorLines.Select(x => x.VendTransId).ToList();
             if (await Db.Set<VendTrans>().AnyAsync(x => x.DataAreaId == area
                     && transactionIds.Contains(x.RecId)
+                    && (x.SettleAmountCur != 0m || x.SettleAmountMst != 0m), ct))
+                throw new SubledgerPostingException("Reverse the vendor settlement before reversing this journal.");
+        }
+        // The line records only its account-side vendor transaction, so the offset one is found by
+        // the vendor, voucher and date it was posted with.
+        foreach (var line in offsetVendorLines)
+        {
+            var account = offsetAccounts[line.OffsetLedgerDimension];
+            var date = line.TransDate.Date;
+            if (await Db.Set<VendTrans>().AnyAsync(x => x.DataAreaId == area && x.AccountNum == account
+                    && x.Voucher == line.Voucher && x.TransDate == date
                     && (x.SettleAmountCur != 0m || x.SettleAmountMst != 0m), ct))
                 throw new SubledgerPostingException("Reverse the vendor settlement before reversing this journal.");
         }

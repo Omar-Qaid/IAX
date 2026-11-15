@@ -15,12 +15,13 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable;
 /// through the shared subledger posting engine. One voucher and accounting date form one
 /// posted entry; a line with an offset produces two account entries under that voucher.
 ///
-/// Ledger, customer, vendor and bank account types post. A customer, vendor or bank line also
-/// writes its subledger movement, so the balance the ledger shows exists in the subledger too.
-/// The offset stays a ledger account, because the journal line here has no field naming an offset
-/// customer, vendor or bank account. Asset and project types, intercompany lines, journal tax
-/// calculation and automatic reversal entries are rejected rather than approximated, because each
-/// needs its own documented process.
+/// Ledger, customer, vendor and bank account types post, on the account side and on the offset
+/// side alike. A customer, vendor or bank side also writes its subledger movement, so the balance
+/// the ledger shows exists in the subledger too. An offset of those types is identified by the
+/// account combination <c>OffsetLedgerDimension</c> references, whose display value is the
+/// account number. Asset and project types, intercompany lines, journal tax calculation and
+/// automatic reversal entries are rejected rather than approximated, because each needs its own
+/// documented process.
 /// </summary>
 internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
 {
@@ -87,6 +88,9 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
         var reportingCurrency = string.IsNullOrWhiteSpace(ledger.ReportingCurrency)
             ? accountingCurrency : ledger.ReportingCurrency.Trim().ToUpperInvariant();
         foreach (var line in lines) EnsureInScope(area, header, line);
+        // An offset that names no customer, vendor or bank account is refused before anything is written.
+        foreach (var line in lines.Where(x => x.OffsetLedgerDimension != 0 && x.OffsetAccountType != LedgerJournalACType.Ledger))
+            await OffsetAccountNumAsync(area, line, $"line {line.LineNum} offset account", ct);
         await EnsureManualEntryAllowedAsync(area, lines, ct);
 
         var vouchers = 0;
@@ -110,7 +114,7 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
             foreach (var line in voucher)
             {
                 var amount = line.AmountCurDebit - line.AmountCurCredit;
-                var side = await ResolveSideAsync(support, area, line, $"line {line.LineNum} account", ct,
+                var side = await ResolveSideAsync(support, area, line, false, $"line {line.LineNum} account", ct,
                     entered => defaulting.ApplyAsync(area, entered, ct, header.DefaultDimension, line.DefaultDimension));
                 var dimension = side.Dimension;
                 line.LedgerDimension = dimension.RecId;
@@ -128,13 +132,16 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                     voucher.Key.Voucher, ct);
                 if (line.OffsetLedgerDimension != 0)
                 {
-                    var offset = await support.LoadDimensionAsync(area, line.OffsetLedgerDimension,
-                        $"line {line.LineNum} offset account", ct,
+                    var offsetSide = await ResolveSideAsync(support, area, line, true, $"line {line.LineNum} offset account", ct,
                         entered => defaulting.ApplyAsync(area, entered, ct, header.DefaultDimension, line.OffsetDefaultDimension));
-                    line.OffsetLedgerDimension = offset.RecId;
+                    var offset = offsetSide.Dimension;
+                    // A customer, vendor or bank offset keeps the reference that names the account.
+                    if (offsetSide.AccountType == LedgerJournalACType.Ledger) line.OffsetLedgerDimension = offset.RecId;
                     posted.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, offset,
-                        LedgerPostingType.LedgerJournal, -amount, -accountingAmount, -reportingAmount,
+                        offsetSide.PostingType, -amount, -accountingAmount, -reportingAmount,
                         line.OffsetTxt.Length > 0 ? line.OffsetTxt : line.Txt, 0m, line.CurrencyCode, line.PaymReference));
+                    await WriteSubledgerAsync(area, header, line, offsetSide, -amount, -accountingAmount, -reportingAmount,
+                        voucher.Key.Voucher, ct);
                     posted.AddRange(await new VendorJournalTaxPosting(db).BuildAsync(area, header, line, entry.RecId, offset, ct));
                 }
             }
@@ -232,22 +239,30 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
 
     /// <summary>
     /// One side of a journal line: the account combination the ledger entry hits, the posting type
-    /// that describes it, and - for a subledger type - the account it belongs to.
+    /// that describes it, and - for a subledger type - the account it belongs to. The document
+    /// fields of the line (invoice, posting profile, prepayment, settlement) describe its account
+    /// side, so the offset side carries none of them.
     /// </summary>
     private sealed record PostingSide(DimensionAttributeValueCombination Dimension, LedgerPostingType PostingType,
-        LedgerJournalACType AccountType, string AccountNum, BankAccountTable? Bank);
+        LedgerJournalACType AccountType, string AccountNum, bool IsOffset);
 
     /// <summary>
-    /// Resolves the line's account. A Ledger line names the combination directly; a customer or
-    /// vendor line resolves its summary account from the posting profile, exactly as an invoice or
-    /// payment does, and a bank line uses the bank account's own ledger account.
+    /// Resolves the account side or the offset side of the line. A Ledger side names the
+    /// combination directly; a customer or vendor side resolves its summary account from the
+    /// posting profile, exactly as an invoice or payment does, and a bank side uses the bank
+    /// account's own ledger account.
     /// </summary>
     private async Task<PostingSide> ResolveSideAsync(SubledgerPostingSupport support, string area,
-        LedgerJournalTrans line, string what, CancellationToken ct,
+        LedgerJournalTrans line, bool isOffset, string what, CancellationToken ct,
         Func<DimensionAttributeValueCombination, Task<DimensionAttributeValueCombination>> applyDefaults)
     {
-        var accountNum = line.LedgerDimensionName.Trim();
-        switch (line.AccountType)
+        var accountType = isOffset ? line.OffsetAccountType : line.AccountType;
+        var accountNum = !isOffset ? line.LedgerDimensionName.Trim()
+            : accountType == LedgerJournalACType.Ledger ? string.Empty
+            : await OffsetAccountNumAsync(area, line, what, ct);
+        var invoice = isOffset ? string.Empty : line.Invoice;
+        var postingProfile = isOffset ? string.Empty : line.PostingProfile;
+        switch (accountType)
         {
             case LedgerJournalACType.Cust:
             {
@@ -255,10 +270,10 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                     .FirstOrDefaultAsync(x => x.DataAreaId == area && x.AccountNum == accountNum, ct)
                     ?? throw new SubledgerPostingException($"Customer '{accountNum}' was not found for {what}.");
                 if (customer.Blocked == CustVendorBlocked.All
-                    || (customer.Blocked == CustVendorBlocked.Invoicing && !string.IsNullOrWhiteSpace(line.Invoice)))
+                    || (customer.Blocked == CustVendorBlocked.Invoicing && !string.IsNullOrWhiteSpace(invoice)))
                     throw new SubledgerPostingException("The customer is blocked for this journal transaction.");
-                var dimension = await support.ResolveCustomerSummaryAsync(area, line.PostingProfile, customer, ct, applyDefaults);
-                return new PostingSide(dimension, LedgerPostingType.CustBalance, line.AccountType, customer.AccountNum, null);
+                var dimension = await support.ResolveCustomerSummaryAsync(area, postingProfile, customer, ct, applyDefaults);
+                return new PostingSide(dimension, LedgerPostingType.CustBalance, accountType, customer.AccountNum, isOffset);
             }
             case LedgerJournalACType.Vend:
             {
@@ -266,9 +281,9 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                     .FirstOrDefaultAsync(x => x.DataAreaId == area && x.AccountNum == accountNum, ct)
                     ?? throw new SubledgerPostingException($"Vendor '{accountNum}' was not found for {what}.");
                 var dimension = await support.ResolveVendorSummaryAsync(area, vendor, ct,
-                    string.IsNullOrWhiteSpace(line.PostingProfile) ? null : line.PostingProfile,
-                    prepayment: line.Prepayment == NoYes.Yes, applyDefaults: applyDefaults);
-                return new PostingSide(dimension, LedgerPostingType.VendBalance, line.AccountType, vendor.AccountNum, null);
+                    string.IsNullOrWhiteSpace(postingProfile) ? null : postingProfile,
+                    prepayment: !isOffset && line.Prepayment == NoYes.Yes, applyDefaults: applyDefaults);
+                return new PostingSide(dimension, LedgerPostingType.VendBalance, accountType, vendor.AccountNum, isOffset);
             }
             case LedgerJournalACType.Bank:
             {
@@ -279,14 +294,33 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                     throw new SubledgerPostingException(
                         $"Bank account '{accountNum}' must be active and have a ledger account for {what}.");
                 var dimension = await support.LoadDimensionAsync(area, bank.LedgerDimension, what, ct, applyDefaults);
-                return new PostingSide(dimension, LedgerPostingType.Bank, line.AccountType, bank.AccountId, bank);
+                return new PostingSide(dimension, LedgerPostingType.Bank, accountType, bank.AccountId, isOffset);
             }
             default:
             {
-                var dimension = await support.LoadDimensionAsync(area, line.LedgerDimension, what, ct, applyDefaults);
-                return new PostingSide(dimension, LedgerPostingType.LedgerJournal, line.AccountType, string.Empty, null);
+                var dimension = await support.LoadDimensionAsync(area,
+                    isOffset ? line.OffsetLedgerDimension : line.LedgerDimension, what, ct, applyDefaults);
+                return new PostingSide(dimension, LedgerPostingType.LedgerJournal, accountType, string.Empty, isOffset);
             }
         }
+    }
+
+    /// <summary>
+    /// The customer, vendor or bank account an offset names. The line has no offset account-number
+    /// field: <c>OffsetLedgerDimension</c> references an account combination whose display value
+    /// is that account number and which carries no main account, since the main account comes
+    /// from the posting setup of the account it names.
+    /// </summary>
+    private async Task<string> OffsetAccountNumAsync(string area, LedgerJournalTrans line, string what, CancellationToken ct)
+    {
+        var account = await db.Set<DimensionAttributeValueCombination>().AsNoTracking()
+            .Where(x => x.DataAreaId == area && x.RecId == line.OffsetLedgerDimension)
+            .Select(x => new { x.DisplayValue, x.MainAccount, x.MainAccountValue }).FirstOrDefaultAsync(ct)
+            ?? throw new SubledgerPostingException($"The {what} references an invalid ledger dimension.");
+        if (account.MainAccount != 0 || account.MainAccountValue.Length > 0 || string.IsNullOrWhiteSpace(account.DisplayValue))
+            throw new SubledgerPostingException(
+                $"The {what} must reference a {line.OffsetAccountType} account, not a main account combination.");
+        return account.DisplayValue.Trim();
     }
 
     /// <summary>
@@ -300,6 +334,9 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
         if (side.AccountType == LedgerJournalACType.Ledger || amount == 0m) return;
         var date = line.TransDate.Date;
         var due = line.Due == default ? date : line.Due.Date;
+        var primary = !side.IsOffset;
+        var invoice = primary ? line.Invoice : string.Empty;
+        var txt = !primary && line.OffsetTxt.Length > 0 ? line.OffsetTxt : line.Txt;
         switch (side.AccountType)
         {
             case LedgerJournalACType.Cust:
@@ -309,15 +346,16 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                     DataAreaId = area, AccountNum = side.AccountNum, OrderAccount = side.AccountNum,
                     TransDate = date, Voucher = voucher, DocumentNum = header.JournalNum,
                     DocumentDate = line.DocumentDate == default ? date : line.DocumentDate.Date,
-                    Invoice = line.Invoice, PaymReference = line.PaymReference,
-                    Txt = line.Txt, TransType = LedgerTransType.Cust, CurrencyCode = line.CurrencyCode,
+                    Invoice = invoice, PaymReference = line.PaymReference,
+                    Txt = txt, TransType = LedgerTransType.Cust, CurrencyCode = line.CurrencyCode,
                     AmountCur = amount, AmountMst = accountingAmount, ReportingCurrencyAmount = reportingAmount,
                     DueDate = due, PaymTermId = line.Payment, PaymMode = line.PaymMode,
-                    DefaultDimension = line.DefaultDimension, PostingProfile = line.PostingProfile
+                    DefaultDimension = primary ? line.DefaultDimension : line.OffsetDefaultDimension,
+                    PostingProfile = primary ? line.PostingProfile : string.Empty
                 };
                 db.Add(custTrans);
                 await db.SaveChangesAsync(ct); // The open row references the transaction key.
-                line.CustTransId = custTrans.RecId;
+                if (primary) line.CustTransId = custTrans.RecId;
                 var open = new CustTransOpen
                 {
                     DataAreaId = area, AccountNum = side.AccountNum, RefRecId = custTrans.RecId,
@@ -325,33 +363,33 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                     AmountCur = amount, AmountMst = accountingAmount, ReportingCurrencyAmount = reportingAmount
                 };
                 db.Add(open);
-                if (line.SettleVoucher == SettleVoucher.Selection)
+                if (primary && line.SettleVoucher == SettleVoucher.Selection)
                     await SettleMarkedInvoiceAsync(area, line, custTrans, open, ct);
                 return;
             }
             case LedgerJournalACType.Vend:
             {
                 var vendor = await db.Set<VendTable>().AsNoTracking().SingleAsync(x => x.DataAreaId == area && x.AccountNum == side.AccountNum, ct);
-                if (vendor.Blocked == CustVendBlocked.All || (line.Invoice.Length > 0 && vendor.Blocked == CustVendBlocked.Invoicing))
+                if (vendor.Blocked == CustVendBlocked.All || (invoice.Length > 0 && vendor.Blocked == CustVendBlocked.Invoicing))
                     throw new SubledgerPostingException("The vendor is blocked for this journal transaction.");
-                if (line.Invoice.Length > 0)
+                if (invoice.Length > 0)
                 {
-                    await new SubledgerPostingSupport(db).LockAsync($"VendInvoice:{area}:{vendor.AccountNum}:{line.Invoice}".ToUpperInvariant(), ct);
-                    if (await db.Set<VendTrans>().AnyAsync(x => x.DataAreaId == area && x.AccountNum == vendor.AccountNum && x.Invoice == line.Invoice, ct)
-                        || await db.Set<VendInvoiceJour>().AnyAsync(x => x.DataAreaId == area && x.InvoiceAccount == vendor.AccountNum && x.InvoiceId == line.Invoice, ct))
+                    await new SubledgerPostingSupport(db).LockAsync($"VendInvoice:{area}:{vendor.AccountNum}:{invoice}".ToUpperInvariant(), ct);
+                    if (await db.Set<VendTrans>().AnyAsync(x => x.DataAreaId == area && x.AccountNum == vendor.AccountNum && x.Invoice == invoice, ct)
+                        || await db.Set<VendInvoiceJour>().AnyAsync(x => x.DataAreaId == area && x.InvoiceAccount == vendor.AccountNum && x.InvoiceId == invoice, ct))
                         throw new SubledgerPostingException("The vendor invoice has already been posted in this company.");
                 }
                 var vendTrans = new VendTrans
                 {
                     DataAreaId = area, AccountNum = side.AccountNum, TransDate = date, Voucher = voucher,
-                    Txt = line.Txt, TransType = line.Prepayment == NoYes.Yes ? LedgerTransType.Payment : LedgerTransType.Vend, CurrencyCode = line.CurrencyCode,
+                    Txt = txt, TransType = primary && line.Prepayment == NoYes.Yes ? LedgerTransType.Payment : LedgerTransType.Vend, CurrencyCode = line.CurrencyCode,
                     AmountCur = amount, AmountMst = accountingAmount, DueDate = due,
-                    Invoice = line.Invoice, CashDiscCode = line.CashDiscCode,
+                    Invoice = invoice, CashDiscCode = primary ? line.CashDiscCode : string.Empty,
                     CashDiscBaseDate = line.CashDiscBaseDate == default ? date : line.CashDiscBaseDate
                 };
                 db.Set<VendTrans>().Add(vendTrans);
                 await db.SaveChangesAsync(ct); // The open row references the transaction key.
-                line.VendTransId = vendTrans.RecId;
+                if (primary) line.VendTransId = vendTrans.RecId;
                 VendorOpenBalance.Add(db, vendTrans);
                 return;
             }
@@ -360,7 +398,7 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                 db.Add(new BankAccountTrans
                 {
                     DataAreaId = area, AccountId = side.AccountNum, TransDate = date, Voucher = voucher,
-                    Txt = line.Txt, LedgerTransType = LedgerTransType.Bank,
+                    Txt = txt, LedgerTransType = LedgerTransType.Bank,
                     CurrencyCode = line.CurrencyCode, BankTransCurrencyCode = line.CurrencyCode,
                     AmountCur = amount, AmountMst = accountingAmount, AmountReportingCurrency = reportingAmount,
                     BankTransAmountCur = amount, LedgerDimension = side.Dimension.RecId,
@@ -414,11 +452,9 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
         if (!BasicAccountTypes.Contains(line.AccountType))
             throw new SubledgerPostingException(
                 $"{label}: the {line.AccountType} account type does not post through the basic general journal. Use Ledger, Cust, Vend or Bank.");
-        // The offset stays a ledger account: LedgerJournalTrans here has no field naming an offset
-        // customer, vendor or bank account, so there is nowhere to record which one it would be.
-        if (line.OffsetLedgerDimension != 0 && line.OffsetAccountType != LedgerJournalACType.Ledger)
+        if (line.OffsetLedgerDimension != 0 && !BasicAccountTypes.Contains(line.OffsetAccountType))
             throw new SubledgerPostingException(
-                $"{label}: the offset account must be a Ledger account; a {line.OffsetAccountType} offset has no account field on the journal line.");
+                $"{label}: the {line.OffsetAccountType} offset account type does not post through the basic general journal. Use Ledger, Cust, Vend or Bank.");
         // A Ledger line names an account combination; a customer, vendor or bank line names the
         // account and the combination comes from its posting setup.
         if (line.AccountType == LedgerJournalACType.Ledger && line.LedgerDimension == 0)
@@ -433,7 +469,8 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
             || !string.IsNullOrWhiteSpace(line.TaxGroup) || !string.IsNullOrWhiteSpace(line.TaxItemGroup);
         var supportedTax = line.AccountType == LedgerJournalACType.Vend && header.LedgerJournalInclTax == NoYes.Yes
             && !string.IsNullOrWhiteSpace(line.TaxGroup) && !string.IsNullOrWhiteSpace(line.TaxItemGroup)
-            && line.OffsetLedgerDimension != 0 && string.IsNullOrWhiteSpace(line.TaxCode);
+            && line.OffsetLedgerDimension != 0 && line.OffsetAccountType == LedgerJournalACType.Ledger
+            && string.IsNullOrWhiteSpace(line.TaxCode);
         if (taxRequested && !supportedTax)
             throw new SubledgerPostingException($"{label}: journal tax calculation is not supported; post tax through its own process.");
         if (line.SettleVoucher != SettleVoucher.PostedVoucher
