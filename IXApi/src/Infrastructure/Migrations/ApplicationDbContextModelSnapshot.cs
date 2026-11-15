@@ -13231,7 +13231,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CustAccount")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
@@ -13272,7 +13271,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<long>("MainResponsibleWorker")
+                    b.Property<long?>("MainResponsibleWorker")
                         .HasColumnType("bigint");
 
                     b.Property<int>("McrIsDefaultContact")
@@ -15805,6 +15804,87 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.HasIndex("PrimaryContactUrl");
 
                     b.ToTable("DirPartyTable", (string)null);
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DirPersonName", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("LastNamePrefix")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("MiddleName")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("Person")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime>("ValidFrom")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ValidTo")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("Person", "ValidFrom")
+                        .IsUnique();
+
+                    b.ToTable("DirPersonName");
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DlvMode", b =>
@@ -34165,14 +34245,12 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("CustAccount")
                         .HasPrincipalKey("AccountNum")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("IAX.IXApi.Modules.Finance.Foundation.HcmWorkers.HcmWorker", null)
                         .WithMany()
                         .HasForeignKey("MainResponsibleWorker")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("IAX.IXApi.Modules.Finance.Entities.DirPartyTable", "DirPartyTable")
                         .WithMany()
@@ -34418,6 +34496,17 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Navigation("LogisticsLocationTable");
 
                     b.Navigation("LogisticsPostalAddressTable");
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DirPersonName", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.DirPartyTable", "PersonParty")
+                        .WithMany("PersonNames")
+                        .HasForeignKey("Person")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PersonParty");
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.ExchangeRate", b =>
@@ -35925,6 +36014,11 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Navigation("FromExchangeRateCurrencyPairs");
 
                     b.Navigation("ToExchangeRateCurrencyPairs");
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DirPartyTable", b =>
+                {
+                    b.Navigation("PersonNames");
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.ExchangeRateCurrencyPair", b =>

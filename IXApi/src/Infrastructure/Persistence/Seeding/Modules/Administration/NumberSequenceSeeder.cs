@@ -94,6 +94,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 ("Nationality",      "Nationality Sequence",      "NAT-######", "{PREFIX}-{SEQ}",       0),
                 ("Gender",           "Gender Sequence",           "GEN-######", "{PREFIX}-{SEQ}",       0),
                 ("CompanyInfo",         "Company Sequence",          "COMP-######","{PREFIX}-{SEQ}",       0),
+                ("ContactPerson",       "Contact person", "CON-######", "{PREFIX}-{SEQ}", 0),
                 ("DirPartyTable",       "Global Address Book Party", "PTY-######", "{PREFIX}-{SEQ}",       0),
                 ("Announcement",     "Announcement Sequence",     "ANN-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
 

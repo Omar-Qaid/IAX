@@ -30,6 +30,7 @@ export interface OpenBalanceCurrencyPageProps {
   refreshing?: boolean;
   onBack: () => void;
   onRefresh: () => void;
+  onViewContacts?: () => void;
   onOpenTransactions?: () => void;
 }
 
@@ -42,6 +43,7 @@ export function OpenBalanceCurrencyPage({
   refreshing,
   onBack,
   onRefresh,
+  onViewContacts,
   onOpenTransactions,
 }: OpenBalanceCurrencyPageProps): React.ReactElement {
   const { t, isRtl } = useAppTranslation();
@@ -269,13 +271,14 @@ export function OpenBalanceCurrencyPage({
         canDelete={false}
       />
     ),
-    commands: onOpenTransactions
+    commands: onOpenTransactions || onViewContacts
       ? [
           {
             id: kind,
             label: partyLabel,
             groups: [
-              {
+              ...(onViewContacts ? [{ id: 'accounts', label: t('customerRibbon.groups.accounts', 'Accounts'), actions: [{ id: 'view-contacts', label: t('contactPerson.view', 'View contacts'), onClick: onViewContacts }] }] : []),
+              ...(onOpenTransactions ? [{
                 id: 'transactions',
                 label: t('customerRibbon.groups.transactions', 'Transactions'),
                 actions: [
@@ -285,7 +288,7 @@ export function OpenBalanceCurrencyPage({
                     onClick: onOpenTransactions,
                   },
                 ],
-              },
+              }] : []),
             ],
           },
         ]

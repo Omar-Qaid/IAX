@@ -23,6 +23,14 @@ public class CustTransController : BaseController<CustTrans, CustTransDto>
         _custTransService = service;
     }
 
+    [HttpGet("transactions")]
+    public async Task<ActionResult<APIResponse<List<CustTransInquiryRow>>>> Transactions(
+        [FromQuery, BindRequired] string accountNum, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(accountNum)) return BadRequest();
+        return Ok(APIResponse<List<CustTransInquiryRow>>.Ok(await _custTransService.GetTransactionsAsync(accountNum.Trim(), ct)));
+    }
+
     /// <summary>The customer's open balance and the open transactions behind it.</summary>
     [HttpGet("balance-currency")]
     public async Task<ActionResult<APIResponse<Common.PartyOpenBalanceCurrencyDto>>> BalanceCurrency(

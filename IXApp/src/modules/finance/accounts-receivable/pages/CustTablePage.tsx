@@ -1,5 +1,6 @@
 import { localizedName } from '@shared/utilities/localizedName';
 import { useCompanyStore } from '@core/company/useCompanyStore';
+import { accountContacts } from '@modules/finance/contacts/contactRoutes';
 import React from 'react';
 import { Box, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
@@ -262,6 +263,9 @@ export function CustTablePage(): React.ReactElement {
         saved: Boolean(record && record.recId > 0), hasParty: Boolean(record?.party),
         canReadBalances: hasPermission(PERMISSIONS.CUSTOMER_TRANSACTION_VIEW),
         onContacts: showContacts,
+        onViewContacts: hasPermission(PERMISSIONS.CONTACT_VIEW) ? () => record && navigate(accountContacts('customer', record.accountNumber)) : undefined,
+        onNewContact: hasPermission(PERMISSIONS.CONTACT_VIEW) && hasPermission(PERMISSIONS.CONTACT_CREATE) ? () => record && navigate(accountContacts('customer', record.accountNumber, 'new')) : undefined,
+        onTransactions: () => { if (record) navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.custTrans(record.accountNumber)); },
         onOpenTransactions: () => { if (record && record.recId > 0) navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customerOpenTransactions(record.accountNumber)); },
         onBalance: () => { if (record && record.recId > 0) navigate(PARTY_BALANCE_ROUTE_PATHS.customerBalance(record.accountNumber)); },
         onAttachments: () => { if (record && record.recId > 0) navigate('/documents/docu-view?refTableId=' + documentTableIds.custTable + '&refRecId=' + record.recId); },

@@ -5,7 +5,10 @@ interface CustomerRibbonContext {
   hasParty: boolean;
   canReadBalances: boolean;
   onContacts: () => void;
+  onViewContacts?: () => void;
+  onNewContact?: () => void;
   onBalance: () => void;
+  onTransactions?: () => void;
   onOpenTransactions?: () => void;
   onAttachments: () => void;
 }
@@ -22,9 +25,34 @@ export function buildCustomerRibbonGroups(
       actions: [
         {
           id: 'contacts',
-          label: tr('customerDetails.sections.contacts', 'Contact information'),
+          label: context.onViewContacts
+            ? tr('contactPerson.contacts', 'Contacts')
+            : tr('customerDetails.sections.contacts', 'Contact information'),
           disabled: !context.saved || !context.hasParty,
           onClick: context.onContacts,
+          items: context.onViewContacts
+            ? [
+                {
+                  id: 'view-contacts',
+                  label: tr('contactPerson.view', 'View contacts'),
+                  onClick: context.onViewContacts,
+                },
+                ...(context.onNewContact
+                  ? [
+                      {
+                        id: 'new-contact',
+                        label: tr('contactPerson.new', 'New contact'),
+                        onClick: context.onNewContact,
+                      },
+                    ]
+                  : []),
+                {
+                  id: 'communication',
+                  label: tr('customerDetails.sections.contacts', 'Contact information'),
+                  onClick: context.onContacts,
+                },
+              ]
+            : undefined,
         },
       ],
     },
@@ -34,6 +62,12 @@ export function buildCustomerRibbonGroups(
       id: 'transactions',
       label: tr('customerRibbon.groups.transactions', 'Transactions'),
       actions: [
+        {
+          id: 'transactions',
+          label: tr('customerRibbon.groups.transactions', 'Transactions'),
+          disabled: !context.saved,
+          onClick: context.onTransactions,
+        },
         {
           id: 'open-transactions',
           label: tr('partyBalance.openTransactions', 'Open transactions'),

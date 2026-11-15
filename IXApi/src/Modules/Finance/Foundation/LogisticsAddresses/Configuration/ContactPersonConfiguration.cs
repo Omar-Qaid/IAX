@@ -26,8 +26,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
                 .IsRequired();
 
             builder.Property(x => x.CustAccount)
-                .HasMaxLength(FieldLengths.CustAccount)
-                .IsRequired();
+                .HasMaxLength(FieldLengths.CustAccount);
 
             builder.Property(x => x.DataAreaId)
                 .HasDefaultValue("dat");

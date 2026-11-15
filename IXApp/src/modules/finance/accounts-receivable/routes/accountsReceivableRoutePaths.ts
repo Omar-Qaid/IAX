@@ -4,6 +4,8 @@ export const ACCOUNTS_RECEIVABLE_ROUTE_PATHS = {
   CUSTOMER_DETAILS: '/accounts-receivable/customers/:customerId',
   customer: (customerId: string) =>
     `/accounts-receivable/customers/${encodeURIComponent(customerId)}`,
+  CUST_TRANS: '/accounts-receivable/CustTrans/:accountNum',
+  custTrans: (accountNum: string) => `/accounts-receivable/CustTrans/${encodeURIComponent(accountNum)}`,
   CUSTOMER_OPEN_TRANSACTIONS: '/accounts-receivable/customer-open-transactions/:accountNum',
   customerOpenTransactions: (accountNum: string) => `/accounts-receivable/customer-open-transactions/${encodeURIComponent(accountNum)}`,
   customerSalesOrders: (accountNum: string) => `/accounts-receivable/sales-orders?customerAccount=${encodeURIComponent(accountNum)}`,

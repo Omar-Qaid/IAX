@@ -2,6 +2,7 @@ import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
 import { matchPath } from 'react-router-dom';
 import { PERMISSIONS, type PermissionCode } from '@core/permissions/permissions';
 import { ROUTE_PATHS } from './routePaths';
+import { accountContactsRoute, contactDetailsRoute } from '@modules/finance/contacts/contactRoutes';
 import { PARTY_BALANCE_ROUTE_PATHS } from '@modules/finance/party-balances/routes/partyBalanceRoutePaths';
 
 export interface AppPageDefinition {
@@ -17,6 +18,12 @@ const lazyPage = <TModule extends object>(
 ) => lazy(async () => ({ default: select(await importer()) }));
 
 export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
+  ...[accountContactsRoute, contactDetailsRoute].map((path, index) => ({
+    id: index ? 'ContactPerson' : 'view-contacts', path, permission: PERMISSIONS.CONTACT_VIEW,
+    component: lazyPage(() => import('@modules/finance/contacts/AccountContactsPage'), module => module.AccountContactsPage),
+  })),
+  {id: 'CustTrans', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUST_TRANS, permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW,
+    component: lazyPage(() => import('@modules/finance/accounts-receivable/pages/CustTrans'), module => module.CustTrans)},
   {id: 'customer-open-transactions', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_OPEN_TRANSACTIONS, permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW,
     component: lazyPage(() => import('@modules/finance/accounts-receivable/pages/CustomerOpenTransactionsPage'), module => module.CustomerOpenTransactionsPage)},
   {

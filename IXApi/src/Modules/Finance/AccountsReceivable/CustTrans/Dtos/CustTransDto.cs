@@ -4,6 +4,8 @@ using IAX.IXApi.Shared.Application.Contracts;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable
 {
+    public record CustTransInquiryRow(long RecId, string Voucher, string TransactionType, DateTime TransDate, string Invoice, string Description, decimal AmountCur, decimal BalanceCur, string CurrencyCode, decimal AmountMst, decimal BalanceMst, string? Department);
+
     public class CustTransDto : EntityDto<long>
     {
     }

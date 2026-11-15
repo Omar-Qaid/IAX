@@ -1,5 +1,6 @@
 import { localizedName } from '@shared/utilities/localizedName';
 import { useCompanyStore } from '@core/company/useCompanyStore';
+import { accountContacts } from '@modules/finance/contacts/contactRoutes';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Typography } from '@mui/material';
 import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
@@ -107,6 +108,8 @@ export function CustomerListPage(): React.ReactElement {
     },
     getCommands: customer => [
       {id: 'customer', label: t('customerCommands.customer'), disabled: !customer, onClick: () => customer && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customer(customer.id))},
+      {id: 'view-contacts', label: t('contactPerson.view', 'View contacts'), permission: PERMISSIONS.CONTACT_VIEW, disabled: !customer, onClick: () => customer && navigate(accountContacts('customer', customer.accountNumber))},
+      {id: 'transactions', label: t('customerRibbon.groups.transactions', 'Transactions'), permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW, disabled: !customer, onClick: () => customer && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.custTrans(customer.accountNumber))},
       {id: 'open-transactions', label: t('partyBalance.openTransactions'), permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW, disabled: !customer, onClick: () => customer && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customerOpenTransactions(customer.accountNumber))},
       {id: 'balance', label: t('partyBalance.balance'), permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW, disabled: !customer, onClick: () => customer && navigate(PARTY_BALANCE_ROUTE_PATHS.customerBalance(customer.accountNumber))},
       {id: 'sales-orders', label: t('pages.salesOrders.title'), permission: PERMISSIONS.SALES_ORDER_VIEW, disabled: !customer, onClick: () => customer && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customerSalesOrders(customer.accountNumber))},

@@ -17,9 +17,8 @@ namespace IAX.IXApi.Modules.Finance.Entities
         public long Party { get; set; }           // Direct reference link pointing to the DirPartyTable record of this person
         public long ContactForParty { get; set; }  // Reference link pointing to the parent company/organization's DirPartyTable record
 
-        [Required]
         [StringLength(FieldLengths.CustAccount)]
-        public string CustAccount { get; set; } = string.Empty; // Direct cross-reference shortcut to CustTable if linked to a Customer Account
+        public string? CustAccount { get; set; } // Direct cross-reference shortcut to CustTable if linked to a Customer Account
 
         // ==========================================================
         // Life Cycle Status & Operational Governance
@@ -35,7 +34,7 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // Internal Personnel Assignment & Availability
         // ==========================================================
         // Basic Properties
-        public long MainResponsibleWorker { get; set; } // Reference pointer to HcmWorker representing the internal account manager
+        public long? MainResponsibleWorker { get; set; } // Reference pointer to HcmWorker representing the internal account manager
 
         public int TimeAvailableFrom { get; set; } // Daily operational window start time represented in seconds from midnight
         public int TimeAvailableTo { get; set; }   // Daily operational window end time represented in seconds from midnight

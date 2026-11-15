@@ -9,6 +9,22 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
 
 public class CustTransService : BaseService<CustTrans>, ICustTransService
 {
+    public Task<List<CustTransInquiryRow>> GetTransactionsAsync(string accountNum, CancellationToken ct)
+    {
+        var area = _user.GetDataAreaId();
+        var db = _unitOfWork.Context;
+        return (from row in db.Set<CustTrans>().AsNoTracking()
+                where row.DataAreaId == area && row.AccountNum == accountNum
+                join dim in db.Set<DimensionAttributeValueSet>().Where(d => d.DataAreaId == area)
+                    on row.DefaultDimension equals dim.RecId into dimensions
+                from dimension in dimensions.DefaultIfEmpty()
+                orderby row.TransDate descending, row.RecId descending
+                select new CustTransInquiryRow(row.RecId, row.Voucher, row.TransType.ToString(),
+                    row.TransDate, row.Invoice, row.Txt, row.AmountCur, row.AmountCur - row.SettleAmountCur,
+                    row.CurrencyCode, row.AmountMst, row.AmountMst - row.SettleAmountMst,
+                    dimension == null ? null : dimension.DepartmentValue)).ToListAsync(ct);
+    }
+
     public Task<PartyOpenBalanceCurrencyDto?> GetBalanceCurrencyAsync(string accountNum, CancellationToken ct) =>
         PartyOpenBalanceCurrencyReader.ReadAsync(_unitOfWork.Context, _user.GetDataAreaId(), accountNum, false, ct);
 

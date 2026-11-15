@@ -203,6 +203,8 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // Basic Properties
         public long? HcmWorker { get; set; } // Links context back to HR system employee maps
 
+        public ICollection<DirPersonName> PersonNames { get; set; } = new List<DirPersonName>();
+
         #region Navigation Properties Row
         [ForeignKey(nameof(PrimaryContactFax))]
         public virtual LogisticsElectronicAddress? LogisticsElectronicAddress_Fax { get; set; }

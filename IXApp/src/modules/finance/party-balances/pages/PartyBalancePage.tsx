@@ -1,3 +1,4 @@
+import { accountContacts } from '@modules/finance/contacts/contactRoutes';
 import React from 'react';
 import { Alert } from '@mui/material';
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -68,6 +69,7 @@ function PartyBalancePage({ kind }: { kind: BalancePartyKind }): React.ReactElem
       onRefresh={() =>
         void queryClient.invalidateQueries({ queryKey: ['party-balance-currency', company] })
       }
+      onViewContacts={hasPermission(PERMISSIONS.CONTACT_VIEW) ? () => navigate(accountContacts(kind, accountNum)) : undefined}
       onOpenTransactions={kind === 'customer' ? () => navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customerOpenTransactions(accountNum)) : undefined}
       onBack={() =>
         kind === 'customer'

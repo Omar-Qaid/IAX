@@ -1,13 +1,15 @@
 import React from 'react';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import { Box, Button, IconButton, Typography } from '@mui/material';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import { Box, Button, IconButton, Menu, MenuItem, Typography } from '@mui/material';
 
 export interface ActionPaneRibbonAction {
   id: string;
   label: string;
   disabled?: boolean;
   onClick?: () => void;
+  items?: readonly { id: string; label: string; onClick: () => void }[];
 }
 
 export interface ActionPaneRibbonGroup {
@@ -31,6 +33,10 @@ export function ActionPaneRibbon({
   pinLabel = 'Pin action pane',
   unpinLabel = 'Unpin action pane',
 }: ActionPaneRibbonProps): React.ReactElement {
+  const [menu, setMenu] = React.useState<{
+    anchor: HTMLElement;
+    action: ActionPaneRibbonAction;
+  } | null>(null);
   return (
     <Box
       sx={{
@@ -65,7 +71,14 @@ export function ActionPaneRibbon({
               <Button
                 key={action.id}
                 disabled={action.disabled}
-                onClick={action.onClick}
+                onClick={
+                  action.items
+                    ? (event) => setMenu({ anchor: event.currentTarget, action })
+                    : action.onClick
+                }
+                aria-haspopup={action.items ? 'menu' : undefined}
+                aria-expanded={action.items ? menu?.action.id === action.id : undefined}
+                endIcon={action.items ? <ArrowDropDownIcon /> : undefined}
                 size="small"
                 variant="text"
                 sx={{
@@ -90,6 +103,21 @@ export function ActionPaneRibbon({
           </Box>
         </Box>
       ))}
+      {menu && (
+        <Menu open anchorEl={menu.anchor} onClose={() => setMenu(null)}>
+          {menu.action.items?.map((item) => (
+            <MenuItem
+              key={item.id}
+              onClick={() => {
+                setMenu(null);
+                item.onClick();
+              }}
+            >
+              {item.label}
+            </MenuItem>
+          ))}
+        </Menu>
+      )}
       {onPinnedChange && (
         <IconButton
           aria-label={pinned ? unpinLabel : pinLabel}

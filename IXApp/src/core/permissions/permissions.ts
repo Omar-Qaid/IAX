@@ -15,6 +15,10 @@ export const PERMISSIONS = {
   HCM_SHOWROOM_VIEW: 'Organization.Showrooms.View',
   DASHBOARD_VIEW: 'Application.Dashboard.View',
 
+  CONTACT_VIEW: 'Organization.ContactPersons.View',
+  CONTACT_CREATE: 'Organization.ContactPersons.Create',
+  CONTACT_EDIT: 'Organization.ContactPersons.Edit',
+  CONTACT_DELETE: 'Organization.ContactPersons.Delete',
   CUSTOMER_VIEW: 'AccountsReceivable.Customers.View',
   CUSTOMER_TRANSACTION_VIEW: 'AccountsReceivable.Transactions.View',
   VENDOR_TRANSACTION_VIEW: 'AccountsPayable.Transactions.View',
