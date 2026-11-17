@@ -26,6 +26,8 @@ import {
   type PackingSlipPostingLine,
   type PackingSlipQuantityMode,
 } from '../api/salesOrderPackingSlipApi';
+import { salesOrderQueryKeys } from '../queries/accountsReceivableQueryKeys';
+import { useCompanyStore } from '@core/company/useCompanyStore';
 
 interface Props {
   open: boolean;
@@ -70,6 +72,7 @@ export function SalesOrderPackingSlipPostingDialog({
   onClose,
   onPosted,
 }: Props): React.ReactElement {
+  const company = useCompanyStore((state) => state.currentCompany);
   const queryClient = useQueryClient();
   const [deliveryDate, setDeliveryDate] = useState(dateToday);
   const [quantityMode, setQuantityMode] = useState<PackingSlipQuantityMode>('all');
@@ -80,7 +83,7 @@ export function SalesOrderPackingSlipPostingDialog({
   const [error, setError] = useState('');
 
   const previewQuery = useQuery({
-    queryKey: ['sales-order-packing-slip-posting-preview', orderId, quantityMode],
+    queryKey: salesOrderQueryKeys.packingSlipPreview(company, orderId, quantityMode),
     queryFn: ({ signal }) => salesOrderPackingSlipApi.postingPreview(orderId, quantityMode, signal),
     enabled: open && Boolean(orderId),
     staleTime: 0,
@@ -166,10 +169,10 @@ export function SalesOrderPackingSlipPostingDialog({
         lines: selectedLines,
       });
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['accounts-receivable', 'sales-orders'] }),
-        queryClient.invalidateQueries({ queryKey: ['sales-order-lines', orderId] }),
-        queryClient.invalidateQueries({ queryKey: ['sales-order-packing-slips', orderId] }),
-        queryClient.invalidateQueries({ queryKey: ['sales-order-packing-slip-posting-preview', orderId] }),
+        queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.list(company) }),
+        queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.lines(company, orderId) }),
+        queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.packingSlips(company, orderId) }),
+        queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.packingSlipPreview(company, orderId) }),
         onPosted(),
       ]);
       setRequestId(undefined);

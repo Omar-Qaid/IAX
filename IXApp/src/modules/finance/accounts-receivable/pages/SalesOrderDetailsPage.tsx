@@ -46,6 +46,7 @@ import { customerQuickCreateApi } from '../api/customerQuickCreateApi';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { FOUNDATION_RECORD_PREVIEWS } from '../../foundation/previews/foundationRecordPreviews';
 import { LookupField } from '@shared/components/lookups/LookupField';
+import { LookupDisplayField } from '@shared/components/lookups/LookupDisplayField';
 import { EditableViewField } from '@shared/components/fields/EditableViewField';
 import { d365 } from '@shared/constants/enterpriseUiTokens';
 import { synchronizeSalesLineDiscount } from '../utils/salesLineDiscount';
@@ -61,6 +62,8 @@ import { salesOrderConfirmationApi } from '../api/salesOrderConfirmationApi';
 
 import { SalesOrderLinesGrid } from './SalesOrderLinesGrid';
 import { SalesOrderLinesProvider } from './SalesOrderLineState';
+import { salesOrderQueryKeys } from '../queries/accountsReceivableQueryKeys';
+import { useCompanyStore } from '@core/company/useCompanyStore';
 
 /** The D365 address card (Location, Effective, Address) from an order's address option. */
 const toAddressPreview = (
@@ -103,6 +106,7 @@ const lineMasters: Partial<Record<keyof DetailLine, { masterRoute?: string; enti
 const salesOrderRibbonPinnedStorageKey = 'sales-order.action-pane.ribbon-pinned';
 
 export function SalesOrderDetailsPage(): React.ReactElement {
+  const company = useCompanyStore((state) => state.currentCompany);
   const { t, currentLanguage } = useAppTranslation();
   const salesDeliveryTypeOptions = [
     { value: 0, label: t('salesOrder.deliveryTypes.none', 'None') },
@@ -173,7 +177,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   const [copyError, setCopyError] = useState('');
   const lineDetailSaveLock = useRef(false);
   const orderQuery = useQuery({
-    queryKey: ['accounts-receivable', 'sales-orders'],
+    queryKey: salesOrderQueryKeys.list(company),
     queryFn: ({ signal }) => salesOrderListApi.list(signal),
   });
   const orders = orderQuery.data ?? [];
@@ -187,8 +191,8 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     try {
       await salesOrderLinesApi.recalculateDiscounts(order.id);
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['sales-order-lines', order.id] }),
-        queryClient.invalidateQueries({ queryKey: ['sales-order-totals', order.id] }),
+        queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.lines(company, order.id) }),
+        queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.totals(company, order.id) }),
         orderQuery.refetch(),
       ]);
     } catch (error) {
@@ -221,9 +225,9 @@ export function SalesOrderDetailsPage(): React.ReactElement {
           try {
             await salesOrderListApi.cancel(order.id);
             await Promise.all([
-              queryClient.invalidateQueries({ queryKey: ['accounts-receivable', 'sales-orders'] }),
-              queryClient.invalidateQueries({ queryKey: ['sales-order-lines', order.id] }),
-              queryClient.invalidateQueries({ queryKey: ['sales-order-totals', order.id] }),
+              queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.list(company) }),
+              queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.lines(company, order.id) }),
+              queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.totals(company, order.id) }),
             ]);
           } catch (error) {
             setHeaderError(error instanceof Error ? error.message : t('errors.generic'));
@@ -341,9 +345,9 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         try {
           await salesOrderConfirmationApi.post(order.id, new Date().toISOString().slice(0, 10), crypto.randomUUID());
           await Promise.all([
-            queryClient.invalidateQueries({ queryKey: ['accounts-receivable', 'sales-orders'] }),
-            queryClient.invalidateQueries({ queryKey: ['sales-order-totals', order.id] }),
-            queryClient.invalidateQueries({ queryKey: ['sales-order-confirmations', order.id] }),
+            queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.list(company) }),
+            queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.totals(company, order.id) }),
+            queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.confirmations(company, order.id) }),
           ]);
         } catch (cause) {
           setConfirmNowError(cause instanceof Error ? cause.message : 'The sales order could not be confirmed.');
@@ -374,26 +378,26 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   ];
 
   const customersQuery = useQuery({
-    queryKey: ['accounts-receivable', 'sales-order-header-customers'],
+    queryKey: salesOrderQueryKeys.lookup(company, 'header-customers'),
     queryFn: ({ signal }) => customerQuickCreateApi.list(signal),
     enabled: Boolean(activeHeader),
     staleTime: 5 * 60 * 1000,
   });
 
   const lookupsQuery = useQuery({
-    queryKey: ['accounts-receivable', 'sales-order-header-lookups'],
+    queryKey: salesOrderQueryKeys.lookup(company, 'header-lookups'),
     queryFn: ({ signal }) => customerQuickCreateApi.lookups(signal),
     enabled: Boolean(activeHeader),
     staleTime: 5 * 60 * 1000,
   });
 
   const copySourcesQuery = useQuery({
-    queryKey: ['sales-order-copy-sources', order?.id, copyMode],
+    queryKey: salesOrderQueryKeys.copySources(company, order?.id, copyMode),
     queryFn: ({ signal }) => salesOrderCopyApi.documents(order!.id, copyMode!, signal),
     enabled: Boolean(order && copyMode),
   });
   const copyLinesQuery = useQuery({
-    queryKey: ['sales-order-copy-lines', order?.id, copyMode, copySourceId],
+    queryKey: salesOrderQueryKeys.copyLines(company, order?.id, copyMode, copySourceId),
     queryFn: ({ signal }) => salesOrderCopyApi.lines(order!.id, copyMode!, copySourceId!, signal),
     enabled: Boolean(order && copyMode && copySourceId !== undefined),
   });
@@ -487,7 +491,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     try {
       const { id, ...input } = activeHeader;
       await salesOrderListApi.updateHeader(id, input);
-      await queryClient.invalidateQueries({ queryKey: ['sales-order-totals', id] });
+      await queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.totals(company, id) });
       await orderQuery.refetch({ throwOnError: true });
       setHeaderDraft(null);
     } catch (error) {
@@ -554,28 +558,28 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     );
   };
   const linesQuery = useQuery({
-    queryKey: ['sales-order-lines', order?.id],
+    queryKey: salesOrderQueryKeys.lines(company, order?.id),
     queryFn: ({ signal }) => salesOrderLinesApi.list(order!.id, signal),
     enabled: Boolean(order),
   });
   const lines = linesQuery.data ?? [];
   const deliveryAddressesQuery = useQuery({
-    queryKey: ['sales-order-delivery-addresses', order?.id],
+    queryKey: salesOrderQueryKeys.deliveryAddresses(company, order?.id),
     queryFn: ({ signal }) => salesOrderLinesApi.deliveryAddresses(order!.id, signal),
     enabled: Boolean(order),
     staleTime: 5 * 60 * 1000,
   });
   const totalsQuery = useQuery({
-    queryKey: ['sales-order-totals', order?.id],
+    queryKey: salesOrderQueryKeys.totals(company, order?.id),
     queryFn: ({ signal }) => salesOrderLinesApi.totals(order!.id, signal),
     enabled: Boolean(order),
   });
   const selectedLine: DetailLine | undefined =
     lines.find((line) => line.id === selectedLineId) ?? lines[0];
   const dimensionsQuery = useQuery({
-    queryKey: ['sales-order-inventory-dimensions'],
+    queryKey: salesOrderQueryKeys.lookup(company, 'inventory-dimensions'),
     queryFn: ({ signal }) => salesOrderLinesApi.inventoryDimensions(signal),
-    enabled: Boolean(activeHeader),
+    // Also used in view mode: names for the master record cards.
     staleTime: 5 * 60 * 1000,
   });
   const headerDimensionInput = (name: 'inventSiteId' | 'inventLocationId', label: string) => {
@@ -614,7 +618,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     );
   };
   const unitsQuery = useQuery({
-    queryKey: ['sales-order-unit-options'],
+    queryKey: salesOrderQueryKeys.lookup(company, 'units'),
     queryFn: async ({ signal }) => {
       const first = await salesOrderLinesApi.units({
         pageNumber: 1,
@@ -638,9 +642,9 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     staleTime: 5 * 60 * 1000,
   });
   const taxGroupsQuery = useQuery({
-    queryKey: ['sales-order-tax-groups'],
+    queryKey: salesOrderQueryKeys.lookup(company, 'tax-groups'),
     queryFn: ({ signal }) => salesOrderLinesApi.taxGroups(signal),
-    enabled: Boolean(activeHeader),
+    // Also used in view mode: names for the master record cards.
     staleTime: 5 * 60 * 1000,
   });
   useEffect(() => {
@@ -664,12 +668,12 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         ...saved,
         ledgerDimensionDisplay: draft.ledgerDimensionDisplay ?? saved.ledgerDimensionDisplay,
       };
-      queryClient.setQueryData<DetailLine[]>(['sales-order-lines', order!.id], (current = []) =>
+      queryClient.setQueryData<DetailLine[]>(salesOrderQueryKeys.lines(company, order!.id), (current = []) =>
         current.map((line) => (line.id === savedLine.id ? savedLine : line))
       );
       setLineDetailDraft({ ...savedLine, deliveryDate: savedLine.deliveryDate?.slice(0, 10) });
       await queryClient.invalidateQueries({
-        queryKey: ['sales-order-totals', order!.id],
+        queryKey: salesOrderQueryKeys.totals(company, order!.id),
       });
       await orderQuery.refetch();
     } catch (error) {
@@ -700,7 +704,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       if (deliveryAddressDrawerTarget === 'line' && !lineId)
         throw new Error('Select a sales order line before adding a delivery address.');
       const created = await salesOrderLinesApi.createDeliveryAddress(order.id, lineId, address);
-      await queryClient.invalidateQueries({ queryKey: ['sales-order-delivery-addresses', order.id] });
+      await queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.deliveryAddresses(company, order.id) });
       await Promise.all([deliveryAddressesQuery.refetch(), linesQuery.refetch(), orderQuery.refetch()]);
       if (deliveryAddressDrawerTarget === 'header') {
         setHeaderDraft((draft) => draft ? { ...draft, deliveryPostalAddress: created.id } : draft);
@@ -816,20 +820,42 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     displayValue: React.ReactNode,
     options?: { value: string; label: string }[]
   ) =>
-    // View mode: master-data values show the D365 record preview. In edit mode the
-    // lookup editor carries its own preview.
+    // Edit mode: the lookup editor (plain label, its own preview).
     activeHeader ? (
       <React.Fragment key={name}>{headerPanelFieldContent(name, label, displayValue, options)}</React.Fragment>
-    ) : (
-      <RecordPreview
+    ) : headerMasterRoutes[name] || headerPreviewEntities[name as keyof SalesOrderListRecord] ? (
+      // View mode master value: open-details icon + record card from the loaded option.
+      <LookupDisplayField
         key={name}
+        label={label}
+        value={displayValue == null ? '' : String(displayValue)}
         masterRoute={headerMasterRoutes[name]}
-        entity={headerPreviewEntities[name as keyof SalesOrderListRecord]}
-        recordKey={String(order[name as keyof SalesOrderListRecord] ?? '')}
-      >
-        {headerPanelFieldContent(name, label, displayValue, options)}
-      </RecordPreview>
+        previewEntity={headerPreviewEntities[name as keyof SalesOrderListRecord]}
+        previewKey={String(order[name as keyof SalesOrderListRecord] ?? '')}
+        previewOption={headerMasterOption(name, options)}
+        onEdit={canEditHeader ? startHeaderEdit : undefined}
+      />
+    ) : (
+      <React.Fragment key={name}>{headerPanelFieldContent(name, label, displayValue, options)}</React.Fragment>
     );
+  // Code + name of a header master value, from lists the page already loads.
+  const headerMasterOption = (
+    name: keyof SalesOrderHeaderInput,
+    options?: { value: string; label: string }[]
+  ) => {
+    const code = String(order[name as keyof SalesOrderListRecord] ?? '');
+    if (!code) return null;
+    const list: { code: string; name: string }[] =
+      name === 'inventSiteId'
+        ? (dimensionsQuery.data?.sites ?? [])
+        : name === 'inventLocationId'
+          ? (dimensionsQuery.data?.warehouses ?? [])
+          : name === 'taxGroupId'
+            ? (taxGroupsQuery.data?.salesTaxGroups ?? [])
+            : (options ?? []).map((option) => ({ code: option.value, name: option.label }));
+    const match = list.find((option) => option.code === code);
+    return match ? { code: match.code, name: match.name } : null;
+  };
   const headerPanelFieldContent = (
     name: keyof SalesOrderHeaderInput,
     label: string,
@@ -856,14 +882,25 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   const selectedDeliveryAddress = deliveryAddressesQuery.data?.find(
     (address) => address.value === String(activeHeader?.deliveryPostalAddress ?? order.deliveryPostalAddress)
   );
+  // Card record for the order's delivery address: the loaded option, else the
+  // name and address the order itself carries.
+  const orderAddressPreview = (
+    option: SalesOrderDeliveryAddressOption | undefined
+  ): PostalAddressPreview | undefined =>
+    toAddressPreview(option) ??
+    (order.deliveryName || order.deliveryAddress
+      ? { location: order.deliveryName ?? '', address: order.deliveryAddress ?? '' }
+      : undefined);
+  const orderAddressKey = (option: SalesOrderDeliveryAddressOption | undefined) =>
+    option?.value || String(order.deliveryPostalAddress || '') || order.deliveryName || '';
   const deliveryAddressPanel = (
     <Box sx={{ minWidth: 0 }}>
       <Typography variant="caption" color="text.secondary">Delivery address</Typography>
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
         <RecordPreview
           entity={POSTAL_ADDRESS_RECORD_PREVIEW}
-          recordKey={selectedDeliveryAddress?.value}
-          record={toAddressPreview(selectedDeliveryAddress)}
+          recordKey={orderAddressKey(selectedDeliveryAddress)}
+          record={orderAddressPreview(selectedDeliveryAddress)}
         >
         {activeHeader ? (
           <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -1056,16 +1093,35 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     );
   };
   // Read-only line master value with its D365 record preview.
-  const lineMasterValue = (name: keyof DetailLine, label: string, value?: unknown) => (
-    <RecordPreview
-      key={name}
-      entity={lineMasters[name]?.entity}
-      masterRoute={lineMasters[name]?.masterRoute}
-      recordKey={value == null ? '' : String(value)}
-    >
-      {field(label, value == null || value === '' ? undefined : String(value), true, true)}
-    </RecordPreview>
-  );
+  // View mode uses the shared lookup display: open-details icon on the label (only
+  // in view mode, like D365) and the record card built from the loaded option.
+  const lineMasterOptions = (name: keyof DetailLine): { code: string; name: string }[] => {
+    switch (name) {
+      case 'site': return dimensionsQuery.data?.sites ?? [];
+      case 'warehouse': return dimensionsQuery.data?.warehouses ?? [];
+      case 'taxGroup': return taxGroupsQuery.data?.salesTaxGroups ?? [];
+      case 'taxItemGroup': return taxGroupsQuery.data?.itemSalesTaxGroups ?? [];
+      case 'deliveryMode':
+        return (lookupsQuery.data?.deliveryModes ?? []).map((o) => ({ code: o.value, name: o.label }));
+      case 'deliveryTerms':
+        return (lookupsQuery.data?.deliveryTerms ?? []).map((o) => ({ code: o.value, name: o.label }));
+      default: return [];
+    }
+  };
+  const lineMasterValue = (name: keyof DetailLine, label: string, value?: unknown) => {
+    const text = value == null ? '' : String(value);
+    const option = lineMasterOptions(name).find((o) => o.code === text);
+    return (
+      <LookupDisplayField
+        key={name}
+        label={label}
+        value={text}
+        masterRoute={lineMasters[name]?.masterRoute}
+        previewEntity={lineMasters[name]?.entity}
+        previewOption={option ? { code: option.code, name: option.name } : null}
+      />
+    );
+  };
   const lineLookupShell = (content: React.ReactNode) => (
     <Box sx={{ minWidth: 0 }}>{content}</Box>
   );
@@ -1332,7 +1388,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
               }]
             : []
         }
-        queryKey={['sales-order-return-lots', displayedLine.itemNumber]}
+        queryKey={salesOrderQueryKeys.lookup(company, 'return-lots', displayedLine.itemNumber)}
         fetchPage={({ pageNumber, pageSize, search, signal }) =>
           salesOrderLinesApi.returnLots({
             itemNumber: displayedLine.itemNumber,
@@ -1371,7 +1427,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         label={label}
         value={value}
         options={value ? [{ id: value, code: value, name: value }] : []}
-        queryKey={['sales-order-inventory-tracking', name, displayedLine.itemNumber]}
+        queryKey={salesOrderQueryKeys.lookup(company, 'inventory-tracking', name, displayedLine.itemNumber)}
         fetchPage={fetchPage}
         displayMode="select"
         searchable
@@ -1405,7 +1461,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
               }]
             : []
         }
-        queryKey={['sales-order-ledger-dimensions']}
+        queryKey={salesOrderQueryKeys.lookup(company, 'ledger-dimensions')}
         fetchPage={salesOrderLinesApi.ledgerDimensions}
         displayMode="select"
         searchable
@@ -1912,7 +1968,13 @@ export function SalesOrderDetailsPage(): React.ReactElement {
                     </Box>
                   ) : (
                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <EditableViewField label="Delivery address" value={selected?.label ?? order.deliveryName ?? ''} lookup onEdit={canEditHeader ? startHeaderEdit : undefined} />
+                      <RecordPreview
+                        entity={POSTAL_ADDRESS_RECORD_PREVIEW}
+                        recordKey={orderAddressKey(selected)}
+                        record={orderAddressPreview(selected)}
+                      >
+                        <EditableViewField label="Delivery address" value={selected?.label ?? order.deliveryName ?? ''} lookup onEdit={canEditHeader ? startHeaderEdit : undefined} />
+                      </RecordPreview>
                     </Box>
                   )}
                   <IconButton
@@ -2226,7 +2288,8 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   ];
   const sections = [
     ...(tab === 'header'
-      ? headerSections
+      // The page owns header edit state (Edit/Save/Cancel in its action pane).
+      ? headerSections.map((headerSection) => ({ ...headerSection, editing: Boolean(activeHeader) }))
       : [section(t('salesOrder.header', 'Sales order header'), header, true)]),
     tab === 'lines' &&
       section(
@@ -2551,8 +2614,8 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         onClose={() => setConfirmationsOpen(false)}
         onPosted={async () => {
           await Promise.all([
-            queryClient.invalidateQueries({ queryKey: ['accounts-receivable', 'sales-orders'] }),
-            queryClient.invalidateQueries({ queryKey: ['sales-order-totals', order.id] }),
+            queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.list(company) }),
+            queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.totals(company, order.id) }),
           ]);
         }}
       />
@@ -2564,9 +2627,9 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         onClose={() => setPackingSlipPostingOpen(false)}
         onPosted={async () => {
           await Promise.all([
-            queryClient.invalidateQueries({ queryKey: ['accounts-receivable', 'sales-orders'] }),
-            queryClient.invalidateQueries({ queryKey: ['sales-order-lines', order.id] }),
-            queryClient.invalidateQueries({ queryKey: ['sales-order-totals', order.id] }),
+            queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.list(company) }),
+            queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.lines(company, order.id) }),
+            queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.totals(company, order.id) }),
           ]);
         }}
       />
@@ -2599,9 +2662,9 @@ export function SalesOrderDetailsPage(): React.ReactElement {
           try {
             await salesOrderCopyApi.copy(order.id, copyMode, lineIds, options);
             await Promise.all([
-              queryClient.invalidateQueries({ queryKey: ['sales-order-lines', order.id] }),
-              queryClient.invalidateQueries({ queryKey: ['sales-order-totals', order.id] }),
-              queryClient.invalidateQueries({ queryKey: ['accounts-receivable', 'sales-orders'] }),
+              queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.lines(company, order.id) }),
+              queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.totals(company, order.id) }),
+              queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.list(company) }),
             ]);
             setCopyMode(undefined);
             setCopySourceId(undefined);

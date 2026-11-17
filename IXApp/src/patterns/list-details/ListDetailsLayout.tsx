@@ -414,8 +414,10 @@ export function ListDetailsLayout({
                           >
                             {group.fields.map((field) => {
                               const value = values[field.name];
+                              // A section can own its edit state (document pages with their own Save/Cancel).
+                              const fieldEditing = section.editing ?? editing;
                               const editable =
-                                editing && !field.disabled && field.type !== 'display';
+                                fieldEditing && !field.disabled && field.type !== 'display';
                               const sectionTitle =
                                 field.sectionTitle ??
                                 (legalEntity && field.name === 'timeZone'
@@ -425,7 +427,7 @@ export function ListDetailsLayout({
                                 legalEntity && field.name === 'timeZone'
                                   ? 'Time zone'
                                   : field.label;
-                              const editField = !editing && !field.disabled && field.type !== 'display' &&
+                              const editField = !fieldEditing && !field.disabled && field.type !== 'display' &&
                                 (!canEditField || canEditField(field.name)) && onFieldEdit
                                   ? () => onFieldEdit(field.name)
                                   : undefined;
@@ -456,7 +458,7 @@ export function ListDetailsLayout({
                                       {sectionTitle}
                                     </Typography>
                                   )}
-                                  {(!field.renderOwnLabel || (!editing && field.render && field.type === 'select')) && (
+                                  {(!field.renderOwnLabel || (!fieldEditing && field.render && field.type === 'select')) && (
                                     <Typography
                                       noWrap
                                       title={fieldLabel}
@@ -478,8 +480,12 @@ export function ListDetailsLayout({
                                     masterRoute={field.masterRoute}
                                     entity={field.previewEntity}
                                     recordKey={typeof value === 'string' || typeof value === 'number' ? value : null}
+                                    option={(() => {
+                                      const match = field.options?.find((option) => option.value === String(value ?? ''));
+                                      return match ? { code: String(match.value), name: String(match.label) } : null;
+                                    })()}
                                   >
-                                  {!editing && field.render && field.type === 'select' ? (
+                                  {!fieldEditing && field.render && field.type === 'select' ? (
                                     <EditableViewField
                                       value={field.formatValue?.(value) ?? field.options?.find((option) => option.value === String(value))?.label ?? String(value ?? '')}
                                       lookup
@@ -488,14 +494,14 @@ export function ListDetailsLayout({
                                       disabled={field.disabled}
                                     />
                                   ) : field.render ? (
-                                    <FieldPresentationProvider viewMode={!(section.editing ?? editing)} masterRoute={field.masterRoute}>
+                                    <FieldPresentationProvider viewMode={!fieldEditing} masterRoute={field.masterRoute}>
                                     <Box sx={{
                                       position: 'relative',
                                       '&:hover .field-edit-action, &:focus-within .field-edit-action': { opacity: 1 },
                                     }}>
                                     {field.render({
                                       value,
-                                      editing,
+                                      editing: fieldEditing,
                                       disabled: !editable,
                                       onChange: (nextValue) => onChange(field.name, nextValue),
                                     })
@@ -514,7 +520,7 @@ export function ListDetailsLayout({
                                     </Box>
                                     </FieldPresentationProvider>
                                   ) : field.type === 'boolean' ? (
-                                    !editing ? <EditableViewField value={value ? yesLabel : noLabel} label={fieldLabel} onEdit={editField} disabled={field.disabled} /> : <Box
+                                    !fieldEditing ? <EditableViewField value={value ? yesLabel : noLabel} label={fieldLabel} onEdit={editField} disabled={field.disabled} /> : <Box
                                       sx={{
                                         display: 'flex',
                                         alignItems: 'center',

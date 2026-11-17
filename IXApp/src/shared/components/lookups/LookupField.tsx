@@ -322,6 +322,8 @@ function SelectLookup({
   const renderedOptions = usesServerDataSource
     ? visibleOptions
     : visibleOptions.slice(0, renderLimit);
+  // The selected option feeds the record preview card (no extra request).
+  const selectedRecordOption = selected ? { code: selected.code, name: localizedName(selected, isRtl) } : null;
   const highlightedRef = useRef<LookupOption | null>(null);
   const [previewAnchor, setPreviewAnchor] = useState<HTMLElement | null>(null);
   const previewTimerRef = useRef<number | undefined>(undefined);
@@ -353,7 +355,7 @@ function SelectLookup({
   const optionText = (option: LookupOption | null) =>
     option ? (gridCell ? option.code || localizedName(option, isRtl) : localizedName(option, isRtl)) : '';
 
-  if (viewMode) return <LookupDisplayField label={externalLabel ? '' : label} value={selected ? localizedName(selected, isRtl) : scalarValue == null || scalarValue === 0 ? '' : String(scalarValue)} masterRoute={masterRoute} previewEntity={previewEntity} previewKey={scalarValue} />;
+  if (viewMode) return <LookupDisplayField label={externalLabel ? '' : label} value={selected ? localizedName(selected, isRtl) : scalarValue == null || scalarValue === 0 ? '' : String(scalarValue)} masterRoute={masterRoute} previewEntity={previewEntity} previewKey={scalarValue} previewOption={selectedRecordOption} />;
 
   // -- Record preview card (grid cells, D365) ---------------------------------
   const previewOption = gridCell ? resolvedSelected : null;
@@ -391,7 +393,7 @@ function SelectLookup({
   };
 
   return (
-    <RecordPreview entity={previewEntity} masterRoute={masterRoute} recordKey={scalarValue as string | number | null}>
+    <RecordPreview entity={previewEntity} masterRoute={masterRoute} recordKey={scalarValue as string | number | null} option={selectedRecordOption}>
     <Autocomplete<LookupOption, false, boolean, false>
       onFocus={(event) => startPreview(event.currentTarget)}
       sx={{

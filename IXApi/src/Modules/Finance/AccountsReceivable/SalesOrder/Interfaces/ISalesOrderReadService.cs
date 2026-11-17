@@ -6,4 +6,5 @@ public interface ISalesOrderReadService
     Task<object?> DeliveryAddressesAsync(long recId, CancellationToken cancellationToken);
     Task<object?> TotalsAsync(long recId, CancellationToken cancellationToken);
     Task<IEnumerable<SalesOrderListDto>> GetListAsync(CancellationToken cancellationToken);
+    Task<SalesOrderListDto?> GetDetailsAsync(long recId, CancellationToken cancellationToken);
 }

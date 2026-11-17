@@ -10,19 +10,22 @@ import { DocumentChargesPage } from '@modules/finance/foundation/components/Docu
 import { salesOrderListApi } from '../api/salesOrderListApi';
 import { salesOrderLinesApi } from '../api/salesOrderLinesApi';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
+import { salesOrderQueryKeys } from '../queries/accountsReceivableQueryKeys';
+import { useCompanyStore } from '@core/company/useCompanyStore';
 
 export function SalesOrderChargesPage(): React.ReactElement {
+  const company = useCompanyStore((state) => state.currentCompany);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { salesOrderId } = useParams<{ salesOrderId: string }>();
   const lineId = searchParams.get('lineId');
   const { hasPermission: canEdit } = usePermission(PERMISSIONS.SALES_ORDER_UPDATE);
   const ordersQuery = useQuery({
-    queryKey: ['accounts-receivable', 'sales-orders'],
+    queryKey: salesOrderQueryKeys.list(company),
     queryFn: ({ signal }) => salesOrderListApi.list(signal),
   });
   const linesQuery = useQuery({
-    queryKey: ['sales-order-lines', salesOrderId],
+    queryKey: salesOrderQueryKeys.lines(company, salesOrderId),
     queryFn: ({ signal }) => salesOrderLinesApi.list(salesOrderId!, signal),
     enabled: Boolean(salesOrderId && lineId),
   });
@@ -43,8 +46,8 @@ export function SalesOrderChargesPage(): React.ReactElement {
       defaultTaxItemGroup={line?.taxItemGroup}
       canEdit={canEdit && order.salesStatus.toLowerCase() === 'backorder'}
       onChanged={() => {
-        void queryClient.invalidateQueries({ queryKey: ['sales-order-totals', order.id] });
-        void queryClient.invalidateQueries({ queryKey: ['accounts-receivable', 'sales-orders'] });
+        void queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.totals(company, order.id) });
+        void queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.list(company) });
       }}
       onBack={() => navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrder(order.id))}
     />

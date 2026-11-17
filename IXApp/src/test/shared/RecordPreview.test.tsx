@@ -1,6 +1,7 @@
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 import { AppProviders } from '@app/providers/AppProviders';
 import { apiClient } from '@core/api/apiClient';
 import { DataGrid } from '@shared/components/data-grid/DataGrid';
@@ -119,6 +120,54 @@ describe('RecordPreview', () => {
     );
     hover(screen.getByText('MISSING'));
     expect(await screen.findByText('No details found.')).toBeDefined();
+  });
+});
+
+describe('option-based cards', () => {
+  it('builds the card from the lookup option without a request (no master access needed)', async () => {
+    const get = vi.spyOn(apiClient, 'get');
+    render(
+      <AppProviders>
+        <RecordPreview entity="inventSite" recordKey="JED" option={{ code: 'JED', name: 'Jeddah' }}>
+          <span>JED</span>
+        </RecordPreview>
+      </AppProviders>
+    );
+    hover(screen.getByText('JED'));
+    expect(await screen.findByText('Jeddah')).toBeDefined();
+    expect(get).not.toHaveBeenCalled();
+  });
+
+  it('shows the code instead of an error when the master endpoint refuses access', async () => {
+    vi.spyOn(apiClient, 'get').mockRejectedValue(new Error('403'));
+    render(
+      <AppProviders>
+        <RecordPreview entity="inventSite" recordKey="RUH">
+          <span>RUH</span>
+        </RecordPreview>
+      </AppProviders>
+    );
+    hover(screen.getByText('RUH'));
+    expect(await screen.findByText('Site')).toBeDefined();
+    expect(screen.queryByText('Details could not be loaded.')).toBeNull();
+  });
+
+  it('shows the open-details icon and the option card on a view-mode lookup value', async () => {
+    render(
+      <AppProviders>
+        <MemoryRouter>
+        <LookupDisplayField
+          label="Warehouse"
+          value="FIFO-WH2"
+          masterRoute="/inventory/warehouses"
+          previewOption={{ code: 'FIFO-WH2', name: 'FIFO warehouse 2' }}
+        />
+        </MemoryRouter>
+      </AppProviders>
+    );
+    expect(screen.getByRole('button', { name: 'Open Warehouse details' })).toBeDefined();
+    hover(screen.getByText('FIFO-WH2'));
+    expect(await screen.findByText('FIFO warehouse 2')).toBeDefined();
   });
 });
 

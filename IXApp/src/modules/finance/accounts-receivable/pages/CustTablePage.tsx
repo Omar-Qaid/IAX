@@ -29,6 +29,7 @@ import { salesOrderLinesApi } from '../api/salesOrderLinesApi';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
 import { FOUNDATION_ROUTE_PATHS } from '@modules/finance/foundation/routes/foundationRoutePaths';
 import { INVENTORY_ROUTE_PATHS } from '@modules/finance/inventory/routes/inventoryRoutePaths';
+import { salesOrderQueryKeys } from '../queries/accountsReceivableQueryKeys';
 
 const includingSelected = (
   options: CustomerLookupOption[],
@@ -130,7 +131,7 @@ export function CustTablePage(): React.ReactElement {
     staleTime: 5 * 60 * 1000,
   });
   const dimensionsQuery = useQuery({
-    queryKey: ['sales-order-inventory-dimensions', company],
+    queryKey: salesOrderQueryKeys.lookup(company, 'inventory-dimensions'),
     queryFn: ({ signal }) => salesOrderLinesApi.inventoryDimensions(signal),
     staleTime: 5 * 60 * 1000,
   });
@@ -705,7 +706,7 @@ export function CustTablePage(): React.ReactElement {
           onSave={async (order) => {
             setNewOrderCustomer(null);
             await queryClient.invalidateQueries({
-              queryKey: ['accounts-receivable', 'sales-orders', company],
+              queryKey: salesOrderQueryKeys.list(company),
             });
             if (hasPermission(PERMISSIONS.SALES_ORDER_VIEW))
               navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrder(order.id));

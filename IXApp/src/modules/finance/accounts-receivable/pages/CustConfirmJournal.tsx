@@ -9,6 +9,8 @@ import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { salesOrderListApi } from '../api/salesOrderListApi';
 import { salesOrderConfirmationApi, type SalesOrderConfirmationLine, type SalesOrderConfirmationSummary } from '../api/salesOrderConfirmationApi';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
+import { salesOrderQueryKeys } from '../queries/accountsReceivableQueryKeys';
+import { useCompanyStore } from '@core/company/useCompanyStore';
 
 type GridRow = { id: string; salesOrderId: string; journal?: SalesOrderConfirmationSummary; line?: SalesOrderConfirmationLine };
 const amount = (value: number | undefined) => (value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -37,17 +39,18 @@ const lineColumns: ColumnDef<GridRow>[] = [
 
 /** Read-only view of posted CustConfirmJour and CustConfirmTrans snapshots. */
 export function CustConfirmJournal(): React.ReactElement {
+  const company = useCompanyStore((state) => state.currentCompany);
   const { salesOrderId } = useParams<{ salesOrderId: string }>();
   const navigate = useNavigate();
   const [tab, setTab] = useState<'overview' | 'lines'>('overview');
   const [selectedId, setSelectedId] = useState<string>();
   const [selectedLineId, setSelectedLineId] = useState<string>();
-  const ordersQuery = useQuery({ queryKey: ['accounts-receivable', 'sales-orders'], queryFn: ({ signal }) => salesOrderListApi.list(signal) });
-  const journalsQuery = useQuery({ queryKey: ['sales-order-confirmations', salesOrderId], queryFn: ({ signal }) => salesOrderConfirmationApi.list(salesOrderId!, signal), enabled: Boolean(salesOrderId) });
+  const ordersQuery = useQuery({ queryKey: salesOrderQueryKeys.list(company), queryFn: ({ signal }) => salesOrderListApi.list(signal) });
+  const journalsQuery = useQuery({ queryKey: salesOrderQueryKeys.confirmations(company, salesOrderId), queryFn: ({ signal }) => salesOrderConfirmationApi.list(salesOrderId!, signal), enabled: Boolean(salesOrderId) });
   const order = ordersQuery.data?.find((row) => row.id === salesOrderId);
   const journals = useMemo(() => journalsQuery.data ?? [], [journalsQuery.data]);
   const activeId = journals.some((row) => row.id === selectedId) ? selectedId : journals[0]?.id;
-  const detailQuery = useQuery({ queryKey: ['sales-order-confirmation', salesOrderId, activeId], queryFn: ({ signal }) => salesOrderConfirmationApi.get(salesOrderId!, activeId!, signal), enabled: Boolean(salesOrderId && activeId && tab === 'lines') });
+  const detailQuery = useQuery({ queryKey: salesOrderQueryKeys.confirmation(company, salesOrderId, activeId), queryFn: ({ signal }) => salesOrderConfirmationApi.get(salesOrderId!, activeId!, signal), enabled: Boolean(salesOrderId && activeId && tab === 'lines') });
   const rows = useMemo<GridRow[]>(() => tab === 'overview'
     ? journals.map((journal) => ({ id: journal.id, salesOrderId: journal.salesId, journal }))
     : (detailQuery.data?.lines ?? []).map((line) => ({ id: line.id, salesOrderId: order?.salesId ?? '', line })),

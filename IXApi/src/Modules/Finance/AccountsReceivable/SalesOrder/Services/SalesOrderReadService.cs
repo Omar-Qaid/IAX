@@ -229,11 +229,28 @@ public sealed class SalesOrderReadService : ISalesOrderReadService
         CancellationToken cancellationToken = default)
     {
         var area = _company.GetDataAreaId();
-        var orders = await _unitOfWork.Context.Set<SalesTable>()
-            .AsNoTracking()
-            .Where(order => order.DataAreaId == area)
-            .OrderByDescending(order => order.RecId)
-            .ToListAsync(cancellationToken);
+        return await ProjectAsync(
+            _unitOfWork.Context.Set<SalesTable>().AsNoTracking()
+                .Where(order => order.DataAreaId == area)
+                .OrderByDescending(order => order.RecId),
+            area, cancellationToken);
+    }
+
+    /// <summary>One order in the list shape, for the details page (no full-list load).</summary>
+    public async Task<SalesOrderListDto?> GetDetailsAsync(long recId, CancellationToken cancellationToken = default)
+    {
+        var area = _company.GetDataAreaId();
+        var rows = await ProjectAsync(
+            _unitOfWork.Context.Set<SalesTable>().AsNoTracking()
+                .Where(order => order.DataAreaId == area && order.RecId == recId),
+            area, cancellationToken);
+        return rows.FirstOrDefault();
+    }
+
+    private async Task<List<SalesOrderListDto>> ProjectAsync(
+        IQueryable<SalesTable> query, string area, CancellationToken cancellationToken)
+    {
+        var orders = await query.ToListAsync(cancellationToken);
 
         var customerAccounts = orders.Select(order => order.CustAccount).Where(account => account != string.Empty).Distinct().ToList();
         var customers = await _unitOfWork.Context.Set<CustTable>()

@@ -42,6 +42,8 @@ import {
   salesLineNetAmount,
   synchronizeSalesLineDiscount,
 } from '../utils/salesLineDiscount';
+import { salesOrderQueryKeys } from '../queries/accountsReceivableQueryKeys';
+import { useCompanyStore } from '@core/company/useCompanyStore';
 
 type DetailLine = SalesOrderLineRecord;
 const EMPTY_LINES: DetailLine[] = [];
@@ -101,6 +103,7 @@ export function SalesOrderLinesGrid({
   setLineFilterVisible,
   refreshOrder,
 }: Props) {
+  const company = useCompanyStore((state) => state.currentCompany);
   const { t, currentLanguage } = useAppTranslation();
   const navigate = useNavigate();
   const [inventoryMenuAnchor, setInventoryMenuAnchor] = React.useState<HTMLElement | null>(null);
@@ -147,10 +150,10 @@ export function SalesOrderLinesGrid({
   );
   const scheduleTotalsRefresh = () => {
     void queryClient.invalidateQueries({
-      queryKey: ['sales-order-totals', order.id],
+      queryKey: salesOrderQueryKeys.totals(company, order.id),
     });
     void queryClient.invalidateQueries({
-      queryKey: ['accounts-receivable', 'sales-orders'],
+      queryKey: salesOrderQueryKeys.list(company),
       refetchType: 'none',
     });
     if (totalsRefreshTimerRef.current) clearTimeout(totalsRefreshTimerRef.current);
@@ -189,7 +192,7 @@ export function SalesOrderLinesGrid({
   };
   const removeLineButtonRef = useRef<HTMLButtonElement>(null);
   const linesQuery = useQuery({
-    queryKey: ['sales-order-lines', order?.id],
+    queryKey: salesOrderQueryKeys.lines(company, order?.id),
     queryFn: ({ signal }) => salesOrderLinesApi.list(order!.id, signal),
     enabled: Boolean(order),
   });
@@ -207,7 +210,7 @@ export function SalesOrderLinesGrid({
     };
   }, []);
   const dimensionsQuery = useQuery({
-    queryKey: ['sales-order-inventory-dimensions'],
+    queryKey: salesOrderQueryKeys.lookup(company, 'inventory-dimensions'),
     queryFn: ({ signal }) => salesOrderLinesApi.inventoryDimensions(signal),
     enabled: lineEditEnabled,
     staleTime: 5 * 60 * 1000,
@@ -551,7 +554,7 @@ export function SalesOrderLinesGrid({
           value={null}
           valueField="itemNumber"
           labelField="itemNumber"
-          queryKey={['sales-order-items']}
+          queryKey={salesOrderQueryKeys.lookup(company, 'items')}
           fetchPage={salesOrderLinesApi.items}
           columns={[
             { field: 'itemNumber', header: t('salesOrder.itemNumber', 'Item number') },
@@ -570,7 +573,7 @@ export function SalesOrderLinesGrid({
             value={row.unit || null}
             required
             autoFocus
-            queryKey={['sales-order-unit-lookup']}
+            queryKey={salesOrderQueryKeys.lookup(company, 'unit-lookup')}
             fetchPage={fetchUnitOptions}
             disabled={savingLine}
             onChange={(nextValue) =>
@@ -793,9 +796,9 @@ export function SalesOrderLinesGrid({
         orderId: order.id,
       });
       setSelectedLineId(saved.id);
-      await queryClient.cancelQueries({ queryKey: ['sales-order-lines', order.id] });
+      await queryClient.cancelQueries({ queryKey: salesOrderQueryKeys.lines(company, order.id) });
       const confirmed = { ...line, ...saved, usePriceAgreement: false };
-      queryClient.setQueryData<DetailLine[]>(['sales-order-lines', order.id], (current = []) =>
+      queryClient.setQueryData<DetailLine[]>(salesOrderQueryKeys.lines(company, order.id), (current = []) =>
         current.some((row) => row.id === confirmed.id)
           ? current.map((row) => (row.id === confirmed.id ? confirmed : row))
           : [...current, confirmed]
@@ -827,8 +830,8 @@ export function SalesOrderLinesGrid({
       await salesOrderLinesApi.remove(order.id, lineId);
       if (activeDraft?.id === lineId) setDraftLine(null);
       setSelectedLineId(undefined);
-      await queryClient.cancelQueries({ queryKey: ['sales-order-lines', order.id] });
-      queryClient.setQueryData<DetailLine[]>(['sales-order-lines', order.id], (current = []) =>
+      await queryClient.cancelQueries({ queryKey: salesOrderQueryKeys.lines(company, order.id) });
+      queryClient.setQueryData<DetailLine[]>(salesOrderQueryKeys.lines(company, order.id), (current = []) =>
         current.filter((row) => row.id !== lineId)
       );
       scheduleTotalsRefresh();

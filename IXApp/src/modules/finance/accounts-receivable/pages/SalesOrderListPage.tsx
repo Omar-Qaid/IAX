@@ -12,6 +12,7 @@ import { useCompanyStore } from '@core/company/useCompanyStore';
 import { SalesOrderQuickCreate } from '../components/SalesOrderQuickCreate';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
 import { ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS } from '../previews/accountsReceivableRecordPreviews';
+import { salesOrderQueryKeys } from '../queries/accountsReceivableQueryKeys';
 
 export function SalesOrderListPage(): React.ReactElement {
   const { t, currentLanguage } = useAppTranslation();
@@ -19,7 +20,7 @@ export function SalesOrderListPage(): React.ReactElement {
   const company = useCompanyStore(state => state.currentCompany);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const orderQuery = useQuery({
-    queryKey: ['accounts-receivable', 'sales-orders', company],
+    queryKey: salesOrderQueryKeys.list(company),
     queryFn: ({ signal }) => salesOrderListApi.list(signal),
   });
   const [searchParams] = useSearchParams();

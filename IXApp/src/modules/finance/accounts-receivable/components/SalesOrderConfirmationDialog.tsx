@@ -21,6 +21,8 @@ import {
   salesOrderConfirmationApi,
   type SalesOrderConfirmationLine,
 } from '../api/salesOrderConfirmationApi';
+import { salesOrderQueryKeys } from '../queries/accountsReceivableQueryKeys';
+import { useCompanyStore } from '@core/company/useCompanyStore';
 
 interface Props {
   open: boolean;
@@ -78,6 +80,7 @@ export function SalesOrderConfirmationDialog({
   onClose,
   onPosted,
 }: Props): React.ReactElement {
+  const company = useCompanyStore((state) => state.currentCompany);
   const queryClient = useQueryClient();
   const [confirmationDate, setConfirmationDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [posting, setPosting] = useState(false);
@@ -85,7 +88,7 @@ export function SalesOrderConfirmationDialog({
   const [error, setError] = useState('');
   const [postingEnabled, setPostingEnabled] = useState(true);
   const previewQuery = useQuery({
-    queryKey: ['sales-order-confirmation-preview', orderId],
+    queryKey: salesOrderQueryKeys.confirmationPreview(company, orderId),
     queryFn: ({ signal }) => salesOrderConfirmationApi.preview(orderId, signal),
     enabled: open && Boolean(orderId),
     staleTime: 0,
@@ -144,7 +147,7 @@ export function SalesOrderConfirmationDialog({
       setPendingRequestId(requestId);
       await salesOrderConfirmationApi.post(orderId, confirmationDate, requestId);
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['sales-order-confirmations', orderId] }),
+        queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.confirmations(company, orderId) }),
         onPosted(),
       ]);
       setPendingRequestId(undefined);

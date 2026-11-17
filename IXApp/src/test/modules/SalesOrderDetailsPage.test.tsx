@@ -3,6 +3,8 @@ import { beforeEach, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { queryClient } from '@core/api/queryClient';
+import { useCompanyStore } from '@core/company/useCompanyStore';
+import { salesOrderQueryKeys } from '@modules/finance/accounts-receivable/queries/accountsReceivableQueryKeys';
 import { AppProviders } from '@app/providers/AppProviders';
 import { salesOrderListApi } from '@modules/finance/accounts-receivable/api/salesOrderListApi';
 import { salesOrderLinesApi } from '@modules/finance/accounts-receivable/api/salesOrderLinesApi';
@@ -176,7 +178,7 @@ it('keeps the entered packing slip quantity when the preview refetches', async (
   expect(quantity).toHaveValue(6);
   fireEvent.change(quantity, { target: { value: '2' } });
   await act(async () => {
-    await queryClient.invalidateQueries({ queryKey: ['sales-order-packing-slip-posting-preview', '1'] });
+    await queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.packingSlipPreview(useCompanyStore.getState().currentCompany, '1') });
   });
   expect(salesOrderPackingSlipApi.postingPreview).toHaveBeenCalledTimes(2);
   expect(quantity).toHaveValue(2);
@@ -373,7 +375,7 @@ it('keeps header changes available after a failed save and supports cancel', asy
 });
 
 it('keeps invalid cell edits focused and moves to Unit after a successful Tab save', async () => {
-  queryClient.removeQueries({ queryKey: ['sales-order-lines'] });
+  queryClient.removeQueries({ queryKey: salesOrderQueryKeys.all });
   vi.mocked(salesOrderLinesApi.update).mockClear();
   vi.mocked(salesOrderLinesApi.list).mockResolvedValueOnce([
     {
@@ -432,4 +434,19 @@ it('preserves an unfinished new line when switching between Lines and Header', a
   fireEvent.click(screen.getByRole('tab', { name: 'Lines' }));
   expect(await screen.findByRole('textbox', { name: 'Item number' })).toBeDefined();
   expect(screen.getByRole('button', { name: 'Add line' })).toBeDisabled();
+});
+
+it('keeps header tab dropdowns editable in edit mode', async () => {
+  openOrder('1');
+  await screen.findByText('SO-LIVE-001 : Live customer');
+  fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+  fireEvent.click(screen.getByRole('tab', { name: 'Header' }));
+  const combos = await screen.findAllByRole('combobox');
+  expect(combos.length).toBeGreaterThan(0);
+  // Enabled once the header lookup lists have loaded.
+  await waitFor(() =>
+    expect(screen.getAllByRole('combobox').some((c) => !(c as HTMLInputElement).disabled)).toBe(true)
+  );
+  // No view-mode pencils left on header fields while editing.
+  expect(screen.queryByRole('button', { name: 'Edit Site' })).toBeNull();
 });

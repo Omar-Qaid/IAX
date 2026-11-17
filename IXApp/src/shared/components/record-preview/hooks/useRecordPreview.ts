@@ -62,7 +62,11 @@ export function useRecordPreview(entity: string, recordKey: string, preloaded?: 
     setAnchor(null);
   };
 
-  const record = preloaded ?? query.data;
+  // When loading fails (e.g. no access to the master's endpoint) a card still
+  // shows the code, built like an option without a name.
+  const fallback =
+    query.isError && definition?.fromOption ? definition.fromOption({ code: recordKey }) : undefined;
+  const record = preloaded ?? query.data ?? fallback;
   const language = i18n.language;
   const rows: RecordPreviewRow[] =
     record && definition
@@ -74,6 +78,7 @@ export function useRecordPreview(entity: string, recordKey: string, preloaded?: 
               : (record as Record<string, unknown>)[field.value as string],
           lookup: field.lookup,
         }))
+          .filter((row) => fallback === undefined || (row.value != null && row.value !== ''))
       : [];
 
   /** Spread on the element that wraps the previewed value. */
@@ -101,7 +106,10 @@ export function useRecordPreview(entity: string, recordKey: string, preloaded?: 
     open: anchor !== null,
     rows,
     loading: preloaded === undefined && query.isLoading,
-    error: query.isError ? t('recordPreview.loadFailed', 'Details could not be loaded.') : null,
+    error:
+      query.isError && fallback === undefined
+        ? t('recordPreview.loadFailed', 'Details could not be loaded.')
+        : null,
     emptyText: t('recordPreview.notFound', 'No details found.'),
     triggerProps,
     cardProps,

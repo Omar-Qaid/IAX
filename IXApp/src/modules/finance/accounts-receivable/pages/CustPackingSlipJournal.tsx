@@ -14,6 +14,7 @@ import {
   type PackingSlipJournalSummary,
 } from '../api/salesOrderPackingSlipApi';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
+import { salesOrderQueryKeys } from '../queries/accountsReceivableQueryKeys';
 
 type JournalTab = 'overview' | 'lines' | 'orderTracking';
 type GridRow = {
@@ -252,7 +253,7 @@ export function CustPackingSlipJournal(): React.ReactElement {
   const [selectedLineId, setSelectedLineId] = useState<string>();
 
   const ordersQuery = useQuery({
-    queryKey: ['accounts-receivable', 'sales-orders', company],
+    queryKey: salesOrderQueryKeys.list(company),
     queryFn: ({ signal }) => salesOrderListApi.list(signal),
   });
   const selectedOrders = (ordersQuery.data ?? []).filter((row) =>
@@ -290,7 +291,7 @@ export function CustPackingSlipJournal(): React.ReactElement {
   const activeOrderId = journals.find((row) => row.id === activeId)?.orderRecId ?? salesOrderId;
   const order = ordersQuery.data?.find((row) => row.id === activeOrderId);
   const detailQuery = useQuery({
-    queryKey: ['sales-order-packing-slip', company, activeOrderId, activeId],
+    queryKey: salesOrderQueryKeys.packingSlip(company, activeOrderId, activeId),
     queryFn: ({ signal }) => salesOrderPackingSlipApi.get(activeOrderId!, activeId!, signal),
     enabled: Boolean(activeOrderId && activeId && tab !== 'overview'),
   });

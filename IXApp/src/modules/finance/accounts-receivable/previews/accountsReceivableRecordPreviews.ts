@@ -61,6 +61,7 @@ registerRecordPreview<CustomerRecord>(ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.CUSTOM
 registerRecordPreview<CustGroupPreview>(ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.CUSTOMER_GROUP, {
   masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_GROUPS,
   load: pagedRecordLoader('/v1/CustGroup', 'CustGroupId'),
+  fromOption: (option) => ({ custGroupId: option.code, name: option.name ?? '' }),
   fields: [
     { labelKey: 'fields.customerGroup', defaultLabel: 'Customer group', value: 'custGroupId', lookup: true },
     { labelKey: 'fields.description', defaultLabel: 'Description', value: 'name' },
@@ -70,6 +71,7 @@ registerRecordPreview<CustGroupPreview>(ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.CUST
 registerRecordPreview<PaymTermPreview>(ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.PAYMENT_TERMS, {
   masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_TERMS,
   load: pagedRecordLoader('/v1/PaymTerm', 'PaymTermId'),
+  fromOption: (option) => ({ paymTermId: option.code, description: option.name ?? '' }),
   fields: [
     { labelKey: 'fields.termsOfPayment', defaultLabel: 'Terms of payment', value: 'paymTermId', lookup: true },
     { labelKey: 'fields.description', defaultLabel: 'Description', value: 'description' },
@@ -79,6 +81,7 @@ registerRecordPreview<PaymTermPreview>(ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.PAYME
 registerRecordPreview<PaymModePreview>(ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.PAYMENT_METHOD, {
   masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_METHODS,
   load: pagedRecordLoader('/v1/CustPaymMode', 'PaymMode'),
+  fromOption: (option) => ({ paymMode: option.code, name: option.name ?? '' }),
   fields: [
     { labelKey: 'fields.methodOfPayment', defaultLabel: 'Method of payment', value: 'paymMode', lookup: true },
     { labelKey: 'fields.description', defaultLabel: 'Description', value: 'name' },

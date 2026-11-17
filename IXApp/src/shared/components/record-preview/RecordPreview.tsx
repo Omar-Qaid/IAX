@@ -3,6 +3,7 @@ import { Box, Popper } from '@mui/material';
 import { useRecordPreview } from './hooks';
 import { getRecordPreview, resolveRecordPreviewEntity } from './recordPreviewRegistry';
 import { RecordPreviewCard } from './RecordPreviewCard';
+import type { RecordPreviewOption } from './types';
 
 export interface RecordPreviewProps {
   /** Registered master-data entity, e.g. "customer" or "customerGroup". */
@@ -13,6 +14,8 @@ export interface RecordPreviewProps {
   recordKey?: string | number | null;
   /** Record the page already holds: shown directly, without loading. */
   record?: unknown;
+  /** Lookup option the field holds; entities with `fromOption` show it without loading. */
+  option?: RecordPreviewOption | null;
   children: React.ReactNode;
   /** Wrap the content inline instead of filling the cell/field width. */
   inline?: boolean;
@@ -28,13 +31,21 @@ export function RecordPreview({
   masterRoute,
   recordKey,
   record,
+  option,
   children,
   inline = false,
 }: RecordPreviewProps) {
   const resolved = resolveRecordPreviewEntity(entity, masterRoute);
   const key = recordKey == null ? '' : String(recordKey).trim();
+  const definition = resolved ? getRecordPreview(resolved) : undefined;
+  // Prefer data already on the page: the option's name makes the card instant.
+  const optionRecord =
+    record === undefined && option?.name && definition?.fromOption
+      ? definition.fromOption(option)
+      : undefined;
+  record = record ?? optionRecord;
   // Nothing to show: no entity, no key, or an entity that cannot load and got no record.
-  const loadable = resolved !== undefined && (record !== undefined || getRecordPreview(resolved)?.load !== undefined);
+  const loadable = resolved !== undefined && (record !== undefined || definition?.load !== undefined);
   if (!resolved || key === '' || !loadable) return <>{children}</>;
   return (
     <RecordPreviewTrigger entity={resolved} recordKey={key} record={record} inline={inline}>

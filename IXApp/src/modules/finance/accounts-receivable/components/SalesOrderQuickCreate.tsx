@@ -12,6 +12,7 @@ import { salesOrderLinesApi } from '../api/salesOrderLinesApi';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
 import { FOUNDATION_ROUTE_PATHS } from '@modules/finance/foundation/routes/foundationRoutePaths';
 import { INVENTORY_ROUTE_PATHS } from '@modules/finance/inventory/routes/inventoryRoutePaths';
+import { salesOrderQueryKeys } from '../queries/accountsReceivableQueryKeys';
 
 interface SalesOrderQuickCreateProps {
   open: boolean;
@@ -84,7 +85,7 @@ export function SalesOrderQuickCreate({
   const { t, isRtl } = useAppTranslation();
   const company = useCompanyStore((state) => state.currentCompany);
   const customersQuery = useQuery({
-    queryKey: ['accounts-receivable', 'sales-order-quick-create', 'customers', company],
+    queryKey: salesOrderQueryKeys.lookup(company, 'quick-create-customers'),
     queryFn: ({ signal }) => customerQuickCreateApi.list(signal),
     enabled: open,
     refetchOnMount: 'always',
@@ -136,13 +137,13 @@ export function SalesOrderQuickCreate({
   );
   const primaryContact = orderContacts.find((contact) => contact.primary) ?? orderContacts[0];
   const deliveryLookupsQuery = useQuery({
-    queryKey: ['accounts-receivable', 'sales-order-quick-create', 'delivery-lookups', company],
+    queryKey: salesOrderQueryKeys.lookup(company, 'quick-create-delivery-lookups'),
     queryFn: ({ signal }) => customerQuickCreateApi.lookups(signal),
     enabled: open,
     staleTime: 5 * 60 * 1000,
   });
   const dimensionsQuery = useQuery({
-    queryKey: ['sales-order-inventory-dimensions', company],
+    queryKey: salesOrderQueryKeys.lookup(company, 'inventory-dimensions'),
     queryFn: ({ signal }) => salesOrderLinesApi.inventoryDimensions(signal),
     enabled: open,
     staleTime: 5 * 60 * 1000,

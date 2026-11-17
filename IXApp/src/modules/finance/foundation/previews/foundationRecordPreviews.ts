@@ -36,6 +36,7 @@ interface TaxAuthorityPreview {
 registerRecordPreview<CurrencyPreview>(FOUNDATION_RECORD_PREVIEWS.CURRENCY, {
   masterRoute: FOUNDATION_ROUTE_PATHS.CURRENCIES,
   load: pagedRecordLoader('/v1/Currency', 'CurrencyCode'),
+  fromOption: (option) => ({ currencyCode: option.code, txt: option.name ?? '' }),
   fields: [
     { labelKey: 'fields.currency', defaultLabel: 'Currency', value: 'currencyCode', lookup: true },
     { labelKey: 'fields.name', defaultLabel: 'Name', value: 'txt' },
@@ -45,6 +46,7 @@ registerRecordPreview<CurrencyPreview>(FOUNDATION_RECORD_PREVIEWS.CURRENCY, {
 registerRecordPreview<TaxGroupPreview>(FOUNDATION_RECORD_PREVIEWS.SALES_TAX_GROUP, {
   masterRoute: FOUNDATION_ROUTE_PATHS.TAX_GROUPS,
   load: pagedRecordLoader('/v1/TaxGroup', 'TaxGroup'),
+  fromOption: (option) => ({ taxGroup: option.code, taxGroupName: option.name ?? '' }),
   fields: [
     { labelKey: 'fields.salesTaxGroup', defaultLabel: 'Sales tax group', value: 'taxGroup', lookup: true },
     { labelKey: 'fields.description', defaultLabel: 'Description', value: 'taxGroupName' },
@@ -54,6 +56,7 @@ registerRecordPreview<TaxGroupPreview>(FOUNDATION_RECORD_PREVIEWS.SALES_TAX_GROU
 registerRecordPreview<TaxItemGroupPreview>(FOUNDATION_RECORD_PREVIEWS.ITEM_SALES_TAX_GROUP, {
   masterRoute: FOUNDATION_ROUTE_PATHS.TAX_ITEM_GROUPS,
   load: pagedRecordLoader('/v1/TaxItemGroup', 'TaxItemGroup'),
+  fromOption: (option) => ({ taxItemGroup: option.code, name: option.name ?? '' }),
   fields: [
     {
       labelKey: 'fields.itemSalesTaxGroup',
@@ -68,6 +71,7 @@ registerRecordPreview<TaxItemGroupPreview>(FOUNDATION_RECORD_PREVIEWS.ITEM_SALES
 registerRecordPreview<TaxAuthorityPreview>(FOUNDATION_RECORD_PREVIEWS.TAX_AUTHORITY, {
   masterRoute: FOUNDATION_ROUTE_PATHS.TAX_AUTHORITIES,
   load: pagedRecordLoader('/v1/TaxAuthorityAddress', 'TaxAuthority'),
+  fromOption: (option) => ({ taxAuthority: option.code, name: option.name ?? '' }),
   fields: [
     { labelKey: 'fields.taxAuthority', defaultLabel: 'Tax authority', value: 'taxAuthority', lookup: true },
     { labelKey: 'fields.name', defaultLabel: 'Name', value: 'name' },
@@ -77,6 +81,7 @@ registerRecordPreview<TaxAuthorityPreview>(FOUNDATION_RECORD_PREVIEWS.TAX_AUTHOR
 // Modes and terms of delivery have no master form yet, so they declare no masterRoute.
 registerRecordPreview<DeliveryCodePreview>(FOUNDATION_RECORD_PREVIEWS.DELIVERY_MODE, {
   load: pagedRecordLoader('/v1/DlvMode', 'Code'),
+  fromOption: (option) => ({ code: option.code, txt: option.name ?? '' }),
   fields: [
     { labelKey: 'fields.deliveryMode', defaultLabel: 'Mode of delivery', value: 'code', lookup: true },
     { labelKey: 'fields.description', defaultLabel: 'Description', value: 'txt' },
@@ -85,6 +90,7 @@ registerRecordPreview<DeliveryCodePreview>(FOUNDATION_RECORD_PREVIEWS.DELIVERY_M
 
 registerRecordPreview<DeliveryCodePreview>(FOUNDATION_RECORD_PREVIEWS.DELIVERY_TERMS, {
   load: pagedRecordLoader('/v1/DlvTerm', 'Code'),
+  fromOption: (option) => ({ code: option.code, txt: option.name ?? '' }),
   fields: [
     { labelKey: 'customerQuickCreate.fields.deliveryTerms', defaultLabel: 'Delivery terms', value: 'code', lookup: true },
     { labelKey: 'fields.description', defaultLabel: 'Description', value: 'txt' },

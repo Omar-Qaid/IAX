@@ -22,6 +22,12 @@ export type RecordPreviewLoader<TRecord> = (
   signal?: AbortSignal
 ) => Promise<TRecord | null>;
 
+/** The lookup option a field already holds for the value (code + display name). */
+export interface RecordPreviewOption {
+  code: string;
+  name?: string | null;
+}
+
 /** How to preview one master-data entity. */
 export interface RecordPreviewDefinition<TRecord = Record<string, unknown>> {
   /**
@@ -37,6 +43,12 @@ export interface RecordPreviewDefinition<TRecord = Record<string, unknown>> {
    * this `masterRoute` get the preview automatically, with no per-field setup.
    */
   masterRoute?: string;
+  /**
+   * Builds the card record from the lookup option a field already holds, so the
+   * card shows at once, without a request (and without needing access to the
+   * master's own endpoint). Used when the option carries a name.
+   */
+  fromOption?: (option: RecordPreviewOption) => TRecord;
 }
 
 /** A resolved card row, ready to render. */

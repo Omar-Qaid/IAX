@@ -20,6 +20,7 @@ interface WarehousePreview {
 registerRecordPreview<SitePreview>(INVENTORY_RECORD_PREVIEWS.SITE, {
   masterRoute: INVENTORY_ROUTE_PATHS.SITES,
   load: pagedRecordLoader('/v1/InventSite', 'SiteId'),
+  fromOption: (option) => ({ siteId: option.code, name: option.name ?? '' }),
   fields: [
     { labelKey: 'fields.site', defaultLabel: 'Site', value: 'siteId', lookup: true },
     { labelKey: 'fields.name', defaultLabel: 'Name', value: 'name' },
@@ -29,6 +30,7 @@ registerRecordPreview<SitePreview>(INVENTORY_RECORD_PREVIEWS.SITE, {
 registerRecordPreview<WarehousePreview>(INVENTORY_RECORD_PREVIEWS.WAREHOUSE, {
   masterRoute: INVENTORY_ROUTE_PATHS.WAREHOUSES,
   load: pagedRecordLoader('/v1/InventLocation', 'InventLocationId'),
+  fromOption: (option) => ({ inventLocationId: option.code, name: option.name ?? '' }),
   fields: [
     { labelKey: 'fields.warehouse', defaultLabel: 'Warehouse', value: 'inventLocationId', lookup: true },
     { labelKey: 'fields.name', defaultLabel: 'Name', value: 'name' },

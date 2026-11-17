@@ -219,6 +219,17 @@ public sealed class SalesTableController : BaseController<SalesTable, SalesTable
 
         => Ok(APIResponse<IEnumerable<SalesOrderListDto>>.Ok(await _reads.GetListAsync(cancellationToken)));
 
+    /// <summary>One sales order in the list shape (header + customer name + delivery address).</summary>
+    [HttpGet("{recId:long}/details")]
+    public async Task<ActionResult<APIResponse<SalesOrderListDto>>> GetDetails(
+        long recId, CancellationToken cancellationToken = default)
+    {
+        var order = await _reads.GetDetailsAsync(recId, cancellationToken);
+        return order == null
+            ? NotFound(APIResponse<SalesOrderListDto>.Fail("Sales order was not found."))
+            : Ok(APIResponse<SalesOrderListDto>.Ok(order));
+    }
+
     public sealed class UpdateSalesHeaderInput : UpdateSalesHeaderInputDto { }
 
     [HttpPut("{recId:long}/header")]

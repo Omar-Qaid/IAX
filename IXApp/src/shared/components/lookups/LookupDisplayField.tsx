@@ -3,7 +3,7 @@ import { Box, Typography } from '@mui/material';
 import { d365 } from '@shared/constants/enterpriseUiTokens';
 import { EditableViewField } from '@shared/components/fields/EditableViewField';
 import { LookupNavigationLabel } from './LookupNavigationLabel';
-import { RecordPreview } from '@shared/components/record-preview';
+import { RecordPreview, type RecordPreviewOption } from '@shared/components/record-preview';
 
 interface LookupDisplayFieldProps {
   label: string;
@@ -13,6 +13,10 @@ interface LookupDisplayFieldProps {
   previewEntity?: string;
   /** Key of the referenced record (defaults to the shown value). */
   previewKey?: string | number | null;
+  /** Option already held for the value: the card shows it without loading. */
+  previewOption?: RecordPreviewOption | null;
+  /** Pencil on the value that switches the form to edit mode. */
+  onEdit?: () => void;
 }
 
 export function LookupDisplayField({
@@ -21,6 +25,8 @@ export function LookupDisplayField({
   masterRoute,
   previewEntity,
   previewKey,
+  previewOption,
+  onEdit,
 }: LookupDisplayFieldProps): React.ReactElement {
   return (
     <Box sx={{ minWidth: 0 }}>
@@ -29,8 +35,8 @@ export function LookupDisplayField({
           <LookupNavigationLabel label={label} masterRoute={masterRoute} />
         </Typography>
       )}
-      <RecordPreview entity={previewEntity} masterRoute={masterRoute} recordKey={previewKey ?? value}>
-        <EditableViewField label={label} value={value} lookup />
+      <RecordPreview entity={previewEntity} masterRoute={masterRoute} recordKey={previewKey ?? value} option={previewOption}>
+        <EditableViewField label={label} value={value} lookup onEdit={onEdit} />
       </RecordPreview>
     </Box>
   );
