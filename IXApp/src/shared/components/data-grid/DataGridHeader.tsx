@@ -15,7 +15,11 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { ColumnDef, SortModel, FilterModel } from './types';
 import { AppBooleanField } from '@shared/components/fields/AppBooleanField';
-import { GRID_SELECTION_COLUMN_WIDTH } from './constants';
+import {
+  GRID_SELECTION_COLUMN_WIDTH,
+  VALUELESS_FILTER_OPERATORS,
+  defaultFilterOperator,
+} from './constants';
 
 // New Modular Sub-components
 import { PinnedHeaderCell } from './header/PinnedHeaderCell';
@@ -121,10 +125,16 @@ export function DataGridHeaderInternal<T>({
   const handleFilterChange = (field: string, value: string) => {
     setFilters(prev => {
       const existing = prev.find(f => f.field === field);
+      const column = columns.find(c => String(c.field) === field);
       if (existing) {
-        return value ? prev.map(f => f.field === field ? { ...f, value } : f) : prev.filter(f => f.field !== field);
+        if (!value) return prev.filter(f => f.field !== field);
+        // Typing over a blank check replaces it with a normal value filter.
+        const operator = VALUELESS_FILTER_OPERATORS.has(existing.operator)
+          ? defaultFilterOperator(column?.type)
+          : existing.operator;
+        return prev.map(f => f.field === field ? { ...f, operator, value } : f);
       }
-      return value ? [...prev, { field, operator: 'contains', value }] : prev;
+      return value ? [...prev, { field, operator: defaultFilterOperator(column?.type), value }] : prev;
     });
   };
 

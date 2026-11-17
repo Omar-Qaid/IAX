@@ -14,6 +14,10 @@ export interface DataGridHandle {
   focusRecordCell: (address: GridCellAddress) => Promise<void>;
   clearFilters: () => void;
   focusFilter: () => void;
+  /** Scrolls the rows (desktop) or cards (mobile) back to the first record. */
+  scrollToTop: () => void;
+  /** Scrolls a loaded record into view; returns false when it is not loaded (yet). */
+  scrollToRow: (id: string | number) => boolean;
   startAddRow: () => void;
   startEditRow: (id: string | number) => void;
   saveEdit: () => Promise<boolean>;
@@ -33,6 +37,12 @@ export interface ColumnDef<T> {
   hidden?: boolean;
   pinned?: 'left' | 'right' | null;
   renderCell?: (params: { row: T; value: unknown; rowIndex: number }) => React.ReactNode;
+  /**
+   * D365 record preview: hovering or focusing the cell shows a card with the
+   * referenced master record (e.g. `{ entity: 'customer' }` on an account column).
+   * The key defaults to the cell value.
+   */
+  preview?: { entity: string; getKey?: (row: T) => unknown };
   /** Makes a key cell link to the record's detail form. Return undefined for rows without a route. */
   getDetailHref?: (row: T) => string | undefined;
   valueGetter?: (params: { row: T }) => unknown;
@@ -67,7 +77,9 @@ export interface FilterModel {
     | 'notEquals'
     | 'doesNotContain'
     | 'in'
-    | 'matches';
+    | 'matches'
+    | 'isEmpty'
+    | 'isNotEmpty';
   value: unknown;
 }
 

@@ -16,7 +16,12 @@ import ArrowUpward from '@mui/icons-material/ArrowUpward';
 import ArrowDownward from '@mui/icons-material/ArrowDownward';
 import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
 import type { ColumnDef, FilterModel } from '../types';
-import { GRID_FILTER_OPERATORS } from '../constants';
+import {
+  GRID_FILTER_OPERATORS,
+  VALUELESS_FILTER_OPERATORS,
+  defaultFilterOperator,
+  filterOperatorsFor,
+} from '../constants';
 import { AppTextField } from '@shared/components/fields/AppTextField';
 import { useTranslation } from 'react-i18next';
 
@@ -44,7 +49,13 @@ export function FilterPopover<T>({
   // Local state for the filter being edited in the popover
   const [localFilter, setLocalFilter] = useState<FilterModel>(() => {
     const existing = column ? filters.find((f) => f.field === column.field) : null;
-    return existing || { field: (column?.field as string) || '', operator: 'contains', value: '' };
+    return (
+      existing || {
+        field: (column?.field as string) || '',
+        operator: defaultFilterOperator(column?.type),
+        value: '',
+      }
+    );
   });
 
   // Sync local filter when popover opens for a column
@@ -52,7 +63,11 @@ export function FilterPopover<T>({
     if (anchorEl && column) {
       const existing = filters.find((f) => f.field === column.field);
       setLocalFilter(
-        existing || { field: column.field as string, operator: 'contains', value: '' }
+        existing || {
+          field: column.field as string,
+          operator: defaultFilterOperator(column.type),
+          value: '',
+        }
       );
       setTempValue('');
     }
@@ -60,12 +75,23 @@ export function FilterPopover<T>({
 
   if (!column) return null;
 
+  const valueless = VALUELESS_FILTER_OPERATORS.has(localFilter.operator);
+
   const handleApply = () => {
+    // A value typed into "is one of" but not yet confirmed with Enter still counts.
+    let next = localFilter;
+    if (localFilter.operator === 'in' && tempValue.trim()) {
+      const current = Array.isArray(localFilter.value) ? (localFilter.value as string[]) : [];
+      const pending = tempValue.trim();
+      next = { ...localFilter, value: current.includes(pending) ? current : [...current, pending] };
+    }
+    if (valueless) next = { ...next, value: '' };
     setFilters((prev) => {
-      const others = prev.filter((f) => f.field !== localFilter.field);
-      const val = localFilter.value;
-      if (!val || (Array.isArray(val) && val.length === 0)) return others;
-      return [...others, localFilter];
+      const others = prev.filter((f) => f.field !== next.field);
+      const val = next.value;
+      if (!valueless && (val == null || val === '' || (Array.isArray(val) && val.length === 0)))
+        return others;
+      return [...others, next];
     });
     onClose();
   };
@@ -148,7 +174,8 @@ export function FilterPopover<T>({
           </Button>
         </Box>
 
-        {/* Value input */}
+        {/* Value input (blank checks take none) */}
+        {!valueless && (
         <AppTextField
           fullWidth
           placeholder={
@@ -156,7 +183,22 @@ export function FilterPopover<T>({
               ? t('grid.press_enter_to_add')
               : t('grid.filter_placeholder')
           }
-          value={localFilter.operator === 'in' ? tempValue : localFilter.value || ''}
+          type={
+            localFilter.operator === 'in'
+              ? 'text'
+              : column.type === 'number'
+                ? 'number'
+                : column.type === 'date'
+                  ? 'date'
+                  : 'text'
+          }
+          value={
+            localFilter.operator === 'in'
+              ? tempValue
+              : Array.isArray(localFilter.value)
+                ? ''
+                : String(localFilter.value ?? '')
+          }
           onChange={(val) => {
             const nextValue = String(val ?? '');
             if (localFilter.operator === 'in') setTempValue(nextValue);
@@ -177,6 +219,7 @@ export function FilterPopover<T>({
           }}
           sx={{ mb: 1.5, '& input': { fontSize: '0.85rem' } }}
         />
+        )}
 
         {/* "is one of" tag list */}
         {localFilter.operator === 'in' && Array.isArray(localFilter.value) && (
@@ -240,11 +283,25 @@ export function FilterPopover<T>({
         open={Boolean(operatorAnchor)}
         onClose={() => setOperatorAnchor(null)}
       >
-        {GRID_FILTER_OPERATORS.map((op) => (
+        {filterOperatorsFor(column.type).map((op) => (
           <MenuItem
             key={op.value}
+            selected={op.value === localFilter.operator}
             onClick={() => {
-              setLocalFilter((f) => ({ ...f, operator: op.value as FilterModel['operator'] }));
+              // "is one of" holds a list; every other operator holds a single value.
+              // Carry the value across only when the shape stays the same.
+              setLocalFilter((f) => {
+                const operator = op.value as FilterModel['operator'];
+                const wasList = f.operator === 'in';
+                const isList = operator === 'in';
+                if (wasList === isList) return { ...f, operator };
+                if (isList) {
+                  const single = String(f.value ?? '').trim();
+                  return { ...f, operator, value: single ? [single] : [] };
+                }
+                return { ...f, operator, value: '' };
+              });
+              setTempValue('');
               setOperatorAnchor(null);
             }}
           >

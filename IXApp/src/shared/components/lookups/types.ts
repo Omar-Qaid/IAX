@@ -76,6 +76,10 @@ export interface GridLookupProps<T extends object> {
   searchDebounceMs?: number;
   showClearButton?: boolean;
   actions?: GridLookupAction[];
+  /** Render inside a data-grid cell: no label or outline; the cell draws the only border. */
+  gridCell?: boolean;
+  /** D365 hover/focus card for the referenced master record (a registered entity). */
+  previewEntity?: string;
 }
 
 export interface LookupGridFieldProps<
@@ -118,6 +122,10 @@ export interface LookupGridFieldProps<
   size?: 'small' | 'medium';
   pageSize?: number;
   actions?: GridLookupAction[];
+  /** Render inside a data-grid cell: no label or outline; the cell draws the only border. */
+  gridCell?: boolean;
+  /** D365 hover/focus card for the referenced master record (a registered entity). */
+  previewEntity?: string;
   permissionModule?: string;
   permissionResource?: string;
 }
@@ -138,7 +146,7 @@ export interface LookupFieldProps<TFieldValues extends FieldValues = FieldValues
   label: string;
   /** Optional destination for the label's master-record navigation icon. */
   masterRoute?: string;
-  value?: string | number | (string | number)[];
+  value?: string | number | (string | number)[] | null;
   onChange?: (
     value: string | number | (string | number)[] | null,
     option?: LookupOption | LookupOption[]
@@ -153,6 +161,15 @@ export interface LookupFieldProps<TFieldValues extends FieldValues = FieldValues
   pageSize?: number;
   searchDebounceMs?: number;
   showAllNamesInOptions?: boolean;
+  /** Focus the input when it mounts (grid cells that open in edit mode). */
+  autoFocus?: boolean;
+  /** D365 hover/focus card for the referenced master record (a registered entity). */
+  previewEntity?: string;
+  /**
+   * Grid cells: fields listed in the record preview card shown when the value is
+   * focused (D365). Defaults to code, name and description.
+   */
+  previewFields?: { field: string; label: string }[];
   multiple?: boolean;
   disabled?: boolean;
   readOnly?: boolean;

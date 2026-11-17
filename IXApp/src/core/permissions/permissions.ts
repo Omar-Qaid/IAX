@@ -1,4 +1,9 @@
 export const PERMISSIONS = {
+  FREE_TEXT_INVOICE_VIEW: 'AccountsReceivable.Invoices.View',
+  FREE_TEXT_INVOICE_CREATE: 'AccountsReceivable.Invoices.Create',
+  FREE_TEXT_INVOICE_EDIT: 'AccountsReceivable.Invoices.Edit',
+  FREE_TEXT_INVOICE_DELETE: 'AccountsReceivable.Invoices.Delete',
+  FREE_TEXT_INVOICE_POST: 'AccountsReceivable.Invoices.Post',
   PAYMENT_TERM_VIEW: 'AccountsReceivable.PaymTerm.View',
   PAYMENT_TERM_CREATE: 'AccountsReceivable.PaymTerm.Create',
   PAYMENT_TERM_EDIT: 'AccountsReceivable.PaymTerm.Edit',

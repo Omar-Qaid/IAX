@@ -15,6 +15,8 @@ import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRou
 import { PERMISSIONS } from '@core/permissions/permissions';
 import { PARTY_BALANCE_ROUTE_PATHS } from '@modules/finance/party-balances/routes/partyBalanceRoutePaths';
 import { useNotifications } from '@shared/hooks/useNotifications';
+import { FOUNDATION_RECORD_PREVIEWS } from '../../foundation/previews/foundationRecordPreviews';
+import { ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS } from '../previews/accountsReceivableRecordPreviews';
 
 export function CustomerListPage(): React.ReactElement {
   const company = useCompanyStore(state => state.currentCompany);
@@ -51,12 +53,12 @@ export function CustomerListPage(): React.ReactElement {
         align: 'right',
         headerAlign: 'right',
       },
-      { field: 'invoiceAccount', headerName: 'fields.invoiceAccount', width: 150 },
-      { field: 'customerGroupId', headerName: 'fields.customerGroup', width: 150 },
-      { field: 'currencyCode', headerName: 'fields.currency', width: 95 },
+      { field: 'invoiceAccount', headerName: 'fields.invoiceAccount', width: 150, preview: { entity: ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.CUSTOMER } },
+      { field: 'customerGroupId', headerName: 'fields.customerGroup', width: 150, preview: { entity: ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.CUSTOMER_GROUP } },
+      { field: 'currencyCode', headerName: 'fields.currency', width: 95, preview: { entity: FOUNDATION_RECORD_PREVIEWS.CURRENCY } },
       { field: 'phone', headerName: 'fields.phone', width: 165 },
-      { field: 'taxGroupId', headerName: 'fields.salesTaxGroup', width: 140 },
-      { field: 'paymTermId', headerName: 'fields.termsOfPayment', width: 145 },
+      { field: 'taxGroupId', headerName: 'fields.salesTaxGroup', width: 140, preview: { entity: FOUNDATION_RECORD_PREVIEWS.SALES_TAX_GROUP } },
+      { field: 'paymTermId', headerName: 'fields.termsOfPayment', width: 145, preview: { entity: ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.PAYMENT_TERMS } },
       {
         field: 'status',
         headerName: 'common.status',

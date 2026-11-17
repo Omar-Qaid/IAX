@@ -81,6 +81,8 @@ export function GridSidebar<T>({
       lt: t('grid.operators.less_than'),
       in: t('grid.operators.is_one_of'),
       matches: t('grid.operators.matches_regex'),
+      isEmpty: t('grid.operators.is_empty'),
+      isNotEmpty: t('grid.operators.is_not_empty'),
     }),
     [t]
   );

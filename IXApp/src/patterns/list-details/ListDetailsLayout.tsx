@@ -19,6 +19,7 @@ import { d365 } from '@shared/constants/enterpriseUiTokens';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { getLogicalDrawerAnchor } from '@shared/hooks/useLogicalDrawerAnchor';
 import { LookupNavigationLabel } from '@shared/components/lookups/LookupNavigationLabel';
+import { RecordPreview } from '@shared/components/record-preview';
 import { LookupField } from '@shared/components/lookups/LookupField';
 import { EditableViewField } from '@shared/components/fields/EditableViewField';
 import { FieldPresentationProvider } from '@shared/components/fields/FieldPresentationContext';
@@ -472,6 +473,12 @@ export function ListDetailsLayout({
                                         : fieldLabel}
                                     </Typography>
                                   )}
+                                  {/* D365 record preview for master-data fields (resolved by masterRoute). */}
+                                  <RecordPreview
+                                    masterRoute={field.masterRoute}
+                                    entity={field.previewEntity}
+                                    recordKey={typeof value === 'string' || typeof value === 'number' ? value : null}
+                                  >
                                   {!editing && field.render && field.type === 'select' ? (
                                     <EditableViewField
                                       value={field.formatValue?.(value) ?? field.options?.find((option) => option.value === String(value))?.label ?? String(value ?? '')}
@@ -481,7 +488,7 @@ export function ListDetailsLayout({
                                       disabled={field.disabled}
                                     />
                                   ) : field.render ? (
-                                    <FieldPresentationProvider viewMode={!editing} masterRoute={field.masterRoute}>
+                                    <FieldPresentationProvider viewMode={!(section.editing ?? editing)} masterRoute={field.masterRoute}>
                                     <Box sx={{
                                       position: 'relative',
                                       '&:hover .field-edit-action, &:focus-within .field-edit-action': { opacity: 1 },
@@ -608,6 +615,7 @@ export function ListDetailsLayout({
                                       onEdit={editField}
                                     />
                                   )}
+                                  </RecordPreview>
                                 </Box>
                               );
                             })}

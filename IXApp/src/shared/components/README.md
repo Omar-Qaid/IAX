@@ -11,6 +11,7 @@
 | `forms` | Form layout, actions, summaries, and entity form hook | [README](forms/README.md) |
 | `logistics` | Postal/electronic address drawers | [README](logistics/README.md) |
 | `lookups` | Field, dialog, grid, filtering, and lookup state | [README](lookups/README.md) |
+| `record-preview` | D365 hover/focus record cards for master data in grids and forms | [README](record-preview/README.md) |
 | `page` | Page primitives, status, related info, and unsaved guard | [README](page/README.md) |
 | `status` | Record/document status presentation | [README](status/README.md) |
 

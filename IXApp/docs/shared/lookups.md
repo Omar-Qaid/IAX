@@ -17,4 +17,6 @@ but existed only as empty files, which have been removed. Searching and filterin
 
 For a large simple lookup, configure `LookupField` with `sideMode="server"`, an entity-specific `queryKey`, and a `fetchPage` adapter. The adapter owns API parameter naming and maps the API response to `{ data, pageNumber, totalPages, totalRecords }`; the shared hook owns debounce, caching, request cancellation, and page accumulation. The older `onFetchOptions(search)` callback remains supported for non-paged server search.
 
+Lookups show the master-data [record preview](record-preview.md) on hover or focus when their `masterRoute` belongs to a registered entity, or when `previewEntity` is set. In grid cells (`DataGridLookupField`) they render borderless with a thin chevron, show the code, list code and name, and accept type-ahead with Enter or Tab.
+
 Lookup permission props disable restricted selection in the field; route/API authorization must still be enforced separately. Use the shared grid lookup for large relational datasets and `AppSelectField` for small fixed option arrays.

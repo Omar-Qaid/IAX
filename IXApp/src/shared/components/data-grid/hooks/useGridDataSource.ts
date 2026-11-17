@@ -6,6 +6,8 @@ interface UseGridDataSourceOptions {
     initialSort: SortModel[];
     initialFilters: FilterModel[];
     pageSize: number;
+    /** Rows loaded so far; the next page index is derived from it. */
+    loadedRowCount?: number;
     onFetchRows?: (params: FetchRowsParams) => void;
     onScrollReset: () => void;
 }
@@ -26,6 +28,7 @@ export function useGridDataSource({
     initialSort,
     initialFilters,
     pageSize,
+    loadedRowCount,
     onFetchRows,
     onScrollReset,
 }: UseGridDataSourceOptions): GridDataSourceHandle {
@@ -38,8 +41,10 @@ export function useGridDataSource({
     const abortRef = useRef<AbortController | null>(null);
     const onFetchRowsRef = useRef(onFetchRows);
     const scrollResetRef = useRef(onScrollReset);
+    const loadedRowCountRef = useRef(loadedRowCount);
 
     useEffect(() => {
+        loadedRowCountRef.current = loadedRowCount;
         paramsRef.current = { sortModel, filters, globalSearch, pageSize };
         onFetchRowsRef.current = onFetchRows;
         scrollResetRef.current = onScrollReset;
@@ -93,7 +98,13 @@ export function useGridDataSource({
 
     const loadNextPage = useCallback(() => {
         if (!enabled) return;
-        pageRef.current += 1;
+        // Derive the page from what actually arrived: a failed request is asked
+        // for again instead of being skipped by a counter that already moved on.
+        const loaded = loadedRowCountRef.current;
+        const { pageSize } = paramsRef.current;
+        pageRef.current = loaded !== undefined && pageSize > 0
+            ? Math.floor(loaded / pageSize)
+            : pageRef.current + 1;
         emit(false);
     }, [enabled, emit]);
 

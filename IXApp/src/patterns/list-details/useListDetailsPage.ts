@@ -89,13 +89,17 @@ export function useListDetailsPage<T extends ListDetailRecord>(
     createEnterpriseFilterCondition(defaultAdvancedField),
   ]);
   const [advancedFilters, setAdvancedFilters] = useState<EnterpriseFilterCondition[]>([]);
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(
+    config.initialMode === 'new' || config.initialMode === 'edit'
+  );
   useUnsavedChanges(editing);
-  const [isNew, setIsNew] = useState(false);
+  const [isNew, setIsNew] = useState(config.initialMode === 'new');
   const [saving, setSaving] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const selected = records.find((record) => record.id === selectedId) ?? null;
-  const [draft, setDraft] = useState<T | null>(selected);
+  const [draft, setDraft] = useState<T | null>(() =>
+    config.initialMode === 'new' ? config.createRecord() : selected
+  );
 
   useEffect(() => {
     if (source.type !== 'remote') return;
@@ -271,6 +275,7 @@ export function useListDetailsPage<T extends ListDetailRecord>(
     setEditing(false);
     setIsNew(false);
     setValidationErrors({});
+    config.onCancel?.();
   };
   const remove = async () => {
     if (config.interactionLocked) return;

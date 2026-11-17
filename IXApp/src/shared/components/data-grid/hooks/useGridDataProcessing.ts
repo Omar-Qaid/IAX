@@ -1,6 +1,19 @@
 import { useMemo, useState } from 'react';
 import type { ColumnDef, FilterModel, SortModel } from '../types';
-import { getNestedValue } from '../DataGridUtils';
+import { getNestedValue, normalizeValueOptions } from '../DataGridUtils';
+
+/** Value -> label maps for dropdown columns, so search and filters match what users see. */
+function buildLabelMaps<T>(columns: ColumnDef<T>[]) {
+    const maps = new Map<ColumnDef<T>['field'], Map<string, string>>();
+    for (const col of columns) {
+        if (col.type !== 'singleSelect' || !col.valueOptions) continue;
+        maps.set(col.field, new Map(normalizeValueOptions(col.valueOptions).map(o => [o.key, o.label])));
+    }
+    return maps;
+}
+
+/** Negative operators must hold for every candidate (value and label), positive ones for any. */
+const NEGATIVE_OPERATORS = new Set(['notEquals', 'doesNotContain']);
 
 interface UseGridDataProcessingOptions<T> {
     rows: T[];
@@ -28,7 +41,9 @@ export function useGridDataProcessing<T>({
     const [dataColumns, setDataColumns] = useState(columns);
     if (columns.length !== dataColumns.length || columns.some((column, index) => {
         const previous = dataColumns[index];
-        return column.field !== previous.field || column.type !== previous.type || column.valueGetter !== previous.valueGetter;
+        return column.field !== previous.field || column.type !== previous.type || column.valueGetter !== previous.valueGetter
+            // Dropdown labels often load after the grid: refresh label matching when they arrive.
+            || column.valueOptions !== previous.valueOptions;
     })) setDataColumns(columns);
     const processedRows = useMemo(() => {
         if (serverSide) return rows;
@@ -37,14 +52,19 @@ export function useGridDataProcessing<T>({
         for (const c of dataColumns) colByField.set(c.field, c);
 
         let result: T[] = rows;
+        const labelMaps = buildLabelMaps(dataColumns);
+        const labelOf = (col: ColumnDef<T>, val: unknown) =>
+            val == null ? undefined : labelMaps.get(col.field)?.get(String(val));
 
-        // 1. Search
+        // 1. Search (stored value or, for dropdowns, the label shown)
         if (globalSearch) {
             const lower = globalSearch.toLowerCase();
             result = result.filter(row =>
                 dataColumns.some(col => {
                     const val = col.valueGetter ? col.valueGetter({ row }) : getNestedValue(row, col.field as string);
-                    return val != null && String(val).toLowerCase().includes(lower);
+                    if (val == null) return false;
+                    if (String(val).toLowerCase().includes(lower)) return true;
+                    return labelOf(col, val)?.toLowerCase().includes(lower) ?? false;
                 }),
             );
         }
@@ -60,8 +80,12 @@ export function useGridDataProcessing<T>({
                     catch { regex = null; }
                 }
                 let inSet: Set<string> | null = null;
-                if (filter.operator === 'in' && Array.isArray(filter.value)) {
-                    inSet = new Set((filter.value as unknown[]).map(v => String(v).toLowerCase()));
+                if (filter.operator === 'in') {
+                    // Accept an array, or a comma-separated string from the filter row / persisted state.
+                    const values = Array.isArray(filter.value)
+                        ? (filter.value as unknown[])
+                        : String(filter.value ?? '').split(',').map(v => v.trim()).filter(Boolean);
+                    inSet = new Set(values.map(v => String(v).toLowerCase()));
                 }
                 return {
                     filter,
@@ -75,32 +99,45 @@ export function useGridDataProcessing<T>({
 
             result = result.filter(row =>
                 compiled.every(({ filter, col, lowerValue, regex, inSet, isNumber }) => {
-                    if (filter.value == null || filter.value === '') return true;
                     if (!col) return true;
                     const val = col.valueGetter ? col.valueGetter({ row }) : getNestedValue(row, col.field as string);
-                    if (val == null) return false;
+                    // Blank checks take no value, so they run before the empty-value skip.
+                    if (filter.operator === 'isEmpty') return val == null || String(val).trim() === '';
+                    if (filter.operator === 'isNotEmpty') return val != null && String(val).trim() !== '';
+                    if (filter.value == null || filter.value === '') return true;
+                    if (Array.isArray(filter.value) && filter.value.length === 0) return true;
+                    if (val == null) return filter.operator === 'notEquals' || filter.operator === 'doesNotContain';
 
-                    const strVal = String(val).toLowerCase();
+                    const matches = (candidate: unknown): boolean => {
+                        const strVal = String(candidate).toLowerCase();
+                        switch (filter.operator) {
+                            case 'contains': return strVal.includes(lowerValue);
+                            case 'doesNotContain': return !strVal.includes(lowerValue);
+                            case 'startsWith': return strVal.startsWith(lowerValue);
+                            case 'endsWith': return strVal.endsWith(lowerValue);
+                            case 'equals':
+                                return isNumber
+                                    ? Number(candidate) === Number(filter.value)
+                                    : strVal === lowerValue;
+                            case 'notEquals':
+                                return isNumber
+                                    ? Number(candidate) !== Number(filter.value)
+                                    : strVal !== lowerValue;
+                            case 'gt': return isNumber ? Number(candidate) > Number(filter.value) : String(candidate) > String(filter.value);
+                            case 'lt': return isNumber ? Number(candidate) < Number(filter.value) : String(candidate) < String(filter.value);
+                            case 'in': return inSet !== null && inSet.has(strVal);
+                            case 'matches': return regex ? regex.test(String(candidate)) : true;
+                            default: return true;
+                        }
+                    };
 
-                    switch (filter.operator) {
-                        case 'contains': return strVal.includes(lowerValue);
-                        case 'doesNotContain': return !strVal.includes(lowerValue);
-                        case 'startsWith': return strVal.startsWith(lowerValue);
-                        case 'endsWith': return strVal.endsWith(lowerValue);
-                        case 'equals':
-                            return isNumber
-                                ? Number(val) === Number(filter.value)
-                                : strVal === lowerValue;
-                        case 'notEquals':
-                            return isNumber
-                                ? Number(val) !== Number(filter.value)
-                                : strVal !== lowerValue;
-                        case 'gt': return isNumber ? Number(val) > Number(filter.value) : val > filter.value;
-                        case 'lt': return isNumber ? Number(val) < Number(filter.value) : val < filter.value;
-                        case 'in': return inSet !== null && inSet.has(strVal);
-                        case 'matches': return regex ? regex.test(String(val)) : true;
-                        default: return true;
-                    }
+                    // Dropdown columns match on the stored value or the label shown.
+                    const label = labelOf(col, val);
+                    const candidates: unknown[] =
+                        label !== undefined && label !== String(val) ? [val, label] : [val];
+                    return NEGATIVE_OPERATORS.has(filter.operator)
+                        ? candidates.every(matches)
+                        : candidates.some(matches);
                 }),
             );
         }

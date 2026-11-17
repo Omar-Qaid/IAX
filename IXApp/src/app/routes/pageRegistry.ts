@@ -18,23 +18,69 @@ const lazyPage = <TModule extends object>(
 ) => lazy(async () => ({ default: select(await importer()) }));
 
 export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
-  ...[accountContactsRoute, contactDetailsRoute].map((path, index) => ({
-    id: index ? 'ContactPerson' : 'view-contacts', path, permission: PERMISSIONS.CONTACT_VIEW,
-    component: lazyPage(() => import('@modules/finance/contacts/AccountContactsPage'), module => module.AccountContactsPage),
+  ...[
+    { id: 'CustFreeInvoiceNewPage', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.FREE_TEXT_INVOICE_NEW, permission: PERMISSIONS.FREE_TEXT_INVOICE_CREATE },
+    { id: 'CustFreeInvoiceDetailsPage', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.FREE_TEXT_INVOICE_DETAILS, permission: PERMISSIONS.FREE_TEXT_INVOICE_VIEW },
+  ].map((route) => ({
+    ...route,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-receivable/pages/CustFreeInvoiceDetailsPage'),
+      (module) => module.CustFreeInvoiceDetailsPage
+    ),
   })),
-  {id: 'CustTrans', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUST_TRANS, permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW,
-    component: lazyPage(() => import('@modules/finance/accounts-receivable/pages/CustTrans'), module => module.CustTrans)},
-  {id: 'customer-open-transactions', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_OPEN_TRANSACTIONS, permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW,
-    component: lazyPage(() => import('@modules/finance/accounts-receivable/pages/CustomerOpenTransactionsPage'), module => module.CustomerOpenTransactionsPage)},
   {
-    id: 'cust-open-balance-currency', path: PARTY_BALANCE_ROUTE_PATHS.CUSTOMER_BALANCE,
+    id: 'CustFreeInvoiceListPage',
+    path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.FREE_TEXT_INVOICES,
+    permission: PERMISSIONS.FREE_TEXT_INVOICE_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-receivable/pages/CustFreeInvoiceListPage'),
+      (module) => module.CustFreeInvoiceListPage
+    ),
+  },
+  ...[accountContactsRoute, contactDetailsRoute].map((path, index) => ({
+    id: index ? 'ContactPerson' : 'view-contacts',
+    path,
+    permission: PERMISSIONS.CONTACT_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/contacts/AccountContactsPage'),
+      (module) => module.AccountContactsPage
+    ),
+  })),
+  {
+    id: 'CustTrans',
+    path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUST_TRANS,
     permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW,
-    component: lazyPage(() => import('@modules/finance/party-balances/pages/PartyBalancePage'), (module) => module.CustOpenBalanceCurrency),
+    component: lazyPage(
+      () => import('@modules/finance/accounts-receivable/pages/CustTrans'),
+      (module) => module.CustTrans
+    ),
   },
   {
-    id: 'vend-open-balance-currency', path: PARTY_BALANCE_ROUTE_PATHS.VENDOR_BALANCE,
+    id: 'customer-open-transactions',
+    path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_OPEN_TRANSACTIONS,
+    permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-receivable/pages/CustomerOpenTransactionsPage'),
+      (module) => module.CustomerOpenTransactionsPage
+    ),
+  },
+  {
+    id: 'cust-open-balance-currency',
+    path: PARTY_BALANCE_ROUTE_PATHS.CUSTOMER_BALANCE,
+    permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/party-balances/pages/PartyBalancePage'),
+      (module) => module.CustOpenBalanceCurrency
+    ),
+  },
+  {
+    id: 'vend-open-balance-currency',
+    path: PARTY_BALANCE_ROUTE_PATHS.VENDOR_BALANCE,
     permission: PERMISSIONS.VENDOR_TRANSACTION_VIEW,
-    component: lazyPage(() => import('@modules/finance/party-balances/pages/PartyBalancePage'), (module) => module.VendOpenBalanceCurrency),
+    component: lazyPage(
+      () => import('@modules/finance/party-balances/pages/PartyBalancePage'),
+      (module) => module.VendOpenBalanceCurrency
+    ),
   },
   {
     id: 'customer-posting-profiles',
@@ -169,6 +215,15 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     component: lazyPage(
       () => import('@modules/finance/accounts-receivable/pages/CustConfirmJournal'),
       (module) => module.CustConfirmJournal
+    ),
+  },
+  {
+    id: 'customer-packing-slips',
+    path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PACKING_SLIPS,
+    permission: PERMISSIONS.SALES_ORDER_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-receivable/pages/CustPackingSlipJournal'),
+      (module) => module.CustPackingSlipJournal
     ),
   },
   {

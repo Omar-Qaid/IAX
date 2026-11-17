@@ -1,5 +1,6 @@
 import React from 'react';
 import { MenuItem, TextField } from '@mui/material';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { Controller, type FieldValues } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import type { BaseFieldProps } from './types';
@@ -19,7 +20,13 @@ export interface AppSelectFieldProps<
 > extends BaseFieldProps<TFieldValues, string | number> {
   options: SelectOption[];
   masterRoute?: string;
+  /** Render inside a data-grid cell: borderless, thin chevron (D365). Unbound mode only. */
+  gridCell?: boolean;
 }
+
+const GridChevron = (props: React.ComponentProps<typeof KeyboardArrowDownIcon>) => (
+  <KeyboardArrowDownIcon {...props} sx={{ fontSize: 18 }} />
+);
 
 export function AppSelectField<TFieldValues extends FieldValues = FieldValues>({
   name,
@@ -36,6 +43,7 @@ export function AppSelectField<TFieldValues extends FieldValues = FieldValues>({
   variant = 'outlined',
   value,
   onChange,
+  gridCell = false,
 }: AppSelectFieldProps<TFieldValues>): React.ReactElement | null {
   const { t } = useTranslation();
   const placeholder = t('lookups.selectPlaceholder', 'Select…');
@@ -54,13 +62,19 @@ export function AppSelectField<TFieldValues extends FieldValues = FieldValues>({
         helperText={helperText}
         fullWidth={fullWidth}
         size="small"
-        variant={variant}
+        variant={gridCell ? 'standard' : variant}
         value={value ?? ''}
-        sx={[lookupValueSx(value), { '& .app-select-placeholder': { color: 'text.disabled' } }]}
+        sx={[
+          // Enum values in a grid read as plain text; only lookups are links (D365).
+          gridCell ? {} : lookupValueSx(value),
+          { '& .app-select-placeholder': { color: 'text.disabled' } },
+        ]}
         slotProps={{
+          ...(gridCell ? { input: { disableUnderline: true } } : {}),
           select: {
             displayEmpty: true,
             renderValue: (selected) => selectValue(selected, options, placeholder),
+            ...(gridCell ? { IconComponent: GridChevron } : {}),
           },
         }}
         onChange={(e) => onChange?.(e.target.value)}

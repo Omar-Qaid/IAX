@@ -71,8 +71,27 @@ describe('workflow setup pages', () => {
 
     expect(await screen.findByText('Approval activity')).toBeDefined();
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    // The grid writes only modified lines (D365), so make a real change before saving.
+    fireEvent.change(await screen.findByDisplayValue('Approval activity'), {
+      target: { value: 'Approval activity v2' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     await waitFor(() => expect(update).toHaveBeenCalledOnce());
+  });
+
+  it('does not write an existing activity type that was saved without changes', async () => {
+    const activityType = record('Approval activity');
+    vi.spyOn(wfActivityTypeApi, 'list').mockResolvedValue([activityType]);
+    const update = vi.spyOn(wfActivityTypeApi, 'update').mockResolvedValue(activityType);
+    render(<WfActivityTypesPage />);
+
+    expect(await screen.findByText('Approval activity')).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    expect(await screen.findByDisplayValue('Approval activity')).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(screen.queryByDisplayValue('Approval activity')).toBeNull());
+    expect(update).not.toHaveBeenCalled();
   });
 });

@@ -38,6 +38,8 @@ interface GridRowProps<T> {
   onContextMenu: (e: React.MouseEvent, row: T) => void;
   renderCell: (row: T, col: ColumnDef<T>, rowIndex: number) => React.ReactNode;
   isEditing?: boolean;
+  /** Changes per keystroke on the line being edited; forwarded so only its cells re-render. */
+  editSnapshot?: unknown;
   saving?: boolean;
   onSave?: () => void;
   onCancel?: () => void;
@@ -66,6 +68,7 @@ export const GridRow = memo(function GridRowInner<T>({
   onContextMenu,
   renderCell,
   isEditing = false,
+  editSnapshot,
   saving = false,
   onSave,
   onCancel,
@@ -92,6 +95,8 @@ export const GridRow = memo(function GridRowInner<T>({
     ? alpha(theme.palette.warning.main, theme.palette.mode === 'light' ? 0.06 : 0.12)
     : undefined;
 
+  const cellEditSnapshot = isEditing ? editSnapshot : undefined;
+  const cellSaving = isEditing && saving;
   const selectionOffset = selectionMode === 'multiple' ? 1 : 0;
   const unpinnedOffset = pinnedLeftCols.length + selectionOffset;
   const rightOffset = pinnedLeftCols.length + unpinnedCols.length + selectionOffset;
@@ -181,6 +186,8 @@ export const GridRow = memo(function GridRowInner<T>({
           position="left"
           renderCell={renderCell}
           colIndex={i + selectionOffset}
+          editSnapshot={cellEditSnapshot}
+          saving={cellSaving}
         />
       ))}
 
@@ -198,6 +205,8 @@ export const GridRow = memo(function GridRowInner<T>({
           position={undefined}
           renderCell={renderCell}
           colIndex={i + unpinnedOffset}
+          editSnapshot={cellEditSnapshot}
+          saving={cellSaving}
         />
       ))}
 
@@ -227,6 +236,8 @@ export const GridRow = memo(function GridRowInner<T>({
           position="right"
           renderCell={renderCell}
           colIndex={i + rightOffset}
+          editSnapshot={cellEditSnapshot}
+          saving={cellSaving}
         />
       ))}
 

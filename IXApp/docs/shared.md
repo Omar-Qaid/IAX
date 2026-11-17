@@ -15,6 +15,7 @@ The shared layer contains domain-agnostic UI, hooks, services, validation helper
 | Forms | [forms.md](shared/forms.md) | layout, entity form, validation summaries, local entity-form hook |
 | Logistics | [logistics.md](shared/logistics.md) | postal and electronic-address drawers |
 | Lookups | [lookups.md](shared/lookups.md) | virtualized grid lookup, form wrapper, dialog lookup |
+| Record preview | [record-preview.md](shared/record-preview.md) | `RecordPreview`, `RecordPreviewCard`, entity registry, generic loaders |
 | Page | [page.md](shared/page.md) | page structure, related information, utility rail, unsaved guard |
 | Status | this page | `StatusBadge`, `RecordStatus`, `DocumentStatus` alias |
 

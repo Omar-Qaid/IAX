@@ -16,6 +16,8 @@ export interface DetailFieldConfig {
   type?: 'text' | 'number' | 'date' | 'boolean' | 'select' | 'display';
   options?: DetailFieldOption[];
   masterRoute?: string;
+  /** Registered record-preview entity, for masters without a master route. */
+  previewEntity?: string;
   disabled?: boolean;
   width?: number | string;
   column?: number | string;
@@ -43,6 +45,8 @@ export interface DetailFieldGroup {
   width?: number | string;
 }
 export interface DetailSectionConfig {
+  /** Document pages may own Save/Cancel and override custom field presentation. */
+  editing?: boolean;
   expanded?: boolean;
   onExpandedChange?: (expanded: boolean) => void;
   id: string;
@@ -112,6 +116,8 @@ export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
   onFieldEdit?: (fieldName: string) => void;
   canEditField?: (fieldName: string) => boolean;
   initialSelectedId?: string;
+  initialMode?: 'view' | 'edit' | 'new';
+  onCancel?: () => void;
   detailHeader?: ReactNode;
   onSearch?: () => void;
   backCommand?: { onClick: () => void };

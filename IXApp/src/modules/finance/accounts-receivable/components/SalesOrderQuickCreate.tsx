@@ -5,7 +5,8 @@ import { FastTabsDrawer } from '@patterns/drawer-fast-tabs';
 import type { FastTabSection, FastTabValue } from '@patterns/dialog-fast-tabs/FastTabsDialog';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { useCities, useCountryRegions, useStates } from '@shared/hooks/useLogisticsAddress';
-import { customerQuickCreateApi } from '../api/customerQuickCreateApi';
+import { useCompanyStore } from '@core/company/useCompanyStore';
+import { customerQuickCreateApi, type CustomerRecord } from '../api/customerQuickCreateApi';
 import { salesOrderListApi, type SalesOrderListRecord } from '../api/salesOrderListApi';
 import { salesOrderLinesApi } from '../api/salesOrderLinesApi';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
@@ -14,6 +15,7 @@ import { INVENTORY_ROUTE_PATHS } from '@modules/finance/inventory/routes/invento
 
 interface SalesOrderQuickCreateProps {
   open: boolean;
+  initialCustomer?: CustomerRecord;
   onClose: () => void;
   onSave: (order: SalesOrderListRecord) => void | Promise<void>;
 }
@@ -56,20 +58,44 @@ const initialValues = (): Record<string, FastTabValue> => ({
   deliveryTerms: '',
 });
 
+const customerDefaults = (customer: CustomerRecord): Record<string, FastTabValue> => ({
+  customerName: customer.name,
+  contact: '',
+  deliveryName: customer.name,
+  address: '',
+  deliveryAddress: '',
+  taxGroupId: customer.taxGroupId ?? '',
+  invoiceAccount: customer.invoiceAccount || customer.accountNumber,
+  currencyCode: customer.currencyCode,
+  paymentTerms: customer.paymTermId ?? '',
+  paymentMethod: customer.paymModeId ?? '',
+  salesName: customer.name,
+  inventSiteId: customer.inventSiteId ?? '',
+  inventLocationId: customer.inventLocationId ?? '',
+  deliveryMode: customer.dlvModeId ?? '',
+});
+
 export function SalesOrderQuickCreate({
   open,
   onClose,
   onSave,
+  initialCustomer,
 }: SalesOrderQuickCreateProps): React.ReactElement {
   const { t, isRtl } = useAppTranslation();
+  const company = useCompanyStore((state) => state.currentCompany);
   const customersQuery = useQuery({
-    queryKey: ['accounts-receivable', 'sales-order-quick-create', 'customers'],
+    queryKey: ['accounts-receivable', 'sales-order-quick-create', 'customers', company],
     queryFn: ({ signal }) => customerQuickCreateApi.list(signal),
     enabled: open,
     refetchOnMount: 'always',
   });
   const customers = React.useMemo(() => customersQuery.data ?? [], [customersQuery.data]);
-  const [selectedAccount, setSelectedAccount] = React.useState('');
+  const [selectedAccount, setSelectedAccount] = React.useState(
+    initialCustomer?.accountNumber ?? ''
+  );
+  React.useEffect(() => {
+    setSelectedAccount(open ? (initialCustomer?.accountNumber ?? '') : '');
+  }, [open, initialCustomer?.accountNumber]);
   // Country and state are mirrored into component state because the state and city lookups are
   // keyed by them, and hooks cannot read the form values held inside the fast-tabs drawer.
   const [addressCountry, setAddressCountry] = React.useState('');
@@ -85,7 +111,13 @@ export function SalesOrderQuickCreate({
   const statesQuery = useStates(addressCountry || undefined);
   const citiesQuery = useCities(addressCountry || undefined, addressStateId || undefined);
   const customerDefaultsQuery = useQuery({
-    queryKey: ['accounts-receivable', 'sales-order-quick-create', 'customer-defaults', selectedAccount],
+    queryKey: [
+      'accounts-receivable',
+      'sales-order-quick-create',
+      'customer-defaults',
+      company,
+      selectedAccount,
+    ],
     queryFn: ({ signal }) => customerQuickCreateApi.salesOrderDefaults(selectedAccount, signal),
     enabled: open && Boolean(selectedAccount),
   });
@@ -95,18 +127,22 @@ export function SalesOrderQuickCreate({
     [customerDefaultsQuery.data?.addresses]
   );
   const primaryDeliveryAddress = customerAddresses[0];
-  const orderContacts = useMemo(() => (customerDefaultsQuery.data?.contacts ?? []).filter(
-    (contact) => contact.type === 'Email' || contact.type === 'Phone'
-  ), [customerDefaultsQuery.data]);
+  const orderContacts = useMemo(
+    () =>
+      (customerDefaultsQuery.data?.contacts ?? []).filter(
+        (contact) => contact.type === 'Email' || contact.type === 'Phone'
+      ),
+    [customerDefaultsQuery.data]
+  );
   const primaryContact = orderContacts.find((contact) => contact.primary) ?? orderContacts[0];
   const deliveryLookupsQuery = useQuery({
-    queryKey: ['accounts-receivable', 'sales-order-quick-create', 'delivery-lookups'],
+    queryKey: ['accounts-receivable', 'sales-order-quick-create', 'delivery-lookups', company],
     queryFn: ({ signal }) => customerQuickCreateApi.lookups(signal),
     enabled: open,
     staleTime: 5 * 60 * 1000,
   });
   const dimensionsQuery = useQuery({
-    queryKey: ['sales-order-inventory-dimensions'],
+    queryKey: ['sales-order-inventory-dimensions', company],
     queryFn: ({ signal }) => salesOrderLinesApi.inventoryDimensions(signal),
     enabled: open,
     staleTime: 5 * 60 * 1000,
@@ -181,7 +217,10 @@ export function SalesOrderQuickCreate({
             label: t('salesOrderQuickCreate.deliveryAddress', 'Delivery address'),
             type: 'select',
             valueGetter: (values) => values.deliveryAddress || primaryDeliveryAddress?.id || '',
-            options: customerAddresses.map((address) => ({ value: address.id, label: address.address })),
+            options: customerAddresses.map((address) => ({
+              value: address.id,
+              label: address.address,
+            })),
           },
         ],
       },
@@ -421,18 +460,35 @@ export function SalesOrderQuickCreate({
         ],
       },
     ],
-    [customerFor, customers, orderContacts, deliveryLookupsQuery.data, dimensionsQuery.data, primaryAddress, primaryContact, primaryDeliveryAddress, customerAddresses, countryRegionsQuery.data, statesQuery.data, citiesQuery.data, t, isRtl]
+    [
+      customerFor,
+      customers,
+      orderContacts,
+      deliveryLookupsQuery.data,
+      dimensionsQuery.data,
+      primaryAddress,
+      primaryContact,
+      primaryDeliveryAddress,
+      customerAddresses,
+      countryRegionsQuery.data,
+      statesQuery.data,
+      citiesQuery.data,
+      t,
+      isRtl,
+    ]
   );
 
   return (
     <FastTabsDrawer
       open={open}
-      resetKey={open ? 'open' : 'closed'}
+      resetKey={`${company}:${initialCustomer?.accountNumber ?? ''}:${open}`}
       title={t('salesOrderQuickCreate.title', 'Create sales order')}
       viewLabel={t('common.standardView')}
       sections={sections}
       loading={
-        customersQuery.isLoading || deliveryLookupsQuery.isLoading || dimensionsQuery.isLoading ||
+        customersQuery.isLoading ||
+        deliveryLookupsQuery.isLoading ||
+        dimensionsQuery.isLoading ||
         customerDefaultsQuery.isFetching
       }
       loadError={
@@ -446,33 +502,33 @@ export function SalesOrderQuickCreate({
                 ? customerDefaultsQuery.error.message
                 : null
       }
-      initialValues={initialValues}
+      initialValues={(): Record<string, FastTabValue> => ({
+        ...initialValues(),
+        ...(initialCustomer
+          ? { ...customerDefaults(initialCustomer), customerAccount: initialCustomer.accountNumber }
+          : {}),
+      })}
       onFieldChange={(name, value) => {
         if (name === 'inventSiteId') return { inventLocationId: '' };
         if (name !== 'customerAccount') return;
         setSelectedAccount(String(value));
         const customer = customers.find((candidate) => candidate.accountNumber === String(value));
-        if (!customer) return {
-          contact: '', deliveryName: '', invoiceAccount: '', currencyCode: '',
-          paymentTerms: '', paymentMethod: '', salesName: '', inventSiteId: '',
-          inventLocationId: '', deliveryMode: '', taxGroupId: '', deliveryAddress: '',
-        };
-        return {
-          customerName: customer.name,
-          contact: '',
-          deliveryName: customer.name,
-          address: '',
-          deliveryAddress: '',
-          taxGroupId: customer.taxGroupId,
-          invoiceAccount: customer.invoiceAccount || customer.accountNumber,
-          currencyCode: customer.currencyCode,
-          paymentTerms: customer.paymTermId ?? '',
-          paymentMethod: customer.paymModeId ?? '',
-          salesName: customer.name,
-          inventSiteId: customer.inventSiteId,
-          inventLocationId: customer.inventLocationId,
-          deliveryMode: customer.dlvModeId,
-        };
+        if (!customer)
+          return {
+            contact: '',
+            deliveryName: '',
+            invoiceAccount: '',
+            currencyCode: '',
+            paymentTerms: '',
+            paymentMethod: '',
+            salesName: '',
+            inventSiteId: '',
+            inventLocationId: '',
+            deliveryMode: '',
+            taxGroupId: '',
+            deliveryAddress: '',
+          };
+        return customerDefaults(customer);
       }}
       validate={(values) => {
         const errors: Record<string, string> = {};
@@ -511,8 +567,7 @@ export function SalesOrderQuickCreate({
         const warehouseBelongsToSite =
           !inventLocationId ||
           dimensionsQuery.data?.warehouses.some(
-            (warehouse) =>
-              warehouse.id === inventLocationId && warehouse.siteId === inventSiteId
+            (warehouse) => warehouse.id === inventLocationId && warehouse.siteId === inventSiteId
           );
         const contact = String(values.contact || primaryContact?.number || '');
         const selectedContact = orderContacts.find((item) => item.number === contact);
@@ -521,7 +576,9 @@ export function SalesOrderQuickCreate({
           oneTimeCustomer: String(values.oneTimeCustomer) === 'true',
           contact,
           contactType: selectedContact?.type,
-          deliveryPostalAddressId: String(values.deliveryAddress || primaryDeliveryAddress?.id || ''),
+          deliveryPostalAddressId: String(
+            values.deliveryAddress || primaryDeliveryAddress?.id || ''
+          ),
           taxGroupId: String(values.taxGroupId || customer?.taxGroupId || ''),
           deliveryName: String(values.deliveryName ?? '') || customer?.name,
           customerReference: String(values.customerReference ?? ''),

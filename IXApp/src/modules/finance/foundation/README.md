@@ -6,6 +6,7 @@ Owns currency and exchange-rate setup.
 - `pages/ExchangeRateTypePage.tsx`: exchange-rate type maintenance backed by `api/exchangeRateTypeApi.ts`.
 - `pages/ExchangeRatePage.tsx`: exchange-rate page using the foundation contracts.
 - `queries/currencyQueryKeys.ts`: feature-owned query keys.
+- `previews/foundationRecordPreviews.ts`: D365 record previews (hover cards) for currencies and tax setup.
 
 Pages use shared list/form infrastructure and TanStack Query. Keep endpoint wrappers in `api`, stable server-state identities in `queries`, and business presentation in `pages`.
 

@@ -17,6 +17,7 @@ import { DataGridHeader } from './DataGridHeader';
 import { DataGridBody, type GridBodyHandle } from './DataGridBody';
 import { DataGridMobileBody } from './DataGridMobileBody';
 import { GridSidebar } from './GridSidebar';
+import { ScrollToTopButton } from './ScrollToTopButton';
 import {
   useGridPersistence,
   useGridDataSource,
@@ -92,6 +93,7 @@ function DataGridInternal<T>(
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const gridRootRef = useRef<HTMLDivElement | null>(null);
   const gridBodyRef = useRef<GridBodyHandle | null>(null);
+  const mobileBodyRef = useRef<GridBodyHandle | null>(null);
   const pendingScrollTopRef = useRef<number | null>(null);
   const saveInFlightRef = useRef<Promise<boolean> | null>(null);
   const focusedCellRef = useRef({ r: 0, c: 0 });
@@ -147,6 +149,7 @@ function DataGridInternal<T>(
   const {
     editingRowId,
     editValues,
+    isDirty,
     saving,
     startEdit,
     startAdd,
@@ -183,8 +186,9 @@ function DataGridInternal<T>(
     [masterForm, startEdit, getRowId, onRowDoubleClick]
   );
 
-  const handleCancelEdit = useCallback(() => {
+  const handleCancelEdit = useCallback((refocus = true) => {
     cancelEdit();
+    if (!refocus) return;
     setTimeout(() => {
       const { r, c } = focusedCellRef.current;
       const cell = gridRootRef.current?.querySelector<HTMLElement>(
@@ -194,12 +198,15 @@ function DataGridInternal<T>(
     }, 100);
   }, [cancelEdit]);
 
-  const handleSaveEdit = useCallback((): Promise<boolean> => {
+  const handleSaveEdit = useCallback((refocus = true): Promise<boolean> => {
     if (saveInFlightRef.current) return saveInFlightRef.current;
+    if (editingRowId == null) return Promise.resolve(true);
 
     const saveWork = (async () => {
-      if (!onRowSave) {
-        handleCancelEdit();
+      // D365 writes a record only when it was modified: leaving an untouched
+      // line just ends editing instead of issuing an update.
+      if (!onRowSave || !isDirty) {
+        handleCancelEdit(refocus);
         return true;
       }
       const isNew = editingRowId === NEW_ROW_ID;
@@ -208,7 +215,7 @@ function DataGridInternal<T>(
       try {
         await onRowSave(editValues, isNew);
         pendingScrollTopRef.current = scrollTop;
-        handleCancelEdit();
+        handleCancelEdit(refocus);
         return true;
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
@@ -228,6 +235,7 @@ function DataGridInternal<T>(
     onRowSave,
     editingRowId,
     editValues,
+    isDirty,
     handleCancelEdit,
     setSaving,
     notifyError,
@@ -319,6 +327,7 @@ function DataGridInternal<T>(
     initialSort: initialState.sortModel,
     initialFilters: initialState.filters,
     pageSize,
+    loadedRowCount: rows.length,
     onFetchRows,
     onScrollReset,
   });
@@ -545,6 +554,16 @@ function DataGridInternal<T>(
       setFilters([]);
       setGlobalSearch('');
     },
+    scrollToTop: () => {
+      if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = 0;
+    },
+    scrollToRow: (id: string | number) => {
+      const index = processedRows.findIndex((row) => String(getRowId(row)) === String(id));
+      if (index < 0) return false;
+      // Desktop rows or mobile cards, whichever body is mounted.
+      (gridBodyRef.current ?? mobileBodyRef.current)?.scrollToIndex(index);
+      return true;
+    },
     focusFilter: () =>
       gridRootRef.current?.querySelector<HTMLElement>('[data-grid-filter-field]')?.focus(),
     startAddRow: handleAddRow,
@@ -566,9 +585,77 @@ function DataGridInternal<T>(
     },
   }));
 
+  // -- D365 line navigation in edit mode -------------------------------------
+  const processedRowsRef = useRef(processedRows);
+  React.useLayoutEffect(() => {
+    processedRowsRef.current = processedRows;
+  }, [processedRows]);
+  const moveInFlightRef = useRef(false);
+
+  /**
+   * Leaves the line being edited for display row `targetR`: saves it (only when
+   * changed), then opens the target line in edit mode at column `targetC`.
+   * A failed save keeps focus on the current line, as D365 does.
+   */
+  const moveEditingTo = useCallback(
+    async (targetR: number, targetC: number) => {
+      if (moveInFlightRef.current || editingRowId == null) return;
+      const adding = editingRowId === NEW_ROW_ID;
+      const target = adding
+        ? targetR === 0
+          ? undefined
+          : processedRows[targetR - 1]
+        : processedRows[targetR];
+      if (target === undefined) return; // first/last line: stay put
+      const targetId = getRowId(target);
+      const offset = selectionMode === 'multiple' ? 1 : 0;
+      const column = navigationColumns[Math.max(0, targetC - offset)];
+      if (!column) return;
+
+      moveInFlightRef.current = true;
+      try {
+        if (!(await handleSaveEdit(false))) return;
+        const nextFrame = () =>
+          new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        // A save can replace the rows array; resolve the target by ID on the latest rows.
+        for (let frame = 0; frame < 12; frame++) {
+          const row = processedRowsRef.current.find(
+            (candidate) => String(getRowId(candidate)) === String(targetId)
+          );
+          if (row) {
+            startEdit(targetId, row);
+            break;
+          }
+          await nextFrame();
+        }
+        for (let frame = 0; frame < 12; frame++) {
+          await nextFrame();
+          const focus = resolveCellRef.current?.({ rowId: targetId, field: String(column.field) });
+          if (focus) {
+            await focus();
+            return;
+          }
+        }
+      } finally {
+        moveInFlightRef.current = false;
+      }
+    },
+    [
+      editingRowId,
+      processedRows,
+      getRowId,
+      selectionMode,
+      navigationColumns,
+      handleSaveEdit,
+      startEdit,
+    ]
+  );
+
   // -- Keyboard Shortcuts (Global) ------------------------------------------
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Autofill and IME composition can dispatch keydown without a key string.
+      if (typeof e.key !== 'string') return;
       const activeEl = document.activeElement as HTMLElement | null;
       if (!activeEl || !gridRootRef.current?.contains(activeEl)) return;
       const isInputActive =
@@ -614,19 +701,27 @@ function DataGridInternal<T>(
       }
 
       // -- Refresh / Validate / Execute ---------------------------------
+      // Only swallow the browser default when the grid handles the key; otherwise
+      // F5 inside a grid without onRefresh silently blocks page reload.
       if (e.key === 'F5') {
-        e.preventDefault();
-        onRefresh?.();
+        if (onRefresh) {
+          e.preventDefault();
+          onRefresh();
+        }
         return;
       }
       if (e.key === 'F7') {
-        e.preventDefault();
-        onValidate?.();
+        if (onValidate) {
+          e.preventDefault();
+          onValidate();
+        }
         return;
       }
-      if (e.key === 'F9') {
-        e.preventDefault();
-        onExecute?.();
+      if (e.key === 'F9' && !e.altKey) {
+        if (onExecute) {
+          e.preventDefault();
+          onExecute();
+        }
         return;
       }
       if (e.altKey && e.key === 'F4') {
@@ -639,9 +734,32 @@ function DataGridInternal<T>(
 
       // -- Navigation (Arrows, Home, End, Tab, PageUp, PageDown) --
       const cellContainer = isGridCellFocused ? activeEl : activeEl?.closest('[data-row-index]');
-      if (cellContainer) {
-        const isInput = isInputActive && activeEl?.tagName === 'INPUT';
+      // A control inside the cell (select, lookup, date picker) already used this key.
+      if (cellContainer && !e.defaultPrevented) {
+        // Checkboxes and radios are inputs but hold no caret: arrows must still navigate.
+        const isInput =
+          isInputActive &&
+          activeEl?.tagName === 'INPUT' &&
+          !['checkbox', 'radio'].includes((activeEl as HTMLInputElement).type);
         const inputEl = isInput ? (activeEl as HTMLInputElement) : null;
+        const isTextArea = activeEl?.tagName === 'TEXTAREA';
+        // An open lookup/select list owns the arrow keys.
+        const isListOpen =
+          activeEl?.getAttribute('aria-expanded') === 'true' ||
+          activeEl?.closest('[aria-expanded="true"]') != null;
+        const inEditingRow =
+          editingRowId != null &&
+          String(cellContainer.closest<HTMLElement>('[data-row-id]')?.dataset.rowId) ===
+            String(editingRowId);
+        const rtl = getComputedStyle(gridRootRef.current).direction === 'rtl';
+        const caretAt = (edge: 'start' | 'end') => {
+          if (!inputEl) return true;
+          // Number/date inputs expose no caret; treat them as at the edge.
+          if (inputEl.selectionStart === null) return true;
+          return edge === 'start'
+            ? inputEl.selectionStart === 0 && inputEl.selectionEnd === 0
+            : inputEl.selectionStart === inputEl.value.length;
+        };
 
         const cellR = parseInt(cellContainer.getAttribute('data-row-index') || '0', 10);
         const cellC = parseInt(cellContainer.getAttribute('data-col-index') || '0', 10);
@@ -657,46 +775,46 @@ function DataGridInternal<T>(
           focusedCellRef.current = { r: cellR, c: cellC };
         }
 
-        if (e.key === 'ArrowDown') {
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          if (isTextArea || isListOpen || e.altKey) return;
+          const target = r + (e.key === 'ArrowDown' ? 1 : -1);
+          // D365: moving off a line in edit mode saves it and keeps editing the next line.
+          if (inEditingRow) {
+            e.preventDefault();
+            void moveEditingTo(target, c);
+            return;
+          }
           if (isInput) return;
           e.preventDefault();
-          focusCell(r + 1, c);
+          focusCell(target, c);
           return;
         }
-        if (e.key === 'ArrowUp') {
-          if (isInput) return;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+          if (isListOpen) return;
+          // Columns run toward inline-end, which is visually left in RTL.
+          const forward = (e.key === 'ArrowRight') !== rtl;
+          // Inside text the caret moves first.
+          if (isInput && !caretAt(forward ? 'end' : 'start')) return;
           e.preventDefault();
-          focusCell(r - 1, c);
-          return;
-        }
-        if (e.key === 'ArrowRight') {
-          if (
-            isInput &&
-            inputEl &&
-            inputEl.selectionStart !== null &&
-            inputEl.selectionStart !== inputEl.value.length
-          )
-            return;
-          e.preventDefault();
-          focusCell(r, c + 1);
-          return;
-        }
-        if (e.key === 'ArrowLeft') {
-          if (isInput && inputEl && inputEl.selectionStart !== null && inputEl.selectionStart !== 0)
-            return;
-          e.preventDefault();
-          focusCell(r, c - 1);
+          focusCell(r, c + (forward ? 1 : -1));
           return;
         }
         if (e.key === 'Tab') {
+          if (isListOpen) return;
           e.preventDefault();
+          const last = getColCount() - 1;
+          let targetR = r;
+          let targetC = c;
           if (e.shiftKey) {
-            if (c > 0) focusCell(r, c - 1);
-            else focusCell(r - 1, getColCount() - 1);
-          } else {
-            if (c < getColCount() - 1) focusCell(r, c + 1);
-            else focusCell(r + 1, 0);
+            if (c > 0) targetC = c - 1;
+            else [targetR, targetC] = [r - 1, last];
+          } else if (c < last) targetC = c + 1;
+          else [targetR, targetC] = [r + 1, 0];
+          if (inEditingRow && targetR !== r) {
+            void moveEditingTo(targetR, targetC);
+            return;
           }
+          focusCell(targetR, targetC);
           return;
         }
         if (e.key === 'Home') {
@@ -766,15 +884,19 @@ function DataGridInternal<T>(
         }
       } else if ((e.ctrlKey || e.altKey) && e.key.toLowerCase() === 'n') {
         e.preventDefault();
-        if (editingRowId == null) {
-          handleAddRow();
-        }
+        // D365 Alt+N while a line is open saves it first, then opens the new line.
+        if (editingRowId == null) handleAddRow();
+        else void handleSaveEdit(false).then((saved) => saved && handleAddRow());
       } else if (e.key === 'Escape') {
+        // Esc that closes an open dropdown list must not also discard the line.
+        if (e.defaultPrevented) return;
         if (editingRowId != null) {
           e.preventDefault();
           handleCancelEdit();
         }
       } else if (e.key === 'Enter') {
+        // A closed dropdown opens its list on Enter; that must not also save the line.
+        if (e.defaultPrevented) return;
         if (editingRowId != null) {
           if (activeEl?.tagName !== 'TEXTAREA') {
             e.preventDefault();
@@ -790,8 +912,9 @@ function DataGridInternal<T>(
           }
         }
       } else if (
-        (e.key === 'Delete' || (e.ctrlKey && e.key.toLowerCase() === 'd')) &&
-        !isInputActive
+        // Alt+F9 is the D365 "Delete record" shortcut and works from inside a field.
+        (e.altKey && e.key === 'F9') ||
+        ((e.key === 'Delete' || (e.ctrlKey && e.key.toLowerCase() === 'd')) && !isInputActive)
       ) {
         if (editingRowId == null && selectedIds.length > 0) {
           if (onDeleteSelected) {
@@ -839,6 +962,7 @@ function DataGridInternal<T>(
     onCloseForm,
     focusCell,
     getColCount,
+    moveEditingTo,
   ]);
 
   const computedColumns = useMemo(
@@ -959,7 +1083,15 @@ function DataGridInternal<T>(
       )}
 
       <Box sx={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, overflow: 'hidden' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            flexGrow: 1,
+            overflow: 'hidden',
+            position: 'relative',
+          }}
+        >
           {!isMobile && (
             <Box
               ref={headerScrollRef}
@@ -1025,6 +1157,7 @@ function DataGridInternal<T>(
           >
             {isMobile ? (
               <DataGridMobileBody
+                ref={mobileBodyRef}
                 rows={processedRows}
                 columns={computedColumns}
                 getRowId={getRowId}
@@ -1070,13 +1203,14 @@ function DataGridInternal<T>(
                 editValues={editValues}
                 saving={saving}
                 onFieldChange={updateField}
-                onSaveEdit={handleSaveEdit}
-                onCancelEdit={handleCancelEdit}
+                onSaveEdit={() => void handleSaveEdit()}
+                onCancelEdit={() => handleCancelEdit()}
                 hideInlineEditActions={hideInlineEditActions}
                 ref={gridBodyRef}
               />
             )}
           </Box>
+          <ScrollToTopButton scrollContainerRef={scrollContainerRef} />
         </Box>
 
         {!isMobile && !hideSidebar && (

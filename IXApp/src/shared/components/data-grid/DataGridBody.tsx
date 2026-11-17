@@ -13,7 +13,7 @@ export interface GridBodyHandle {
 import { GridRow } from './body/GridRow';
 import { RowContextMenu } from './body/RowContextMenu';
 import { SkeletonRows } from './body/SkeletonRows';
-import { getNestedValue } from './DataGridUtils';
+import { getNestedValue, generateCSV, downloadFile, normalizeValueOptions } from './DataGridUtils';
 import { AppTextField } from '@shared/components/fields/AppTextField';
 import { AppSelectField } from '@shared/components/fields/AppSelectField';
 import { AppBooleanField } from '@shared/components/fields/AppBooleanField';
@@ -21,6 +21,7 @@ import { DataGridEmptyState } from './DataGridEmptyState';
 import { DataGridLoadingState } from './DataGridLoadingState';
 import { APP_FONT_FAMILY } from '@shared/constants/fontFamilies';
 import { hasLookupValue } from '@shared/components/lookups/lookupValueStyle';
+import { RecordPreview } from '@shared/components/record-preview';
 
 interface GridBodyProps<T> {
   rows: T[];
@@ -229,26 +230,14 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>(
 
   const handleExportRow = useCallback(
     (row: T) => {
-      const header = visibleColumns.map((c) => `"${c.headerName}"`).join(',');
-      const values = visibleColumns
-        .map((col) => {
-          const val = col.valueGetter ? col.valueGetter({ row }) : row[col.field as keyof T];
-          const str = val != null ? String(val) : '';
-          return `"${str.replace(/"/g, '""')}"`;
-        })
-        .join(',');
-      const blob = new Blob([`${header}\n${values}`], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'row.csv';
-      a.click();
-      URL.revokeObjectURL(url);
+      // Shares the grid export's escaping and BOM; downloadFile defers revoking the
+      // object URL, which revoking synchronously after click() can cancel.
+      downloadFile(generateCSV([row], visibleColumns), 'row.csv', 'text/csv;charset=utf-8;');
     },
     [visibleColumns]
   );
 
-  const renderCell = useCallback(
+  const renderCellImpl = useCallback(
     (row: T, col: ColumnDef<T>, rowIndex: number) => {
       const rowId = getRowId(row);
       const isEditingThisRow =
@@ -295,21 +284,34 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>(
         }
 
         if (col.type === 'singleSelect' && col.valueOptions) {
+          const options = normalizeValueOptions(col.valueOptions);
+          const selectedKey = currentValue == null ? '' : String(currentValue);
+          // A stored value missing from the list (options still loading, or a
+          // retired option) is shown, read-only, instead of rendering blank.
+          if (selectedKey !== '' && !options.some((option) => option.key === selectedKey)) {
+            options.push({ key: selectedKey, value: currentValue, label: selectedKey, disabled: true });
+          }
           return (
-            <Box onClick={(e) => e.stopPropagation()}>
+            <Box onClick={(e) => e.stopPropagation()} sx={{ width: '100%', minWidth: 0 }}>
               <AppSelectField
                 name={fieldKey}
                 variant="standard"
-                value={finalValue}
-                onChange={(v) => onFieldChange?.(fieldKey, v)}
+                gridCell
+                value={selectedKey}
+                // MUI hands back the string key: map it to the option's own value
+                // so numeric enums are saved as numbers, not "1".
+                onChange={(key) =>
+                  onFieldChange?.(
+                    fieldKey,
+                    options.find((option) => option.key === String(key))?.value ?? key
+                  )
+                }
                 disabled={saving}
-                options={col.valueOptions.map((opt) => {
-                  const isObj = typeof opt === 'object' && opt !== null;
-                  return {
-                    value: String(isObj ? (opt as any).value : opt),
-                    label: String(isObj ? (opt as any).label : opt),
-                  };
-                })}
+                options={options.map((option) => ({
+                  value: option.key,
+                  label: option.label,
+                  disabled: option.disabled,
+                }))}
               />
             </Box>
           );
@@ -428,6 +430,40 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>(
     [masterForm, editingRowId, editValues, saving, onFieldChange, getRowId, firstEditableField]
   );
 
+  // Read cells of master-data columns get the D365 hover preview.
+  const renderCellWithPreview = useCallback(
+    (row: T, col: ColumnDef<T>, rowIndex: number) => {
+      const content = renderCellImpl(row, col, rowIndex);
+      if (!col.preview) return content;
+      const editing =
+        masterForm &&
+        col.editable &&
+        editingRowId != null &&
+        String(getRowId(row)) === String(editingRowId);
+      if (editing) return content;
+      const key = col.preview.getKey
+        ? col.preview.getKey(row)
+        : getNestedValue(row, col.field as string);
+      return (
+        <RecordPreview entity={col.preview.entity} recordKey={key as string | number | null}>
+          {content}
+        </RecordPreview>
+      );
+    },
+    [renderCellImpl, masterForm, editingRowId, getRowId]
+  );
+
+  // `editValues` changes on every keystroke, so a `renderCell` that carried it in
+  // its identity re-rendered every virtual row and every cell of the grid on each
+  // character typed. Hand the rows a stable callback instead and invalidate only
+  // the row being edited, through its `editSnapshot` prop.
+  const renderCellImplRef = useRef(renderCellWithPreview);
+  renderCellImplRef.current = renderCellWithPreview;
+  const renderCell = useCallback(
+    (row: T, col: ColumnDef<T>, rowIndex: number) => renderCellImplRef.current(row, col, rowIndex),
+    []
+  );
+
   if (loading && displayRows.length === 0) {
     return (
       <SkeletonRows
@@ -486,6 +522,7 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>(
               onContextMenu={handleContextMenu}
               renderCell={renderCell}
               isEditing={isEditingRow}
+              editSnapshot={isEditingRow ? editValues : undefined}
               saving={saving}
               onSave={onSaveEdit}
               onCancel={onCancelEdit}

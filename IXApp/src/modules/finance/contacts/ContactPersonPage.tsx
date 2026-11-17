@@ -1,37 +1,21 @@
 import React from 'react';
-import {
-  Alert,
-  Box,
-  Button,
-  FormControlLabel,
-  MenuItem,
-  Stack,
-  Switch,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Button, Stack, Typography } from '@mui/material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { apiClient } from '@core/api/apiClient';
 import { useAuth } from '@core/auth/useAuth';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { PERMISSIONS } from '@core/permissions/permissions';
-import type { Contact } from './contactTypes';
-import { MasterDetailPage } from '@patterns/master-detail/MasterDetailPage';
-import { MasterDetailSection } from '@patterns/master-detail/MasterDetailSection';
+import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
+import type { DetailValues, EnterpriseListDetailsConfig } from '@patterns/list-details/types';
+import { localizedName } from '@shared/utilities/localizedName';
 import {
   PartyPostalAddressPanel,
   PartyElectronicAddressPanel,
 } from '@shared/components/logistics/PartyLogisticsPanels';
-
-function dateValue(year?: number | null, month?: number | null, day?: number | null) {
-  return year && month && day
-    ? [
-        String(year).padStart(4, '0'),
-        String(month).padStart(2, '0'),
-        String(day).padStart(2, '0'),
-      ].join('-')
-    : '';
-}
+import type { Contact } from './contactTypes';
+import { customerQuickCreateApi } from '@modules/finance/accounts-receivable/api/customerQuickCreateApi';
+import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '@modules/finance/accounts-receivable/routes/accountsReceivableRoutePaths';
 
 interface DetailsProps {
   account: string;
@@ -41,6 +25,76 @@ interface DetailsProps {
   contacts: Contact[];
   open: (id?: string) => void;
 }
+interface ContactRecord extends Contact {
+  id: string;
+  firstName: string;
+  middleName: string;
+  lastNamePrefix: string;
+  lastName: string;
+  birthdayDate: string;
+  anniversaryDate: string;
+}
+const genders = ['None', 'Male', 'Female', 'NonSpecific'];
+const statuses = ['None', 'Single', 'Married', 'Divorced', 'Widowed'];
+const enumIndex = (value: number | string | null | undefined, options: string[]) =>
+  typeof value === 'string' ? Math.max(0, options.indexOf(value)) : (value ?? 0);
+const dateValue = (year?: number | null, month?: number | null, day?: number | null) =>
+  year && month && day
+    ? `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    : '';
+const toRecord = (contact: Contact): ContactRecord => ({
+  ...contact,
+  id: String(contact.recId),
+  firstName: contact.nameParts?.firstName ?? '',
+  middleName: contact.nameParts?.middleName ?? '',
+  lastNamePrefix: contact.nameParts?.lastNamePrefix ?? '',
+  lastName: contact.nameParts?.lastName ?? '',
+  birthdayDate: dateValue(contact.birthYear, contact.birthMonth, contact.birthday),
+  anniversaryDate: dateValue(
+    contact.anniversaryYear,
+    contact.anniversaryMonth,
+    contact.anniversaryDay
+  ),
+});
+const emptyContact = (): ContactRecord =>
+  toRecord({
+    recId: 0,
+    contactPersonId: '',
+    party: 0,
+    name: '',
+    nameAlias: '',
+    languageId: 'en-US',
+    addressBookNames: '',
+    initials: '',
+    birthYear: null,
+    birthMonth: null,
+    birthday: null,
+    anniversaryYear: null,
+    anniversaryMonth: null,
+    anniversaryDay: null,
+    telephone: null,
+    extension: null,
+    nameParts: { firstName: '', middleName: '', lastNamePrefix: '', lastName: '' },
+    gender: 0,
+    maritalStatus: 0,
+    inactive: false,
+    vendorPortalAccessAllowed: false,
+  });
+const namePartsOf = (row: ContactRecord) => ({
+  firstName: row.firstName,
+  middleName: row.middleName,
+  lastNamePrefix: row.lastNamePrefix,
+  lastName: row.lastName,
+});
+const fullName = (row: ContactRecord) =>
+  row.nameParts || Object.values(namePartsOf(row)).some(Boolean)
+    ? Object.values(namePartsOf(row))
+        .map((value) => value.trim())
+        .filter(Boolean)
+        .join(' ')
+    : row.name;
+
+/** Same enterprise page configuration and lifecycle as CustTablePage. */
 export function ContactPersonPage({
   account,
   endpoint,
@@ -49,261 +103,334 @@ export function ContactPersonPage({
   contacts,
   open,
 }: DetailsProps) {
-  const { hasPermission } = useAuth();
   const cache = useQueryClient();
+  const { hasPermission } = useAuth();
+  const { isRtl } = useAppTranslation();
   const location = useLocation();
-  const [editing, setEditing] = React.useState(
-    !record || (Boolean(location.state?.edit) && hasPermission(PERMISSIONS.CONTACT_EDIT))
-  );
+  const navigate = useNavigate();
+  const { kind, accountNum } = useParams();
   const [more, setMore] = React.useState(false);
-  const [draft, setDraft] = React.useState({
-    name: record?.name ?? '',
-    nameAlias: record?.nameAlias ?? '',
-    languageId: record?.languageId ?? 'en-US',
-    addressBookNames: record?.addressBookNames ?? '',
-    initials: record?.initials ?? '',
-    birthday: dateValue(record?.birthYear, record?.birthMonth, record?.birthday),
-    anniversary: dateValue(
-      record?.anniversaryYear,
-      record?.anniversaryMonth,
-      record?.anniversaryDay
-    ),
-    inactive: record?.inactive ?? false,
-  });
-  const [nameParts, setNameParts] = React.useState(
-    record?.nameParts ?? { firstName: '', middleName: '', lastNamePrefix: '', lastName: '' }
-  );
-  const structuredName =
-    !record || Boolean(record.nameParts) || Object.values(nameParts).some(Boolean);
-  const fullName = structuredName
-    ? [nameParts.firstName, nameParts.middleName, nameParts.lastNamePrefix, nameParts.lastName]
-        .map((s) => s.trim())
-        .filter(Boolean)
-        .join(' ')
-    : draft.name;
-  const genders = ['None', 'Male', 'Female', 'NonSpecific'];
-  const statuses = ['None', 'Single', 'Married', 'Divorced', 'Widowed'];
-  const enumIndex = (value: number | string | null | undefined, options: string[]) =>
-    typeof value === 'string' ? options.indexOf(value) : (value ?? 0);
-  const [gender, setGender] = React.useState(enumIndex(record?.gender, genders));
-  const [maritalStatus, setMaritalStatus] = React.useState(
-    enumIndex(record?.maritalStatus, statuses)
-  );
-  const save = useMutation({
+  const sourceKey = JSON.stringify([...queryKey, record?.recId ?? 'new']);
+  const customerNavigation = useMutation({
     mutationFn: async () => {
-      const body = {
-        ...draft,
-        name: fullName,
-        nameParts: structuredName ? nameParts : null,
-        gender,
-        maritalStatus,
-        birthday: draft.birthday || null,
-        anniversary: draft.anniversary || null,
-      };
-      return record
-        ? (await apiClient.put<number>(`${endpoint}/${record.recId}`, body)).data
-        : (await apiClient.post<number>(endpoint, body)).data;
+      const customers = await cache.fetchQuery({
+        queryKey: ['contact-owner-customer', ...queryKey],
+        queryFn: ({ signal }) => customerQuickCreateApi.list(signal),
+      });
+      const customer = customers.find((row) => row.accountNumber === accountNum);
+      if (!customer) throw new Error('Customer not found for this contact account.');
+      return customer;
     },
-    onSuccess: async (id) => {
-      await cache.invalidateQueries({ queryKey });
-      setEditing(false);
-      if (!record) open(String(id));
-    },
+    onSuccess: (customer) =>
+      navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customer(String(customer.recId))),
   });
-  const remove = useMutation({
-    mutationFn: () => apiClient.delete(`/v1/ContactPerson/${record!.recId}`),
-    onSuccess: async () => {
-      await cache.invalidateQueries({ queryKey });
-      open();
-    },
-  });
-  const fields = (field: Exclude<keyof typeof draft, 'inactive'>, label: string, type = 'text') => (
-    <TextField
-      size="small"
-      label={label}
-      type={type}
-      value={draft[field]}
-      disabled={!editing}
-      slotProps={{ inputLabel: { shrink: true } }}
-      onChange={(e) => setDraft({ ...draft, [field]: e.target.value })}
-    />
-  );
-  const nameField = (key: keyof typeof nameParts, label: string) => (
-    <TextField
-      size="small"
-      label={label}
-      disabled={!editing}
-      value={nameParts[key]}
-      onChange={(event) => setNameParts({ ...nameParts, [key]: event.target.value })}
-    />
-  );
-  const writable = hasPermission(record ? PERMISSIONS.CONTACT_EDIT : PERMISSIONS.CONTACT_CREATE);
-  return (
-    <MasterDetailPage
-      records={contacts.map((r) => ({
-        id: String(r.recId),
-        title: r.contactPersonId,
-        subtitle: r.name,
-      }))}
-      selectedId={record && String(record.recId)}
-      onSelect={open}
-      title={record?.name ?? 'New Record'}
-      subtitle={`Contacts | ${account}`}
-      filterLabel="Filter"
-      emptyLabel="No contacts"
-      viewLabel="Standard view"
-      backAction={<Button onClick={() => open()}>Back</Button>}
-      actionPane={
-        <>
-          {writable &&
-            (editing ? (
-              <Button
-                disabled={!fullName.trim() || !draft.languageId.trim() || save.isPending}
-                onClick={() => save.mutate()}
-              >
-                Save
-              </Button>
-            ) : (
-              <Button onClick={() => setEditing(true)}>Edit</Button>
-            ))}
-          {record && hasPermission(PERMISSIONS.CONTACT_CREATE) && (
-            <Button onClick={() => open('new')}>New</Button>
-          )}
-          {record && hasPermission(PERMISSIONS.CONTACT_DELETE) && (
-            <Button
-              disabled={remove.isPending}
-              onClick={() => {
-                if (window.confirm('Delete this contact?')) remove.mutate();
-              }}
-            >
-              Delete
-            </Button>
-          )}
-        </>
+  const load = async (signal?: AbortSignal) =>
+    (await apiClient.get<{ contacts: Contact[] }>(endpoint, { signal })).data.contacts.map(
+      toRecord
+    );
+  const persist = async (row: ContactRecord, create: boolean): Promise<ContactRecord> => {
+    const body = {
+      name: fullName(row),
+      nameAlias: row.nameAlias,
+      languageId: row.languageId,
+      addressBookNames: row.addressBookNames,
+      initials: row.initials,
+      nameParts:
+        row.nameParts || Object.values(namePartsOf(row)).some(Boolean) ? namePartsOf(row) : null,
+      gender: enumIndex(row.gender, genders),
+      maritalStatus: enumIndex(row.maritalStatus, statuses),
+      birthday: row.birthdayDate || null,
+      anniversary: row.anniversaryDate || null,
+      inactive: row.inactive,
+    };
+    const result = create
+      ? await apiClient.post<number>(endpoint, body)
+      : await apiClient.put<number>(`${endpoint}/${row.recId}`, body);
+    await cache.invalidateQueries({ queryKey });
+    const refreshed = await load();
+    return (
+      refreshed.find((item) => item.recId === Number(result.data)) ?? {
+        ...row,
+        recId: Number(result.data),
+        id: String(result.data),
+        name: body.name,
       }
-    >
-      {(save.error || remove.error) && (
-        <Alert severity="error">{(save.error || remove.error)?.message}</Alert>
-      )}
-      <MasterDetailSection title="General">
-        <Stack spacing={2}>
-          <Box
-            sx={{
-              display: 'grid',
-              gap: 2,
-              alignItems: 'start',
-              gridTemplateColumns: {
-                xs: '1fr',
-                sm: 'repeat(2, minmax(0, 1fr))',
-                lg: 'repeat(5, minmax(0, 1fr))',
+    );
+  };
+  const status = useMutation({
+    mutationFn: (row: ContactRecord) => persist(row, false),
+    onSuccess: async () => {
+      await cache.invalidateQueries({ queryKey: ['list-details', sourceKey] });
+    },
+  });
+  const initialRecords = contacts.map(toRecord);
+  const config: EnterpriseListDetailsConfig<ContactRecord> = {
+    recordTableName: 'ContactPerson',
+    getAuditRecordId: (row) => row.recId,
+    initialMode: !record
+      ? 'new'
+      : location.state?.edit && hasPermission(PERMISSIONS.CONTACT_EDIT)
+        ? 'edit'
+        : 'view',
+    initialSelectedId: record ? String(record.recId) : '__new__',
+    interactionLocked: status.isPending || customerNavigation.isPending,
+    dataSource: {
+      type: 'remote',
+      key: sourceKey,
+      initialRecords,
+      load,
+      create: (row) => persist(row, true),
+      update: (row) => persist(row, false),
+      delete: async (row) => {
+        await apiClient.delete(`/v1/ContactPerson/${row.recId}`);
+        await cache.invalidateQueries({ queryKey });
+        open();
+      },
+    },
+    createRecord: emptyContact,
+    getPrimaryText: (row) => localizedName(row, isRtl),
+    getSecondaryText: (row) => row.contactPersonId,
+    matchesSearch: (row, query) =>
+      `${row.contactPersonId} ${row.name} ${row.nameAlias}`
+        .toLocaleLowerCase()
+        .includes(query.toLocaleLowerCase()),
+    getValues: (row) => ({
+      contactPersonId: row.contactPersonId || 'Automatic',
+      account,
+      name: row.name,
+      firstName: row.firstName,
+      middleName: row.middleName,
+      lastNamePrefix: row.lastNamePrefix,
+      lastName: row.lastName,
+      nameAlias: row.nameAlias,
+      languageId: row.languageId,
+      addressBookNames: row.addressBookNames,
+      initials: row.initials ?? '',
+      gender: enumIndex(row.gender, genders),
+      maritalStatus: enumIndex(row.maritalStatus, statuses),
+      birthdayDate: row.birthdayDate,
+      anniversaryDate: row.anniversaryDate,
+      inactive: row.inactive,
+    }),
+    setValues: (row, values: DetailValues) => ({
+      ...row,
+      name: String(values.name ?? ''),
+      firstName: String(values.firstName ?? ''),
+      middleName: String(values.middleName ?? ''),
+      lastNamePrefix: String(values.lastNamePrefix ?? ''),
+      lastName: String(values.lastName ?? ''),
+      nameAlias: String(values.nameAlias ?? ''),
+      languageId: String(values.languageId ?? ''),
+      addressBookNames: String(values.addressBookNames ?? ''),
+      initials: String(values.initials ?? ''),
+      gender: Number(values.gender),
+      maritalStatus: Number(values.maritalStatus),
+      birthdayDate: String(values.birthdayDate ?? ''),
+      anniversaryDate: String(values.anniversaryDate ?? ''),
+      inactive: Boolean(values.inactive),
+    }),
+    headerFields: [
+      {
+        id: 'summary',
+        label: 'Contacts',
+        type: 'display',
+        getValue: (row) => `${row.contactPersonId || 'New Record'} | ${account}`,
+        setValue: (row) => row,
+      },
+    ],
+    sections: ({ record: row, editing }) => [
+      {
+        id: 'general',
+        title: 'General',
+        columns: 6,
+        minHeight: 320,
+        groups: [
+          {
+            id: 'contact',
+            title: 'Contact',
+            fields: [
+              { name: 'contactPersonId', label: 'Contact ID', disabled: true },
+              { name: 'account', label: 'Contact for', disabled: true },
+            ],
+          },
+          {
+            id: 'name',
+            fields: [
+              ...(!row.nameParts && row.recId > 0 ? [{ name: 'name', label: 'Name' }] : []),
+              { name: 'firstName', label: 'First name' },
+              { name: 'middleName', label: 'Middle name' },
+              { name: 'lastNamePrefix', label: 'Last name prefix' },
+            ],
+          },
+          {
+            id: 'last-name',
+            fields: [
+              { name: 'lastName', label: 'Last name' },
+              { name: 'nameAlias', label: 'Arabic name' },
+            ],
+          },
+          {
+            id: 'other',
+            title: 'Other information',
+            fields: [
+              { name: 'addressBookNames', label: 'Address books' },
+              { name: 'languageId', label: 'Language' },
+              ...(more ? [{ name: 'initials', label: 'Initials' }] : []),
+            ],
+          },
+          {
+            id: 'personal',
+            title: 'Personal information',
+            fields: [
+              {
+                name: 'gender',
+                label: 'Gender',
+                type: 'select',
+                options: genders.map((label, value) => ({ label, value: String(value) })),
               },
-            }}
-          >
-            <Stack spacing={2}>
-              <Typography variant="overline">Contact</Typography>
-              <TextField
-                size="small"
-                label="Contact ID"
-                value={record?.contactPersonId ?? 'Automatic'}
-                disabled
-              />
-              <TextField size="small" label="Contact for" value={account} disabled />
-            </Stack>
-            <Stack spacing={2}>
-              <Typography variant="overline">Name details</Typography>
-              {!structuredName && fields('name', 'Name')}
-              {nameField('firstName', 'First name')}
-              {nameField('middleName', 'Middle name')}
-              {nameField('lastNamePrefix', 'Last name prefix')}
-            </Stack>
-            <Stack spacing={2} sx={{ pt: { lg: 6 } }}>
-              {nameField('lastName', 'Last name')}
-              {fields('nameAlias', 'Arabic name')}
-              {more && fields('initials', 'Initials')}
-            </Stack>
-            <Stack spacing={2}>
-              <Typography variant="overline">Other information</Typography>
-              {fields('addressBookNames', 'Address books')}
-              {fields('languageId', 'Language')}
-            </Stack>
-            <Stack spacing={2}>
-              <Typography variant="overline">Personal information</Typography>
-              <TextField
-                select
-                size="small"
-                label="Gender"
-                disabled={!editing}
-                value={gender}
-                onChange={(e) => setGender(Number(e.target.value))}
-              >
-                {genders.map((label, index) => (
-                  <MenuItem key={label} value={index}>
-                    {label}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <TextField
-                select
-                size="small"
-                label="Marital status"
-                disabled={!editing}
-                value={maritalStatus}
-                onChange={(e) => setMaritalStatus(Number(e.target.value))}
-              >
-                {statuses.map((label, index) => (
-                  <MenuItem key={label} value={index}>
-                    {label}
-                  </MenuItem>
-                ))}
-              </TextField>
-
-              {more && (
-                <>
-                  {fields('birthday', 'Birthday', 'date')}
-                  {fields('anniversary', 'Anniversary', 'date')}
-                </>
-              )}
-              <Typography variant="overline">Status</Typography>
-              <FormControlLabel
-                label="Inactive"
-                control={
-                  <Switch
-                    disabled={!editing}
-                    checked={draft.inactive}
-                    onChange={(e) => setDraft({ ...draft, inactive: e.target.checked })}
-                  />
-                }
-              />
-            </Stack>
-          </Box>
-          <Button sx={{ alignSelf: 'flex-start' }} onClick={() => setMore(!more)}>
+              {
+                name: 'maritalStatus',
+                label: 'Marital status',
+                type: 'select',
+                options: statuses.map((label, value) => ({ label, value: String(value) })),
+              },
+              ...(more ? [{ name: 'birthdayDate', label: 'Birthday', type: 'date' as const }] : []),
+            ],
+          },
+          {
+            id: 'status',
+            title: 'Status',
+            fields: [
+              { name: 'inactive', label: 'Inactive', type: 'boolean' },
+              ...(more
+                ? [{ name: 'anniversaryDate', label: 'Anniversary', type: 'date' as const }]
+                : []),
+            ],
+          },
+        ],
+        link: (
+          <Button onClick={() => setMore((value) => !value)}>
             {more ? 'Show fewer fields' : 'Show more fields'}
           </Button>
-        </Stack>
-      </MasterDetailSection>
-      {!record && (
-        <MasterDetailSection title="Addresses" defaultExpanded={false}>
-          <Typography variant="body2">Save the contact to add addresses.</Typography>
-        </MasterDetailSection>
-      )}
-      {record && (
-        <>
-          <MasterDetailSection title="Addresses" defaultExpanded={false}>
+        ),
+      },
+      {
+        id: 'addresses',
+        title: 'Addresses',
+        content: (
+          <Stack>
+            {!row.party && (
+              <Typography variant="caption">Save the contact to add addresses.</Typography>
+            )}
             <PartyPostalAddressPanel
-              partyId={record.party}
-              editing={editing && writable}
+              partyId={row.party}
+              editing={editing && row.party > 0}
               storageKey="contactPerson.addresses"
             />
-          </MasterDetailSection>
-          <MasterDetailSection title="Contact information" defaultExpanded={false}>
+          </Stack>
+        ),
+      },
+      {
+        id: 'communication',
+        title: 'Contact information',
+        content: (
+          <Stack>
+            {!row.party && (
+              <Typography variant="caption">
+                Save the contact to add contact information.
+              </Typography>
+            )}
             <PartyElectronicAddressPanel
-              partyId={record.party}
-              editing={editing && writable}
+              partyId={row.party}
+              editing={editing && row.party > 0}
               storageKey="contactPerson.communication"
             />
-          </MasterDetailSection>
-        </>
-      )}
-    </MasterDetailPage>
-  );
+          </Stack>
+        ),
+      },
+    ],
+    commands: (row) => [
+      {
+        id: 'contact',
+        label: 'Contact',
+        requiresSelection: true,
+        ribbonPersistenceKey: 'contactPerson.ribbon',
+        groups: [
+          {
+            id: 'maintain',
+            label: 'Maintain',
+            actions: [
+              {
+                id: 'inactivate',
+                label: 'Inactivate',
+                disabled: !row || !hasPermission(PERMISSIONS.CONTACT_EDIT) || row.inactive,
+                onClick: () => {
+                  if (row) status.mutate({ ...row, inactive: true });
+                },
+              },
+              {
+                id: 'activate',
+                label: 'Activate',
+                disabled: !row || !hasPermission(PERMISSIONS.CONTACT_EDIT) || !row.inactive,
+                onClick: () => {
+                  if (row) status.mutate({ ...row, inactive: false });
+                },
+              },
+            ],
+          },
+          {
+            id: 'accounts',
+            label: 'Accounts',
+            actions: [
+              {
+                id: 'customer',
+                label: 'Customer',
+                disabled:
+                  kind !== 'customer' ||
+                  !hasPermission(PERMISSIONS.CUSTOMER_VIEW) ||
+                  customerNavigation.isPending,
+                onClick: () => customerNavigation.mutate(),
+              },
+              { id: 'vendor', label: 'Vendor', disabled: true },
+            ],
+          },
+          {
+            id: 'related',
+            label: 'Related information',
+            actions: [{ id: 'contacts', label: 'View contacts', onClick: () => open() }],
+          },
+        ],
+      },
+    ],
+    permissions: {
+      view: PERMISSIONS.CONTACT_VIEW,
+      create: PERMISSIONS.CONTACT_CREATE,
+      edit: PERMISSIONS.CONTACT_EDIT,
+      delete: PERMISSIONS.CONTACT_DELETE,
+    },
+    validate: (row) => ({
+      ...(!fullName(row).trim() ? { firstName: 'Contact name is required.' } : {}),
+      ...(!row.languageId.trim() ? { languageId: 'Language is required.' } : {}),
+    }),
+    onSelectionChange: (row) => {
+      if (row && row.recId !== record?.recId) open(row.id);
+    },
+    onCancel: !record ? () => open() : undefined,
+    backCommand: { onClick: () => open() },
+    detailHeader:
+      status.error || customerNavigation.error ? (
+        <Alert severity="error">{(status.error || customerNavigation.error)?.message}</Alert>
+      ) : undefined,
+    presentation: {
+      mode: 'list',
+      listInitiallyVisible: Boolean(record),
+      listWidth: 232,
+      listMinWidth: 200,
+      listMaxWidth: 360,
+      listResizable: true,
+      compactRecordHeader: true,
+      recordHeaderMinHeight: 42,
+    },
+  };
+  return <ListDetailsPage variant="enterprise" title="Contacts" config={config} />;
 }

@@ -13,6 +13,7 @@ Implements customer/customer-group lists, receivables parameters, payment modes 
 - `SalesOrdersPage.tsx`: order list.
 - `SalesOrderDetailsPage.tsx`: header-and-lines document experience with unsaved-change handling.
 - `queries/accountsReceivableQueryKeys.ts`: feature query-key ownership.
+- `previews/accountsReceivableRecordPreviews.ts`: D365 record previews (hover cards) for customers and customer groups.
 - `index.ts`: public module exports.
 
 These pages currently use a mix of shared mock datasets and implemented page logic; do not describe a module API folder that does not exist. New remote integration should introduce module-owned typed API and query hooks while preserving query-key ownership.

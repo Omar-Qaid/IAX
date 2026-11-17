@@ -54,7 +54,7 @@ describe('lookup title navigation', () => {
     expect(screen.queryByRole('button', { name: 'Open Sales tax group details' })).toBeNull();
   });
 
-  it('navigates from a shared lookup label without opening its dropdown', () => {
+  it('keeps open-details off the editor label, like D365 (view mode only)', () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     render(<QueryClientProvider client={client}><MemoryRouter initialEntries={['/form']}>
       <Routes>
@@ -63,9 +63,8 @@ describe('lookup title navigation', () => {
       </Routes>
     </MemoryRouter></QueryClientProvider>);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Open Priority details' }));
-    expect(screen.getByText('Priorities page')).toBeInTheDocument();
-    expect(screen.queryByRole('listbox')).toBeNull();
+    expect(screen.getByLabelText('Priority')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Open Priority details' })).toBeNull();
   });
 
   it('does not infer a route from a shared lookup field name', () => {

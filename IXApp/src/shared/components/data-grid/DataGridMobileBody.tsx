@@ -1,5 +1,5 @@
 import { uiDensity } from '@shared/constants/uiDensity';
-import React, { useMemo, useCallback, memo } from 'react';
+import React, { useMemo, useCallback, useImperativeHandle, useRef, memo, forwardRef } from 'react';
 import {
   Box,
   Typography,
@@ -17,6 +17,7 @@ import HistoryIcon from '@mui/icons-material/History';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useTranslation } from 'react-i18next';
 import type { ColumnDef } from './types';
+import type { GridBodyHandle } from './DataGridBody';
 import { getNestedValue } from './DataGridUtils';
 import { AppBooleanField } from '@shared/components/fields/AppBooleanField';
 import { EmptyDataWatermark } from '@shared/components/feedback/EmptyDataWatermark';
@@ -40,7 +41,11 @@ interface MobileGridBodyProps<T> {
   onSelectionChange?: (ids: (string | number)[]) => void;
 }
 
-export function DataGridMobileBodyInternal<T>({
+/** Cards rendered before the list is measured (first paint, jsdom). */
+const UNMEASURED_CARD_COUNT = 10;
+const ESTIMATED_CARD_HEIGHT = 180;
+
+function DataGridMobileBodyInternal<T>({
   rows,
   columns,
   getRowId,
@@ -56,27 +61,33 @@ export function DataGridMobileBodyInternal<T>({
   selectionMode = 'single',
   selectedIds = [],
   onSelectionChange,
-}: MobileGridBodyProps<T>) {
+}: MobileGridBodyProps<T>, ref: React.Ref<GridBodyHandle>) {
   const { t } = useTranslation();
   const theme = useTheme();
 
-  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+  // IDs are compared as strings, as on desktop: the grid reports selection as
+  // strings, so a numeric row ID would otherwise never show as selected.
+  const selectedSet = useMemo(() => new Set(selectedIds.map(String)), [selectedIds]);
+  const selectedIdsRef = useRef(selectedIds);
+  selectedIdsRef.current = selectedIds;
 
   const onToggleRow = useCallback(
     (rowId: string | number, event?: React.MouseEvent) => {
       if (event) {
         event.stopPropagation();
       }
+      const key = String(rowId);
+      const current = selectedIdsRef.current;
+      const isSelected = current.some((id) => String(id) === key);
       if (selectionMode === 'single') {
-        onSelectionChange?.(selectedSet.has(rowId) ? [] : [rowId]);
+        onSelectionChange?.(isSelected ? [] : [rowId]);
       } else if (selectionMode === 'multiple') {
-        const next = new Set(selectedSet);
-        if (next.has(rowId)) next.delete(rowId);
-        else next.add(rowId);
-        onSelectionChange?.(Array.from(next));
+        onSelectionChange?.(
+          isSelected ? current.filter((id) => String(id) !== key) : [...current, rowId]
+        );
       }
     },
-    [selectionMode, onSelectionChange, selectedSet]
+    [selectionMode, onSelectionChange]
   );
 
   // Use a dynamic virtualizer for cards which vary in height
@@ -85,11 +96,31 @@ export function DataGridMobileBodyInternal<T>({
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => scrollContainerRef.current,
-    estimateSize: () => 180, // rough estimate of a card height
+    estimateSize: () => ESTIMATED_CARD_HEIGHT,
     overscan: 5,
   });
 
-  const visibleColumns = useMemo(() => columns.filter((c) => !c.hidden), [columns]);
+  useImperativeHandle(
+    ref,
+    () => ({
+      scrollToIndex: (index: number) => rowVirtualizer.scrollToIndex(index, { align: 'start' }),
+    }),
+    [rowVirtualizer]
+  );
+
+  // Card layout is the same for every row: work it out once, not per card per render.
+  const { titleCol, statusCol, detailCols } = useMemo(() => {
+    const visible = columns.filter((c) => !c.hidden);
+    const title = visible[0] ?? null;
+    const status = visible.find(
+      (c) => c !== title && (c.type === 'boolean' || c.field === 'status' || c.field === 'isActive')
+    );
+    return {
+      titleCol: title,
+      statusCol: status,
+      detailCols: visible.filter((c) => c !== title && c !== status),
+    };
+  }, [columns]);
 
   const renderCell = useCallback((row: T, col: ColumnDef<T>, rowIndex: number) => {
     if (col.renderCell) {
@@ -221,24 +252,33 @@ export function DataGridMobileBodyInternal<T>({
     );
   }
 
+  const measuredItems = rowVirtualizer.getVirtualItems();
+  // Before the scroll element is measured the virtualizer returns nothing; render
+  // the first cards so the list never paints empty (desktop rows do the same).
+  const virtualItems =
+    measuredItems.length > 0
+      ? measuredItems
+      : rows.slice(0, UNMEASURED_CARD_COUNT).map((_, index) => ({
+          index,
+          start: index * ESTIMATED_CARD_HEIGHT,
+          key: index,
+        }));
+
   return (
     <>
       <Box
-        sx={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}
+        sx={{
+          height: `${Math.max(rowVirtualizer.getTotalSize(), virtualItems.length * ESTIMATED_CARD_HEIGHT)}px`,
+          width: '100%',
+          position: 'relative',
+        }}
       >
-        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+        {virtualItems.map((virtualRow) => {
           const row = rows[virtualRow.index];
-          const rowId = getRowId(row);
-          const isSelected = selectedSet.has(rowId);
-
-          // Pick the first column as the card title, second as status (if boolean or short text), rest as fields
-          const titleCol = visibleColumns.length > 0 ? visibleColumns[0] : null;
-          const statusCol = visibleColumns.find(
-            (c) => c.type === 'boolean' || c.field === 'status' || c.field === 'isActive'
-          );
-
-          // Filter out title and status columns from the general details list
-          const detailCols = visibleColumns.filter((c) => c !== titleCol && c !== statusCol);
+          // Rows can shrink between measuring and rendering (filtering, refresh).
+          if (row === undefined) return null;
+          const rowId = getRowId(row) ?? virtualRow.index;
+          const isSelected = selectedSet.has(String(rowId));
 
           return (
             <Box
@@ -253,6 +293,7 @@ export function DataGridMobileBodyInternal<T>({
               }}
               ref={rowVirtualizer.measureElement}
               data-index={virtualRow.index}
+              data-row-id={String(rowId)}
             >
               <Card
                 onClick={() => {
@@ -461,6 +502,6 @@ export function DataGridMobileBodyInternal<T>({
   );
 }
 
-export const DataGridMobileBody = memo(
-  DataGridMobileBodyInternal
-) as typeof DataGridMobileBodyInternal;
+export const DataGridMobileBody = memo(forwardRef(DataGridMobileBodyInternal)) as <T>(
+  props: MobileGridBodyProps<T> & { ref?: React.Ref<GridBodyHandle> }
+) => React.ReactElement | null;

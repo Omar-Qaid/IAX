@@ -276,16 +276,20 @@ it('saves on cell blur, locks item identity and names, and removes the line', as
   openOrder('1');
   await screen.findByText('SO-LIVE-001 : Live customer');
   fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Add line' }));
+  // Query inside the lines toolbar and grid: whole-page role queries over the
+  // order form made this flow take ~50 s in jsdom.
+  const toolbar = within(screen.getByRole('toolbar', { name: 'Sales order line actions' }));
+  const grid = within(screen.getByRole('grid'));
+  fireEvent.click(toolbar.getByRole('button', { name: 'Add line' }));
   expect(screen.queryByRole('dialog')).toBeNull();
-  fireEvent.click(screen.getByRole('textbox', { name: 'Item number' }));
+  fireEvent.click(grid.getByRole('textbox', { name: 'Item number' }));
   fireEvent.click(await screen.findByText('ITEM-1'));
-  await waitFor(() => expect(screen.queryByRole('textbox', { name: 'Item number' })).toBeNull());
-  expect(screen.queryByRole('textbox', { name: 'Product name' })).toBeNull();
-  expect(screen.queryByRole('textbox', { name: 'Arabic name' })).toBeNull();
+  await waitFor(() => expect(grid.queryByRole('textbox', { name: 'Item number' })).toBeNull());
+  expect(grid.queryByRole('textbox', { name: 'Product name' })).toBeNull();
+  expect(grid.queryByRole('textbox', { name: 'Arabic name' })).toBeNull();
   expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
   expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
-  const quantity = screen.getByRole('spinbutton', { name: 'Quantity' });
+  const quantity = grid.getByRole('spinbutton', { name: 'Quantity' });
   fireEvent.change(quantity, { target: { value: '3' } });
   expect(salesOrderLinesApi.add).not.toHaveBeenCalled();
   fireEvent.blur(quantity);
@@ -296,32 +300,32 @@ it('saves on cell blur, locks item identity and names, and removes the line', as
     )
   );
   await waitFor(() =>
-    expect(screen.getByRole('spinbutton', { name: 'Quantity' })).not.toBeDisabled()
+    expect(grid.getByRole('spinbutton', { name: 'Quantity' })).not.toBeDisabled()
   );
-  fireEvent.change(screen.getByRole('spinbutton', { name: 'Quantity' }), {
+  fireEvent.change(grid.getByRole('spinbutton', { name: 'Quantity' }), {
     target: { value: '4' },
   });
-  fireEvent.blur(screen.getByRole('spinbutton', { name: 'Quantity' }));
+  fireEvent.blur(grid.getByRole('spinbutton', { name: 'Quantity' }));
   await waitFor(() =>
     expect(salesOrderLinesApi.update).toHaveBeenCalledWith(
       '1',
       expect.objectContaining({ id: '10', quantity: 4 })
     )
   );
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Remove' })).not.toBeDisabled());
-  fireEvent.click(screen.getByLabelText('Unit'));
-  await waitFor(() => expect(screen.getByRole('combobox', { name: 'Unit' })).not.toBeDisabled());
-  fireEvent.keyDown(screen.getByRole('combobox', { name: 'Unit' }), { key: 'ArrowDown' });
+  await waitFor(() => expect(toolbar.getByRole('button', { name: 'Remove' })).not.toBeDisabled());
+  fireEvent.click(grid.getByLabelText('Unit'));
+  await waitFor(() => expect(grid.getByRole('combobox', { name: 'Unit' })).not.toBeDisabled());
+  fireEvent.keyDown(grid.getByRole('combobox', { name: 'Unit' }), { key: 'ArrowDown' });
   fireEvent.click(await screen.findByRole('option', { name: /BOX/ }));
-  fireEvent.blur(screen.getByRole('combobox', { name: 'Unit' }));
+  fireEvent.blur(grid.getByRole('combobox', { name: 'Unit' }));
   await waitFor(() =>
     expect(salesOrderLinesApi.update).toHaveBeenCalledWith(
       '1',
       expect.objectContaining({ unit: 'BOX' })
     )
   );
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Remove' })).not.toBeDisabled());
-  fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+  await waitFor(() => expect(toolbar.getByRole('button', { name: 'Remove' })).not.toBeDisabled());
+  fireEvent.click(toolbar.getByRole('button', { name: 'Remove' }));
   await waitFor(() => expect(salesOrderLinesApi.remove).toHaveBeenCalledWith('1', '10'));
 });
 
@@ -409,6 +413,11 @@ it('keeps invalid cell edits focused and moves to Unit after a successful Tab sa
       ).toHaveFocus(),
     { timeout: 3000 }
   );
+  // The focused Unit editor must keep showing the line's unit, not go blank.
+  const unitEditor = within(screen.getByRole('grid')).getByRole('combobox', { name: 'Unit' });
+  expect(unitEditor).toHaveValue('Pcs');
+  fireEvent.mouseDown(unitEditor);
+  expect(unitEditor).toHaveValue('Pcs');
   expect(salesOrderLinesApi.update).toHaveBeenCalledTimes(1);
 });
 

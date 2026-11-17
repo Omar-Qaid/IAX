@@ -13,6 +13,7 @@ import {
   Button,
 } from '@mui/material';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import { useVirtualizer } from '@tanstack/react-virtual';
@@ -22,8 +23,8 @@ import { localizedName } from '@shared/utilities/localizedName';
 import type { GridLookupProps, GridLookupColumn, LookupValue } from './types';
 import { useLookupGridField } from '@shared/hooks/useLookupGridField';
 import { lookupValueSx } from './lookupValueStyle';
-import { LookupNavigationLabel } from './LookupNavigationLabel';
 import { LookupDisplayField } from './LookupDisplayField';
+import { RecordPreview } from '@shared/components/record-preview';
 import { useFieldViewMode } from '@shared/components/fields/FieldPresentationContext';
 
 const DEFAULT_PAGE_SIZE = 50;
@@ -57,6 +58,8 @@ export function LookupGrid<T extends object>({
   searchDebounceMs = 300,
   showClearButton = true,
   actions,
+  gridCell = false,
+  previewEntity,
 }: GridLookupProps<T>) {
   const viewMode = useFieldViewMode();
   const { t, i18n } = useTranslation();
@@ -392,13 +395,23 @@ export function LookupGrid<T extends object>({
     if (open) recalcPosition();
   }, [open, rows.length, recalcPosition]);
 
-  if (viewMode) return <LookupDisplayField label={label ? t(label) : ''} value={resolvedDisplay} masterRoute={masterRoute} />;
+  // The record preview is keyed by the stored value (a code), not the shown text.
+  const previewKey =
+    typeof value === 'string' || typeof value === 'number' ? value : null;
+  if (viewMode) return <LookupDisplayField label={label ? t(label) : ''} value={resolvedDisplay} masterRoute={masterRoute} previewEntity={previewEntity} previewKey={previewKey} />;
 
   return (
     <Box sx={{ width: fullWidth ? '100%' : undefined }}>
+      <RecordPreview entity={previewEntity} masterRoute={masterRoute} recordKey={previewKey}>
       <TextField
         ref={anchorRef}
-        label={label ? <LookupNavigationLabel label={t(label)} masterRoute={masterRoute} /> : undefined}
+        // In a grid cell the column header is the label and the cell draws the
+        // only border, so render a borderless input named by aria-label.
+        variant={gridCell ? 'standard' : 'outlined'}
+        label={
+          // Open-details lives on the view-mode value (LookupDisplayField), not the editor.
+          label && !gridCell ? t(label) : undefined
+        }
         fullWidth={fullWidth}
         size={size}
         disabled={disabled}
@@ -409,11 +422,13 @@ export function LookupGrid<T extends object>({
         onClick={handleOpen}
         onKeyDown={handleKeyDown}
         slotProps={{
+          ...(gridCell && label ? { htmlInput: { 'aria-label': t(label) } } : {}),
           input: {
+            ...(gridCell ? { disableUnderline: true } : {}),
             readOnly: true,
             endAdornment: (
               <InputAdornment position="end">
-                {showClearButton && value != null && !disabled && (
+                {showClearButton && !gridCell && value != null && !disabled && (
                   <IconButton
                     size="small"
                     onClick={handleClear}
@@ -432,19 +447,38 @@ export function LookupGrid<T extends object>({
                   disabled={disabled}
                   aria-label={t('common.open') === 'common.open' ? 'Open' : t('common.open')}
                 >
-                  <ArrowDropDownIcon
-                    sx={{
-                      transition: 'transform 120ms',
-                      transform: open ? 'rotate(180deg)' : 'none',
-                    }}
-                  />
+                  {gridCell ? (
+                    // D365 grid cells use a thin chevron.
+                    <KeyboardArrowDownIcon
+                      sx={{
+                        fontSize: 18,
+                        transition: 'transform 120ms',
+                        transform: open ? 'rotate(180deg)' : 'none',
+                      }}
+                    />
+                  ) : (
+                    <ArrowDropDownIcon
+                      sx={{
+                        transition: 'transform 120ms',
+                        transform: open ? 'rotate(180deg)' : 'none',
+                      }}
+                    />
+                  )}
                 </IconButton>
               </InputAdornment>
             ),
           },
         }}
-        sx={{ bgcolor: 'background.paper', cursor: disabled ? 'not-allowed' : 'pointer', ...lookupValueSx(value) }}
+        sx={{
+          bgcolor: gridCell ? 'transparent' : 'background.paper',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          ...lookupValueSx(value),
+          ...(gridCell
+            ? { '& .MuiInputBase-root': { height: 28, fontSize: 13 }, '& .MuiInputBase-input': { py: 0 } }
+            : {}),
+        }}
       />
+      </RecordPreview>
 
       {open && (
         <Portal>

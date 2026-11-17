@@ -3,6 +3,7 @@ import { Box, Chip, Typography, IconButton } from '@mui/material';
 import FilterIcon from '@mui/icons-material/FilterList';
 import { useTranslation } from 'react-i18next';
 import type { ColumnDef, FilterModel } from '../types';
+import { VALUELESS_FILTER_OPERATORS } from '../constants';
 import { AppTextField } from '@shared/components/fields/AppTextField';
 import { AppBooleanField } from '@shared/components/fields/AppBooleanField';
 
@@ -31,6 +32,37 @@ export function FilterInput<T>({
           onChange={(v) => onFilterChange(field, v ? 'true' : '')}
           sx={{ '& .MuiSwitch-root': { transform: 'scale(0.8)' } }}
         />
+      </Box>
+    );
+  }
+
+  if (currentFilter && VALUELESS_FILTER_OPERATORS.has(currentFilter.operator)) {
+    return (
+      <Box
+        role="button"
+        tabIndex={0}
+        onClick={(e) => onFilterIconClick?.(e, column)}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          width: '100%',
+          height: 22,
+          px: 0.75,
+          gap: 0.5,
+          border: '1px solid',
+          borderColor: 'primary.main',
+          borderRadius: 1,
+          cursor: 'pointer',
+        }}
+      >
+        <Typography noWrap sx={{ flexGrow: 1, fontSize: '0.7rem', fontStyle: 'italic' }}>
+          {t(
+            currentFilter.operator === 'isEmpty'
+              ? 'grid.operators.is_empty'
+              : 'grid.operators.is_not_empty'
+          )}
+        </Typography>
+        <FilterIcon sx={{ fontSize: 12, color: 'primary.main', flexShrink: 0 }} />
       </Box>
     );
   }

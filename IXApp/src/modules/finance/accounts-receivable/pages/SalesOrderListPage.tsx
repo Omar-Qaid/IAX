@@ -3,6 +3,7 @@ import { Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
 import { StatusBadge } from '@shared/components/status/StatusBadge';
+import { FOUNDATION_RECORD_PREVIEWS } from '../../foundation/previews/foundationRecordPreviews';
 import type { ColumnDef } from '@shared/components/data-grid/types';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { salesOrderListApi, type SalesOrderListRecord } from '../api/salesOrderListApi';
@@ -10,6 +11,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCompanyStore } from '@core/company/useCompanyStore';
 import { SalesOrderQuickCreate } from '../components/SalesOrderQuickCreate';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
+import { ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS } from '../previews/accountsReceivableRecordPreviews';
 
 export function SalesOrderListPage(): React.ReactElement {
   const { t, currentLanguage } = useAppTranslation();
@@ -27,11 +29,11 @@ export function SalesOrderListPage(): React.ReactElement {
     () => [
       { field: 'salesId', headerName: 'fields.salesOrderNumber', width: 145, pinned: 'left',
         getDetailHref: (row) => ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrder(row.id) },
-      { field: 'customerAccount', headerName: 'fields.customerAccount', width: 150 },
+      { field: 'customerAccount', headerName: 'fields.customerAccount', width: 150, preview: { entity: ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.CUSTOMER } },
       { field: 'customerName', headerName: 'fields.customerName', minWidth: 220, flex: 1 },
-      { field: 'invoiceAccount', headerName: 'fields.invoiceAccount', width: 150 },
-      { field: 'customerGroup', headerName: 'fields.customerGroup', width: 145 },
-      { field: 'currencyCode', headerName: 'fields.currency', width: 95 },
+      { field: 'invoiceAccount', headerName: 'fields.invoiceAccount', width: 150, preview: { entity: ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.CUSTOMER } },
+      { field: 'customerGroup', headerName: 'fields.customerGroup', width: 145, preview: { entity: ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.CUSTOMER_GROUP } },
+      { field: 'currencyCode', headerName: 'fields.currency', width: 95, preview: { entity: FOUNDATION_RECORD_PREVIEWS.CURRENCY } },
       { field: 'deliveryDate', headerName: 'fields.requestedDelivery', width: 135, type: 'date' },
       {
         field: 'orderTotal',

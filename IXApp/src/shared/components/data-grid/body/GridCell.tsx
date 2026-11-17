@@ -15,6 +15,13 @@ interface GridCellProps<T> {
   position: 'left' | 'right' | undefined;
   renderCell: (row: T, col: ColumnDef<T>, rowIndex: number) => React.ReactNode;
   colIndex: number;
+  /**
+   * Not read here. `renderCell` is a stable callback, so these props are what
+   * re-render the cells of the line being edited (values and saving state) while
+   * every other cell stays memoized.
+   */
+  editSnapshot?: unknown;
+  saving?: boolean;
 }
 
 const GridCellInternal = <T,>({

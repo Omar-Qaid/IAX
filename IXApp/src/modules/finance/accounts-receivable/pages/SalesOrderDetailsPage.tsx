@@ -22,8 +22,17 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
 import type { DetailFieldConfig, DetailSectionConfig } from '@patterns/list-details/types';
 import { ErrorState } from '@shared/components/feedback/ErrorState';
-import { salesOrderLinesApi, type SalesOrderLineRecord } from '../api/salesOrderLinesApi';
+import {
+  salesOrderLinesApi,
+  type SalesOrderDeliveryAddressOption,
+  type SalesOrderLineRecord,
+} from '../api/salesOrderLinesApi';
 import { LogisticsPostalAddressDrawer } from '@shared/components/logistics/LogisticsPostalAddressDrawer';
+import {
+  POSTAL_ADDRESS_RECORD_PREVIEW,
+  type PostalAddressPreview,
+} from '@shared/components/logistics/postalAddressRecordPreview';
+import { RecordPreview } from '@shared/components/record-preview';
 import type { LogisticsPostalAddress } from '@shared/types/logistics';
 import { PERMISSIONS } from '@core/permissions/permissions';
 import { usePermission } from '@core/permissions/usePermission';
@@ -35,6 +44,7 @@ import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { salesOrderListApi, type SalesOrderHeaderInput, type SalesOrderListRecord } from '../api/salesOrderListApi';
 import { customerQuickCreateApi } from '../api/customerQuickCreateApi';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import { FOUNDATION_RECORD_PREVIEWS } from '../../foundation/previews/foundationRecordPreviews';
 import { LookupField } from '@shared/components/lookups/LookupField';
 import { EditableViewField } from '@shared/components/fields/EditableViewField';
 import { d365 } from '@shared/constants/enterpriseUiTokens';
@@ -52,6 +62,14 @@ import { salesOrderConfirmationApi } from '../api/salesOrderConfirmationApi';
 import { SalesOrderLinesGrid } from './SalesOrderLinesGrid';
 import { SalesOrderLinesProvider } from './SalesOrderLineState';
 
+/** The D365 address card (Location, Effective, Address) from an order's address option. */
+const toAddressPreview = (
+  option: SalesOrderDeliveryAddressOption | undefined
+): PostalAddressPreview | undefined =>
+  option
+    ? { location: option.label, validFrom: option.postalAddress?.validFrom, address: option.address }
+    : undefined;
+
 type DetailLine = SalesOrderLineRecord;
 
 const headerMasterRoutes: Partial<Record<keyof SalesOrderListRecord, string>> = {
@@ -65,6 +83,22 @@ const headerMasterRoutes: Partial<Record<keyof SalesOrderListRecord, string>> = 
   paymentTerms: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_TERMS,
   paymentMethod: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_METHODS,
   chargesGroup: FOUNDATION_ROUTE_PATHS.CHARGES_CODES,
+};
+// Masters with a registered preview but no master form route.
+const headerPreviewEntities: Partial<Record<keyof SalesOrderListRecord, string>> = {
+  deliveryMode: FOUNDATION_RECORD_PREVIEWS.DELIVERY_MODE,
+  deliveryTerms: FOUNDATION_RECORD_PREVIEWS.DELIVERY_TERMS,
+};
+// Line master fields: master form route (open details) and preview entity.
+const lineMasters: Partial<Record<keyof DetailLine, { masterRoute?: string; entity?: string }>> = {
+  site: { masterRoute: INVENTORY_ROUTE_PATHS.SITES },
+  warehouse: { masterRoute: INVENTORY_ROUTE_PATHS.WAREHOUSES },
+  unit: { masterRoute: INVENTORY_ROUTE_PATHS.UNITS_OF_MEASURE },
+  packingUnit: { masterRoute: INVENTORY_ROUTE_PATHS.UNITS_OF_MEASURE },
+  taxGroup: { masterRoute: FOUNDATION_ROUTE_PATHS.TAX_GROUPS },
+  taxItemGroup: { masterRoute: FOUNDATION_ROUTE_PATHS.TAX_ITEM_GROUPS },
+  deliveryMode: { entity: FOUNDATION_RECORD_PREVIEWS.DELIVERY_MODE },
+  deliveryTerms: { entity: FOUNDATION_RECORD_PREVIEWS.DELIVERY_TERMS },
 };
 const salesOrderRibbonPinnedStorageKey = 'sales-order.action-pane.ribbon-pinned';
 
@@ -480,6 +514,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
           <LookupField
             name={name}
             masterRoute={headerMasterRoutes[name]}
+            previewEntity={headerPreviewEntities[name as keyof SalesOrderListRecord]}
             label={label}
             value={String(activeHeader?.[name] ?? '')}
             disabled={savingHeader || !customersQuery.data || !lookupsQuery.data}
@@ -780,6 +815,26 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     label: string,
     displayValue: React.ReactNode,
     options?: { value: string; label: string }[]
+  ) =>
+    // View mode: master-data values show the D365 record preview. In edit mode the
+    // lookup editor carries its own preview.
+    activeHeader ? (
+      <React.Fragment key={name}>{headerPanelFieldContent(name, label, displayValue, options)}</React.Fragment>
+    ) : (
+      <RecordPreview
+        key={name}
+        masterRoute={headerMasterRoutes[name]}
+        entity={headerPreviewEntities[name as keyof SalesOrderListRecord]}
+        recordKey={String(order[name as keyof SalesOrderListRecord] ?? '')}
+      >
+        {headerPanelFieldContent(name, label, displayValue, options)}
+      </RecordPreview>
+    );
+  const headerPanelFieldContent = (
+    name: keyof SalesOrderHeaderInput,
+    label: string,
+    displayValue: React.ReactNode,
+    options?: { value: string; label: string }[]
   ) => activeHeader
     ? name === 'inventSiteId' || name === 'inventLocationId'
       ? headerDimensionInput(name, label)
@@ -805,6 +860,11 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     <Box sx={{ minWidth: 0 }}>
       <Typography variant="caption" color="text.secondary">Delivery address</Typography>
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+        <RecordPreview
+          entity={POSTAL_ADDRESS_RECORD_PREVIEW}
+          recordKey={selectedDeliveryAddress?.value}
+          record={toAddressPreview(selectedDeliveryAddress)}
+        >
         {activeHeader ? (
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <LookupField
@@ -835,6 +895,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
             />
           </Box>
         )}
+        </RecordPreview>
         <IconButton
           size="small"
           aria-label={selectedDeliveryAddress ? 'Add or update delivery address' : 'Add delivery address'}
@@ -962,7 +1023,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   };
   const dimensionField = (name: 'site' | 'warehouse', label: string) => {
     if (!displayedLine) return null;
-    if (!activeHeader) return field(label, displayedLine[name], true, true);
+    if (!activeHeader) return lineMasterValue(name, label, displayedLine[name]);
     const options =
       name === 'site'
         ? (dimensionsQuery.data?.sites ?? [])
@@ -973,6 +1034,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       <LookupField
         key={name}
         name={name}
+        masterRoute={lineMasters[name]?.masterRoute}
         label={label}
         value={lineDetailDraft?.[name] ?? ''}
         options={options}
@@ -993,6 +1055,17 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       />
     );
   };
+  // Read-only line master value with its D365 record preview.
+  const lineMasterValue = (name: keyof DetailLine, label: string, value?: unknown) => (
+    <RecordPreview
+      key={name}
+      entity={lineMasters[name]?.entity}
+      masterRoute={lineMasters[name]?.masterRoute}
+      recordKey={value == null ? '' : String(value)}
+    >
+      {field(label, value == null || value === '' ? undefined : String(value), true, true)}
+    </RecordPreview>
+  );
   const lineLookupShell = (content: React.ReactNode) => (
     <Box sx={{ minWidth: 0 }}>{content}</Box>
   );
@@ -1000,12 +1073,21 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     if (!displayedLine) return null;
     const options = deliveryAddressesQuery.data ?? [];
     const selected = options.find((option) => option.value === String(displayedLine.deliveryPostalAddress ?? ''));
+    const preview = (content: React.ReactNode) => (
+      <RecordPreview
+        entity={POSTAL_ADDRESS_RECORD_PREVIEW}
+        recordKey={selected?.value}
+        record={toAddressPreview(selected)}
+      >
+        {content}
+      </RecordPreview>
+    );
     if (!activeHeader)
-      return <>{field('Delivery address', selected?.label ?? '', true, true)}{field('Address', selected?.address ?? '', true)}</>;
+      return <>{preview(field('Delivery address', selected?.label ?? '', true, true))}{field('Address', selected?.address ?? '', true)}</>;
     return (
       <>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-          <Box sx={{ flex: 1, minWidth: 0 }}>
+          {preview(<Box sx={{ flex: 1, minWidth: 0 }}>
             <LookupField
               name="deliveryPostalAddress"
               label="Delivery address"
@@ -1026,7 +1108,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
                 void saveLineDetail(next);
               }}
             />
-          </Box>
+          </Box>)}
           <IconButton
             size="small"
             aria-label="Add delivery address"
@@ -1042,10 +1124,11 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   const unitField = () => {
     const label = t('fields.unit');
     if (!displayedLine) return null;
-    if (!activeHeader) return field(label, displayedLine.unit, true, true);
+    if (!activeHeader) return lineMasterValue('unit', label, displayedLine.unit);
     return lineLookupShell(
       <LookupField
         name="unit"
+        masterRoute={lineMasters.unit?.masterRoute}
         label={label}
         value={lineDetailDraft?.unit ?? ''}
         options={(unitsQuery.data ?? []).map((unit) => ({
@@ -1069,10 +1152,11 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   const packingUnitField = () => {
     const label = t('salesOrder.packingUnit', 'وحدة التعبئة');
     if (!displayedLine) return null;
-    if (!activeHeader) return field(label, displayedLine.packingUnit, true, true);
+    if (!activeHeader) return lineMasterValue('packingUnit', label, displayedLine.packingUnit);
     return lineLookupShell(
       <LookupField
         name="packingUnit"
+        masterRoute={lineMasters.packingUnit?.masterRoute}
         label={label}
         value={lineDetailDraft?.packingUnit ?? ''}
         options={(unitsQuery.data ?? []).map((unit) => ({
@@ -1104,10 +1188,11 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     options: { value: string; label: string }[] = []
   ) => {
     if (!displayedLine) return null;
-    if (!activeHeader) return lineValue(name, label, false, true, true);
+    if (!activeHeader) return lineMasterValue(name, label, displayedLine[name]);
     return lineLookupShell(
       <LookupField
         name={name}
+        previewEntity={lineMasters[name]?.entity}
         label={label}
         value={lineDetailDraft?.[name] ?? ''}
         options={options.map((option) => ({
@@ -1162,7 +1247,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   };
   const taxGroupField = (name: 'taxGroup' | 'taxItemGroup', label: string) => {
     if (!displayedLine) return null;
-    if (!activeHeader) return lineValue(name, label, false, true, true);
+    if (!activeHeader) return lineMasterValue(name, label, displayedLine[name]);
     const options =
       name === 'taxGroup'
         ? (taxGroupsQuery.data?.salesTaxGroups ?? [])
@@ -1170,6 +1255,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     return lineLookupShell(
       <LookupField
         name={name}
+        masterRoute={lineMasters[name]?.masterRoute}
         label={label}
         value={lineDetailDraft?.[name] ?? ''}
         options={options}
@@ -1770,6 +1856,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   const headerField = (name: string, label: string, sectionTitle?: string): DetailFieldConfig => ({
     name,
     masterRoute: headerMasterRoutes[name as keyof SalesOrderHeaderInput],
+    previewEntity: headerPreviewEntities[name as keyof SalesOrderListRecord],
     label: t(`salesOrder.headerFields.${name}`, label),
     type: readOnlyHeaderFields.has(name) ? 'display' : headerLookupFields.has(name) ? 'select' : 'text',
     sectionTitle,

@@ -47,10 +47,21 @@ export function useGridLayout() {
         setScrollbarWidth((prev) => (prev === sb ? prev : sb));
       });
     };
+    // Watch the container and its content box (content height decides whether a
+    // vertical scrollbar appears). Observing the whole subtree for mutations fired
+    // on every virtual row mount during scroll and forced a layout read per frame.
     const ro = new ResizeObserver(measure);
     ro.observe(el);
-    const mo = new MutationObserver(measure);
-    mo.observe(el, { childList: true, subtree: true });
+    let content = el.firstElementChild;
+    if (content) ro.observe(content);
+    const mo = new MutationObserver(() => {
+      if (el.firstElementChild === content) return;
+      if (content) ro.unobserve(content);
+      content = el.firstElementChild;
+      if (content) ro.observe(content);
+      measure();
+    });
+    mo.observe(el, { childList: true });
     return () => {
       if (rafId !== null) cancelAnimationFrame(rafId);
       ro.disconnect();

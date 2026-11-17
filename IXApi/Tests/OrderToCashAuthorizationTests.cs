@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.CollectionLetters;
+using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.CurrencyRevaluation;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.Invoice;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.Payment;
@@ -66,6 +67,13 @@ public sealed class OrderToCashAuthorizationTests
         var creates = 0;
         var posts = 0;
         var reversals = 0;
+        var lookupCalls = new List<string>();
+        builder.Services.AddSingleton(Stub<ISalesOrderLookupService>(method => _ =>
+        {
+            Assert.Contains(method.Name, new[] { nameof(ISalesOrderLookupService.TaxGroupsAsync), nameof(ISalesOrderLookupService.LedgerDimensionsAsync) });
+            lookupCalls.Add(method.Name);
+            return Task.FromResult<object>(new { });
+        }));
         builder.Services.AddSingleton(Stub<IFreeTextInvoiceService>(method => method.Name switch
         {
             nameof(IFreeTextInvoiceService.CreateAsync) => _ =>
@@ -147,6 +155,11 @@ public sealed class OrderToCashAuthorizationTests
         }
 
         await Expect(invoice, null, HttpStatusCode.Unauthorized);
+        await Expect(invoice + "/ledger-dimensions", null, HttpStatusCode.Unauthorized, HttpMethod.Get);
+        await Expect(invoice + "/ledger-dimensions", "viewer", HttpStatusCode.OK, HttpMethod.Get);
+        await Expect(invoice + "/tax-groups", "viewer", HttpStatusCode.OK, HttpMethod.Get);
+        await Expect(invoice + "/tax-groups", "reverser", HttpStatusCode.Forbidden, HttpMethod.Get);
+        Assert.Equal(new[] { nameof(ISalesOrderLookupService.LedgerDimensionsAsync), nameof(ISalesOrderLookupService.TaxGroupsAsync) }, lookupCalls);
         await Expect(invoice, "viewer", HttpStatusCode.Forbidden);
         await Expect(invoice + "/1/post", "creator", HttpStatusCode.Forbidden);
         await Expect(reversal, "poster", HttpStatusCode.Forbidden);

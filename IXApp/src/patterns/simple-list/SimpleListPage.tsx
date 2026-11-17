@@ -63,6 +63,8 @@ export interface EnterpriseListCrudConfig<T> {
   onEdit?: (row: T) => void;
   onNew?: () => void;
   onDelete?: (rows: T[]) => void;
+  canDelete?: (rows: T[]) => boolean;
+  canEdit?: (row: T) => boolean;
 }
 
 export interface EnterpriseListAdvancedFilter<T> {
@@ -217,7 +219,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
   const [selectedIds, setSelectedIds] = useState<(string | number)[]>(
     initialRow ? [getRowId(initialRow)] : []
   );
-  const [selectedRow, setSelectedRow] = useState<T | null>(initialRow);
+  const [selectedRowSnapshot, setSelectedRow] = useState<T | null>(initialRow);
   const initialSelectionApplied = useRef(Boolean(initialRow));
   useEffect(() => {
     if (dataGridProps.selectedIds) {
@@ -287,6 +289,13 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
     });
   }, [advancedFilters, enterpriseConfig, rows, suppliedConfig, columns]);
 
+  // Commands and record information must use the current visible record, not a stale
+  // snapshot retained before filtering, refreshing, posting or deletion.
+  const selectedRow =
+    selectedRowSnapshot && selectedIds.includes(getRowId(selectedRowSnapshot))
+      ? (processedRows.find((row) => getRowId(row) === getRowId(selectedRowSnapshot)) ?? null)
+      : null;
+
   const resolvedError = error ?? sourceState.error;
   const resolvedLoading = loading || sourceState.loading;
   const retry = onRetry ?? sourceState.refresh;
@@ -329,6 +338,11 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
           },
           onRowClick: (row) => {
             if (isEditing) return;
+            if ((dataGridProps.selectionMode ?? 'single') === 'single') {
+              const ids = [getRowId(row)];
+              setSelectedIds(ids);
+              dataGridProps.onSelectionChange?.(ids);
+            }
             setSelectedRow(row);
             dataGridProps.onRowClick?.(row);
           },
@@ -362,10 +376,17 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
             newLabel={config.crud.newLabel}
             deleteLabel={config.crud.deleteLabel}
             canEdit={
-              selectedIds.length === 1 && Boolean(config.crud.onEdit || dataGridProps.masterForm)
+              selectedIds.length === 1 && Boolean(selectedRow) && Boolean(config.crud.onEdit || dataGridProps.masterForm) && (selectedRow ? (config.crud.canEdit?.(selectedRow) ?? true) : false)
             }
             canNew={Boolean(config.crud.onNew || dataGridProps.masterForm)}
-            canDelete={selectedIds.length > 0 && Boolean(config.crud.onDelete)}
+            canDelete={
+              selectedIds.some((id) => processedRows.some((row) => getRowId(row) === id)) &&
+              Boolean(config.crud.onDelete) &&
+              (config.crud.canDelete?.(
+                processedRows.filter((row) => selectedIds.includes(getRowId(row)))
+              ) ??
+                true)
+            }
             onEdit={
               selectedRow
                 ? () =>
@@ -382,7 +403,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
                   : undefined
             }
             onDelete={() =>
-              setPendingDelete(rows.filter((row) => selectedIds.includes(getRowId(row))))
+              setPendingDelete(processedRows.filter((row) => selectedIds.includes(getRowId(row))))
             }
             editPermission={config.crud.editPermission}
             newPermission={config.crud.newPermission}

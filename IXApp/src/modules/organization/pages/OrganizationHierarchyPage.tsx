@@ -7,8 +7,7 @@ import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list
 import type { ColumnDef } from '@shared/components/data-grid/types';
 import { localizedName } from '@shared/utilities/localizedName';
 import { uiDensity } from '@shared/constants/uiDensity';
-import { LookupField } from '@shared/components/lookups/LookupField';
-import { ORGANIZATION_ROUTE_PATHS } from '../routes/organizationRoutePaths';
+import { DataGridLookupField } from '@shared/components/lookups/DataGridLookupField';
 import { organizationStructureApi as api } from '../api/organizationStructureApi';
 
 interface HierarchyRecord {
@@ -60,9 +59,8 @@ export function OrganizationHierarchyPage(): React.ReactElement {
         width: 240,
         editable: creating,
         renderEditCell: ({ value, onChange, disabled }) => (
-          <LookupField
+          <DataGridLookupField
             name="rootOrganizationUnitId"
-            masterRoute={ORGANIZATION_ROUTE_PATHS.ORGANIZATION_UNITS}
             label={t('organizationStructure.rootUnit')}
             value={Number(value) || undefined}
             onChange={(id) => onChange(Number(id) || 0)}

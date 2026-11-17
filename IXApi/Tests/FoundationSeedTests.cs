@@ -37,6 +37,26 @@ public sealed class FoundationSeedTests
         using var scope = provider.CreateScope();
         var runner = new SeedRunner(db, scope.ServiceProvider.GetServices<IDataSeeder>(), scope.ServiceProvider.GetServices<ISeedValidator>());
         await runner.RunAsync(2026, "foundation-test");
+        var contactCodes = ContactPersonDemoData.Examples.Select(x => x.Code).ToArray();
+        var demoContacts = await db.Set<ContactPerson>().Where(x => contactCodes.Contains(x.ContactPersonId)).ToListAsync();
+        Assert.Equal(3, demoContacts.Count);
+        Assert.Single(demoContacts.Where(x => x.Inactive == IAX.IXApi.Modules.Finance.Common.NoYes.Yes));
+        var contactNameIds = new List<long>();
+        foreach (var contact in demoContacts)
+        {
+            var example = ContactPersonDemoData.Examples.Single(x => x.Code == contact.ContactPersonId);
+            var party = await db.Set<DirPartyTable>().SingleAsync(x => x.RecId == contact.Party);
+            Assert.Equal(example.Name, party.Name);
+            Assert.Equal(example.ArabicName, party.NameAlias);
+            var personName = await db.Set<DirPersonName>().SingleAsync(x => x.Person == party.RecId);
+            Assert.Equal(example.FirstName, personName.FirstName);
+            Assert.Equal(example.LastName, personName.LastName);
+            contactNameIds.Add(personName.RecId);
+            var customer = await db.Set<IAX.IXApi.Modules.Finance.AccountsReceivable.CustTable>()
+                .SingleAsync(x => x.AccountNum == "FNV2-" + db.GetDataAreaId() + "-CUSTOMER");
+            Assert.Equal(customer.Party, contact.ContactForParty);
+            Assert.Equal(example.CustomerContact ? customer.AccountNum : null, contact.CustAccount);
+        }
         var mapped = db.Model.GetEntityTypes().Where(x => FoundationTableCatalog.MasterTypes.Contains(x.ClrType.Name)).ToArray();
         Assert.Equal(FoundationTableCatalog.MasterTypes.Count, mapped.Length);
         var counts = new Dictionary<string,long>();
@@ -56,6 +76,9 @@ public sealed class FoundationSeedTests
             cmd.CommandText = "SELECT COUNT(*) FROM \"" + type.GetTableName() + "\"";
             Assert.Equal(counts[type.ClrType.Name], Convert.ToInt64(await cmd.ExecuteScalarAsync()));
         }
+        Assert.Equal(contactNameIds.OrderBy(x => x), await db.Set<DirPersonName>()
+            .Where(x => contactNameIds.Contains(x.RecId)).OrderBy(x => x.RecId).Select(x => x.RecId).ToListAsync());
+        Assert.Equal(3, await db.Set<DirPersonName>().CountAsync());
         var delivery = await db.Set<DlvMode>().SingleAsync(x => x.Code == "FNV2");
         delivery.Txt = "Operator change";
         await db.SaveChangesAsync();

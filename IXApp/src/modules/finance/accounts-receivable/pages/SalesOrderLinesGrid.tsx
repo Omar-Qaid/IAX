@@ -1,7 +1,6 @@
 import React, { useRef, useMemo, useEffect, useCallback } from 'react';
 import {
   Alert,
-  Autocomplete,
   Box,
   Button,
   MenuItem,
@@ -13,6 +12,8 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/Delete';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import { d365 } from '@shared/constants/enterpriseUiTokens';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
@@ -23,6 +24,7 @@ import type { ColumnDef, DataGridHandle } from '@shared/components/data-grid/typ
 import { ErrorState } from '@shared/components/feedback/ErrorState';
 import { LookupGridField } from '@shared/components/lookups/LookupGridField';
 import { DataGridLookupField } from '@shared/components/lookups/DataGridLookupField';
+import type { FetchPageFn, LookupOption } from '@shared/components/lookups/types';
 import { SalesLineValueField } from './SalesLineValueField';
 import { SalesLineGridSurface } from './SalesLineGridSurface';
 import { SalesLineCell, SalesLineCellProvider } from './SalesLineCell';
@@ -33,6 +35,7 @@ import {
   type SalesOrderLineRecord,
 } from '../api/salesOrderLinesApi';
 import type { SalesOrderListRecord } from '../api/salesOrderListApi';
+import { INVENTORY_RECORD_PREVIEWS } from '../../inventory/previews/inventoryRecordPreviews';
 import { INVENTORY_ROUTE_PATHS } from '../../inventory/routes/inventoryRoutePaths';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
 import {
@@ -63,7 +66,23 @@ const displayCellStyle: React.CSSProperties = {
   height: '100%',
   display: 'flex',
   alignItems: 'center',
+  gap: 4,
+  minWidth: 0,
 };
+const displayTextStyle: React.CSSProperties = {
+  flex: 1,
+  minWidth: 0,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+};
+/** Fields that reference another table: shown as links, as D365 does. */
+const LOOKUP_LINE_FIELDS = new Set(['unit', 'site', 'warehouse', 'salesCategory']);
+/** Fields edited from a list: the active line shows their chevron before focus (D365). */
+const DROPDOWN_LINE_FIELDS = new Set(['lineType', 'deliveryType', 'unit', 'site', 'warehouse']);
+const LineCellChevron = (props: React.ComponentProps<typeof KeyboardArrowDownIcon>) => (
+  <KeyboardArrowDownIcon {...props} sx={{ fontSize: 18 }} />
+);
 interface Props {
   order: SalesOrderListRecord;
   editing: boolean;
@@ -178,29 +197,15 @@ export function SalesOrderLinesGrid({
   const handleRefreshLines = useCallback(() => {
     void refetchLines();
   }, [refetchLines]);
-  const unitsQuery = useQuery({
-    queryKey: ['sales-order-unit-options'],
-    queryFn: async ({ signal }) => {
-      const first = await salesOrderLinesApi.units({
-        pageNumber: 1,
-        pageSize: 100,
-        search: '',
-        signal,
-      });
-      const units = [...first.data];
-      for (let pageNumber = 2; pageNumber <= first.totalPages; pageNumber++) {
-        const page = await salesOrderLinesApi.units({
-          pageNumber,
-          pageSize: 100,
-          search: '',
-          signal,
-        });
-        units.push(...page.data);
-      }
-      return units;
-    },
-    enabled: Boolean(draftLine),
-  });
+  // Units are searched and paged on the server as the user types and scrolls,
+  // instead of downloading every page before the list can open.
+  const fetchUnitOptions = useCallback<FetchPageFn<LookupOption>>(async (params) => {
+    const page = await salesOrderLinesApi.units(params);
+    return {
+      ...page,
+      data: page.data.map((unit) => ({ id: unit.symbol, code: unit.symbol, name: unit.symbol })),
+    };
+  }, []);
   const dimensionsQuery = useQuery({
     queryKey: ['sales-order-inventory-dimensions'],
     queryFn: ({ signal }) => salesOrderLinesApi.inventoryDimensions(signal),
@@ -282,11 +287,13 @@ export function SalesOrderLinesGrid({
         field: 'site',
         headerName: t('salesOrderQuickCreate.site', 'Site'),
         width: 120,
+        preview: { entity: INVENTORY_RECORD_PREVIEWS.SITE },
       },
       {
         field: 'warehouse',
         headerName: t('salesOrderQuickCreate.warehouse', 'Warehouse'),
         width: 140,
+        preview: { entity: INVENTORY_RECORD_PREVIEWS.WAREHOUSE },
       },
     ],
     [t]
@@ -475,6 +482,14 @@ export function SalesOrderLinesGrid({
       } else if (column.field === 'deliveryType' && typeof value === 'number') {
         displayValue = DELIVERY_TYPE_OPTIONS[value] ?? value;
       }
+      const field = String(column.field);
+      const text = String(displayValue ?? '');
+      const lineIsActive =
+        lineEditEnabled &&
+        canEditLines &&
+        order?.salesStatus.toLowerCase() === 'backorder' &&
+        row.id === (activeDraft?.id ?? selectedLineId);
+      const showChevron = lineIsActive && editable && DROPDOWN_LINE_FIELDS.has(field);
       return (
         <div
           data-grid-cell-focus
@@ -510,7 +525,20 @@ export function SalesOrderLinesGrid({
             event.currentTarget.focus();
           }}
         >
-          {String(displayValue ?? '')}
+          <span
+            style={{
+              ...displayTextStyle,
+              ...(LOOKUP_LINE_FIELDS.has(field) && text ? { color: d365.primary } : {}),
+            }}
+          >
+            {text}
+          </span>
+          {showChevron && (
+            <KeyboardArrowDownIcon
+              aria-hidden
+              sx={{ fontSize: 18, color: 'text.secondary', flexShrink: 0 }}
+            />
+          )}
         </div>
       );
     }
@@ -518,6 +546,7 @@ export function SalesOrderLinesGrid({
       return (
         <LookupGridField<SalesItem>
           name="itemNumber"
+          gridCell
           label={t('salesOrder.itemNumber', 'Item number')}
           value={null}
           valueField="itemNumber"
@@ -534,36 +563,19 @@ export function SalesOrderLinesGrid({
       );
     if (column.field === 'unit')
       return (
-        <Box sx={{ width: '100%' }}>
-          <Autocomplete
-            autoHighlight
-            disableClearable
-            size="small"
-            options={Array.from(
-              new Set(
-                [row.unit, ...(unitsQuery.data ?? []).map((unit) => unit.symbol)].filter(Boolean)
-              )
-            )}
-            value={row.unit}
+        <Box sx={{ width: '100%', minWidth: 0, height: 28, display: 'flex', alignItems: 'center' }}>
+          <DataGridLookupField
+            name="unit"
+            label={t('salesOrder.unit', 'Unit')}
+            value={row.unit || null}
+            required
+            autoFocus
+            queryKey={['sales-order-unit-lookup']}
+            fetchPage={fetchUnitOptions}
             disabled={savingLine}
-            loading={unitsQuery.isLoading}
-            onChange={handleUnitChange}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                autoFocus
-                variant="standard"
-                error={unitsQuery.isError}
-                helperText={unitsQuery.isError ? unitsQuery.error.message : undefined}
-                slotProps={{
-                  ...params.slotProps,
-                  htmlInput: {
-                    ...params.slotProps.htmlInput,
-                    'aria-label': t('salesOrder.unit', 'Unit'),
-                  },
-                }}
-              />
-            )}
+            onChange={(nextValue) =>
+              handleUnitChange(null, nextValue == null ? null : String(nextValue))
+            }
           />
         </Box>
       );
@@ -616,7 +628,10 @@ export function SalesOrderLinesGrid({
           fullWidth
           disabled={savingLine}
           value={value ?? (column.field === 'lineType' ? 3 : 0)}
-          slotProps={{ select: { 'aria-label': t(column.headerName) } }}
+          slotProps={{
+            input: { disableUnderline: true },
+            select: { 'aria-label': t(column.headerName), IconComponent: LineCellChevron },
+          }}
           onChange={(event) =>
             setDraftLine((draft) =>
               draft ? { ...draft, [column.field]: Number(event.target.value) } : draft
@@ -827,6 +842,8 @@ export function SalesOrderLinesGrid({
   return (
     <>
       <Stack
+        role="toolbar"
+        aria-label={t('salesOrder.lineActions', 'Sales order line actions')}
         direction="row"
         spacing={0.5}
         sx={{

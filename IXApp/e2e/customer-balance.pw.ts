@@ -67,6 +67,7 @@ test('customer tab exposes confirmed basic actions and opens the screenshot-alig
           currencyCode: 'SAR',
         },
       ];
+    if (url.pathname.endsWith('/SalesTable/1/packing-slips')) data = [{ id: '10', salesId: 'SO-C001', packingSlipId: 'PS-C001', deliveryDate: '2026-11-15' }];
     if (url.pathname.endsWith('/inventory-dimensions')) data = { sites: [], warehouses: [] };
     if (url.pathname.endsWith('/CustTrans/balance-currency')) {
       expect(url.searchParams.get('accountNum')).toBe('C-001');
@@ -113,7 +114,12 @@ test('customer tab exposes confirmed basic actions and opens the screenshot-alig
   });
   await expect(page.getByText('-706,782.41', { exact: true })).toBeVisible();
   await expect(page.getByText('Accounting currency balance', { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', {name: 'Toggle record list', exact: true})).toHaveAttribute('aria-pressed', testInfo.project.name === 'desktop-chromium' ? 'true' : 'false');
+  await expect(
+    page.getByRole('button', { name: 'Toggle record list', exact: true })
+  ).toHaveAttribute(
+    'aria-pressed',
+    testInfo.project.name === 'desktop-chromium' ? 'true' : 'false'
+  );
   await expect(page.getByRole('button', { name: 'Edit', exact: true })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'New', exact: true })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Delete', exact: true })).toBeDisabled();
@@ -141,7 +147,19 @@ test('customer tab exposes confirmed basic actions and opens the screenshot-alig
   await page.getByRole('button', { name: 'Back', exact: true }).click();
   await expect(page).toHaveURL(/customers\/1$/);
   await page.getByRole('button', { name: 'Sell', exact: true }).click();
-  await page.getByRole('button', { name: 'Sales orders', exact: true }).click();
+  await page.getByRole('button', { name: 'Sales order', exact: true }).click();
+  await expect(page.getByRole('combobox', { name: 'Customer account', exact: true })).toHaveText('C-001 - Example customer');
+  await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeEnabled({ timeout: 30_000 });
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await page.getByRole('button', { name: 'Sell', exact: true }).click();
+  await page.getByRole('button', { name: 'Packing slips', exact: true }).click();
+  await expect(page).toHaveURL(/customer-packing-slips\/C-001$/);
+  await expect(page.getByText('PS-C001', { exact: true })).toBeVisible({ timeout: 30_000 });
+  await page.goBack();
+  await expect(page.getByText('C-001 : Example customer')).toBeVisible();
+  await page.getByRole('button', { name: 'Sell', exact: true }).click();
+  await page.getByRole('button', { name: 'Orders', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Sales orders', exact: true }).click();
   await expect(page).toHaveURL(/sales-orders\?customerAccount=C-001$/);
   await expect(page.getByText('SO-C001', { exact: true })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText('SO-C002', { exact: true })).toHaveCount(0);

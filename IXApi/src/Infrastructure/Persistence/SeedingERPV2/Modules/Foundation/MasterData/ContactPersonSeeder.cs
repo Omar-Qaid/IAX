@@ -12,7 +12,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Foundation;
 public sealed class ContactPersonSeeder : IDataSeeder
 {
     public string Id => "ERPV2.Foundation.ContactPersonSeeder";
-    public IReadOnlyCollection<string> Dependencies => ["ERPV2.Foundation.HcmWorkerSeeder", "ERPV2.DirPartyTableSeeder", "ERPV2.CurrencySeeder", "ERPV2.PaymTermSeeder", "ERPV2.TaxGroupHeadingSeeder", "ERPV2.Foundation.PaymSchedLineSeeder", "ERPV2.Foundation.DlvModeSeeder", "ERPV2.Foundation.DimensionSeeder"];
+    public IReadOnlyCollection<string> Dependencies => ["ERPV2.Foundation.HcmWorkerSeeder", "ERPV2.DirPartyTableSeeder", "ERPV2.VendTableSeeder", "ERPV2.CurrencySeeder", "ERPV2.PaymTermSeeder", "ERPV2.TaxGroupHeadingSeeder", "ERPV2.Foundation.PaymSchedLineSeeder", "ERPV2.Foundation.DlvModeSeeder", "ERPV2.Foundation.DimensionSeeder"];
     public async Task SeedAsync(SeedContext c, CancellationToken ct)
     {
         var worker = await c.RequireAsync<HcmWorker>(x => x.PersonnelNumber == "FNV2-BUYER", ct);
@@ -23,5 +23,35 @@ public sealed class ContactPersonSeeder : IDataSeeder
         await c.EnsureAsync<IAX.IXApi.Modules.Finance.AccountsReceivable.CustTable>(x => x.AccountNum == account,
             new() { AccountNum = account, Party = vendor.RecId, CurrencyCode = "SAR", PaymTermId = "FNV2-60", TaxGroupId = "APV2", DlvModeId = "FNV2", DefaultDimension = dimensions.RecId }, ct);
         await c.EnsureAsync<ContactPerson>(x => x.ContactPersonId == "FNV2-BUYER", new() { ContactPersonId = "FNV2-BUYER", Party = worker.Person, ContactForParty = vendor.RecId, CustAccount = account, MainResponsibleWorker = worker.RecId }, ct);
+
+        // The existing Foundation customer and AP demo vendor explicitly share this owner party.
+        var vendorAccount = await c.RequireAsync<VendTable>(
+            x => x.AccountNum == $"APV2-{c.Company}-LOCAL", ct);
+        if (vendorAccount.Party != vendor.RecId)
+            throw new InvalidOperationException("The demo vendor belongs to a different party; existing data was preserved.");
+        await SeedDemoContactsAsync(c, vendor.RecId, account, ct);
+    }
+
+    public static async Task SeedDemoContactsAsync(SeedContext c, long ownerParty, string customerAccount, CancellationToken ct)
+    {
+        await c.RequireAsync<DirPartyTable>(x => x.RecId == ownerParty, ct);
+        await c.RequireAsync<IAX.IXApi.Modules.Finance.AccountsReceivable.CustTable>(
+            x => x.AccountNum == customerAccount && x.Party == ownerParty, ct);
+        foreach (var example in ContactPersonDemoData.Examples)
+        {
+            var partyNumber = $"{example.Code}-{c.Company}";
+            var person = await c.EnsureAsync<DirPartyTable>(x => x.PartyNumber == partyNumber,
+                new() { PartyNumber = partyNumber, Name = example.Name, NameAlias = example.ArabicName,
+                    LanguageId = "en-US", Initials = example.Initials, IsActive = NoYes.Yes }, ct,
+                nameof(DirPartyTable.Name), nameof(DirPartyTable.NameAlias), nameof(DirPartyTable.LanguageId), nameof(DirPartyTable.Initials));
+            await c.EnsureAsync<DirPersonName>(x => x.Person == person.RecId && x.ValidFrom == ContactPersonDemoData.NameValidFrom,
+                new() { Person = person.RecId, FirstName = example.FirstName, LastName = example.LastName,
+                    ValidFrom = ContactPersonDemoData.NameValidFrom, ValidTo = DateTime.MaxValue }, ct);
+            await c.EnsureAsync<ContactPerson>(x => x.ContactPersonId == example.Code,
+                new() { ContactPersonId = example.Code, Party = person.RecId, ContactForParty = ownerParty,
+                    CustAccount = example.CustomerContact ? customerAccount : null,
+                    Inactive = example.Inactive ? NoYes.Yes : NoYes.No }, ct,
+                nameof(ContactPerson.Party), nameof(ContactPerson.ContactForParty), nameof(ContactPerson.CustAccount), nameof(ContactPerson.Inactive));
+        }
     }
 }

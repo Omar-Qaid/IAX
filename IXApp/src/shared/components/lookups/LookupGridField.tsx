@@ -36,6 +36,8 @@ function LookupGridFieldInner<T extends object>({
   actions,
   permissionModule,
   permissionResource,
+  gridCell = false,
+  previewEntity,
 }: LookupGridFieldBaseProps<T>) {
   const { t, i18n } = useTranslation();
   const isRtl = i18n.language.startsWith('ar');
@@ -107,6 +109,8 @@ function LookupGridFieldInner<T extends object>({
         size={size}
         pageSize={pageSize}
         actions={actions}
+        gridCell={gridCell}
+        previewEntity={previewEntity}
       />
       {!hasAccess && permissionModule && permissionResource && (
         <FormHelperText

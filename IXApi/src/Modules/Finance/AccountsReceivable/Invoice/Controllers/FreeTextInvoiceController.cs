@@ -1,4 +1,5 @@
 using IAX.IXApi.Modules.Identity.Permissions;
+using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
 using IAX.IXApi.Shared.Application.Contracts;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,8 +8,17 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Invoice;
 [ApiController]
 [Route("api/v1/CustInvoiceTable")]
 [DomainPermission("AccountsReceivable", "Invoices", "View")]
-public sealed class FreeTextInvoiceController(IFreeTextInvoiceService service) : ControllerBase
+public sealed class FreeTextInvoiceController(IFreeTextInvoiceService service, ISalesOrderLookupService lookups) : ControllerBase
 {
+    [HttpGet("tax-groups")]
+    public async Task<IActionResult> TaxGroups(CancellationToken ct) =>
+        Ok(APIResponse<object>.Ok(await lookups.TaxGroupsAsync(ct)));
+
+    [HttpGet("ledger-dimensions")]
+    public async Task<IActionResult> LedgerDimensions(string? search = null, int pageNumber = 1,
+        int pageSize = 50, CancellationToken ct = default) =>
+        Ok(APIResponse<object>.Ok(await lookups.LedgerDimensionsAsync(search, pageNumber, pageSize, ct)));
+
     [HttpGet]
     public async Task<IActionResult> List(CancellationToken ct) =>
         Ok(APIResponse<IReadOnlyList<FreeTextInvoiceDto>>.Ok(await service.ListAsync(ct)));
