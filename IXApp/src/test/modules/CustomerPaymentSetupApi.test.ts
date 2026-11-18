@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { apiClient } from '@core/api/apiClient';
-import { customerPaymentSetupApi } from '@modules/finance/accounts-receivable/api/customerPaymentSetupApi';
+import { customerPaymentSetupApi } from '@modules/finance/accounts-receivable/setup/api/customerPaymentSetupApi';
 vi.mock('@core/api/apiClient', () => ({
   apiClient: { get: vi.fn(), put: vi.fn(), post: vi.fn(), delete: vi.fn() },
 }));

@@ -1,6 +1,6 @@
 import { expect, it, vi } from 'vitest';
 import { apiClient } from '@core/api/apiClient';
-import { unitOfMeasureApi } from '@modules/finance/inventory/api/unitOfMeasureApi';
+import { unitOfMeasureApi } from '@modules/finance/inventory/units-of-measure/api/unitOfMeasureApi';
 
 vi.mock('@core/api/apiClient', () => ({ apiClient: { delete: vi.fn() } }));
 

@@ -3,8 +3,8 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, render } from '@testing-library/react';
 import { apiClient } from '@core/api/apiClient';
 import type { EnterpriseListDetailsConfig } from '@patterns/list-details/types';
-import { InventJournalNamePage } from '@modules/finance/inventory/pages/InventJournalNamePage';
-import { inventJournalNameApi, type InventJournalNameRecord } from '@modules/finance/inventory/api/inventJournalNameApi';
+import { InventJournalNamePage } from '@modules/finance/inventory/journals/pages/InventJournalNamePage';
+import { inventJournalNameApi, type InventJournalNameRecord } from '@modules/finance/inventory/journals/api/inventJournalNameApi';
 
 let renderedConfig: EnterpriseListDetailsConfig<InventJournalNameRecord>;
 vi.mock('@patterns/list-details/ListDetailsPage', () => ({

@@ -7,7 +7,7 @@ Modules own business pages, DTOs, endpoint wrappers, queries, validation, and fe
 | `administration` | Application/user settings and number sequences | [README](administration/README.md) |
 | `dashboard` | Operations landing dashboard | [README](dashboard/README.md) |
 | `finance/accounts-receivable` | Customers, groups, parameters, payment setup, and sales orders | [README](finance/accounts-receivable/README.md) |
-| `finance/foundation` | Currencies, exchange rates, and exchange-rate types | [README](finance/foundation/README.md) |
+| `finance/foundation` | Currencies, exchange rates, charges, sales tax and contacts | [README](finance/foundation/README.md) |
 | `identity` | Login page | [README](identity/README.md) |
 | `organization` | Legal-entity maintenance | [README](organization/README.md) |
 | `process-builder` | Integrated workflow designer/editor | [README](process-builder/README.md) |

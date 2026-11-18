@@ -6,17 +6,24 @@ import { queryClient } from '@core/api/queryClient';
 import { useCompanyStore } from '@core/company/useCompanyStore';
 import { salesOrderQueryKeys } from '@modules/finance/accounts-receivable/queries/accountsReceivableQueryKeys';
 import { AppProviders } from '@app/providers/AppProviders';
-import { salesOrderListApi } from '@modules/finance/accounts-receivable/api/salesOrderListApi';
-import { salesOrderLinesApi } from '@modules/finance/accounts-receivable/api/salesOrderLinesApi';
-import { salesOrderConfirmationApi } from '@modules/finance/accounts-receivable/api/salesOrderConfirmationApi';
-import { salesOrderPackingSlipApi } from '@modules/finance/accounts-receivable/api/salesOrderPackingSlipApi';
-import { SalesOrderDetailsPage } from '@modules/finance/accounts-receivable/pages/SalesOrderDetailsPage';
+import { salesOrderListApi } from '@modules/finance/accounts-receivable/sales-order/api/salesOrderListApi';
+import { salesOrderLinesApi } from '@modules/finance/accounts-receivable/sales-order/api/salesOrderLinesApi';
+import { salesOrderConfirmationApi } from '@modules/finance/accounts-receivable/sales-order/api/salesOrderConfirmationApi';
+import { salesOrderPackingSlipApi } from '@modules/finance/accounts-receivable/sales-order/api/salesOrderPackingSlipApi';
+import { SalesOrderDetailsPage } from '@modules/finance/accounts-receivable/sales-order/pages/SalesOrderDetailsPage';
 
-vi.mock('@modules/finance/accounts-receivable/api/salesOrderListApi', () => ({
+vi.mock('@modules/finance/accounts-receivable/sales-order/api/salesOrderListApi', () => ({
   salesOrderListApi: {
     cancel: vi.fn().mockResolvedValue(undefined),
     updateHeader: vi.fn().mockResolvedValue(undefined),
-    list: vi.fn().mockResolvedValue([
+    // One order by ID, from the same fixture the list returns.
+    get: vi.fn(async (id: string) => (await mockOrders()).find((order) => order.id === id) ?? null),
+    list: vi.fn(async () => mockOrders()),
+  },
+}));
+
+async function mockOrders() {
+  return [
       {
         id: '1',
         recId: 1,
@@ -33,11 +40,10 @@ vi.mock('@modules/finance/accounts-receivable/api/salesOrderListApi', () => ({
         customerReference: 'PO-001',
         orderTotal: 250,
       },
-    ]),
-  },
-}));
+    ];
+}
 
-vi.mock('@modules/finance/accounts-receivable/api/salesOrderLinesApi', () => ({
+vi.mock('@modules/finance/accounts-receivable/sales-order/api/salesOrderLinesApi', () => ({
   salesOrderLinesApi: {
     list: vi.fn().mockResolvedValue([]),
     totals: vi.fn().mockResolvedValue({ subtotal: 250, totalDiscount: 0, salesTax: 0, totalCharges: 0, invoiceAmount: 250, quantity: 0, costValue: 0 }),
@@ -59,7 +65,7 @@ vi.mock('@modules/finance/accounts-receivable/api/salesOrderLinesApi', () => ({
   },
 }));
 
-vi.mock('@modules/finance/accounts-receivable/api/salesOrderConfirmationApi', () => ({
+vi.mock('@modules/finance/accounts-receivable/sales-order/api/salesOrderConfirmationApi', () => ({
   salesOrderConfirmationApi: {
     preview: vi.fn().mockResolvedValue({
       header: { currencyCode: 'SAR', qty: 1, salesBalance: 100, sumTax: 15, confirmAmount: 115 },
@@ -70,7 +76,7 @@ vi.mock('@modules/finance/accounts-receivable/api/salesOrderConfirmationApi', ()
   },
 }));
 
-vi.mock('@modules/finance/accounts-receivable/api/salesOrderPackingSlipApi', () => ({
+vi.mock('@modules/finance/accounts-receivable/sales-order/api/salesOrderPackingSlipApi', () => ({
   salesOrderPackingSlipApi: {
     postingPreview: vi.fn().mockImplementation(async () => ({
       header: { id: '1', salesId: 'SO-LIVE-001', customerName: 'Live customer', currencyCode: 'SAR', siteId: 'MAIN' },

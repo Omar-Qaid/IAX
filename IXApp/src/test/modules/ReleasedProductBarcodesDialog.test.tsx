@@ -1,7 +1,7 @@
 import React from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { ReleasedProductBarcodesDialog } from '@modules/finance/inventory/components/ReleasedProductBarcodesDialog';
+import { ReleasedProductBarcodesDialog } from '@modules/finance/inventory/products/components/ReleasedProductBarcodesDialog';
 
 vi.mock('@tanstack/react-query', () => ({
   useQuery: () => ({ data: [], isError: false, refetch: vi.fn() }),

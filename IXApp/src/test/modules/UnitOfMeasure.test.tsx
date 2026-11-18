@@ -2,13 +2,13 @@ import React from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { UnitConversionEditor } from '@modules/finance/inventory/components/UnitConversionEditor';
-import { unitOfMeasureApi } from '@modules/finance/inventory/api/unitOfMeasureApi';
-import { ecoResProductApi } from '@modules/finance/inventory/api/ecoResProductApi';
+import { UnitConversionEditor } from '@modules/finance/inventory/units-of-measure/components/UnitConversionEditor';
+import { unitOfMeasureApi } from '@modules/finance/inventory/units-of-measure/api/unitOfMeasureApi';
+import { ecoResProductApi } from '@modules/finance/inventory/products/api/ecoResProductApi';
 
 vi.mock('@core/localization/useAppTranslation', () => ({ useAppTranslation: () => ({ t: (_key: string, fallback: string) => fallback }) }));
-vi.mock('@modules/finance/inventory/api/unitOfMeasureApi', () => ({ unitOfMeasureApi: { list: vi.fn(), createConversion: vi.fn(), updateConversion: vi.fn(), deleteConversion: vi.fn() } }));
-vi.mock('@modules/finance/inventory/api/ecoResProductApi', () => ({ ecoResProductApi: { list: vi.fn() } }));
+vi.mock('@modules/finance/inventory/units-of-measure/api/unitOfMeasureApi', () => ({ unitOfMeasureApi: { list: vi.fn(), createConversion: vi.fn(), updateConversion: vi.fn(), deleteConversion: vi.fn() } }));
+vi.mock('@modules/finance/inventory/products/api/ecoResProductApi', () => ({ ecoResProductApi: { list: vi.fn() } }));
 afterEach(() => { cleanup(); vi.clearAllMocks(); });
 
 it('saves a fraction conversion and excludes units from another class', async () => {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { expect, it, vi } from 'vitest';
-import { SalesLineGridSurface } from '@modules/finance/accounts-receivable/pages/SalesLineGridSurface';
+import { SalesLineGridSurface } from '@modules/finance/accounts-receivable/sales-order/lines/SalesLineGridSurface';
 import type { DataGridHandle } from '@shared/components/data-grid/types';
 
 function setup(commit = vi.fn().mockResolvedValue(true)) {

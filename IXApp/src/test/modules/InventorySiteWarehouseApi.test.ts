@@ -1,7 +1,7 @@
 import { expect, it, vi } from 'vitest';
 import { apiClient } from '@core/api/apiClient';
-import { inventSiteApi, type InventSiteRecord } from '@modules/finance/inventory/api/inventSiteApi';
-import { inventLocationApi, type InventLocationRecord } from '@modules/finance/inventory/api/inventLocationApi';
+import { inventSiteApi, type InventSiteRecord } from '@modules/finance/inventory/warehouses/api/inventSiteApi';
+import { inventLocationApi, type InventLocationRecord } from '@modules/finance/inventory/warehouses/api/inventLocationApi';
 
 vi.mock('@core/api/apiClient', () => ({ apiClient: { delete: vi.fn() } }));
 

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@test/testUtils';
 import { OpenBalanceCurrencyPage } from '@patterns/open-balance-currency/OpenBalanceCurrencyPage';
 import type { PartyOpenBalanceCurrency } from '@patterns/open-balance-currency/types';
-import { buildCustomerRibbonGroups } from '@modules/finance/accounts-receivable/components/customerRibbon';
+import { buildCustomerRibbonGroups } from '@modules/finance/accounts-receivable/customer/components/customerRibbon';
 import { partyBalanceApi } from '@modules/finance/party-balances/api/partyBalanceApi';
 import { CustOpenBalanceCurrency } from '@modules/finance/party-balances/pages/PartyBalancePage';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';

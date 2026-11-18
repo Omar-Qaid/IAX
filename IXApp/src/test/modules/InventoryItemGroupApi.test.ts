@@ -1,6 +1,6 @@
 import { expect, it, vi } from 'vitest';
 import { apiClient } from '@core/api/apiClient';
-import { inventItemGroupApi, type InventItemGroupRecord } from '@modules/finance/inventory/api/inventItemGroupApi';
+import { inventItemGroupApi, type InventItemGroupRecord } from '@modules/finance/inventory/item-groups/api/inventItemGroupApi';
 
 vi.mock('@core/api/apiClient', () => ({ apiClient: { delete: vi.fn() } }));
 

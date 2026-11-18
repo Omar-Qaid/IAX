@@ -4,17 +4,17 @@ import { screen, waitFor } from '@test/testUtils';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AppProviders } from '@app/providers/AppProviders';
 import { useCompanyStore } from '@core/company/useCompanyStore';
-import { customerQuickCreateApi } from '@modules/finance/accounts-receivable/api/customerQuickCreateApi';
-import { CustTablePage } from '@modules/finance/accounts-receivable/pages/CustTablePage';
+import { customerQuickCreateApi } from '@modules/finance/accounts-receivable/customer/api/customerQuickCreateApi';
+import { CustTablePage } from '@modules/finance/accounts-receivable/customer/pages/CustTablePage';
 vi.mock('@core/auth/useAuth', () => ({ useAuth: () => ({ hasPermission: () => true }) }));
 vi.mock('@shared/components/logistics/PartyLogisticsPanels', () => ({
   PartyPostalAddressPanel: () => null,
   PartyElectronicAddressPanel: () => null,
 }));
-vi.mock('@modules/finance/accounts-receivable/api/salesOrderLinesApi', () => ({
+vi.mock('@modules/finance/accounts-receivable/sales-order/api/salesOrderLinesApi', () => ({
   salesOrderLinesApi: { inventoryDimensions: async () => ({ sites: [], warehouses: [] }) },
 }));
-vi.mock('@modules/finance/accounts-receivable/api/customerQuickCreateApi', () => ({
+vi.mock('@modules/finance/accounts-receivable/customer/api/customerQuickCreateApi', () => ({
   customerQuickCreateApi: {
     list: vi.fn(),
     lookups: async () => ({}),

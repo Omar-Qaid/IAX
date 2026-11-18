@@ -826,7 +826,7 @@ function RecordHeader<T>({
                     component="span"
                     sx={{ marginInlineEnd: 0.5, fontSize: 12, lineHeight: 1.35, fontWeight: 700 }}
                   >
-                    {field.type === 'select' || field.masterRoute
+                    {(field.type === 'select' || field.masterRoute) && !editing
                       ? <LookupNavigationLabel label={field.label} masterRoute={field.masterRoute} />
                       : field.label}:
                   </Typography>
@@ -919,7 +919,7 @@ function RecordHeader<T>({
                 title={field.label}
                 sx={{ mb: '2px', fontSize: d365.labelFontSize, lineHeight: 1.1, color: d365.text }}
               >
-                {field.type === 'select' || field.masterRoute
+                {(field.type === 'select' || field.masterRoute) && !editing
                   ? <LookupNavigationLabel label={field.label} masterRoute={field.masterRoute} />
                   : field.label}
               </Typography>

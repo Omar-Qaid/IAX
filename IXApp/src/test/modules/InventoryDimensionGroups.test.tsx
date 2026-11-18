@@ -3,10 +3,10 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, render } from '@testing-library/react';
 import { apiClient } from '@core/api/apiClient';
 import type { EnterpriseListDetailsConfig } from '@patterns/list-details/types';
-import { EcoResStorageDimensionGroupPage } from '@modules/finance/inventory/pages/EcoResStorageDimensionGroupPage';
-import { EcoResTrackingDimensionGroupPage } from '@modules/finance/inventory/pages/EcoResTrackingDimensionGroupPage';
-import { storageDimensionGroupApi, type StorageDimensionGroupRecord } from '@modules/finance/inventory/api/storageDimensionGroupApi';
-import { trackingDimensionGroupApi, type TrackingDimensionGroupRecord } from '@modules/finance/inventory/api/trackingDimensionGroupApi';
+import { EcoResStorageDimensionGroupPage } from '@modules/finance/inventory/dimension-groups/pages/EcoResStorageDimensionGroupPage';
+import { EcoResTrackingDimensionGroupPage } from '@modules/finance/inventory/dimension-groups/pages/EcoResTrackingDimensionGroupPage';
+import { storageDimensionGroupApi, type StorageDimensionGroupRecord } from '@modules/finance/inventory/dimension-groups/api/storageDimensionGroupApi';
+import { trackingDimensionGroupApi, type TrackingDimensionGroupRecord } from '@modules/finance/inventory/dimension-groups/api/trackingDimensionGroupApi';
 
 let renderedConfig: EnterpriseListDetailsConfig<StorageDimensionGroupRecord | TrackingDimensionGroupRecord>;
 vi.mock('@patterns/list-details/ListDetailsPage', () => ({

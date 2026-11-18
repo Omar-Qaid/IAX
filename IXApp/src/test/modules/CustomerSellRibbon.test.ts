@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { buildCustomerSellRibbonGroups } from '@modules/finance/accounts-receivable/components/customerSellRibbon';
+import { buildCustomerSellRibbonGroups } from '@modules/finance/accounts-receivable/customer/components/customerSellRibbon';
 const tr = (_: string, fallback: string) => fallback;
 describe('customer Sell ribbon', () => {
   it('keeps New order separate from existing Orders and omits destinations without permission', () => {

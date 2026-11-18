@@ -6,7 +6,7 @@ import {
   pagedRecordLoader,
   registerRecordPreview,
 } from '@shared/components/record-preview';
-import { customerQuickCreateApi, type CustomerRecord } from '../api/customerQuickCreateApi';
+import { customerQuickCreateApi, type CustomerRecord } from '../customer/api/customerQuickCreateApi';
 import { customerQueryKeys } from '../queries/accountsReceivableQueryKeys';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
 

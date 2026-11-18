@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   salesLineNetAmount,
   synchronizeSalesLineDiscount,
-} from '../../modules/finance/accounts-receivable/utils/salesLineDiscount';
+} from '../../modules/finance/accounts-receivable/sales-order/lines/salesLineDiscount';
 
 const line = { quantity: 10, unitPrice: 100, lineDiscount: 0, lineDiscountPercent: 0 };
 

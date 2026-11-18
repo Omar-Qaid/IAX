@@ -1,6 +1,6 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 import { apiClient } from '@core/api/apiClient';
-import { customerQuickCreateApi } from '@modules/finance/accounts-receivable/api/customerQuickCreateApi';
+import { customerQuickCreateApi } from '@modules/finance/accounts-receivable/customer/api/customerQuickCreateApi';
 vi.mock('@core/api/apiClient', () => ({ apiClient: { get: vi.fn(), put: vi.fn() } }));
 const dto = {
   recId: 1,

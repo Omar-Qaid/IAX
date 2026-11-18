@@ -2,8 +2,8 @@ import React from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, render } from '@testing-library/react';
 import type { SetupPageProps } from '@patterns/setup/types';
-import { InventParametersPage } from '@modules/finance/inventory/pages/InventParametersPage';
-import { inventParametersApi } from '@modules/finance/inventory/api/inventParametersApi';
+import { InventParametersPage } from '@modules/finance/inventory/setup/pages/InventParametersPage';
+import { inventParametersApi } from '@modules/finance/inventory/setup/api/inventParametersApi';
 
 let renderedProps: SetupPageProps;
 vi.mock('@patterns/setup/SetupPage', () => ({
@@ -21,7 +21,7 @@ vi.mock('@tanstack/react-query', () => ({
       : { recId: 1, reserveOnOrdered: false, multiSiteDefaultInventSiteId: 'JED', multiSiteDefaultInventLocationId: 'MAIN' },
   }),
 }));
-vi.mock('@modules/finance/inventory/api/inventParametersApi', () => ({ inventParametersApi: { save: vi.fn() } }));
+vi.mock('@modules/finance/inventory/setup/api/inventParametersApi', () => ({ inventParametersApi: { save: vi.fn() } }));
 afterEach(() => { cleanup(); vi.clearAllMocks(); });
 
 it('blocks ordered reservation and a warehouse outside the selected site before save', async () => {

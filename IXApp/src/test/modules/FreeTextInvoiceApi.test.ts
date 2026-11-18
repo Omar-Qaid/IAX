@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { freeTextInvoiceApi } from '@modules/finance/accounts-receivable/api/freeTextInvoiceApi';
+import { freeTextInvoiceApi } from '@modules/finance/accounts-receivable/free-text-invoice/api/freeTextInvoiceApi';
 import { apiClient } from '@core/api/apiClient';
 vi.mock('@core/api/apiClient', () => ({
   apiClient: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },

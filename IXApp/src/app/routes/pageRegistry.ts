@@ -2,7 +2,7 @@ import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
 import { matchPath } from 'react-router-dom';
 import { PERMISSIONS, type PermissionCode } from '@core/permissions/permissions';
 import { ROUTE_PATHS } from './routePaths';
-import { accountContactsRoute, contactDetailsRoute } from '@modules/finance/contacts/contactRoutes';
+import { accountContactsRoute, contactDetailsRoute } from '@modules/finance/foundation/contacts/routes/contactRoutes';
 import { PARTY_BALANCE_ROUTE_PATHS } from '@modules/finance/party-balances/routes/partyBalanceRoutePaths';
 
 export interface AppPageDefinition {
@@ -24,7 +24,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
   ].map((route) => ({
     ...route,
     component: lazyPage(
-      () => import('@modules/finance/accounts-receivable/pages/CustFreeInvoiceDetailsPage'),
+      () => import('@modules/finance/accounts-receivable/free-text-invoice/pages/CustFreeInvoiceDetailsPage'),
       (module) => module.CustFreeInvoiceDetailsPage
     ),
   })),
@@ -33,7 +33,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.FREE_TEXT_INVOICES,
     permission: PERMISSIONS.FREE_TEXT_INVOICE_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/accounts-receivable/pages/CustFreeInvoiceListPage'),
+      () => import('@modules/finance/accounts-receivable/free-text-invoice/pages/CustFreeInvoiceListPage'),
       (module) => module.CustFreeInvoiceListPage
     ),
   },
@@ -42,7 +42,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path,
     permission: PERMISSIONS.CONTACT_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/contacts/AccountContactsPage'),
+      () => import('@modules/finance/foundation/contacts/pages/AccountContactsPage'),
       (module) => module.AccountContactsPage
     ),
   })),
@@ -51,7 +51,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUST_TRANS,
     permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/accounts-receivable/pages/CustTrans'),
+      () => import('@modules/finance/accounts-receivable/customer/pages/CustTrans'),
       (module) => module.CustTrans
     ),
   },
@@ -60,7 +60,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_OPEN_TRANSACTIONS,
     permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/accounts-receivable/pages/CustomerOpenTransactionsPage'),
+      () => import('@modules/finance/accounts-receivable/customer/pages/CustomerOpenTransactionsPage'),
       (module) => module.CustomerOpenTransactionsPage
     ),
   },
@@ -87,7 +87,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_POSTING_PROFILES,
     permission: PERMISSIONS.CUSTOMER_POSTING_PROFILE_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/accounts-receivable/pages/CustomerPostingProfilesPage'),
+      () => import('@modules/finance/accounts-receivable/setup/pages/CustomerPostingProfilesPage'),
       (module) => module.CustomerPostingProfilesPage
     ),
   },
@@ -96,7 +96,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.TRADE_AGREEMENT_JOURNALS,
     permission: PERMISSIONS.TRADE_AGREEMENT_JOURNAL_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/accounts-receivable/pages/TradeAgreementJournalPage'),
+      () => import('@modules/finance/accounts-receivable/price-discount/pages/TradeAgreementJournalPage'),
       (module) => module.TradeAgreementJournalPage
     ),
   },
@@ -105,7 +105,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.PRICE_DISCOUNT_GROUPS,
     permission: PERMISSIONS.PRICE_DISCOUNT_GROUP_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/accounts-receivable/pages/PriceDiscountGroupPage'),
+      () => import('@modules/finance/accounts-receivable/price-discount/pages/PriceDiscountGroupPage'),
       (module) => module.PriceDiscountGroupPage
     ),
   },
@@ -114,7 +114,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.TRADE_AGREEMENT_JOURNAL_NAMES,
     permission: PERMISSIONS.TRADE_AGREEMENT_JOURNAL_NAME_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/accounts-receivable/pages/TradeAgreementJournalNamePage'),
+      () => import('@modules/finance/accounts-receivable/price-discount/pages/TradeAgreementJournalNamePage'),
       (module) => module.TradeAgreementJournalNamePage
     ),
   },
@@ -132,7 +132,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMERS,
     permission: PERMISSIONS.CUSTOMER_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/accounts-receivable/pages/CustomerListPage'),
+      () => import('@modules/finance/accounts-receivable/customer/pages/CustomerListPage'),
       (module) => module.CustomerListPage
     ),
   },
@@ -141,7 +141,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_GROUPS,
     permission: PERMISSIONS.CUSTOMER_GROUP_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/accounts-receivable/pages/CustomerGroupListPage'),
+      () => import('@modules/finance/accounts-receivable/customer-group/pages/CustomerGroupListPage'),
       (module) => module.CustomerGroupListPage
     ),
   },
@@ -150,7 +150,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_DETAILS,
     permission: PERMISSIONS.CUSTOMER_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/accounts-receivable/pages/CustTablePage'),
+      () => import('@modules/finance/accounts-receivable/customer/pages/CustTablePage'),
       (module) => module.CustTablePage
     ),
   },
@@ -159,7 +159,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PARAMETERS,
     permission: PERMISSIONS.CUSTOMER_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/accounts-receivable/pages/CustParametersPage'),
+      () => import('@modules/finance/accounts-receivable/setup/pages/CustParametersPage'),
       (module) => module.CustParametersPage
     ),
   },
@@ -168,7 +168,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_METHODS,
     permission: PERMISSIONS.PAYMENT_METHOD_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/accounts-receivable/pages/CustPaymModePage'),
+      () => import('@modules/finance/accounts-receivable/setup/pages/CustPaymModePage'),
       (module) => module.CustPaymMode
     ),
   },
@@ -177,7 +177,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_TERMS,
     permission: PERMISSIONS.PAYMENT_TERM_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/accounts-receivable/pages/CustPaymTermPage'),
+      () => import('@modules/finance/accounts-receivable/setup/pages/CustPaymTermPage'),
       (module) => module.CustPaymTerm
     ),
   },
@@ -186,7 +186,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDERS,
     permission: PERMISSIONS.SALES_ORDER_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/accounts-receivable/pages/SalesOrderListPage'),
+      () => import('@modules/finance/accounts-receivable/sales-order/pages/SalesOrderListPage'),
       (module) => module.SalesOrderListPage
     ),
   },
@@ -195,7 +195,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDER_DETAILS,
     permission: PERMISSIONS.SALES_ORDER_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/accounts-receivable/pages/SalesOrderDetailsPage'),
+      () => import('@modules/finance/accounts-receivable/sales-order/pages/SalesOrderDetailsPage'),
       (module) => module.SalesOrderDetailsPage
     ),
   },
@@ -204,7 +204,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDER_CHARGES,
     permission: PERMISSIONS.SALES_ORDER_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/accounts-receivable/pages/SalesOrderChargesPage'),
+      () => import('@modules/finance/accounts-receivable/sales-order/pages/SalesOrderChargesPage'),
       (module) => module.SalesOrderChargesPage
     ),
   },
@@ -213,7 +213,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUST_CONFIRM_JOURNAL,
     permission: PERMISSIONS.SALES_ORDER_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/accounts-receivable/pages/CustConfirmJournal'),
+      () => import('@modules/finance/accounts-receivable/sales-order/pages/CustConfirmJournal'),
       (module) => module.CustConfirmJournal
     ),
   },
@@ -222,7 +222,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PACKING_SLIPS,
     permission: PERMISSIONS.SALES_ORDER_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/accounts-receivable/pages/CustPackingSlipJournal'),
+      () => import('@modules/finance/accounts-receivable/sales-order/pages/CustPackingSlipJournal'),
       (module) => module.CustPackingSlipJournal
     ),
   },
@@ -231,7 +231,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUST_PACKING_SLIP_JOURNAL,
     permission: PERMISSIONS.SALES_ORDER_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/accounts-receivable/pages/CustPackingSlipJournal'),
+      () => import('@modules/finance/accounts-receivable/sales-order/pages/CustPackingSlipJournal'),
       (module) => module.CustPackingSlipJournal
     ),
   },
@@ -240,7 +240,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.INVENTORY.TRANSACTIONS,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/inventory/pages/InventTransPage'),
+      () => import('@modules/finance/inventory/inquiries/pages/InventTransPage'),
       (module) => module.InventTransPage
     ),
   },
@@ -249,7 +249,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.INVENTORY.ON_HAND,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/inventory/pages/InventOnHandPage'),
+      () => import('@modules/finance/inventory/inquiries/pages/InventOnHandPage'),
       (module) => module.InventOnHandPage
     ),
   },
@@ -258,7 +258,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.INVENTORY.PRODUCTS,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/inventory/pages/EcoResDistinctProductListPage'),
+      () => import('@modules/finance/inventory/products/pages/EcoResDistinctProductListPage'),
       (module) => module.EcoResDistinctProductListPage
     ),
   },
@@ -267,7 +267,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.INVENTORY.PRODUCT_DETAILS,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/inventory/pages/EcoResDistinctProductDetailsPage'),
+      () => import('@modules/finance/inventory/products/pages/EcoResDistinctProductDetailsPage'),
       (module) => module.EcoResDistinctProductDetailsPage
     ),
   },
@@ -276,7 +276,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.INVENTORY.RELEASED_PRODUCTS,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/inventory/pages/EcoResProductListPage'),
+      () => import('@modules/finance/inventory/products/pages/EcoResProductListPage'),
       (module) => module.EcoResProductListPage
     ),
   },
@@ -285,7 +285,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.INVENTORY.PRODUCT_RELEASE,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_CREATE,
     component: lazyPage(
-      () => import('@modules/finance/inventory/pages/EcoResProductReleasePage'),
+      () => import('@modules/finance/inventory/products/pages/EcoResProductReleasePage'),
       (module) => module.EcoResProductReleasePage
     ),
   },
@@ -294,7 +294,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.INVENTORY.RELEASED_PRODUCT_DETAILS,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/inventory/pages/EcoResProductDetailsPage'),
+      () => import('@modules/finance/inventory/products/pages/EcoResProductDetailsPage'),
       (module) => module.EcoResProductDetailsPage
     ),
   },
@@ -303,7 +303,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.INVENTORY.PARAMETERS,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/inventory/pages/InventParametersPage'),
+      () => import('@modules/finance/inventory/setup/pages/InventParametersPage'),
       (module) => module.InventParametersPage
     ),
   },
@@ -312,7 +312,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.INVENTORY.SITES,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/inventory/pages/InventSitePage'),
+      () => import('@modules/finance/inventory/warehouses/pages/InventSitePage'),
       (module) => module.InventSitePage
     ),
   },
@@ -321,7 +321,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.INVENTORY.JOURNAL_NAMES,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/inventory/pages/InventJournalNamePage'),
+      () => import('@modules/finance/inventory/journals/pages/InventJournalNamePage'),
       (module) => module.InventJournalNamePage
     ),
   },
@@ -330,7 +330,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.INVENTORY.JOURNALS,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/inventory/pages/InventJournalPage'),
+      () => import('@modules/finance/inventory/journals/pages/InventJournalPage'),
       (module) => module.InventJournalPage
     ),
   },
@@ -339,7 +339,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.INVENTORY.UNITS_OF_MEASURE,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/inventory/pages/UnitOfMeasurePage'),
+      () => import('@modules/finance/inventory/units-of-measure/pages/UnitOfMeasurePage'),
       (module) => module.UnitOfMeasurePage
     ),
   },
@@ -348,7 +348,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.INVENTORY.STORAGE_DIMENSION_GROUPS,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/inventory/pages/EcoResStorageDimensionGroupPage'),
+      () => import('@modules/finance/inventory/dimension-groups/pages/EcoResStorageDimensionGroupPage'),
       (module) => module.EcoResStorageDimensionGroupPage
     ),
   },
@@ -357,7 +357,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.INVENTORY.TRACKING_DIMENSION_GROUPS,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/inventory/pages/EcoResTrackingDimensionGroupPage'),
+      () => import('@modules/finance/inventory/dimension-groups/pages/EcoResTrackingDimensionGroupPage'),
       (module) => module.EcoResTrackingDimensionGroupPage
     ),
   },
@@ -366,7 +366,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.INVENTORY.MODEL_GROUPS,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/inventory/pages/InventModelGroupPage'),
+      () => import('@modules/finance/inventory/item-groups/pages/InventModelGroupPage'),
       (module) => module.InventModelGroupPage
     ),
   },
@@ -375,7 +375,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.INVENTORY.ITEM_GROUPS,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/inventory/pages/InventItemGroupPage'),
+      () => import('@modules/finance/inventory/item-groups/pages/InventItemGroupPage'),
       (module) => module.InventItemGroupPage
     ),
   },
@@ -384,7 +384,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.INVENTORY.POSTING,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/inventory/pages/InventPostingPage'),
+      () => import('@modules/finance/inventory/setup/pages/InventPostingPage'),
       (module) => module.InventPostingPage
     ),
   },
@@ -393,7 +393,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.INVENTORY.WAREHOUSES,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/inventory/pages/InventLocationPage'),
+      () => import('@modules/finance/inventory/warehouses/pages/InventLocationPage'),
       (module) => module.InventLocationPage
     ),
   },
@@ -402,7 +402,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.INVENTORY.INVENTORY_LOCATIONS,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/inventory/pages/WMSLocationPage'),
+      () => import('@modules/finance/inventory/warehouses/pages/WMSLocationPage'),
       (module) => module.WMSLocationPage
     ),
   },
@@ -411,7 +411,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.FOUNDATION.CURRENCIES,
     permission: PERMISSIONS.CURRENCY_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/foundation/pages/CurrencyPage'),
+      () => import('@modules/finance/foundation/currency/pages/CurrencyPage'),
       (module) => module.CurrencyPage
     ),
   },
@@ -420,7 +420,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.FOUNDATION.EXCHANGE_RATE_TYPES,
     permission: PERMISSIONS.CURRENCY_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/foundation/pages/ExchangeRateTypePage'),
+      () => import('@modules/finance/foundation/exchange-rate/pages/ExchangeRateTypePage'),
       (module) => module.ExchangeRateTypePage
     ),
   },
@@ -429,7 +429,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.FOUNDATION.EXCHANGE_RATES,
     permission: PERMISSIONS.CURRENCY_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/foundation/pages/ExchangeRatePage'),
+      () => import('@modules/finance/foundation/exchange-rate/pages/ExchangeRatePage'),
       (module) => module.ExchangeRatePage
     ),
   },
@@ -438,7 +438,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.FOUNDATION.TAX_AUTHORITIES,
     permission: PERMISSIONS.TAX_AUTHORITY_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/foundation/pages/TaxAuthorityPage'),
+      () => import('@modules/finance/foundation/tax/pages/TaxAuthorityPage'),
       (module) => module.TaxAuthorityPage
     ),
   },
@@ -447,7 +447,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.FOUNDATION.CHARGES_CODES,
     permission: PERMISSIONS.MARKUP_TABLE_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/foundation/pages/MarkupTablePage'),
+      () => import('@modules/finance/foundation/charges/pages/MarkupTablePage'),
       (module) => module.MarkupTablePage
     ),
   },
@@ -456,7 +456,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.FOUNDATION.TAX_PERIODS,
     permission: PERMISSIONS.TAX_PERIOD_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/foundation/pages/TaxPeriodPage'),
+      () => import('@modules/finance/foundation/tax/pages/TaxPeriodPage'),
       (module) => module.TaxPeriodPage
     ),
   },
@@ -465,7 +465,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.FOUNDATION.TAX_CODES,
     permission: PERMISSIONS.TAX_CODE_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/foundation/pages/TaxTablePage'),
+      () => import('@modules/finance/foundation/tax/pages/TaxTablePage'),
       (module) => module.TaxTablePage
     ),
   },
@@ -474,7 +474,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.FOUNDATION.TAX_GROUPS,
     permission: PERMISSIONS.TAX_GROUP_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/foundation/pages/TaxGroupPage'),
+      () => import('@modules/finance/foundation/tax/pages/TaxGroupPage'),
       (module) => module.TaxGroupPage
     ),
   },
@@ -483,7 +483,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.FOUNDATION.TAX_ITEM_GROUPS,
     permission: PERMISSIONS.TAX_ITEM_GROUP_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/foundation/pages/TaxItemGroupPage'),
+      () => import('@modules/finance/foundation/tax/pages/TaxItemGroupPage'),
       (module) => module.TaxItemGroupPage
     ),
   },

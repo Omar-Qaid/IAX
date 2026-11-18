@@ -6,7 +6,7 @@ import { queryClient } from '@core/api/queryClient';
 import { apiClient } from '@core/api/apiClient';
 import { AppProviders } from '@app/providers/AppProviders';
 import '@app/configuration/recordPreviews';
-import { SalesOrderListPage } from '@modules/finance/accounts-receivable/pages/SalesOrderListPage';
+import { SalesOrderListPage } from '@modules/finance/accounts-receivable/sales-order/pages/SalesOrderListPage';
 
 const order = (id: string, salesId: string, customerAccount: string, customerName: string) => ({
   id,
@@ -22,7 +22,7 @@ const order = (id: string, salesId: string, customerAccount: string, customerNam
   documentStatus: 'None',
 });
 
-vi.mock('@modules/finance/accounts-receivable/api/salesOrderListApi', () => ({
+vi.mock('@modules/finance/accounts-receivable/sales-order/api/salesOrderListApi', () => ({
   salesOrderListApi: {
     list: vi.fn(async () => [
       order('1', 'SO-2026-000001', 'CUST-100', 'Consulting Customer 100'),

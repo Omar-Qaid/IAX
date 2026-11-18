@@ -2,8 +2,8 @@ import React from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, render } from '@testing-library/react';
 import type { SimpleListPageProps } from '@patterns/simple-list/SimpleListPage';
-import { InventOnHandPage } from '@modules/finance/inventory/pages/InventOnHandPage';
-import type { InventOnHandRecord } from '@modules/finance/inventory/api/inventOnHandApi';
+import { InventOnHandPage } from '@modules/finance/inventory/inquiries/pages/InventOnHandPage';
+import type { InventOnHandRecord } from '@modules/finance/inventory/inquiries/api/inventOnHandApi';
 
 let renderedProps: SimpleListPageProps<InventOnHandRecord>;
 vi.mock('@patterns/simple-list/SimpleListPage', () => ({

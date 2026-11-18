@@ -1,13 +1,17 @@
 # Finance foundation
 
-Owns currency and exchange-rate setup.
+Shared finance setup used by every other finance module. One folder per feature,
+each with its own `api/`, `pages/` and `components/`:
 
-- `pages/CurrencyPage.tsx`: currency maintenance backed by `api/currencyApi.ts`.
-- `pages/ExchangeRateTypePage.tsx`: exchange-rate type maintenance backed by `api/exchangeRateTypeApi.ts`.
-- `pages/ExchangeRatePage.tsx`: exchange-rate page using the foundation contracts.
-- `queries/currencyQueryKeys.ts`: feature-owned query keys.
-- `previews/foundationRecordPreviews.ts`: D365 record previews (hover cards) for currencies and tax setup.
+| Folder | Feature |
+| --- | --- |
+| `currency/` | Currencies (`Currency`). |
+| `exchange-rate/` | Exchange rate types and exchange rates. |
+| `charges/` | Charges codes (`MarkupTable`) and document charges (`MarkupTrans`) shown on documents such as sales orders. |
+| `tax/` | Sales tax authorities, settlement periods, sales tax codes, sales tax groups and item sales tax groups. |
+| `contacts/` | Contact persons and account contacts (shared by customers and vendors). |
 
-Pages use shared list/form infrastructure and TanStack Query. Keep endpoint wrappers in `api`, stable server-state identities in `queries`, and business presentation in `pages`.
+Shared by the module: `queries/` (query keys), `previews/` (D365 record previews),
+`routes/` (route paths). A new feature gets its own folder with the same layout.
 
 [Modules](../../README.md) · [API and state](../../../../docs/api-and-state.md) · [Simple-list pattern](../../../patterns/simple-list/README.md)

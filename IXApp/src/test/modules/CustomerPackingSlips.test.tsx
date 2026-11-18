@@ -2,14 +2,14 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AppProviders } from '@app/providers/AppProviders';
-import { CustPackingSlipJournal } from '@modules/finance/accounts-receivable/pages/CustPackingSlipJournal';
-import { salesOrderListApi } from '@modules/finance/accounts-receivable/api/salesOrderListApi';
-import { salesOrderPackingSlipApi } from '@modules/finance/accounts-receivable/api/salesOrderPackingSlipApi';
+import { CustPackingSlipJournal } from '@modules/finance/accounts-receivable/sales-order/pages/CustPackingSlipJournal';
+import { salesOrderListApi } from '@modules/finance/accounts-receivable/sales-order/api/salesOrderListApi';
+import { salesOrderPackingSlipApi } from '@modules/finance/accounts-receivable/sales-order/api/salesOrderPackingSlipApi';
 vi.mock('@core/auth/useAuth', () => ({ useAuth: () => ({ hasPermission: () => true }) }));
-vi.mock('@modules/finance/accounts-receivable/api/salesOrderListApi', () => ({
+vi.mock('@modules/finance/accounts-receivable/sales-order/api/salesOrderListApi', () => ({
   salesOrderListApi: { list: vi.fn() },
 }));
-vi.mock('@modules/finance/accounts-receivable/api/salesOrderPackingSlipApi', () => ({
+vi.mock('@modules/finance/accounts-receivable/sales-order/api/salesOrderPackingSlipApi', () => ({
   salesOrderPackingSlipApi: { list: vi.fn(), get: vi.fn() },
 }));
 it('loads only the customer orders and opens lines using the selected packing slip owner order', async () => {

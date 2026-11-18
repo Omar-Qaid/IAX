@@ -1,0 +1,129 @@
+import React from 'react';
+import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { AppProviders } from '@app/providers/AppProviders';
+import {
+  MasterDetailField,
+  MasterDetailFieldGroup,
+  MasterDetailFieldGroups,
+  MasterDetailLines,
+  MasterDetailPage,
+  MasterDetailSection,
+  MasterDetailTabs,
+} from '@patterns/master-detail';
+
+const records = [
+  { id: '1', title: 'SO-001', subtitle: 'CUST-100 - Consulting' },
+  { id: '2', title: 'SO-002', subtitle: 'CUST-200 - Retail' },
+];
+
+const renderPage = (props: Partial<React.ComponentProps<typeof MasterDetailPage>> = {}) => {
+  const onSelect = vi.fn();
+  render(
+    <AppProviders>
+      <MemoryRouter>
+        <MasterDetailPage
+          records={records}
+          selectedId="1"
+          onSelect={onSelect}
+          title="SO-001 : Consulting"
+          subtitle="Sales order details"
+          viewLabel="Standard view"
+          status="Backorder"
+          filterLabel="Filter"
+          emptyLabel="No records"
+          actionPane={<button type="button">Edit</button>}
+          tabs={<MasterDetailTabs ariaLabel="Views" value="lines" onChange={() => undefined} tabs={[{ value: 'lines', label: 'Lines' }, { value: 'header', label: 'Header' }]} />}
+          {...props}
+        >
+          <MasterDetailSection title="Sales order header" summary={['CUST-100', 'SAR']}>
+            <MasterDetailFieldGroups>
+              <MasterDetailFieldGroup title="Warehouse">
+                <MasterDetailField label="Site" value="JED" masterRoute="/inventory/sites" previewOption={{ code: 'JED', name: 'Jeddah' }} />
+                <MasterDetailField label="Release status" value="Open" />
+                <MasterDetailField label="Notes" value="" editing editor={<input aria-label="Notes" />} />
+              </MasterDetailFieldGroup>
+            </MasterDetailFieldGroups>
+          </MasterDetailSection>
+          <MasterDetailSection title="Sales order lines">
+            <MasterDetailLines toolbarLabel="Line actions" toolbar={<button type="button">Add line</button>} grid={<div>grid</div>} />
+          </MasterDetailSection>
+        </MasterDetailPage>
+      </MemoryRouter>
+    </AppProviders>
+  );
+  return { onSelect };
+};
+
+describe('MasterDetailPage', () => {
+  it('renders the D365 details layout: pane, breadcrumb, title, status, tabs and sections', () => {
+    renderPage();
+    expect(screen.getByRole('heading', { name: 'SO-001 : Consulting' })).toBeInTheDocument();
+    expect(screen.getByText('Standard view')).toBeInTheDocument();
+    expect(screen.getByText('Backorder')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Lines' })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Warehouse' })).toBeInTheDocument();
+    expect(screen.getByText('CUST-100', { selector: 'span' })).toBeInTheDocument();
+    expect(screen.getByRole('toolbar', { name: 'Line actions' })).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Tab / Enter');
+  });
+
+  it('filters and selects records in the navigation pane', () => {
+    const { onSelect } = renderPage();
+    fireEvent.change(screen.getByPlaceholderText('Filter'), { target: { value: 'retail' } });
+    expect(screen.queryByText('SO-001', { selector: 'p' })).toBeNull();
+    fireEvent.click(screen.getByText('SO-002'));
+    expect(onSelect).toHaveBeenCalledWith('2');
+  });
+
+  it('locks the navigation pane to the open record while editing', () => {
+    renderPage({ editing: true });
+    const other = screen.getByText('SO-002').closest('[role="button"]');
+    expect(other).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('shows master fields with open details, plain fields as text, and editors in edit mode', () => {
+    renderPage();
+    expect(screen.getByRole('button', { name: 'Open Site details' })).toBeInTheDocument();
+    expect(screen.getByText('Open')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Notes' })).toBeInTheDocument();
+  });
+
+  it('shows loading and error states instead of the content', () => {
+    const onRetry = vi.fn();
+    renderPage({ error: 'Could not load', onRetry });
+    expect(screen.getByText('Could not load')).toBeInTheDocument();
+    expect(screen.queryByText('Sales order header')).toBeNull();
+  });
+
+  it('applies the advanced filter from the right rail', () => {
+    renderPage({ advancedFilter: { fields: [{ id: 'customer', label: 'Customer', getValue: (record) => record.subtitle }] } });
+    // The rail's Filter button is the last one named Filter (the first toggles the record list).
+    fireEvent.click(screen.getAllByRole('button', { name: /^Filter$/ }).at(-1)!);
+    const filterPane = screen.getByRole('heading', { name: 'Filters' }).parentElement!.parentElement!;
+    const panel = within(filterPane).getAllByRole('textbox').at(-1)!;
+    fireEvent.change(panel, { target: { value: 'retail' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
+    expect(screen.queryByText('SO-001', { selector: 'p' })).toBeNull();
+    expect(screen.getByText('SO-002')).toBeInTheDocument();
+  });
+
+  it('shows related information for the open record', () => {
+    renderPage({ relatedInformation: { title: 'Customer', sections: [{ id: 'c', label: 'Statistics', content: <span>Balance 1,000</span>, defaultExpanded: true }] } });
+    fireEvent.click(screen.getByRole('button', { name: /Information/i }));
+    expect(screen.getByText('Balance 1,000')).toBeInTheDocument();
+  });
+
+  it('renders field-config sections with the shared engine, in view and edit mode', () => {
+    const sections = [{ id: 'general', title: 'General', groups: [{ id: 'g', title: 'Delivery', fields: [{ name: 'deliveryName', label: 'Delivery name', type: 'text' as const }] }] }];
+    renderPage({ sections, values: { deliveryName: 'Main' } });
+    expect(screen.getByRole('group', { name: 'Delivery' })).toBeInTheDocument();
+    expect(screen.getByText('Main')).toBeInTheDocument();
+  });
+
+  it('has the Options menu and locks utilities while editing', () => {
+    renderPage({ recordTableName: 'SalesTable', editing: true });
+    expect(screen.getByRole('button', { name: /options/i })).toBeDisabled();
+  });
+});

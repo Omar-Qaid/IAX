@@ -3,7 +3,7 @@ import { apiClient } from '@core/api/apiClient';
 import {
   salesOrderListApi,
   type SalesOrderHeaderInput,
-} from '@modules/finance/accounts-receivable/api/salesOrderListApi';
+} from '@modules/finance/accounts-receivable/sales-order/api/salesOrderListApi';
 
 vi.mock('@core/api/apiClient', () => ({
   apiClient: {

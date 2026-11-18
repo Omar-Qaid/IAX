@@ -1,4 +1,4 @@
-import { accountContacts } from '@modules/finance/contacts/contactRoutes';
+import { accountContacts } from '@modules/finance/foundation/contacts/routes/contactRoutes';
 import React from 'react';
 import { Alert } from '@mui/material';
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';

@@ -2,17 +2,17 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { AppProviders } from '@app/providers/AppProviders';
-import { CustFreeInvoiceListPage } from '@modules/finance/accounts-receivable/pages/CustFreeInvoiceListPage';
+import { CustFreeInvoiceListPage } from '@modules/finance/accounts-receivable/free-text-invoice/pages/CustFreeInvoiceListPage';
 import {
   freeTextInvoiceApi,
   type FreeTextInvoiceRecord,
-} from '@modules/finance/accounts-receivable/api/freeTextInvoiceApi';
+} from '@modules/finance/accounts-receivable/free-text-invoice/api/freeTextInvoiceApi';
 vi.mock('@core/auth/useAuth', () => ({
   useAuth: () => ({
     hasPermission: (permission: string) => permission !== 'AccountsReceivable.Customers.View',
   }),
 }));
-vi.mock('@modules/finance/accounts-receivable/api/freeTextInvoiceApi', () => ({
+vi.mock('@modules/finance/accounts-receivable/free-text-invoice/api/freeTextInvoiceApi', () => ({
   freeTextInvoiceApi: { list: vi.fn(), post: vi.fn(), remove: vi.fn() },
 }));
 const today = new Date();

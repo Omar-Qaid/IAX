@@ -1,21 +1,21 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@test/testUtils';
-import { SalesOrderQuickCreate } from '@modules/finance/accounts-receivable/components/SalesOrderQuickCreate';
-import { customerQuickCreateApi } from '@modules/finance/accounts-receivable/api/customerQuickCreateApi';
-import { salesOrderLinesApi } from '@modules/finance/accounts-receivable/api/salesOrderLinesApi';
-import { salesOrderListApi } from '@modules/finance/accounts-receivable/api/salesOrderListApi';
+import { SalesOrderQuickCreate } from '@modules/finance/accounts-receivable/sales-order/components/SalesOrderQuickCreate';
+import { customerQuickCreateApi } from '@modules/finance/accounts-receivable/customer/api/customerQuickCreateApi';
+import { salesOrderLinesApi } from '@modules/finance/accounts-receivable/sales-order/api/salesOrderLinesApi';
+import { salesOrderListApi } from '@modules/finance/accounts-receivable/sales-order/api/salesOrderListApi';
 
-vi.mock('@modules/finance/accounts-receivable/api/customerQuickCreateApi', () => ({
+vi.mock('@modules/finance/accounts-receivable/customer/api/customerQuickCreateApi', () => ({
   customerQuickCreateApi: {
     list: vi.fn(),
     lookups: vi.fn(),
     salesOrderDefaults: vi.fn(),
   },
 }));
-vi.mock('@modules/finance/accounts-receivable/api/salesOrderLinesApi', () => ({
+vi.mock('@modules/finance/accounts-receivable/sales-order/api/salesOrderLinesApi', () => ({
   salesOrderLinesApi: { inventoryDimensions: vi.fn() },
 }));
-vi.mock('@modules/finance/accounts-receivable/api/salesOrderListApi', () => ({
+vi.mock('@modules/finance/accounts-receivable/sales-order/api/salesOrderListApi', () => ({
   salesOrderListApi: { create: vi.fn() },
 }));
 

@@ -1,6 +1,6 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 import { apiClient } from '@core/api/apiClient';
-import { releasedProductApi } from '@modules/finance/inventory/api/releasedProductApi';
+import { releasedProductApi } from '@modules/finance/inventory/products/api/releasedProductApi';
 
 vi.mock('@core/api/apiClient', () => ({
   apiClient: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },

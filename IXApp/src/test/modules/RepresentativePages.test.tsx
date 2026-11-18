@@ -2,23 +2,23 @@ import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor } from '@test/testUtils';
 import { DashboardPage } from '@modules/dashboard/pages/DashboardPage';
-import { CurrencyPage } from '@modules/finance/foundation/pages/CurrencyPage';
-import { ExchangeRateTypePage } from '@modules/finance/foundation/pages/ExchangeRateTypePage';
-import { ExchangeRatePage } from '@modules/finance/foundation/pages/ExchangeRatePage';
+import { CurrencyPage } from '@modules/finance/foundation/currency/pages/CurrencyPage';
+import { ExchangeRateTypePage } from '@modules/finance/foundation/exchange-rate/pages/ExchangeRateTypePage';
+import { ExchangeRatePage } from '@modules/finance/foundation/exchange-rate/pages/ExchangeRatePage';
 import { LegalEntityPage } from '@modules/organization/pages/LegalEntityPage';
-import { CustomerListPage } from '@modules/finance/accounts-receivable/pages/CustomerListPage';
-import { SalesOrderDetailsPage } from '@modules/finance/accounts-receivable/pages/SalesOrderDetailsPage';
+import { CustomerListPage } from '@modules/finance/accounts-receivable/customer/pages/CustomerListPage';
+import { SalesOrderDetailsPage } from '@modules/finance/accounts-receivable/sales-order/pages/SalesOrderDetailsPage';
 import { ApplicationSettingsPage } from '@modules/administration/pages/ApplicationSettingsPage';
-import { CustomerGroupListPage } from '@modules/finance/accounts-receivable/pages/CustomerGroupListPage';
-import { SalesOrderListPage } from '@modules/finance/accounts-receivable/pages/SalesOrderListPage';
-import { CustPaymMode } from '@modules/finance/accounts-receivable/pages/CustPaymModePage';
-import { CustPaymTerm } from '@modules/finance/accounts-receivable/pages/CustPaymTermPage';
+import { CustomerGroupListPage } from '@modules/finance/accounts-receivable/customer-group/pages/CustomerGroupListPage';
+import { SalesOrderListPage } from '@modules/finance/accounts-receivable/sales-order/pages/SalesOrderListPage';
+import { CustPaymMode } from '@modules/finance/accounts-receivable/setup/pages/CustPaymModePage';
+import { CustPaymTerm } from '@modules/finance/accounts-receivable/setup/pages/CustPaymTermPage';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { render as renderWithoutProviders } from '@testing-library/react';
 import { AppProviders } from '@app/providers/AppProviders';
 import { SimpleListPage } from '@patterns/simple-list/SimpleListPage';
 
-vi.mock('@modules/finance/foundation/api/currencyApi', () => ({
+vi.mock('@modules/finance/foundation/currency/api/currencyApi', () => ({
   currencyApi: {
     list: vi.fn().mockResolvedValue([
       {
@@ -50,7 +50,7 @@ vi.mock('@modules/finance/foundation/api/currencyApi', () => ({
   },
 }));
 
-vi.mock('@modules/finance/foundation/api/exchangeRateTypeApi', () => ({
+vi.mock('@modules/finance/foundation/exchange-rate/api/exchangeRateTypeApi', () => ({
   exchangeRateTypeApi: {
     list: vi.fn().mockResolvedValue([
       {

@@ -377,6 +377,8 @@ export function ListDetailsLayout({
                       {(section.groups ?? []).map((group) => (
                         <Box
                           key={group.id}
+                          role={group.title ? 'group' : undefined}
+                          aria-label={group.title || undefined}
                           sx={{
                             minWidth: 0,
                             maxWidth: '100%',
@@ -470,7 +472,8 @@ export function ListDetailsLayout({
                                         color: d365.text,
                                       }}
                                     >
-                                      {field.type === 'select' || field.masterRoute
+                                      {/* Open details on master fields in view mode only (D365). */}
+                                      {(field.type === 'select' || field.masterRoute) && !fieldEditing
                                         ? <LookupNavigationLabel label={fieldLabel} masterRoute={field.masterRoute} />
                                         : fieldLabel}
                                     </Typography>

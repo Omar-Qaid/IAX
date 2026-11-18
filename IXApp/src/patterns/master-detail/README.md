@@ -1,6 +1,12 @@
 # Master-detail pattern
 
-`MasterDetailPage` provides the shared action pane, filterable record navigation, selected-record title and status, and detail content slot. Selection is controlled by the caller, so pages can keep it in route state. Filtering only changes the visible navigation records. Use existing DataGrid and accordion components inside the detail slot for header and line sections. Business data and persistence belong to the consuming page.
+D365 details page for a master record with lines, built from the sales order page
+(same record pane, typography, FastTabs, header field groups, master-data fields
+and lines area). Parts: `MasterDetailPage`, `MasterDetailTabs`,
+`MasterDetailSection`, `MasterDetailFieldGroups` / `MasterDetailFieldGroup`,
+`MasterDetailField`, `MasterDetailLines` (import from `@patterns/master-detail`).
 
-`MasterDetailLayout.tsx` and `useMasterDetailPage.ts` were empty placeholders and have been
-removed; the pattern is `MasterDetailPage` plus `MasterDetailSection`.
+The page owns data, selection, edit state and persistence; the pattern only lays
+them out. See [Master-detail page](../../../docs/patterns/MASTER_DETAILS_PAGE.md)
+for the option table mapped from sales order. Tests:
+`src/test/patterns/MasterDetailPage.test.tsx`.

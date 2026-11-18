@@ -1,6 +1,6 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {apiClient} from '@core/api/apiClient';
-import {customerOpenTransactionsApi} from '@modules/finance/accounts-receivable/api/customerOpenTransactionsApi';
+import {customerOpenTransactionsApi} from '@modules/finance/accounts-receivable/customer/api/customerOpenTransactionsApi';
 vi.mock('@core/api/apiClient', () => ({apiClient: {get: vi.fn()}}));
 beforeEach(() => vi.mocked(apiClient.get).mockReset());
 describe('customer open transactions API', () => {

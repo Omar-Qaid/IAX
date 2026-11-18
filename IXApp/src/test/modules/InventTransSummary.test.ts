@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { InventTransRecord } from '../../modules/finance/inventory/api/inventTransApi';
-import { summarizeInventTransRows } from '../../modules/finance/inventory/components/summarizeInventTransRows';
+import type { InventTransRecord } from '../../modules/finance/inventory/inquiries/api/inventTransApi';
+import { summarizeInventTransRows } from '../../modules/finance/inventory/inquiries/components/summarizeInventTransRows';
 
 const transaction = (overrides: Partial<InventTransRecord>): InventTransRecord => ({
   itemNumber: 'ITEM-A',
