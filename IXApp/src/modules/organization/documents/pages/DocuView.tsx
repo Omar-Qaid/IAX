@@ -674,8 +674,6 @@ export function DocuView(): React.ReactElement {
         { id: 'options', label: t('common.options'), disabled: true },
       ],
       showAttachmentAction: false,
-      viewLabel: t('common.standardView'),
-      filterLabel: t('actions.filter'),
       yesLabel: t('common.yes'),
       noLabel: t('common.no'),
       advancedFilter: {

@@ -1,7 +1,6 @@
 import { localizedName } from '@shared/utilities/localizedName';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import React, { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
 import type { ColumnDef } from '@shared/components/data-grid/types';
 import { queryClient } from '@core/api/queryClient';
@@ -21,7 +20,6 @@ const queryKey = ['simple-list', sourceKey] as const;
 
 export function OrganizationRolePage(): React.ReactElement {
   const { t, isRtl } = useAppTranslation();
-  const navigate = useNavigate();
   const { notifySuccess } = useNotifications();
   const columns = useMemo<ColumnDef<OrganizationRoleRow>[]>(
     () => [
@@ -53,22 +51,15 @@ export function OrganizationRolePage(): React.ReactElement {
   const refresh = () => queryClient.invalidateQueries({ queryKey });
   const config: EnterpriseListConfig<OrganizationRoleRow> = {
     contextLabel: t('organizationStructure.rolesTitle'),
-    viewLabel: t('common.standardView'),
-    filterLabel: t('actions.filter'),
-    informationLabel: t('common.information'),
     searchMode: 'quick',
     searchFields: [
       { field: 'code', label: t('organizationStructure.code') },
       { field: 'name', label: t('organizationStructure.name') },
       { field: 'nameAlias', label: t('hcmWorkers.fields.nameAlias') },
     ],
-    backCommand: { label: t('actions.back'), onClick: () => navigate(-1) },
-    showSearchCommand: true,
     recordTableName: 'OrganizationRole',
     getAuditRecordId: (record) => record.recordId,
     crud: {
-      editLabel: t('actions.edit'),
-      newLabel: t('actions.new'),
       deleteLabel: t('organizationStructure.deactivate'),
       editPermission: 'Organization.Structure.Edit',
       newPermission: 'Organization.Structure.Create',
@@ -82,8 +73,6 @@ export function OrganizationRolePage(): React.ReactElement {
     utilities: {
       personalizeLabel: t('organizationStructure.personalize'),
       guideLabel: t('organizationStructure.guide'),
-      notificationsLabel: t('common.notifications'),
-      refreshLabel: t('actions.refresh'),
       openWindowLabel: t('organizationStructure.openWindow'),
     },
   };

@@ -91,8 +91,6 @@ export function CustomerGroupListPage(): React.ReactElement {
   const config: EnterpriseListConfig<CustomerGroupRecord> = {
     contextLabel: t('pages.customerGroups.title'),
     viewLabel: t('pages.customerGroups.standardView'),
-    filterLabel: t('actions.filter'),
-    informationLabel: t('common.information'),
     searchMode: 'quick',
     searchFields: [
       { field: 'custGroupId', label: t('fields.customerGroup') },
@@ -100,11 +98,7 @@ export function CustomerGroupListPage(): React.ReactElement {
       { field: 'paymTermId', label: t('fields.paymentTerms') },
       { field: 'taxGroupId', label: t('fields.salesTaxGroup') },
     ],
-    locale: currentLanguage.code,
     crud: {
-      editLabel: t('actions.edit'),
-      newLabel: t('actions.new'),
-      deleteLabel: t('actions.delete'),
       onDelete: async (rows) => {
         try {
           await Promise.all(rows.map((row) => customerGroupApi.delete(row)));
@@ -119,21 +113,9 @@ export function CustomerGroupListPage(): React.ReactElement {
       label: t(`customerGroupCommands.${id}`),
       disabled: true,
     })),
-    utilities: {
-      personalizeLabel: t('utilities.personalize'),
-      guideLabel: t('utilities.guide'),
-      notificationsLabel: t('common.notifications'),
-      refreshLabel: t('actions.refresh'),
-      openWindowLabel: t('utilities.openWindow'),
-      notificationCount: 0,
-    },
     advancedFilter: {
-      title: t('filters.title'),
-      addLabel: t('actions.add'),
       fieldLabel: t('fields.customerGroup'),
       operatorLabel: t('filters.contains'),
-      applyLabel: t('actions.apply'),
-      resetLabel: t('actions.reset'),
       getValue: (group) => group.custGroupId,
       matches: (group, value) =>
         group.custGroupId

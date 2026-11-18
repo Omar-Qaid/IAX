@@ -8,6 +8,7 @@ import {
   Tab,
   Tabs,
   Typography,
+  useTheme,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { ActionPane } from '@shared/components/action-pane/ActionPane';
@@ -18,8 +19,8 @@ import { OptionsMenu } from '@shared/components/action-pane/OptionsMenu';
 import { DataGrid } from '@shared/components/data-grid/DataGrid';
 import { PageContainer } from '@shared/components/page/PageContainer';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
-import { d365 } from '@shared/constants/enterpriseUiTokens';
 import type { TabbedChoiceGridPageProps } from './types';
+import { enterpriseSurfaces } from '@shared/constants/enterpriseSurfaces';
 
 export function TabbedChoiceGridPage<T extends { id: string }>({
   title,
@@ -50,6 +51,7 @@ export function TabbedChoiceGridPage<T extends { id: string }>({
   onRefresh,
 }: TabbedChoiceGridPageProps<T>): React.ReactElement {
   const { t } = useAppTranslation();
+  const theme = useTheme();
   const navigate = useNavigate();
   const firstTab = tabs.find((tab) => tab.choices.length > 0) ?? tabs[0];
   const [tabId, setTabId] = React.useState(initialTabId ?? firstTab?.id ?? '');
@@ -72,7 +74,7 @@ export function TabbedChoiceGridPage<T extends { id: string }>({
         minHeight: 0,
         overflow: 'hidden',
         p: 0.75,
-        bgcolor: d365.canvas,
+        bgcolor: (theme) => enterpriseSurfaces(theme).canvas,
       }}
     >
       <ActionPane
@@ -171,7 +173,7 @@ export function TabbedChoiceGridPage<T extends { id: string }>({
             py: 1,
             pe: 1.5,
             overflowY: 'auto',
-            borderInlineEnd: { md: `1px solid ${d365.border}` },
+            borderInlineEnd: { md: `1px solid ${theme.palette.divider}` },
           }}
         >
           <Typography sx={{ fontSize: '0.72rem', mb: 0.5 }}>

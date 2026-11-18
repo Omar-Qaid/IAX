@@ -1,12 +1,12 @@
 import React from 'react';
-import { Alert, Box, CircularProgress, Tooltip, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Tooltip, Typography, useTheme } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutlined';
 import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined';
 import { useQuery } from '@tanstack/react-query';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
-import { d365 } from '@shared/constants/enterpriseUiTokens';
+import { enterpriseSurfaces } from '@shared/constants/enterpriseSurfaces';
 import { localizedName } from '@shared/utilities/localizedName';
 import { hcmWorkerApi } from '../api/hcmWorkerApi';
 
@@ -17,6 +17,7 @@ interface Props {
 
 export function HcmWorkerAssignmentDiagram({ workerId, company }: Props): React.ReactElement {
   const { t, isRtl } = useAppTranslation();
+  const theme = useTheme();
   const query = useQuery({
     queryKey: ['hcm-worker-assignment-chain', company, workerId],
     queryFn: ({ signal }) => hcmWorkerApi.assignmentChain(workerId, signal),
@@ -63,7 +64,11 @@ export function HcmWorkerAssignmentDiagram({ workerId, company }: Props): React.
         {nodes.map((node, index) => {
           const isShowroom = node.type === 'showroom';
           const isWorker = node.type === 'worker';
-          const accent = isShowroom ? '#107c10' : isWorker ? '#7c3aed' : d365.primary;
+          const accent = isShowroom
+            ? '#107c10'
+            : isWorker
+              ? '#7c3aed'
+              : enterpriseSurfaces(theme).accent;
           const paleAccent = isShowroom ? '#eaf6ea' : isWorker ? '#f1ebff' : '#eaf0ff';
           const displayName = localizedName(node, isRtl);
           const title =
@@ -101,7 +106,7 @@ export function HcmWorkerAssignmentDiagram({ workerId, company }: Props): React.
                     <ArrowForwardIcon
                       sx={{
                         fontSize: 15,
-                        color: d365.primary,
+                        color: (theme) => enterpriseSurfaces(theme).accent,
                         transform: isRtl ? 'rotate(180deg)' : undefined,
                       }}
                     />

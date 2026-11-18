@@ -388,7 +388,7 @@ export function buildSalesOrderLineFields(scope: Scope) {
         <Typography sx={{ mb: '6px', fontFamily: d365.fontFamily, fontSize: d365.labelFontSize, lineHeight: 1.2 }}>
           {label}
         </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', height: d365.controlHeight }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', height: d365.fieldControlHeight }}>
           <Switch
               size="small"
               checked={checked}

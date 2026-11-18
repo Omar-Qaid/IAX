@@ -6,30 +6,24 @@ import { PERMISSIONS } from '@core/permissions/permissions';
 import { queryClient } from '@core/api/queryClient';
 import { useNotifications } from '@shared/hooks/useNotifications';
 import { exchangeRateTypeApi, type ExchangeRateTypeRecord } from '../api/exchangeRateTypeApi';
-import { useNavigate } from 'react-router-dom';
 
 const queryKey = ['simple-list', 'foundation-exchange-rate-types'] as const;
 
 export function ExchangeRateTypePage(): React.ReactElement {
   const { t, currentLanguage } = useAppTranslation();
   const { notifyError, notifySuccess } = useNotifications();
-  const navigate = useNavigate();
   const columns = useMemo<ColumnDef<ExchangeRateTypeRecord>[]>(() => [
     { field: 'type', headerName: 'exchangeRateTypes.fields.type', width: 150, pinned: 'left', editable: true },
     { field: 'name', headerName: 'fields.name', minWidth: 240, flex: 1, editable: true },
   ], []);
   const refresh = async () => queryClient.invalidateQueries({ queryKey });
   const config: EnterpriseListConfig<ExchangeRateTypeRecord> = {
-    contextLabel: t('pages.exchangeRateTypes.title'), viewLabel: t('common.standardView'),
-    filterLabel: t('actions.filter'), informationLabel: t('common.information'), searchMode: 'quick',
+    contextLabel: t('pages.exchangeRateTypes.title'),
+    searchMode: 'quick',
     searchFields: [{ field: 'type', label: t('exchangeRateTypes.fields.type') }, { field: 'name', label: t('fields.name') }],
-    locale: currentLanguage.code,
-    backCommand: { label: t('actions.back'), onClick: () => navigate(-1) },
-    showSearchCommand: true,
     recordTableName: 'ExchangeRateType',
     getAuditRecordId: (record) => record.recId,
     crud: {
-      editLabel: t('actions.edit'), newLabel: t('actions.new'), deleteLabel: t('actions.delete'),
       editPermission: PERMISSIONS.CURRENCY_MANAGE, newPermission: PERMISSIONS.CURRENCY_MANAGE, deletePermission: PERMISSIONS.CURRENCY_MANAGE,
       onDelete: async (rows) => {
         try {
@@ -42,8 +36,7 @@ export function ExchangeRateTypePage(): React.ReactElement {
       },
     },
     commands: [{ id: 'exchangeRates', label: t('exchangeRateTypes.commands.exchangeRates') }],
-    utilities: { personalizeLabel: t('utilities.personalize'), guideLabel: t('utilities.guide'), notificationsLabel: t('common.notifications'), refreshLabel: t('actions.refresh'), openWindowLabel: t('utilities.openWindow'), notificationCount: 0 },
-    advancedFilter: { title: t('filters.title'), addLabel: t('actions.add'), fieldLabel: t('exchangeRateTypes.fields.type'), operatorLabel: t('filters.contains'), applyLabel: t('actions.apply'), resetLabel: t('actions.reset'), getValue: (record) => record.type, matches: (record, value) => record.type.toLocaleLowerCase(currentLanguage.code).includes(value.trim().toLocaleLowerCase(currentLanguage.code)) },
+    advancedFilter: { fieldLabel: t('exchangeRateTypes.fields.type'), operatorLabel: t('filters.contains'), getValue: (record) => record.type, matches: (record, value) => record.type.toLocaleLowerCase(currentLanguage.code).includes(value.trim().toLocaleLowerCase(currentLanguage.code)) },
   };
   return <SimpleListPage title={t('pages.exchangeRateTypes.title')} enterpriseConfig={config}
     dataSource={{ type: 'remote', key: 'foundation-exchange-rate-types', load: (signal) => exchangeRateTypeApi.list(signal) }} columns={columns} dataGridProps={{

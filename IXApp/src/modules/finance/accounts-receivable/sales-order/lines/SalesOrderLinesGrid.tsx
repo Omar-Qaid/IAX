@@ -8,12 +8,12 @@ import {
   Stack,
   TextField,
   Typography,
+  useTheme,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/Delete';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import { d365 } from '@shared/constants/enterpriseUiTokens';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
@@ -45,6 +45,7 @@ import {
 } from './salesLineDiscount';
 import { salesOrderQueryKeys } from '../../queries/accountsReceivableQueryKeys';
 import { useCompanyStore } from '@core/company/useCompanyStore';
+import { enterpriseSurfaces } from '@shared/constants/enterpriseSurfaces';
 
 type DetailLine = SalesOrderLineRecord;
 const EMPTY_LINES: DetailLine[] = [];
@@ -110,6 +111,7 @@ export function SalesOrderLinesGrid({
   const company = useCompanyStore((state) => state.currentCompany);
   const { t, currentLanguage } = useAppTranslation();
   const navigate = useNavigate();
+  const theme = useTheme();
   const [inventoryMenuAnchor, setInventoryMenuAnchor] = React.useState<HTMLElement | null>(null);
   const [financialsMenuAnchor, setFinancialsMenuAnchor] = React.useState<HTMLElement | null>(null);
   const queryClient = useQueryClient();
@@ -537,7 +539,9 @@ export function SalesOrderLinesGrid({
           <span
             style={{
               ...displayTextStyle,
-              ...(LOOKUP_LINE_FIELDS.has(field) && text ? { color: d365.primary } : {}),
+              ...(LOOKUP_LINE_FIELDS.has(field) && text
+                ? { color: enterpriseSurfaces(theme).accent }
+                : {}),
             }}
           >
             {text}

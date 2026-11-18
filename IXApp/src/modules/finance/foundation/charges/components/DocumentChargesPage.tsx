@@ -62,8 +62,8 @@ export function DocumentChargesPage({ documentType, level = 'header', documentRe
   const config: EnterpriseListConfig<MarkupTransRecord> = {
     readOnly: !canEdit,
     contextLabel: `Maintain charges | ${level === 'line' ? 'Line | ' : ''}${documentNumber}${documentName ? ` : ${documentName}` : ''}`,
-    viewLabel: t('common.standardView', 'Standard view'), filterLabel: t('actions.filter'),
-    informationLabel: t('common.information'), searchMode: 'quick', locale: currentLanguage.code,
+    viewLabel: t('common.standardView', 'Standard view'),
+    searchMode: 'quick',
     searchFields: [
       { field: 'markupCode', label: 'Charges code' }, { field: 'txt', label: t('fields.description', 'Description') },
       { field: 'currencyCode', label: t('fields.currency', 'Currency') }, { field: 'taxGroup', label: 'Sales tax group' },
@@ -72,7 +72,6 @@ export function DocumentChargesPage({ documentType, level = 'header', documentRe
     backCommand: { label: t('actions.back', 'Back'), onClick: onBack },
     recordTableName: 'MarkupTrans', getAuditRecordId: (record) => record.recId,
     crud: {
-      editLabel: t('actions.edit'), newLabel: t('actions.new'), deleteLabel: t('actions.delete'),
       onDelete: async (records) => {
         try {
           await Promise.all(records.map((record) => markupTransApi.delete(record)));
@@ -84,10 +83,9 @@ export function DocumentChargesPage({ documentType, level = 'header', documentRe
         }
       },
     },
-    utilities: { personalizeLabel: t('utilities.personalize'), guideLabel: t('utilities.guide'), notificationsLabel: t('common.notifications'), refreshLabel: t('actions.refresh'), openWindowLabel: t('utilities.openWindow'), notificationCount: 0 },
     advancedFilter: {
-      title: t('filters.title'), addLabel: t('actions.add'), fieldLabel: 'Charges code', operatorLabel: t('filters.contains'),
-      applyLabel: t('actions.apply'), resetLabel: t('actions.reset'), getValue: (record) => record.markupCode,
+      fieldLabel: 'Charges code', operatorLabel: t('filters.contains'),
+      getValue: (record) => record.markupCode,
       matches: (record, value) => `${record.markupCode} ${record.txt}`.toLocaleLowerCase(currentLanguage.code).includes(value.trim().toLocaleLowerCase(currentLanguage.code)),
     },
   };

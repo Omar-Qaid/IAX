@@ -1,37 +1,100 @@
-import React, { useState } from 'react';
-import { Accordion, AccordionSummary, AccordionDetails, Typography, Box, Chip } from '@mui/material';
+import React, { useId, useState } from 'react';
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Typography,
+  Box,
+  Chip,
+  type SxProps,
+  type Theme,
+} from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ErrorIcon from '@mui/icons-material/Error';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 
 export interface FastTabProps {
-  id: string;
+  id?: string;
   title: string;
-  summary?: string;
+  summary?: React.ReactNode;
   defaultExpanded?: boolean;
+  expanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
+  appearance?: 'standard' | 'enterprise' | 'legalEntity';
+  /** Standard tabs show summaries when collapsed; enterprise tabs show them in both states. */
+  summaryWhenCollapsed?: boolean;
   hasError?: boolean;
   required?: boolean;
+  sx?: SxProps<Theme>;
+  detailsSx?: SxProps<Theme>;
   children: React.ReactNode;
 }
 
 export const FastTab: React.FC<FastTabProps> = ({
+  id,
   title,
   summary,
   defaultExpanded = true,
+  expanded: controlledExpanded,
+  onExpandedChange,
+  appearance = 'standard',
+  summaryWhenCollapsed = appearance === 'standard',
   hasError = false,
   required = false,
+  sx,
+  detailsSx,
   children,
 }) => {
   const { t } = useAppTranslation();
-  const [expanded, setExpanded] = useState(defaultExpanded);
+  const generatedId = useId();
+  const sectionId = id ?? generatedId;
+  const [localExpanded, setLocalExpanded] = useState(defaultExpanded);
+  const expanded = controlledExpanded ?? localExpanded;
 
   return (
-    <Accordion expanded={expanded} onChange={() => setExpanded(!expanded)} disableGutters>
-      <AccordionSummary expandIcon={<ExpandMoreIcon fontSize="small" />}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingInlineEnd: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="subtitle2" color={hasError ? 'error.main' : 'text.primary'} sx={{ fontWeight: 700 }}>
-              {title} {required && <Box component="span" color="error.main">*</Box>}
+    <Accordion
+      id={sectionId}
+      expanded={expanded}
+      onChange={(_, next) => {
+        if (controlledExpanded === undefined) setLocalExpanded(next);
+        onExpandedChange?.(next);
+      }}
+      disableGutters
+      square={appearance !== 'standard'}
+      elevation={appearance === 'standard' ? undefined : 0}
+      data-page-section={appearance === 'standard' ? undefined : appearance}
+      sx={sx}
+    >
+      <AccordionSummary
+        data-page-section={appearance === 'standard' ? undefined : appearance}
+        id={`${sectionId}-header`}
+        aria-controls={`${sectionId}-content`}
+        expandIcon={<ExpandMoreIcon fontSize="small" />}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            width: '100%',
+            minWidth: 0,
+            paddingInlineEnd: 2,
+            gap: 1,
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+            <Typography
+              className="page-section-title"
+              variant="subtitle2"
+              color={hasError ? 'error.main' : 'text.primary'}
+              sx={{ fontWeight: 700, overflowWrap: 'anywhere' }}
+            >
+              {title}{' '}
+              {required && (
+                <Box component="span" color="error.main">
+                  *
+                </Box>
+              )}
             </Typography>
             {hasError && (
               <Chip
@@ -43,14 +106,30 @@ export const FastTab: React.FC<FastTabProps> = ({
               />
             )}
           </Box>
-          {summary && !expanded && (
-            <Typography variant="caption" color="text.secondary" noWrap sx={{ maxWidth: 300 }}>
+          {summary != null && (!summaryWhenCollapsed || !expanded) && (
+            <Box
+              className="page-section-summary"
+              sx={{
+                minWidth: 0,
+                maxWidth: appearance === 'standard' ? 300 : '60%',
+                whiteSpace: appearance === 'standard' ? 'nowrap' : undefined,
+                textOverflow: appearance === 'standard' ? 'ellipsis' : undefined,
+                overflow: 'hidden',
+                color: 'text.secondary',
+                typography: 'caption',
+              }}
+            >
               {summary}
-            </Typography>
+            </Box>
           )}
         </Box>
       </AccordionSummary>
-      <AccordionDetails>{children}</AccordionDetails>
+      <AccordionDetails
+        data-page-section={appearance === 'standard' ? undefined : appearance}
+        sx={detailsSx}
+      >
+        {children}
+      </AccordionDetails>
     </Accordion>
   );
 };

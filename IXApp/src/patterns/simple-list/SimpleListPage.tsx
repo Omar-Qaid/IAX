@@ -137,7 +137,15 @@ interface ResolvedListUtilities {
 /** The configuration after defaults are applied (what the page renders from). */
 type ResolvedEnterpriseListConfig<T> = Omit<
   EnterpriseListConfig<T>,
-  'contextLabel' | 'viewLabel' | 'filterLabel' | 'informationLabel' | 'searchFields' | 'crud' | 'utilities' | 'advancedFilter' | 'relatedInformation'
+  | 'contextLabel'
+  | 'viewLabel'
+  | 'filterLabel'
+  | 'informationLabel'
+  | 'searchFields'
+  | 'crud'
+  | 'utilities'
+  | 'advancedFilter'
+  | 'relatedInformation'
 > & {
   contextLabel: string;
   viewLabel: string;
@@ -148,24 +156,28 @@ type ResolvedEnterpriseListConfig<T> = Omit<
   utilities: ResolvedListUtilities;
   advancedFilter?: Required<Omit<EnterpriseListAdvancedFilter<T>, 'getValue' | 'fields'>> &
     Pick<EnterpriseListAdvancedFilter<T>, 'getValue' | 'fields'>;
-  relatedInformation?: { title: string; sections: (selectedRow: T | null) => RelatedInformationSection[] };
+  relatedInformation?: {
+    title: string;
+    sections: (selectedRow: T | null) => RelatedInformationSection[];
+  };
 };
 
 export interface SimpleListPageProps<T extends { id: string } = { id: string }> {
   title: string;
   subtitle?: string;
   recordTableName?: string;
-  variant?: 'standard' | 'enterprise';
   enterpriseConfig?: EnterpriseListConfig<T>;
-  /** Low-level slots retained for exceptional layouts and backward compatibility. */
+  /**
+   * Overrides for the labels the pattern derives from `enterpriseConfig` and
+   * `title`, for the few pages whose header text differs from both.
+   */
   contextLabel?: string;
   viewLabel?: string;
   onViewClick?: () => void;
+  /** Extra action-pane commands rendered before the generated CRUD commands. */
   actionPane?: React.ReactNode;
-  actionPaneEndActions?: React.ReactNode;
+  /** A page-specific filter row rendered between the list header and the grid. */
   filterBar?: React.ReactNode;
-  sidePanels?: React.ReactNode;
-  utilityRail?: React.ReactNode;
   dataSource: SimpleListDataSource<T>;
   columns: ColumnDef<T>[];
   dataGridProps?: SimpleListGridProps<T>;
@@ -214,7 +226,11 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
       informationLabel: t('common.information'),
       searchFields,
       locale: currentLanguage.code,
-      crud: { editLabel: t('actions.edit'), newLabel: t('actions.new'), deleteLabel: t('actions.delete') },
+      crud: {
+        editLabel: t('actions.edit'),
+        newLabel: t('actions.new'),
+        deleteLabel: t('actions.delete'),
+      },
       utilities: {
         personalizeLabel: t('utilities.personalize'),
         guideLabel: t('utilities.guide'),
@@ -441,7 +457,10 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
             newLabel={config.crud.newLabel}
             deleteLabel={config.crud.deleteLabel}
             canEdit={
-              selectedIds.length === 1 && Boolean(selectedRow) && Boolean(config.crud.onEdit || dataGridProps.masterForm) && (selectedRow ? (config.crud.canEdit?.(selectedRow) ?? true) : false)
+              selectedIds.length === 1 &&
+              Boolean(selectedRow) &&
+              Boolean(config.crud.onEdit || dataGridProps.masterForm) &&
+              (selectedRow ? (config.crud.canEdit?.(selectedRow) ?? true) : false)
             }
             canNew={Boolean(config.crud.onNew || dataGridProps.masterForm)}
             canDelete={
@@ -637,15 +656,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
         ]}
       >
         {(generatedActionPane ?? props.actionPane) && (
-          <ActionPane
-            variant="flat"
-            endActions={
-              <>
-                {generatedUtilities}
-                {props.actionPaneEndActions}
-              </>
-            }
-          >
+          <ActionPane variant="flat" endActions={generatedUtilities}>
             {generatedActionPane ?? props.actionPane}
           </ActionPane>
         )}
@@ -697,9 +708,9 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
               </Box>
             )}
           </Box>
-          {generatedSidePanels ?? props.sidePanels}
+          {generatedSidePanels}
         </Box>
-        {generatedUtilityRail ?? props.utilityRail}
+        {generatedUtilityRail}
         {dialogs}
         <ConfirmationDialog
           open={pendingDelete.length > 0}
@@ -732,5 +743,7 @@ const getFilterOperatorOptions = (
 
 /** Copy of an object without its undefined values (so they do not override defaults). */
 function stripUndefined<V extends object>(value: V): Partial<V> {
-  return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined)) as Partial<V>;
+  return Object.fromEntries(
+    Object.entries(value).filter(([, entry]) => entry !== undefined)
+  ) as Partial<V>;
 }

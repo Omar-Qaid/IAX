@@ -22,7 +22,7 @@ export function SetupNavigation({
       sx={{
         width: { xs: '100%', md: 238 },
         flexShrink: 0,
-        bgcolor: '#f5f4f3',
+        bgcolor: 'action.hover',
         overflowY: 'auto',
         py: 0.5,
       }}

@@ -70,14 +70,10 @@ export function CustomerListPage(): React.ReactElement {
   );
 
   const config: EnterpriseListConfig<CustomerRecord> = {
-    backCommand: { label: t('actions.back'), onClick: () => navigate(-1) },
-    showSearchCommand: true,
     recordTableName: 'CustTable',
     getAuditRecordId: (customer) => customer.recId,
     contextLabel: t('pages.customers.allCustomers'),
     viewLabel: t('pages.customers.standardView'),
-    filterLabel: t('actions.filter'),
-    informationLabel: t('common.information'),
     searchByLabel: t('fields.searchBy'),
     searchMode: 'field',
     showFilterOnLoad: true,
@@ -88,12 +84,8 @@ export function CustomerListPage(): React.ReactElement {
       { field: 'nameAr', label: t('fields.arabicName') },
     ],
     defaultSearchField: 'phone',
-    locale: currentLanguage.code,
     crud: {
       editPermission: PERMISSIONS.CUSTOMER_UPDATE, newPermission: PERMISSIONS.CUSTOMER_CREATE, deletePermission: PERMISSIONS.CUSTOMER_DELETE,
-      editLabel: t('actions.edit'),
-      newLabel: t('actions.new'),
-      deleteLabel: t('actions.delete'),
       onEdit: (customer) => navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customer(customer.id)),
       onNew: () => setQuickCreateOpen(true),
       onDelete: async (selectedCustomers) => {
@@ -116,21 +108,9 @@ export function CustomerListPage(): React.ReactElement {
       {id: 'balance', label: t('partyBalance.balance'), permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW, disabled: !customer, onClick: () => customer && navigate(PARTY_BALANCE_ROUTE_PATHS.customerBalance(customer.accountNumber))},
       {id: 'sales-orders', label: t('pages.salesOrders.title'), permission: PERMISSIONS.SALES_ORDER_VIEW, disabled: !customer, onClick: () => customer && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customerSalesOrders(customer.accountNumber))},
     ],
-    utilities: {
-      personalizeLabel: t('utilities.personalize'),
-      guideLabel: t('utilities.guide'),
-      notificationsLabel: t('common.notifications'),
-      refreshLabel: t('actions.refresh'),
-      openWindowLabel: t('utilities.openWindow'),
-      notificationCount: 0,
-    },
     advancedFilter: {
-      title: t('filters.title'),
-      addLabel: t('actions.add'),
       fieldLabel: t('filters.customerAccount'),
       operatorLabel: t('filters.contains'),
-      applyLabel: t('actions.apply'),
-      resetLabel: t('actions.reset'),
       fields: [
         { field: 'accountNumber', label: t('filters.customerAccount') },
         { field: 'name', label: t('fields.customerName') },

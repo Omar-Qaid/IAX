@@ -6,6 +6,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import { d365 } from '@shared/constants/enterpriseUiTokens';
 import type { ListDetailRecord, ListDetailsNavigationContext } from '@patterns/list-details/types';
 import type { ListDetailsTreeConfig } from './types';
+import { enterpriseSurfaces } from '@shared/constants/enterpriseSurfaces';
 
 interface TreeNavigationPaneProps<
   T extends ListDetailRecord,
@@ -140,9 +141,18 @@ export function TreeNavigationPane<T extends ListDetailRecord>({
               paddingInlineStart: `${8 + depth * (tree.indent ?? 18)}px`,
               paddingInlineEnd: 1,
               cursor: editing ? 'default' : 'pointer',
-              bgcolor: selectedId === record.id ? '#d9e7ff' : 'transparent',
-              color: selectedId === record.id ? d365.primary : d365.text,
-              '&:hover': { bgcolor: selectedId === record.id ? '#d9e7ff' : '#f3f2f1' },
+              bgcolor: (theme) =>
+                selectedId === record.id ? enterpriseSurfaces(theme).selectedRow : 'transparent',
+              color: (theme) =>
+                selectedId === record.id
+                  ? enterpriseSurfaces(theme).accent
+                  : theme.palette.text.primary,
+              '&:hover': {
+                bgcolor: (theme) =>
+                  selectedId === record.id
+                    ? enterpriseSurfaces(theme).selectedRow
+                    : theme.palette.action.hover,
+              },
             }}
           >
             <Box sx={{ width: 24, flexShrink: 0 }}>

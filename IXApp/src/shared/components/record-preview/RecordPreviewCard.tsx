@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, CircularProgress, Paper, Typography } from '@mui/material';
-import { d365 } from '@shared/constants/enterpriseUiTokens';
 import type { RecordPreviewRow } from './types';
+import { enterpriseSurfaces } from '@shared/constants/enterpriseSurfaces';
 
 export interface RecordPreviewCardProps {
   rows: RecordPreviewRow[];
@@ -81,7 +81,7 @@ export function RecordPreviewCard({
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
-                  color: row.lookup && text ? d365.primary : 'text.primary',
+                  color: (theme) => (row.lookup && text ? enterpriseSurfaces(theme).accent : theme.palette.text.primary),
                 }}
               >
                 {text}

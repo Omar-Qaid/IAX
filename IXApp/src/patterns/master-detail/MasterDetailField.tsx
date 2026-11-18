@@ -50,7 +50,7 @@ export function MasterDetailField({
           mb: '6px',
           fontSize: d365.labelFontSize,
           lineHeight: 1.2,
-          color: d365.text,
+          color: 'text.primary',
         }}
       >
         {label}

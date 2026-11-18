@@ -163,7 +163,8 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
             },
             {
               field: 'name' as const,
-              valueGetter: ({ row }: { row: WorkflowMasterRecord<TDto> }) => localizedName(row, isRtl),
+              valueGetter: ({ row }: { row: WorkflowMasterRecord<TDto> }) =>
+                localizedName(row, isRtl),
               headerName: 'workflowSetup.fields.name',
               minWidth: 220,
               flex: 1,
@@ -173,7 +174,8 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
         : [
             {
               field: 'name' as const,
-              valueGetter: ({ row }: { row: WorkflowMasterRecord<TDto> }) => localizedName(row, isRtl),
+              valueGetter: ({ row }: { row: WorkflowMasterRecord<TDto> }) =>
+                localizedName(row, isRtl),
               headerName: 'workflowSetup.fields.name',
               minWidth: 220,
               flex: 1,
@@ -210,9 +212,6 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
   };
   const config: EnterpriseListConfig<WorkflowMasterRecord<TDto>> = {
     contextLabel: t(titleKey),
-    viewLabel: t('common.standardView'),
-    filterLabel: t('actions.filter'),
-    informationLabel: t('common.information'),
     searchMode: 'quick',
     locale: currentLanguage.code,
     searchFields: [
@@ -225,9 +224,6 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
     recordTableName: numberSequenceKey,
     getAuditRecordId: (record) => record.recId,
     crud: {
-      editLabel: t('actions.edit'),
-      newLabel: t('actions.new'),
-      deleteLabel: t('actions.delete'),
       editPermission: permissions?.edit,
       newPermission: permissions?.create,
       deletePermission: permissions?.delete,
@@ -237,27 +233,14 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
           await refresh();
           notifySuccess(t('messages.deletedSuccessfully'));
         } catch (error) {
-          notifyError(
-            error instanceof Error ? error.message : t('errors.deleteFailed')
-          );
+          notifyError(error instanceof Error ? error.message : t('errors.deleteFailed'));
         }
       },
     },
-    utilities: {
-      personalizeLabel: t('utilities.personalize'),
-      guideLabel: t('utilities.guide'),
-      notificationsLabel: t('common.notifications'),
-      refreshLabel: t('actions.refresh'),
-      openWindowLabel: t('utilities.openWindow'),
-      notificationCount: 0,
-    },
     advancedFilter: {
       title: t('filters.title'),
-      addLabel: t('actions.add'),
       fieldLabel: t('workflowSetup.fields.name'),
       operatorLabel: t('filters.contains'),
-      applyLabel: t('actions.apply'),
-      resetLabel: t('actions.reset'),
       getValue: (record) => localizedName(record, isRtl),
       matches: (record, value) =>
         localizedName(record, isRtl)

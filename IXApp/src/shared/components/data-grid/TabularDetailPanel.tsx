@@ -1,10 +1,11 @@
 import React from 'react';
-import { Box, Button } from '@mui/material';
+import { Box, Button, type Theme } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { DataGrid } from './DataGrid';
 import type { ColumnDef, DataGridHandle } from './types';
 import { d365 } from '@shared/constants/enterpriseUiTokens';
+import { enterpriseSurfaces } from '@shared/constants/enterpriseSurfaces';
 
 export interface TabularDetailAction {
   id: string;
@@ -51,7 +52,7 @@ export function TabularDetailPanel<T extends { id: string }>({
   filterContent,
   storageKey,
   height = 218,
-  rowHeight = d365.gridRowHeight,
+  rowHeight = d365.detailGridRowHeight,
   disabled = false,
   showFilterRow = false,
   actions,
@@ -115,7 +116,7 @@ export function TabularDetailPanel<T extends { id: string }>({
         onSelectionChange={(ids) => onSelectionChange(ids as (string | number)[])}
         storageKey={storageKey}
         rowHeight={rowHeight}
-        headerHeight={d365.gridHeaderHeight}
+        headerHeight={d365.detailGridHeaderHeight}
         masterForm={masterForm}
         onRowSave={onRowSave}
         onNewRow={onNewRow}
@@ -132,7 +133,7 @@ const actionSx = {
   py: 0,
   height: 25,
   borderRadius: 0,
-  color: d365.primary,
+  color: (theme: Theme) => enterpriseSurfaces(theme).accent,
   fontFamily: d365.fontFamily,
   fontWeight: 400,
   fontSize: d365.fontSize,

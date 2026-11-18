@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
 import type { ColumnDef } from '@shared/components/data-grid/types';
 import { queryClient } from '@core/api/queryClient';
@@ -16,9 +15,8 @@ const minimumTime = 0;
 const maximumTime = 86_399;
 
 export function BatchJobActivePeriodPage(): React.ReactElement {
-  const navigate = useNavigate();
   const { notifyError, notifySuccess } = useNotifications();
-  const { t, currentLanguage } = useAppTranslation();
+  const { t } = useAppTranslation();
   const columns = useMemo<ColumnDef<BatchJobActivePeriodRecord>[]>(
     () => [
       { field: 'periodId', headerName: t('pages.batchJobActivePeriods.periodId'), width: 150, pinned: 'left', editable: true },
@@ -36,20 +34,14 @@ export function BatchJobActivePeriodPage(): React.ReactElement {
   const config: EnterpriseListConfig<BatchJobActivePeriodRecord> = {
     contextLabel: t('pages.batchJobActivePeriods.title'),
     viewLabel: t('pages.batchJobActivePeriods.standardView'),
-    filterLabel: t('actions.filter'),
-    informationLabel: t('common.information'),
     searchMode: 'quick',
-    locale: currentLanguage.code,
     searchFields: [
       { field: 'periodId', label: t('pages.batchJobActivePeriods.periodId') },
       { field: 'name', label: t('fields.name') },
     ],
-    backCommand: { label: t('actions.back'), onClick: () => navigate(-1) },
-    showSearchCommand: true,
     recordTableName: 'BatchJobActivePeriod',
     getAuditRecordId: (record) => record.recId,
     crud: {
-      editLabel: t('actions.edit'), newLabel: t('actions.new'), deleteLabel: t('actions.delete'),
       editPermission: PERMISSIONS.BACKGROUND_JOB_EDIT,
       newPermission: PERMISSIONS.BACKGROUND_JOB_CREATE,
       deletePermission: PERMISSIONS.BACKGROUND_JOB_DELETE,
@@ -63,25 +55,11 @@ export function BatchJobActivePeriodPage(): React.ReactElement {
         }
       },
     },
-    utilities: {
-      personalizeLabel: t('utilities.personalize'),
-      guideLabel: t('utilities.guide'),
-      notificationsLabel: t('common.notifications'),
-      refreshLabel: t('actions.refresh'),
-      openWindowLabel: t('utilities.openWindow'),
-      notificationCount: 0,
-    },
     advancedFilter: {
       title: t('actions.filter'),
-      addLabel: t('actions.add'),
       fieldLabel: t('pages.batchJobActivePeriods.periodId'),
       operatorLabel: t('pages.batchJobActivePeriods.operatorContains'),
-      applyLabel: t('actions.apply'),
-      resetLabel: t('actions.reset'),
       getValue: (record) => record.periodId,
-      matches: (record, value) => record.periodId
-        .toLocaleLowerCase(currentLanguage.code)
-        .includes(value.trim().toLocaleLowerCase(currentLanguage.code)),
     },
   };
 

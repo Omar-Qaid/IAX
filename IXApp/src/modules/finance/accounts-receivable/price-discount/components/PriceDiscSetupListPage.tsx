@@ -92,13 +92,9 @@ export function PriceDiscSetupListPage({ kind }: { kind: SetupKind }): React.Rea
     recordTableName: labels.table,
     contextLabel: labels.title,
     viewLabel: 'Standard view',
-    filterLabel: t('actions.filter'),
-    informationLabel: t('common.information'),
     searchMode: 'quick',
     searchFields,
-    locale: currentLanguage.code,
     crud: {
-      editLabel: t('actions.edit'), newLabel: t('actions.new'), deleteLabel: t('actions.delete'),
       editPermission: labels.permission[2], newPermission: labels.permission[1], deletePermission: labels.permission[3],
       onDelete: async (rows) => {
         try {
@@ -114,13 +110,9 @@ export function PriceDiscSetupListPage({ kind }: { kind: SetupKind }): React.Rea
       },
     },
     commands: ['setup', 'options'].map((id) => ({ id, label: t(`customerGroupCommands.${id}`) })),
-    utilities: {
-      personalizeLabel: t('utilities.personalize'), guideLabel: t('utilities.guide'), notificationsLabel: t('common.notifications'),
-      refreshLabel: t('actions.refresh'), openWindowLabel: t('utilities.openWindow'), notificationCount: 0,
-    },
     advancedFilter: {
-      title: t('filters.title'), addLabel: t('actions.add'), fieldLabel: kind === 'groups' ? 'Group ID' : 'Journal number',
-      operatorLabel: t('filters.contains'), applyLabel: t('actions.apply'), resetLabel: t('actions.reset'),
+      fieldLabel: kind === 'groups' ? 'Group ID' : 'Journal number',
+      operatorLabel: t('filters.contains'),
       getValue: (row) => kind === 'groups' ? (row as PriceDiscountGroup).groupId : kind === 'journals' ? (row as TradeAgreementJournal).journalNum : (row as TradeAgreementJournalName).journalName,
       matches: (row, value) => `${'groupId' in row ? row.groupId : 'journalNum' in row ? row.journalNum : row.journalName} ${row.name}`.toLocaleLowerCase(currentLanguage.code).includes(value.trim().toLocaleLowerCase(currentLanguage.code)),
     },

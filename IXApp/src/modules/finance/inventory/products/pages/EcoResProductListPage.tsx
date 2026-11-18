@@ -84,12 +84,12 @@ export function EcoResProductListPage(): React.ReactElement {
   );
 
   const config: EnterpriseListConfig<ReleasedProductRecord> = {
-    contextLabel: t('releasedProduct.title', 'Released products'), viewLabel: t('common.standardView'),
-    filterLabel: t('actions.filter'), informationLabel: t('common.information'), searchMode: 'quick',
+    contextLabel: t('releasedProduct.title', 'Released products'),
+    searchMode: 'quick',
     searchFields: [{ field: 'itemNumber', label: t('releasedProduct.fields.itemNumber') }, { field: 'name', label: t('releasedProduct.fields.productName') }, { field: 'nameAliasLocalized', label: t('releasedProduct.fields.arabicName') }],
-    showSearchCommand: true, recordTableName: 'InventTable',
-    crud: { editLabel: t('actions.edit'), newLabel: t('actions.new'), deleteLabel: t('actions.delete'), editPermission: PERMISSIONS.INVENTORY_TRANSACTION_EDIT, newPermission: PERMISSIONS.INVENTORY_TRANSACTION_CREATE, onEdit: (row) => navigate(INVENTORY_ROUTE_PATHS.releasedProductDetails(row.id)), onNew: () => setCreating(true) },
-    utilities: { personalizeLabel: t('common.personalize'), guideLabel: t('common.guide'), notificationsLabel: t('common.notifications'), refreshLabel: t('actions.refresh'), openWindowLabel: t('common.openWindow') },
+    recordTableName: 'InventTable',
+    crud: { editPermission: PERMISSIONS.INVENTORY_TRANSACTION_EDIT, newPermission: PERMISSIONS.INVENTORY_TRANSACTION_CREATE, onEdit: (row) => navigate(INVENTORY_ROUTE_PATHS.releasedProductDetails(row.id)), onNew: () => setCreating(true) },
+    utilities: { personalizeLabel: t('common.personalize'), guideLabel: t('common.guide'), openWindowLabel: t('common.openWindow') },
   };
 
   return (

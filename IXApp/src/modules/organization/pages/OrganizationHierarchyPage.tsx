@@ -107,9 +107,6 @@ export function OrganizationHierarchyPage(): React.ReactElement {
   );
   const config: EnterpriseListConfig<HierarchyRecord> = {
     contextLabel: t('organizationStructure.hierarchiesTitle'),
-    viewLabel: t('common.standardView'),
-    filterLabel: t('actions.filter'),
-    informationLabel: t('common.information'),
     searchMode: 'quick',
     searchFields: [
       { field: 'code', label: t('organizationStructure.code') },
@@ -121,21 +118,15 @@ export function OrganizationHierarchyPage(): React.ReactElement {
       label: t('actions.back'),
       onClick: () => navigate('/organization-administration/organization-hierarchies'),
     },
-    showSearchCommand: true,
     recordTableName: 'OrganizationHierarchy',
     getAuditRecordId: (row) => row.recordId,
     crud: {
-      editLabel: t('actions.edit'),
-      newLabel: t('actions.new'),
-      deleteLabel: t('actions.delete'),
       editPermission: 'Organization.Structure.Edit',
       newPermission: 'Organization.Structure.Create',
     },
     utilities: {
       personalizeLabel: t('organizationStructure.personalize'),
       guideLabel: t('organizationStructure.guide'),
-      notificationsLabel: t('common.notifications'),
-      refreshLabel: t('actions.refresh'),
       openWindowLabel: t('organizationStructure.openWindow'),
     },
   };

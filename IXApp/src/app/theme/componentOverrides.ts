@@ -87,8 +87,8 @@ export const getComponentOverrides = (theme: Theme): Components => ({
           whiteSpace: 'nowrap',
         },
         '& .MuiOutlinedInput-root:not(.MuiInputBase-multiline)': {
-          height: d365.controlHeight,
-          minHeight: d365.controlHeight,
+          height: d365.fieldControlHeight,
+          minHeight: d365.fieldControlHeight,
           borderRadius: d365.radius,
           fontSize: d365.fontSize,
         },
@@ -129,9 +129,17 @@ export const getComponentOverrides = (theme: Theme): Components => ({
     styleOverrides: {
       root: {
         minWidth: 0,
-        '& .MuiOutlinedInput-root': { minHeight: d365.controlHeight, paddingBlock: 0 },
-        '& .MuiOutlinedInput-root .MuiAutocomplete-input': { height: d365.controlHeight, boxSizing: 'border-box', padding: '4px 7px' },
-        '& .MuiAutocomplete-endAdornment': { insetInlineEnd: 0, top: '50%', transform: 'translateY(-50%)' },
+        '& .MuiOutlinedInput-root': { minHeight: d365.fieldControlHeight, paddingBlock: 0 },
+        '& .MuiOutlinedInput-root .MuiAutocomplete-input': {
+          height: d365.fieldControlHeight,
+          boxSizing: 'border-box',
+          padding: '4px 7px',
+        },
+        '& .MuiAutocomplete-endAdornment': {
+          insetInlineEnd: 0,
+          top: '50%',
+          transform: 'translateY(-50%)',
+        },
       },
     },
   },
@@ -203,6 +211,23 @@ export const getComponentOverrides = (theme: Theme): Components => ({
         '&.Mui-expanded': {
           margin: '0 0 8px 0',
         },
+        variants: [
+          {
+            props: (props) => 'data-page-section' in props && Boolean(props['data-page-section']),
+            style: {
+              marginBottom: `${d365.sectionGap}px`,
+              borderRadius: `${d365.sectionRadius}px`,
+              backgroundColor: theme.palette.background.paper,
+              overflow: 'hidden',
+              '&.Mui-expanded': { margin: `0 0 ${d365.sectionGap}px` },
+            },
+          },
+          {
+            props: (props) =>
+              'data-page-section' in props && props['data-page-section'] === 'legalEntity',
+            style: { borderRadius: '9px', boxShadow: theme.shadows[1] },
+          },
+        ],
       },
     },
   },
@@ -216,16 +241,55 @@ export const getComponentOverrides = (theme: Theme): Components => ({
           minHeight: '36px !important',
           borderBottom: `1px solid ${theme.palette.divider}`,
         },
+        '&:where([data-page-section])': {
+          minHeight: `${d365.sectionHeaderHeight}px !important`,
+          '&.Mui-expanded': { minHeight: `${d365.sectionHeaderHeight}px !important` },
+          paddingInline: theme.spacing(1),
+          backgroundColor: theme.palette.background.paper,
+          borderBottom: `1px solid ${theme.palette.divider}`,
+          '& .MuiAccordionSummary-content, & .MuiAccordionSummary-content.Mui-expanded': {
+            marginBlock: `${theme.spacing(0.5)} !important`,
+            minWidth: 0,
+          },
+          '& .MuiAccordionSummary-expandIconWrapper': {
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: `1px solid ${theme.palette.divider}`,
+            borderRadius: `${d365.radius}px`,
+            padding: 2,
+            color: theme.palette.text.primary,
+          },
+          '& .MuiAccordionSummary-expandIconWrapper .MuiSvgIcon-root': { fontSize: 16 },
+          '& .page-section-title': {
+            fontSize: theme.typography.pxToRem(14),
+            fontWeight: 600,
+            lineHeight: 1.2,
+          },
+        },
+        '&:where([data-page-section="legalEntity"])': {
+          paddingInline: 10,
+          '& .MuiAccordionSummary-expandIconWrapper': {
+            width: 30,
+            height: 30,
+            padding: 0,
+            borderRadius: 4,
+          },
+        },
       },
-      content: {
-        margin: '6px 0 !important',
-      },
+      content: { margin: '6px 0 !important' },
     },
   },
   MuiAccordionDetails: {
     styleOverrides: {
       root: {
         padding: uiDensity.sectionPadding,
+        variants: [
+          {
+            props: (props) => 'data-page-section' in props && Boolean(props['data-page-section']),
+            style: { padding: '11px 10px 10px' },
+          },
+        ],
       },
     },
   },
@@ -267,13 +331,17 @@ export const getComponentOverrides = (theme: Theme): Components => ({
     },
   },
   MuiDialogTitle: {
-    styleOverrides: { root: { padding: `${uiDensity.dialogPadding}px`, fontSize: '0.9375rem', textAlign: 'start' } },
+    styleOverrides: {
+      root: { padding: `${uiDensity.dialogPadding}px`, fontSize: '0.9375rem', textAlign: 'start' },
+    },
   },
   MuiDialogContent: {
     styleOverrides: { root: { padding: `${uiDensity.dialogPadding}px`, textAlign: 'start' } },
   },
   MuiDialogActions: {
-    styleOverrides: { root: { padding: '8px 12px', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end' } },
+    styleOverrides: {
+      root: { padding: '8px 12px', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end' },
+    },
   },
   MuiCardContent: {
     styleOverrides: {
@@ -287,7 +355,9 @@ export const getComponentOverrides = (theme: Theme): Components => ({
     styleOverrides: { root: { minHeight: 32, padding: '4px 8px' } },
   },
   MuiMenuItem: {
-    styleOverrides: { root: { minHeight: '32px !important', padding: '4px 8px', fontSize: '0.8125rem' } },
+    styleOverrides: {
+      root: { minHeight: '32px !important', padding: '4px 8px', fontSize: '0.8125rem' },
+    },
   },
   MuiTableCell: {
     styleOverrides: { root: { padding: '5px 8px' }, sizeSmall: { padding: '3px 6px' } },

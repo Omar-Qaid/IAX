@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
 import type { ColumnDef } from '@shared/components/data-grid/types';
 import { queryClient } from '@core/api/queryClient';
@@ -14,9 +13,8 @@ import {
 const queryKey = ['simple-list', 'batch-groups'] as const;
 
 export function SysBackgroundJobGroupPage(): React.ReactElement {
-  const navigate = useNavigate();
   const { notifyError, notifySuccess } = useNotifications();
-  const { t, currentLanguage } = useAppTranslation();
+  const { t } = useAppTranslation();
   const columns = useMemo<ColumnDef<SysBackgroundJobGroupRecord>[]>(() => [
     { field: 'groupCode', headerName: t('pages.batchGroups.groupCode'), width: 170, pinned: 'left', editable: true },
     { field: 'description', headerName: t('fields.description'), minWidth: 260, flex: 1, editable: true },
@@ -28,20 +26,14 @@ export function SysBackgroundJobGroupPage(): React.ReactElement {
   const config: EnterpriseListConfig<SysBackgroundJobGroupRecord> = {
     contextLabel: t('pages.batchGroups.title'),
     viewLabel: t('pages.batchGroups.standardView'),
-    filterLabel: t('actions.filter'),
-    informationLabel: t('common.information'),
     searchMode: 'quick',
-    locale: currentLanguage.code,
     searchFields: [
       { field: 'groupCode', label: t('pages.batchGroups.groupCode') },
       { field: 'description', label: t('fields.description') },
     ],
-    backCommand: { label: t('actions.back'), onClick: () => navigate(-1) },
-    showSearchCommand: true,
     recordTableName: 'SysBackgroundJobGroup',
     getAuditRecordId: (record) => record.recId,
     crud: {
-      editLabel: t('actions.edit'), newLabel: t('actions.new'), deleteLabel: t('actions.delete'),
       editPermission: PERMISSIONS.BACKGROUND_JOB_EDIT,
       newPermission: PERMISSIONS.BACKGROUND_JOB_CREATE,
       deletePermission: PERMISSIONS.BACKGROUND_JOB_DELETE,
@@ -52,25 +44,11 @@ export function SysBackgroundJobGroupPage(): React.ReactElement {
         } catch (error) { notifyError(error instanceof Error ? error.message : t('errors.deleteFailed')); }
       },
     },
-    utilities: {
-      personalizeLabel: t('utilities.personalize'),
-      guideLabel: t('utilities.guide'),
-      notificationsLabel: t('common.notifications'),
-      refreshLabel: t('actions.refresh'),
-      openWindowLabel: t('utilities.openWindow'),
-      notificationCount: 0,
-    },
     advancedFilter: {
       title: t('actions.filter'),
-      addLabel: t('actions.add'),
       fieldLabel: t('pages.batchGroups.filterByGroup'),
       operatorLabel: t('pages.batchGroups.operatorContains'),
-      applyLabel: t('actions.apply'),
-      resetLabel: t('actions.reset'),
       getValue: (record) => record.groupCode,
-      matches: (record, value) => record.groupCode
-        .toLocaleLowerCase(currentLanguage.code)
-        .includes(value.trim().toLocaleLowerCase(currentLanguage.code)),
     },
   };
   return <SimpleListPage title={t('pages.batchGroups.title')} enterpriseConfig={config}

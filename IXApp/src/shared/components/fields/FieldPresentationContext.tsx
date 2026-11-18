@@ -1,6 +1,6 @@
 import React, { createContext, useContext } from 'react';
 import { Box } from '@mui/material';
-import { d365 } from '@shared/constants/enterpriseUiTokens';
+import { enterpriseSurfaces } from '@shared/constants/enterpriseSurfaces';
 
 interface FieldPresentation {
   viewMode: boolean;
@@ -15,8 +15,8 @@ export function FieldPresentationProvider({ viewMode, masterRoute, children }: F
       {viewMode ? (
         <Box sx={{
           '& .MuiOutlinedInput-root': { borderRadius: 0, bgcolor: 'transparent', boxShadow: 'none' },
-          '& .MuiOutlinedInput-notchedOutline': { border: 0, borderBottom: `1px solid ${d365.darkBorder}`, borderRadius: 0 },
-          '& .MuiInputBase-input.Mui-disabled': { WebkitTextFillColor: d365.text },
+          '& .MuiOutlinedInput-notchedOutline': (theme) => ({ border: 0, borderBottom: `1px solid ${enterpriseSurfaces(theme).strongBorder}`, borderRadius: 0 }),
+          '& .MuiInputBase-input.Mui-disabled': (theme) => ({ WebkitTextFillColor: theme.palette.text.primary }),
           '& .MuiInputBase-input::placeholder': { opacity: 0 },
           '& .MuiSelect-icon, & .MuiAutocomplete-endAdornment, & .MuiInputAdornment-root': { display: 'none' },
           '& input, & textarea, & .MuiSelect-select': { pointerEvents: 'none' },

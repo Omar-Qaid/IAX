@@ -3,6 +3,7 @@ import { lightPalette, darkPalette } from './palette';
 import { typography } from './typography';
 import { spacing } from './spacing';
 import { getComponentOverrides } from './componentOverrides';
+import { createEnterprisePalette } from '@shared/constants/enterpriseSurfaces';
 import type { ThemeMode } from '@app/store/usePreferenceStore';
 import { resolveUiFontFamily } from '@shared/constants/fontFamilies';
 
@@ -43,8 +44,16 @@ export function createAppTheme(mode: ThemeMode, direction: 'ltr' | 'rtl' = 'ltr'
     },
   });
 
-  const themeWithOverrides = createTheme(baseTheme, {
-    components: getComponentOverrides(baseTheme),
+  // The enterprise surfaces derive from the resolved palette, so they follow the
+  // theme mode and the selected primary color instead of literal light-mode hex.
+  const theme = createTheme(baseTheme, {
+    palette: {
+      enterprise: createEnterprisePalette(baseTheme.palette, Boolean(preferences.contrast)),
+    },
+  });
+
+  const themeWithOverrides = createTheme(theme, {
+    components: getComponentOverrides(theme),
   });
 
   return themeWithOverrides;

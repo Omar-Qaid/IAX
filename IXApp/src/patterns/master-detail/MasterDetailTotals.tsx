@@ -22,7 +22,7 @@ export function MasterDetailTotals({
         <Box key={item.id} sx={{ minWidth: 120 }}>
           <Typography
             component="dt"
-            sx={{ fontSize: d365.labelFontSize + 1, color: d365.mutedText, mb: 0.5 }}
+            sx={{ fontSize: d365.labelFontSize + 1, color: 'text.secondary', mb: 0.5 }}
           >
             {item.label}
           </Typography>
@@ -33,7 +33,7 @@ export function MasterDetailTotals({
               fontSize: d365.fontSize,
               textAlign: 'end',
               fontWeight: item.emphasis ? 600 : 400,
-              color: d365.text,
+              color: 'text.primary',
             }}
           >
             {item.value}

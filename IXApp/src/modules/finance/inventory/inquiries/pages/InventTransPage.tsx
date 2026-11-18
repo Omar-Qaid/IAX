@@ -130,16 +130,12 @@ export function InventTransPage(): React.ReactElement {
     recordTableName: 'InventTrans',
     getAuditRecordId: (row) => row.recId,
     contextLabel: t('pages.inventTrans.title'),
-    viewLabel: t('common.standardView'),
-    filterLabel: t('actions.filter'),
-    informationLabel: t('common.information'),
     searchFields: [
       { field: 'itemNumber', label: t('inventTrans.fields.itemNumber') },
       { field: 'referenceNumber', label: t('inventTrans.fields.number') },
       { field: 'inventTransId', label: t('inventTrans.fields.transactionId') },
     ],
     locale: currentLanguage.code,
-    crud: { editLabel: '', newLabel: '', deleteLabel: '' },
     commands: [
       {
         id: 'details',
@@ -164,21 +160,10 @@ export function InventTransPage(): React.ReactElement {
       { id: 'inventory', label: t('inventTrans.actions.inventory'), disabled: true },
       { id: 'ledger', label: t('inventTrans.actions.ledger'), disabled: true },
     ],
-    utilities: {
-      personalizeLabel: t('utilities.personalize'),
-      guideLabel: t('utilities.guide'),
-      notificationsLabel: t('common.notifications'),
-      refreshLabel: t('actions.refresh'),
-      openWindowLabel: t('utilities.openWindow'),
-      notificationCount: 0,
-    },
     advancedFilter: {
       title: t('filters.title'),
-      addLabel: t('actions.add'),
       fieldLabel: t('filters.field'),
       operatorLabel: t('filters.operator'),
-      applyLabel: t('actions.apply'),
-      resetLabel: t('actions.reset'),
       fields: columns.map((column) => ({
         field: column.field as keyof InventTransRecord & string,
         label: column.headerName,
@@ -259,19 +244,33 @@ function InventTransDialog({
             [t('inventTrans.fields.expectedDate'), selected.expectedDate ?? ''],
             [t('inventTrans.fields.voucher'), selected.voucher],
             [t('inventTrans.fields.physicalVoucher'), selected.physicalVoucher],
-            [t('inventTrans.fields.physicalCostAmount'), selected.physicalCostAmount.toLocaleString()],
+            [
+              t('inventTrans.fields.physicalCostAmount'),
+              selected.physicalCostAmount.toLocaleString(),
+            ],
             [t('inventTrans.fields.postedCostAmount'), selected.postedCostAmount.toLocaleString()],
-            [t('inventTrans.fields.costAdjustmentAmount'), selected.costAdjustmentAmount.toLocaleString()],
+            [
+              t('inventTrans.fields.costAdjustmentAmount'),
+              selected.costAdjustmentAmount.toLocaleString(),
+            ],
             [t('fields.currency'), selected.currencyCode],
           ]
         : [
             [t('inventTrans.summary.transactions'), String(rows.length)],
             [t('inventTrans.summary.receipts'), String(summary.receipts)],
             [t('inventTrans.summary.issues'), String(summary.issues)],
-            [t('inventTrans.fields.quantity'), summary.quantity === null
-              ? t('inventTrans.summary.multipleItems', 'Multiple items') : summary.quantity.toLocaleString()],
-            [t('inventTrans.fields.costAmount'), summary.costAmount === null
-              ? t('inventTrans.summary.multipleCurrencies', 'Multiple currencies') : summary.costAmount.toLocaleString()],
+            [
+              t('inventTrans.fields.quantity'),
+              summary.quantity === null
+                ? t('inventTrans.summary.multipleItems', 'Multiple items')
+                : summary.quantity.toLocaleString(),
+            ],
+            [
+              t('inventTrans.fields.costAmount'),
+              summary.costAmount === null
+                ? t('inventTrans.summary.multipleCurrencies', 'Multiple currencies')
+                : summary.costAmount.toLocaleString(),
+            ],
           ];
   const title =
     mode === 'dimensions'

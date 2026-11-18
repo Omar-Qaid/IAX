@@ -558,7 +558,6 @@ export function WfGenericReportPage(): React.ReactElement {
     contextLabel: t('genericReport.workflowReports'),
     viewLabel: t('genericReport.title'),
     filterLabel: t('genericReport.filter'),
-    informationLabel: t('common.information'),
     searchMode: 'quick',
     searchFields: [
       { field: 'showroom', label: t('genericReport.showroom') },
@@ -580,12 +579,10 @@ export function WfGenericReportPage(): React.ReactElement {
     utilities: {
       personalizeLabel: t('genericReport.personalize'),
       guideLabel: t('genericReport.guide'),
-      notificationsLabel: t('common.notifications'),
       refreshLabel: t('common.refresh'),
       openWindowLabel: t('genericReport.openInNewWindow'),
     },
     initialSelection: 'none',
-    showSearchCommand: true,
   };
   return (
     <SimpleListPage<GenericReportRow>

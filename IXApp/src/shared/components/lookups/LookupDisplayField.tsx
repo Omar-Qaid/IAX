@@ -31,7 +31,7 @@ export function LookupDisplayField({
   return (
     <Box sx={{ minWidth: 0 }}>
       {label && (
-        <Typography sx={{ display: 'block', mb: '6px', fontSize: d365.labelFontSize, lineHeight: 1.2, color: d365.text }}>
+        <Typography sx={{ display: 'block', mb: '6px', fontSize: d365.labelFontSize, lineHeight: 1.2, color: 'text.primary' }}>
           <LookupNavigationLabel label={label} masterRoute={masterRoute} />
         </Typography>
       )}

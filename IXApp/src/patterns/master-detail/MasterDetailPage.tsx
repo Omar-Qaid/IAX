@@ -25,6 +25,7 @@ import { RecordList } from '@patterns/list-details/ListDetailsPage';
 import { ListDetailsLayout } from '@patterns/list-details/ListDetailsLayout';
 import type { DetailSectionConfig } from '@patterns/list-details/types';
 import type { MasterDetailPageProps, MasterDetailRecord } from './types';
+import { enterpriseSurfaces } from '@shared/constants/enterpriseSurfaces';
 
 const NO_VALUES = {};
 const sidePanelSx = {
@@ -105,7 +106,9 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
         !term ||
         (matchesSearch
           ? matchesSearch(record, term)
-          : `${record.title} ${record.subtitle ?? ''} ${record.description ?? ''}`.toLocaleLowerCase().includes(term));
+          : `${record.title} ${record.subtitle ?? ''} ${record.description ?? ''}`
+              .toLocaleLowerCase()
+              .includes(term));
       const advanced = conditions.every((condition) => {
         const field = advancedFilter?.fields.find((candidate) => candidate.id === condition.field);
         return !field || matchesEnterpriseFilter(field.getValue(record), condition);
@@ -123,15 +126,30 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
           {[subtitle, viewLabel].filter(Boolean).join(' | ')}
         </Typography>
       )}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, mb: 1 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 2,
+          mb: 1,
+        }}
+      >
         <Typography
           component="h1"
           noWrap
-          sx={{ fontSize: { xs: 18, sm: d365.titleFontSize }, lineHeight: 1.2, fontWeight: 600, color: d365.text }}
+          sx={{
+            fontSize: { xs: 18, sm: d365.titleFontSize },
+            lineHeight: 1.2,
+            fontWeight: 600,
+            color: 'text.primary',
+          }}
         >
           {title}
         </Typography>
-        {status && <Box sx={{ fontSize: d365.fontSize, flexShrink: 0, paddingInlineEnd: 1 }}>{status}</Box>}
+        {status && (
+          <Box sx={{ fontSize: d365.fontSize, flexShrink: 0, paddingInlineEnd: 1 }}>{status}</Box>
+        )}
       </Box>
       {!loading && !error && tabs}
     </Box>
@@ -141,10 +159,22 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
   const bodySections: DetailSectionConfig[] = loading
     ? [{ id: 'master-detail-loading', title: '', hideHeader: true, content: <LoadingState /> }]
     : error
-      ? [{ id: 'master-detail-error', title: '', hideHeader: true, content: <ErrorState message={error} onRetry={onRetry} /> }]
+      ? [
+          {
+            id: 'master-detail-error',
+            title: '',
+            hideHeader: true,
+            content: <ErrorState message={error} onRetry={onRetry} />,
+          },
+        ]
       : [
-          ...(sections ?? []).map((section) => ({ ...section, editing: section.editing ?? editing })),
-          ...(children ? [{ id: 'master-detail-content', title: '', hideHeader: true, content: children }] : []),
+          ...(sections ?? []).map((section) => ({
+            ...section,
+            editing: section.editing ?? editing,
+          })),
+          ...(children
+            ? [{ id: 'master-detail-content', title: '', hideHeader: true, content: children }]
+            : []),
         ];
 
   const listPane = (
@@ -161,7 +191,9 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
         onQueryChange={setQuery}
         onSelect={(record) => onSelect(record.id)}
       />
-      {!visible.length && <Typography sx={{ p: 1.5, fontSize: d365.fontSize }}>{emptyLabel}</Typography>}
+      {!visible.length && (
+        <Typography sx={{ p: 1.5, fontSize: d365.fontSize }}>{emptyLabel}</Typography>
+      )}
     </>
   );
 
@@ -177,9 +209,9 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
         position: 'relative',
         overflow: 'hidden',
         paddingInlineEnd: hasRail ? { lg: `${d365.utilityRailWidth}px` } : undefined,
-        bgcolor: d365.canvas,
+        bgcolor: (theme) => enterpriseSurfaces(theme).canvas,
         fontFamily: d365.fontFamily,
-        color: d365.text,
+        color: 'text.primary',
       }}
     >
       <ActionPane
@@ -198,7 +230,11 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
               {...utilities}
               attachmentAction={
                 attachments ? (
-                  <RecordAttachmentsButton refTableId={attachments.refTableId} refRecId={attachments.refRecId} disabled={editing} />
+                  <RecordAttachmentsButton
+                    refTableId={attachments.refTableId}
+                    refRecId={attachments.refRecId}
+                    disabled={editing}
+                  />
                 ) : (
                   false
                 )
@@ -218,11 +254,19 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
             width: 31,
             height: 31,
             mx: 0.5,
-            bgcolor: navigationOpen ? d365.primary : 'transparent',
-            color: navigationOpen ? '#fff' : d365.primary,
+            bgcolor: (theme) => (navigationOpen ? enterpriseSurfaces(theme).accent : 'transparent'),
+            color: (theme) =>
+              navigationOpen
+                ? theme.palette.primary.contrastText
+                : enterpriseSurfaces(theme).accent,
             borderRadius: d365.radius,
             transition: 'background-color 140ms ease, color 140ms ease',
-            '&:hover': { bgcolor: navigationOpen ? '#2559d6' : 'action.hover' },
+            '&:hover': {
+              bgcolor: (theme) =>
+                navigationOpen
+                  ? enterpriseSurfaces(theme).accentStrong
+                  : theme.palette.action.hover,
+            },
           }}
         >
           <MenuIcon sx={{ fontSize: 17 }} />

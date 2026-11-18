@@ -358,7 +358,6 @@ export function CustPackingSlipJournal(): React.ReactElement {
           field: String(column.field) as keyof GridRow & string,
           label: column.headerName,
         })),
-        crud: { editLabel: '', newLabel: '', deleteLabel: '' },
         utilities: {
           personalizeLabel: 'Personalize',
           guideLabel: 'Guide',

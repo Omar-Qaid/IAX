@@ -1,8 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Box,
   Drawer,
   IconButton,
@@ -11,8 +8,9 @@ import {
   Typography,
   useMediaQuery,
   useTheme,
+  type Theme,
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { FastTab } from '@shared/components/fast-tabs/FastTab';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import type { DetailSectionConfig, DetailValue, DetailValues } from './types';
 import { d365 } from '@shared/constants/enterpriseUiTokens';
@@ -23,6 +21,7 @@ import { RecordPreview } from '@shared/components/record-preview';
 import { LookupField } from '@shared/components/lookups/LookupField';
 import { EditableViewField } from '@shared/components/fields/EditableViewField';
 import { FieldPresentationProvider } from '@shared/components/fields/FieldPresentationContext';
+import { enterpriseSurfaces } from '@shared/constants/enterpriseSurfaces';
 
 export interface ListDetailsLayoutProps {
   detailEndPadding?: number;
@@ -151,7 +150,7 @@ export function ListDetailsLayout({
         gap: 0,
         overflow: 'hidden',
         fontFamily: d365.fontFamily,
-        color: d365.text,
+        color: 'text.primary',
       }}
     >
       {isMobile && (
@@ -179,8 +178,9 @@ export function ListDetailsLayout({
             width: currentListWidth,
             flexShrink: 0,
             display: { xs: 'none', md: 'block' },
-            bgcolor: d365.surface,
-            border: `1px solid ${d365.border}`,
+            bgcolor: 'background.paper',
+            border: 1,
+            borderColor: 'divider',
             borderRadius: '9px',
             overflow: 'hidden',
             boxShadow: '0 1px 4px rgba(0,0,0,.14)',
@@ -262,58 +262,20 @@ export function ListDetailsLayout({
                 </Box>
               );
             return (
-              <Accordion
+              <FastTab
                 key={section.id}
+                title={section.title}
+                appearance={legalEntity ? 'legalEntity' : 'enterprise'}
                 defaultExpanded={section.defaultExpanded ?? true}
                 expanded={section.expanded}
-                onChange={(_, expanded) => section.onExpandedChange?.(expanded)}
-                disableGutters
-                elevation={0}
-                sx={{
-                  mb: `${d365.sectionGap}px !important`,
-                  border: `1px solid ${legalEntity ? '#d1d1d1' : d365.border}`,
-                  borderRadius: `${legalEntity ? 9 : d365.sectionRadius}px !important`,
-                  bgcolor: d365.surface,
-                  overflow: 'hidden',
-                  boxShadow: legalEntity ? '0 1px 3px rgba(0,0,0,.12)' : 'none',
-                  '&::before': { display: 'none' },
+                onExpandedChange={section.onExpandedChange}
+                detailsSx={{
+                  p: section.detailsPadding,
+                  minHeight: section.minHeight,
+                  boxSizing: 'border-box',
                 }}
-              >
-                <AccordionSummary
-                  expandIcon={<ExpandMoreIcon sx={{ fontSize: 16, color: '#323130' }} />}
-                  sx={{
-                    px: legalEntity ? '10px' : 1,
-                    minHeight: `${d365.sectionHeaderHeight}px !important`,
-                    borderBottom: 1,
-                    borderColor: legalEntity ? '#c8c6c4' : d365.border,
-                    '&.Mui-expanded': { minHeight: `${d365.sectionHeaderHeight}px !important` },
-                    '& .MuiAccordionSummary-content, & .MuiAccordionSummary-content.Mui-expanded': {
-                      my: 0.5,
-                    },
-                    '& .MuiAccordionSummary-expandIconWrapper': {
-                      width: legalEntity ? 30 : 'auto',
-                      height: legalEntity ? 30 : 'auto',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      border: `1px solid ${legalEntity ? '#c8c6c4' : d365.border}`,
-                      borderRadius: legalEntity ? '4px' : d365.radius,
-                      p: legalEntity ? 0 : '2px',
-                    },
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      fontFamily: d365.fontFamily,
-                      fontSize: 14,
-                      lineHeight: 1.2,
-                      color: '#111',
-                      fontWeight: 600,
-                    }}
-                  >
-                    {section.title}
-                  </Typography>
-                  {Boolean(section.summaryItems?.length) && (
+                summary={
+                  Boolean(section.summaryItems?.length) && (
                     <Box
                       sx={{
                         display: 'flex',
@@ -339,7 +301,8 @@ export function ListDetailsLayout({
                             textOverflow: 'ellipsis',
                             maxWidth: 220,
                             px: 1.25,
-                            borderInlineStart: index ? '1px solid #c8c6c4' : undefined,
+                            borderInlineStart: index ? 1 : undefined,
+                            borderColor: 'divider',
                             color: item.accent ? 'primary.main' : 'text.primary',
                           }}
                         >
@@ -347,206 +310,242 @@ export function ListDetailsLayout({
                         </Typography>
                       ))}
                     </Box>
-                  )}
-                </AccordionSummary>
-                <AccordionDetails
-                  sx={{
-                    p: section.detailsPadding ?? '11px 10px 10px',
-                    minHeight: section.minHeight,
-                    boxSizing: 'border-box',
-                  }}
-                >
-                  {section.link && <Box sx={{ mb: 1 }}>{section.link}</Box>}
-                  {section.content ?? (
-                    <Box
-                      sx={{
-                        display: 'grid',
-                        gridTemplateColumns: {
-                          xs: 'minmax(0, 1fr)',
-                          sm: 'repeat(2, minmax(0, 1fr))',
-                          lg: 'repeat(auto-fit, minmax(180px, 1fr))',
-                          xl:
-                            section.gridTemplateColumns ??
-                            `repeat(${section.columns ?? Math.min(5, section.groups?.length ?? 1)}, minmax(120px,1fr))`,
-                        },
-                        justifyContent: section.gridTemplateColumns ? 'start' : 'space-between',
-                        columnGap: section.columnGap ?? `${d365.fieldGap}px`,
-                        rowGap: 1,
-                      }}
-                    >
-                      {(section.groups ?? []).map((group) => (
-                        <Box
-                          key={group.id}
-                          role={group.title ? 'group' : undefined}
-                          aria-label={group.title || undefined}
-                          sx={{
-                            minWidth: 0,
-                            maxWidth: '100%',
-                            width: { xs: '100%', xl: group.width },
-                            gridColumn: { xs: 'auto', xl: group.column },
-                          }}
-                        >
-                          {(group.title || section.groups?.some((candidate) => candidate.title)) && (
-                            <Typography
-                              aria-hidden={!group.title}
-                              sx={{
-                                mb: 1,
-                                fontSize: d365.labelFontSize,
-                                fontWeight: 700,
-                                textTransform: 'uppercase',
-                                visibility: group.title ? 'visible' : 'hidden',
-                              }}
-                            >
-                              {group.title || '\u00a0'}
-                            </Typography>
-                          )}
-                          <Box
+                  )
+                }
+              >
+                {section.link && <Box sx={{ mb: 1 }}>{section.link}</Box>}
+                {section.content ?? (
+                  <Box
+                    sx={{
+                      display: 'grid',
+                      gridTemplateColumns: {
+                        xs: 'minmax(0, 1fr)',
+                        sm: 'repeat(2, minmax(0, 1fr))',
+                        lg: 'repeat(auto-fit, minmax(180px, 1fr))',
+                        xl:
+                          section.gridTemplateColumns ??
+                          `repeat(${section.columns ?? Math.min(5, section.groups?.length ?? 1)}, minmax(120px,1fr))`,
+                      },
+                      justifyContent: section.gridTemplateColumns ? 'start' : 'space-between',
+                      columnGap: section.columnGap ?? `${d365.fieldGap}px`,
+                      rowGap: 1,
+                    }}
+                  >
+                    {(section.groups ?? []).map((group) => (
+                      <Box
+                        key={group.id}
+                        role={group.title ? 'group' : undefined}
+                        aria-label={group.title || undefined}
+                        sx={{
+                          minWidth: 0,
+                          maxWidth: '100%',
+                          width: { xs: '100%', xl: group.width },
+                          gridColumn: { xs: 'auto', xl: group.column },
+                        }}
+                      >
+                        {(group.title || section.groups?.some((candidate) => candidate.title)) && (
+                          <Typography
+                            aria-hidden={!group.title}
                             sx={{
-                              display: 'grid',
-                              gridTemplateColumns: group.columns
-                                ? {
-                                    xs: 'minmax(0, 1fr)',
-                                    sm: `repeat(${Math.min(2, group.columns)}, minmax(0, 1fr))`,
-                                    lg: `repeat(${group.columns}, minmax(0, 1fr))`,
-                                  }
-                                : '1fr',
-                              columnGap: 2,
-                              rowGap: '12px',
+                              mb: 1,
+                              fontSize: d365.labelFontSize,
+                              fontWeight: 700,
+                              textTransform: 'uppercase',
+                              visibility: group.title ? 'visible' : 'hidden',
                             }}
                           >
-                            {group.fields.map((field) => {
-                              const value = values[field.name];
-                              // A section can own its edit state (document pages with their own Save/Cancel).
-                              const fieldEditing = section.editing ?? editing;
-                              const editable =
-                                fieldEditing && !field.disabled && field.type !== 'display';
-                              const sectionTitle =
-                                field.sectionTitle ??
-                                (legalEntity && field.name === 'timeZone'
-                                  ? 'TIME ZONE'
-                                  : undefined);
-                              const fieldLabel =
-                                legalEntity && field.name === 'timeZone'
-                                  ? 'Time zone'
-                                  : field.label;
-                              const editField = !fieldEditing && !field.disabled && field.type !== 'display' &&
-                                (!canEditField || canEditField(field.name)) && onFieldEdit
-                                  ? () => onFieldEdit(field.name)
-                                  : undefined;
-                              return (
-                                <Box
-                                  key={field.name}
-                                  sx={{
-                                    minWidth: 0,
-                                    maxWidth: '100%',
-                                    width: { xs: '100%', lg: field.width ?? '100%' },
-                                    gridColumn: { xs: 'auto', lg: field.column },
-                                    gridRow: { xs: 'auto', lg: field.row },
-                                  }}
-                                >
-                                  {sectionTitle && (
-                                    <Typography
-                                      sx={{
-                                        mt: '10px',
-                                        mb: '8px',
-                                        fontFamily: d365.fontFamily,
-                                        fontSize: 12,
-                                        lineHeight: 1.2,
-                                        fontWeight: 700,
-                                        textTransform: 'uppercase',
-                                        color: '#111',
-                                      }}
-                                    >
-                                      {sectionTitle}
-                                    </Typography>
-                                  )}
-                                  {(!field.renderOwnLabel || (!fieldEditing && field.render && field.type === 'select')) && (
-                                    <Typography
-                                      noWrap
-                                      title={fieldLabel}
-                                      sx={{
-                                        mb: '6px',
-                                        fontFamily: d365.fontFamily,
-                                        fontSize: legalEntity ? 12 : d365.labelFontSize,
-                                        lineHeight: 1.2,
-                                        color: d365.text,
-                                      }}
-                                    >
-                                      {/* Open details on master fields in view mode only (D365). */}
-                                      {(field.type === 'select' || field.masterRoute) && !fieldEditing
-                                        ? <LookupNavigationLabel label={fieldLabel} masterRoute={field.masterRoute} />
-                                        : fieldLabel}
-                                    </Typography>
-                                  )}
-                                  {/* D365 record preview for master-data fields (resolved by masterRoute). */}
-                                  <RecordPreview
-                                    masterRoute={field.masterRoute}
-                                    entity={field.previewEntity}
-                                    recordKey={typeof value === 'string' || typeof value === 'number' ? value : null}
-                                    option={(() => {
-                                      const match = field.options?.find((option) => option.value === String(value ?? ''));
-                                      return match ? { code: String(match.value), name: String(match.label) } : null;
-                                    })()}
+                            {group.title || '\u00a0'}
+                          </Typography>
+                        )}
+                        <Box
+                          sx={{
+                            display: 'grid',
+                            gridTemplateColumns: group.columns
+                              ? {
+                                  xs: 'minmax(0, 1fr)',
+                                  sm: `repeat(${Math.min(2, group.columns)}, minmax(0, 1fr))`,
+                                  lg: `repeat(${group.columns}, minmax(0, 1fr))`,
+                                }
+                              : '1fr',
+                            columnGap: 2,
+                            rowGap: '12px',
+                          }}
+                        >
+                          {group.fields.map((field) => {
+                            const value = values[field.name];
+                            // A section can own its edit state (document pages with their own Save/Cancel).
+                            const fieldEditing = section.editing ?? editing;
+                            const editable =
+                              fieldEditing && !field.disabled && field.type !== 'display';
+                            const sectionTitle =
+                              field.sectionTitle ??
+                              (legalEntity && field.name === 'timeZone' ? 'TIME ZONE' : undefined);
+                            const fieldLabel =
+                              legalEntity && field.name === 'timeZone' ? 'Time zone' : field.label;
+                            const editField =
+                              !fieldEditing &&
+                              !field.disabled &&
+                              field.type !== 'display' &&
+                              (!canEditField || canEditField(field.name)) &&
+                              onFieldEdit
+                                ? () => onFieldEdit(field.name)
+                                : undefined;
+                            return (
+                              <Box
+                                key={field.name}
+                                sx={{
+                                  minWidth: 0,
+                                  maxWidth: '100%',
+                                  width: { xs: '100%', lg: field.width ?? '100%' },
+                                  gridColumn: { xs: 'auto', lg: field.column },
+                                  gridRow: { xs: 'auto', lg: field.row },
+                                }}
+                              >
+                                {sectionTitle && (
+                                  <Typography
+                                    sx={{
+                                      mt: '10px',
+                                      mb: '8px',
+                                      fontFamily: d365.fontFamily,
+                                      fontSize: 12,
+                                      lineHeight: 1.2,
+                                      fontWeight: 700,
+                                      textTransform: 'uppercase',
+                                      color: 'text.primary',
+                                    }}
                                   >
+                                    {sectionTitle}
+                                  </Typography>
+                                )}
+                                {(!field.renderOwnLabel ||
+                                  (!fieldEditing && field.render && field.type === 'select')) && (
+                                  <Typography
+                                    noWrap
+                                    title={fieldLabel}
+                                    sx={{
+                                      mb: '6px',
+                                      fontFamily: d365.fontFamily,
+                                      fontSize: legalEntity ? 12 : d365.labelFontSize,
+                                      lineHeight: 1.2,
+                                      color: 'text.primary',
+                                    }}
+                                  >
+                                    {/* Open details on master fields in view mode only (D365). */}
+                                    {(field.type === 'select' || field.masterRoute) &&
+                                    !fieldEditing ? (
+                                      <LookupNavigationLabel
+                                        label={fieldLabel}
+                                        masterRoute={field.masterRoute}
+                                      />
+                                    ) : (
+                                      fieldLabel
+                                    )}
+                                  </Typography>
+                                )}
+                                {/* D365 record preview for master-data fields (resolved by masterRoute). */}
+                                <RecordPreview
+                                  masterRoute={field.masterRoute}
+                                  entity={field.previewEntity}
+                                  recordKey={
+                                    typeof value === 'string' || typeof value === 'number'
+                                      ? value
+                                      : null
+                                  }
+                                  option={(() => {
+                                    const match = field.options?.find(
+                                      (option) => option.value === String(value ?? '')
+                                    );
+                                    return match
+                                      ? { code: String(match.value), name: String(match.label) }
+                                      : null;
+                                  })()}
+                                >
                                   {!fieldEditing && field.render && field.type === 'select' ? (
                                     <EditableViewField
-                                      value={field.formatValue?.(value) ?? field.options?.find((option) => option.value === String(value))?.label ?? String(value ?? '')}
+                                      value={
+                                        field.formatValue?.(value) ??
+                                        field.options?.find(
+                                          (option) => option.value === String(value)
+                                        )?.label ??
+                                        String(value ?? '')
+                                      }
                                       lookup
                                       label={fieldLabel}
                                       onEdit={editField}
                                       disabled={field.disabled}
                                     />
                                   ) : field.render ? (
-                                    <FieldPresentationProvider viewMode={!fieldEditing} masterRoute={field.masterRoute}>
-                                    <Box sx={{
-                                      position: 'relative',
-                                      '&:hover .field-edit-action, &:focus-within .field-edit-action': { opacity: 1 },
-                                    }}>
-                                    {field.render({
-                                      value,
-                                      editing: fieldEditing,
-                                      disabled: !editable,
-                                      onChange: (nextValue) => onChange(field.name, nextValue),
-                                    })
-                                    }
-                                    {editField && (
-                                      <IconButton
-                                        className="field-edit-action"
-                                        size="small"
-                                        aria-label={`Edit ${fieldLabel}`}
-                                        onClick={editField}
-                                        sx={{ position: 'absolute', insetInlineEnd: 0, bottom: 0, opacity: 0, color: d365.primary, p: 0.25 }}
-                                      >
-                                        <EditOutlinedIcon sx={{ fontSize: 13 }} />
-                                      </IconButton>
-                                    )}
-                                    </Box>
-                                    </FieldPresentationProvider>
-                                  ) : field.type === 'boolean' ? (
-                                    !fieldEditing ? <EditableViewField value={value ? yesLabel : noLabel} label={fieldLabel} onEdit={editField} disabled={field.disabled} /> : <Box
-                                      sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        height: d365.controlHeight,
-                                      }}
+                                    <FieldPresentationProvider
+                                      viewMode={!fieldEditing}
+                                      masterRoute={field.masterRoute}
                                     >
-                                      <Switch
-                                        size="small"
-                                        checked={Boolean(value)}
-                                        disabled={!editable}
-                                        onChange={(_, checked) => onChange(field.name, checked)}
-                                        sx={legalEntity ? legalEntitySwitchSx : d365SwitchSx}
-                                      />
-                                      <Typography
+                                      <Box
                                         sx={{
-                                          marginInlineStart: legalEntity ? '6px' : 0,
-                                          fontFamily: d365.fontFamily,
-                                          fontSize: d365.fontSize,
+                                          position: 'relative',
+                                          '&:hover .field-edit-action, &:focus-within .field-edit-action':
+                                            { opacity: 1 },
                                         }}
                                       >
-                                        {value ? yesLabel : noLabel}
-                                      </Typography>
-                                    </Box>
+                                        {field.render({
+                                          value,
+                                          editing: fieldEditing,
+                                          disabled: !editable,
+                                          onChange: (nextValue) => onChange(field.name, nextValue),
+                                        })}
+                                        {editField && (
+                                          <IconButton
+                                            className="field-edit-action"
+                                            size="small"
+                                            aria-label={`Edit ${fieldLabel}`}
+                                            onClick={editField}
+                                            sx={{
+                                              position: 'absolute',
+                                              insetInlineEnd: 0,
+                                              bottom: 0,
+                                              opacity: 0,
+                                              color: 'primary.main',
+                                              p: 0.25,
+                                            }}
+                                          >
+                                            <EditOutlinedIcon sx={{ fontSize: 13 }} />
+                                          </IconButton>
+                                        )}
+                                      </Box>
+                                    </FieldPresentationProvider>
+                                  ) : field.type === 'boolean' ? (
+                                    !fieldEditing ? (
+                                      <EditableViewField
+                                        value={value ? yesLabel : noLabel}
+                                        label={fieldLabel}
+                                        onEdit={editField}
+                                        disabled={field.disabled}
+                                      />
+                                    ) : (
+                                      <Box
+                                        sx={{
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          height: d365.fieldControlHeight,
+                                        }}
+                                      >
+                                        <Switch
+                                          size="small"
+                                          checked={Boolean(value)}
+                                          disabled={!editable}
+                                          onChange={(_, checked) => onChange(field.name, checked)}
+                                          sx={legalEntity ? legalEntitySwitchSx : d365SwitchSx}
+                                        />
+                                        <Typography
+                                          sx={{
+                                            marginInlineStart: legalEntity ? '6px' : 0,
+                                            fontFamily: d365.fontFamily,
+                                            fontSize: d365.fontSize,
+                                          }}
+                                        >
+                                          {value ? yesLabel : noLabel}
+                                        </Typography>
+                                      </Box>
+                                    )
                                   ) : editable && field.type === 'select' ? (
                                     <Box sx={legalEntity ? legalEntityFieldSx : editFieldSx}>
                                       <LookupField
@@ -555,17 +554,38 @@ export function ListDetailsLayout({
                                         externalLabel
                                         value={String(value ?? '')}
                                         variant={legalEntity ? 'standard' : 'outlined'}
-                                        options={(field.options ?? []).map((option) => ({ id: option.value, code: option.value, name: option.label }))}
-                                        queryKey={['list-details-lookup', field.name, field.options]}
+                                        options={(field.options ?? []).map((option) => ({
+                                          id: option.value,
+                                          code: option.value,
+                                          name: option.label,
+                                        }))}
+                                        queryKey={[
+                                          'list-details-lookup',
+                                          field.name,
+                                          field.options,
+                                        ]}
                                         fetchPage={async ({ pageNumber, pageSize, search }) => {
                                           const matches = (field.options ?? []).filter((option) =>
-                                            `${option.value} ${option.label}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())
+                                            `${option.value} ${option.label}`
+                                              .toLocaleLowerCase()
+                                              .includes(search.trim().toLocaleLowerCase())
                                           );
                                           return {
-                                            data: matches.slice((pageNumber - 1) * pageSize, pageNumber * pageSize)
-                                              .map((option) => ({ id: option.value, code: option.value, name: option.label })),
+                                            data: matches
+                                              .slice(
+                                                (pageNumber - 1) * pageSize,
+                                                pageNumber * pageSize
+                                              )
+                                              .map((option) => ({
+                                                id: option.value,
+                                                code: option.value,
+                                                name: option.label,
+                                              })),
                                             pageNumber,
-                                            totalPages: Math.max(1, Math.ceil(matches.length / pageSize)),
+                                            totalPages: Math.max(
+                                              1,
+                                              Math.ceil(matches.length / pageSize)
+                                            ),
                                             totalRecords: matches.length,
                                           };
                                         }}
@@ -573,7 +593,9 @@ export function ListDetailsLayout({
                                         searchable
                                         lazyLoading
                                         pageSize={50}
-                                        onChange={(selected) => onChange(field.name, String(selected ?? ''))}
+                                        onChange={(selected) =>
+                                          onChange(field.name, String(selected ?? ''))
+                                        }
                                       />
                                     </Box>
                                   ) : editable ? (
@@ -619,22 +641,27 @@ export function ListDetailsLayout({
                                       }
                                       numeric={field.type === 'number'}
                                       disabled={field.disabled}
-                                      lookup={field.type === 'select' || Boolean(field.masterRoute?.trim()) || Boolean(field.previewEntity) || Boolean(field.linkStyle) || (legalEntity && field.name === 'languageId')}
+                                      lookup={
+                                        field.type === 'select' ||
+                                        Boolean(field.masterRoute?.trim()) ||
+                                        Boolean(field.previewEntity) ||
+                                        Boolean(field.linkStyle) ||
+                                        (legalEntity && field.name === 'languageId')
+                                      }
                                       label={fieldLabel}
                                       onEdit={editField}
                                     />
                                   )}
-                                  </RecordPreview>
-                                </Box>
-                              );
-                            })}
-                          </Box>
+                                </RecordPreview>
+                              </Box>
+                            );
+                          })}
                         </Box>
-                      ))}
-                    </Box>
-                  )}
-                </AccordionDetails>
-              </Accordion>
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+              </FastTab>
             );
           })}
         </Box>
@@ -646,7 +673,7 @@ export function ListDetailsLayout({
 const editFieldSx = {
   width: '100%',
   '& .MuiInputBase-root': {
-    height: d365.controlHeight,
+    height: d365.fieldControlHeight,
     borderRadius: d365.radius,
     fontSize: d365.fontSize,
   },
@@ -666,13 +693,17 @@ const multilineFieldSx = {
 const legalEntityFieldSx = {
   width: '100%',
   '& .MuiInputBase-root': {
-    height: d365.controlHeight,
+    height: d365.fieldControlHeight,
     fontFamily: d365.fontFamily,
     fontSize: d365.fontSize,
   },
   '& .MuiInputBase-input': { px: 0.5, py: 0.25 },
-  '& .MuiInput-underline:before': { borderBottomColor: d365.darkBorder },
-  '& .MuiInput-underline:after': { borderBottomColor: d365.primary },
+  '& .MuiInput-underline:before': (theme: Theme) => ({
+    borderBottomColor: enterpriseSurfaces(theme).strongBorder,
+  }),
+  '& .MuiInput-underline:after': (theme: Theme) => ({
+    borderBottomColor: enterpriseSurfaces(theme).accent,
+  }),
 };
 const legalEntityMultilineSx = {
   ...legalEntityFieldSx,
@@ -694,8 +725,8 @@ const d365SwitchSx = {
   '& .MuiSwitch-thumb': { width: 10, height: 10 },
   '& .MuiSwitch-track': {
     borderRadius: 8,
-    border: `1px solid ${d365.darkBorder}`,
-    bgcolor: '#fff',
+    border: (theme: Theme) => `1px solid ${enterpriseSurfaces(theme).strongBorder}`,
+    bgcolor: 'background.paper',
     opacity: 1,
   },
   '& .Mui-checked + .MuiSwitch-track': { bgcolor: '#605e5c !important', opacity: '1 !important' },

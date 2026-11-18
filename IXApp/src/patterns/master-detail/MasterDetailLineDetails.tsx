@@ -68,7 +68,7 @@ export function MasterDetailLineDetails({
             {children}
           </Box>
         ) : (
-          <Typography sx={{ fontSize: d365.fontSize, color: d365.mutedText, minHeight: 100 }}>
+          <Typography sx={{ fontSize: d365.fontSize, color: 'text.secondary', minHeight: 100 }}>
             {emptyLabel}
           </Typography>
         )}

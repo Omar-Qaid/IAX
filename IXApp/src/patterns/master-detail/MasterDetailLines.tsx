@@ -70,10 +70,10 @@ export function MasterDetailLines({
           spacing={0.5}
           sx={{
             mb: 0.5,
-            minHeight: d365.controlHeight,
+            minHeight: d365.fieldControlHeight,
             overflowX: 'auto',
             whiteSpace: 'nowrap',
-            '& .MuiButton-root': { flexShrink: 0, fontSize: d365.fontSize, minWidth: 0, px: 0.75, py: 0.25, minHeight: d365.controlHeight },
+            '& .MuiButton-root': { flexShrink: 0, fontSize: d365.fontSize, minWidth: 0, px: 0.75, py: 0.25, minHeight: d365.fieldControlHeight },
           }}
         >
           {actions?.map((action) => (

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Alert } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useCompanyStore } from '@core/company/useCompanyStore';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { useAuth } from '@core/auth/useAuth';
@@ -21,7 +21,6 @@ export function CustomerOpenTransactionsPage(): React.ReactElement {
   const { hasPermission } = useAuth();
   const permitted = hasPermission(PERMISSIONS.CUSTOMER_TRANSACTION_VIEW);
   const { t, isRtl } = useAppTranslation();
-  const navigate = useNavigate();
   const query = useQuery({
     queryKey: ['customer-open-transactions', company, accountNum],
     queryFn: ({ signal }) => customerOpenTransactionsApi.load(accountNum, signal),
@@ -64,27 +63,14 @@ export function CustomerOpenTransactionsPage(): React.ReactElement {
     <SimpleListPage<Row>
       title={t('customerInquiry.openTransactions')}
       contextLabel={accountNum}
-      variant="enterprise"
       recordTableName="CustTrans"
       enterpriseConfig={{
-        utilities: {
-          personalizeLabel: t('utilities.personalize'),
-          guideLabel: t('utilities.guide'),
-          notificationsLabel: t('common.notifications'),
-          refreshLabel: t('actions.refresh'),
-          openWindowLabel: t('utilities.openWindow'),
-        },
         readOnly: true,
         contextLabel: `${t('customerInquiry.openTransactions')} | ${accountNum}`,
-        viewLabel: t('common.standardView'),
-        filterLabel: t('actions.filter'),
-        informationLabel: t('common.information'),
         searchFields: [
           { field: 'invoice', label: t('customerInquiry.invoice') },
           { field: 'voucher', label: t('customerInquiry.voucher') },
         ],
-        crud: { editLabel: '', newLabel: '', deleteLabel: '' },
-        backCommand: { label: t('actions.back'), onClick: () => navigate(-1) },
         getAuditRecordId: (row) => row.recId,
       }}
       columns={columns}

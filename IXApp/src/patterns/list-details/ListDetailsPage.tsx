@@ -54,6 +54,7 @@ import type {
   ListDetailsHeaderField,
 } from './types';
 import { d365 } from '@shared/constants/enterpriseUiTokens';
+import { enterpriseSurfaces } from '@shared/constants/enterpriseSurfaces';
 import { EditableViewField } from '@shared/components/fields/EditableViewField';
 import { LookupNavigationLabel } from '@shared/components/lookups/LookupNavigationLabel';
 
@@ -140,9 +141,13 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
       : null;
   const displayedRecord = record ?? emptyPreviewRecord;
   const displayedEditing = Boolean(record) && state.editing;
-  const requestFieldEdit = state.selected && !displayedEditing && !state.saving && !config.interactionLocked &&
+  const requestFieldEdit =
+    state.selected &&
+    !displayedEditing &&
+    !state.saving &&
+    !config.interactionLocked &&
     (config.onFieldEdit || (!config.readOnly && canEdit))
-      ? (name: string) => config.onFieldEdit ? config.onFieldEdit(name) : state.startEdit()
+      ? (name: string) => (config.onFieldEdit ? config.onFieldEdit(name) : state.startEdit())
       : undefined;
   const labels = {
     filter: config.filterLabel ?? t('actions.filter'),
@@ -277,9 +282,9 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
         inset: fullscreen ? '5px 0 0 5px' : undefined,
         zIndex: fullscreen ? 1300 : undefined,
         paddingInlineEnd: { lg: `${d365.utilityRailWidth}px` },
-        bgcolor: d365.canvas,
+        bgcolor: (theme) => enterpriseSurfaces(theme).canvas,
         fontFamily: d365.fontFamily,
-        color: d365.text,
+        color: 'text.primary',
         '& .MuiTypography-root, & .MuiButton-root, & .MuiInputBase-root, & input, & textarea': {
           fontFamily: `${d365.fontFamily} !important`,
         },
@@ -324,11 +329,20 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
           sx={{
             width: 31,
             height: 31,
-            bgcolor: listPaneVisible ? d365.primary : 'transparent',
-            color: listPaneVisible ? '#fff' : d365.primary,
+            bgcolor: (theme) =>
+              listPaneVisible ? enterpriseSurfaces(theme).accent : 'transparent',
+            color: (theme) =>
+              listPaneVisible
+                ? theme.palette.primary.contrastText
+                : enterpriseSurfaces(theme).accent,
             borderRadius: d365.radius,
             transition: 'background-color 140ms ease, color 140ms ease',
-            '&:hover': { bgcolor: listPaneVisible ? '#2559d6' : 'action.hover' },
+            '&:hover': {
+              bgcolor: (theme) =>
+                listPaneVisible
+                  ? enterpriseSurfaces(theme).accentStrong
+                  : theme.palette.action.hover,
+            },
           }}
         >
           <MenuIcon sx={{ fontSize: 17 }} />
@@ -361,9 +375,7 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
           <ActionPaneGroup>
             {standaloneCommands.map((command) => {
               const unavailable =
-                state.editing ||
-                command.disabled ||
-                (command.requiresSelection && !state.selected);
+                state.editing || command.disabled || (command.requiresSelection && !state.selected);
               return command.groups?.length ? (
                 <ActionPaneRibbonTrigger
                   key={command.id}
@@ -404,7 +416,13 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
             label={t('common.search', 'Search')}
             icon={<SearchIcon />}
             disabled={state.editing}
-            onClick={config.onSearch ?? (() => {setListPaneVisible(true); if (!state.filterVisible) state.toggleFilter();})}
+            onClick={
+              config.onSearch ??
+              (() => {
+                setListPaneVisible(true);
+                if (!state.filterVisible) state.toggleFilter();
+              })
+            }
           />
           {config.showOptionsMenu !== false && (
             <OptionsMenu
@@ -478,7 +496,11 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
                     onChange={record ? state.changeHeader : () => undefined}
                   />
                 )}
-                {state.error && <Alert severity="error" sx={{mb: 1}}>{state.error}</Alert>}
+                {state.error && (
+                  <Alert severity="error" sx={{ mb: 1 }}>
+                    {state.error}
+                  </Alert>
+                )}
                 {record && Object.keys(state.validationErrors).length > 0 && (
                   <Alert severity="error" sx={{ mb: 1 }}>
                     <Typography sx={{ fontWeight: 600, fontSize: '0.75rem' }}>
@@ -667,10 +689,12 @@ export function RecordList<T extends ListDetailRecord>({
                 px: '10px',
                 py: '10px',
                 minHeight: rowHeight,
-                borderBottom: `1px solid ${d365.darkBorder}`,
+                borderBottom: (theme) => `1px solid ${enterpriseSurfaces(theme).strongBorder}`,
                 borderInlineStart: record.id === selectedId ? 4 : 0,
-                borderInlineStartColor: d365.selectedBar,
-                '&.Mui-selected, &.Mui-selected:hover': { bgcolor: d365.selectedRow },
+                borderInlineStartColor: (theme) => enterpriseSurfaces(theme).selectedBar,
+                '&.Mui-selected, &.Mui-selected:hover': {
+                  bgcolor: (theme) => enterpriseSurfaces(theme).selectedRow,
+                },
               }}
             >
               <Typography
@@ -680,7 +704,10 @@ export function RecordList<T extends ListDetailRecord>({
                   fontSize: 15,
                   lineHeight: 1.3,
                   fontWeight: 400,
-                  color: record.id === selectedId ? '#1746aa' : d365.text,
+                  color: (theme) =>
+                    record.id === selectedId
+                      ? enterpriseSurfaces(theme).accentStrong
+                      : theme.palette.text.primary,
                 }}
               >
                 {getPrimaryText(record)}
@@ -692,7 +719,10 @@ export function RecordList<T extends ListDetailRecord>({
                     mt: '6px',
                     fontSize: 10,
                     lineHeight: 1.2,
-                    color: record.id === selectedId ? '#1746aa' : d365.text,
+                    color: (theme) =>
+                      record.id === selectedId
+                        ? enterpriseSurfaces(theme).accentStrong
+                        : theme.palette.text.primary,
                   }}
                 >
                   {getSecondaryText(record)}
@@ -720,7 +750,10 @@ export function RecordList<T extends ListDetailRecord>({
                       fontSize: 9.5,
                       lineHeight: 1,
                       textAlign: 'end',
-                      color: record.id === selectedId ? '#1746aa' : d365.text,
+                      color: (theme) =>
+                        record.id === selectedId
+                          ? enterpriseSurfaces(theme).accentStrong
+                          : theme.palette.text.primary,
                     }}
                   >
                     {Math.round(Math.max(0, Math.min(100, getProgress(record))))}%
@@ -797,8 +830,12 @@ function RecordHeader<T>({
         >
           {fields.map((field, index) => {
             const value = field.getDisplayValue?.(record) ?? field.getValue(record);
-            const editField = !editing && !field.disabled && field.type !== 'display' &&
-              (!canEditField || canEditField(field.id)) && onFieldEdit
+            const editField =
+              !editing &&
+              !field.disabled &&
+              field.type !== 'display' &&
+              (!canEditField || canEditField(field.id)) &&
+              onFieldEdit
                 ? () => onFieldEdit(field.id)
                 : undefined;
             const custom = field.render?.({
@@ -828,9 +865,12 @@ function RecordHeader<T>({
                     component="span"
                     sx={{ marginInlineEnd: 0.5, fontSize: 12, lineHeight: 1.35, fontWeight: 700 }}
                   >
-                    {(field.type === 'select' || field.masterRoute) && !editing
-                      ? <LookupNavigationLabel label={field.label} masterRoute={field.masterRoute} />
-                      : field.label}:
+                    {(field.type === 'select' || field.masterRoute) && !editing ? (
+                      <LookupNavigationLabel label={field.label} masterRoute={field.masterRoute} />
+                    ) : (
+                      field.label
+                    )}
+                    :
                   </Typography>
                 )}
                 {custom ?? (
@@ -855,7 +895,7 @@ function RecordHeader<T>({
                     size="small"
                     aria-label={`Edit ${field.label}`}
                     onClick={editField}
-                    sx={{ opacity: 0, color: d365.primary, p: 0.25 }}
+                    sx={{ opacity: 0, color: (theme) => enterpriseSurfaces(theme).accent, p: 0.25 }}
                   >
                     <EditOutlinedIcon sx={{ fontSize: 13 }} />
                   </IconButton>
@@ -910,8 +950,12 @@ function RecordHeader<T>({
             ? field.getValue(record)
             : (field.getDisplayValue?.(record) ?? field.getValue(record));
           const editable = editing && !field.disabled && field.type !== 'display';
-          const editField = !editing && !field.disabled && field.type !== 'display' &&
-            (!canEditField || canEditField(field.id)) && onFieldEdit
+          const editField =
+            !editing &&
+            !field.disabled &&
+            field.type !== 'display' &&
+            (!canEditField || canEditField(field.id)) &&
+            onFieldEdit
               ? () => onFieldEdit(field.id)
               : undefined;
           return (
@@ -919,16 +963,30 @@ function RecordHeader<T>({
               <Typography
                 noWrap
                 title={field.label}
-                sx={{ mb: '2px', fontSize: d365.labelFontSize, lineHeight: 1.1, color: d365.text }}
+                sx={{
+                  mb: '2px',
+                  fontSize: d365.labelFontSize,
+                  lineHeight: 1.1,
+                  color: 'text.primary',
+                }}
               >
-                {(field.type === 'select' || field.masterRoute) && !editing
-                  ? <LookupNavigationLabel label={field.label} masterRoute={field.masterRoute} />
-                  : field.label}
+                {(field.type === 'select' || field.masterRoute) && !editing ? (
+                  <LookupNavigationLabel label={field.label} masterRoute={field.masterRoute} />
+                ) : (
+                  field.label
+                )}
               </Typography>
               {field.type === 'boolean' && !editing ? (
-                <EditableViewField value={value ? yesLabel : noLabel} label={field.label} onEdit={editField} disabled={field.disabled} />
+                <EditableViewField
+                  value={value ? yesLabel : noLabel}
+                  label={field.label}
+                  onEdit={editField}
+                  disabled={field.disabled}
+                />
               ) : field.type === 'boolean' ? (
-                <Box sx={{ display: 'flex', alignItems: 'center', height: d365.controlHeight }}>
+                <Box
+                  sx={{ display: 'flex', alignItems: 'center', height: d365.fieldControlHeight }}
+                >
                   <Switch
                     size="small"
                     checked={Boolean(value)}
@@ -1060,7 +1118,7 @@ const headerEditFieldSx = {
   width: '100%',
   mt: '5px',
   '& .MuiInputBase-root': {
-    height: d365.controlHeight,
+    height: d365.fieldControlHeight,
     borderRadius: d365.radius,
     fontSize: d365.fontSize,
   },

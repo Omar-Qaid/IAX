@@ -89,3 +89,6 @@ Thumbs.db
 
 # Compiled seeder output captured during validation runs, not evidence.
 .validation/seed-erp-v2-bin/
+
+# Compiled contact test output.
+.validation/contact-test-bin/

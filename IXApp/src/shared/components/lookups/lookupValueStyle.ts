@@ -2,11 +2,15 @@ export const hasLookupValue = (value: unknown): boolean =>
   value !== null && value !== undefined && value !== '' &&
   (!Array.isArray(value) || value.length > 0);
 
-import { d365 } from '@shared/constants/enterpriseUiTokens';
+import type { Theme } from '@mui/material/styles';
+import { enterpriseSurfaces } from '@shared/constants/enterpriseSurfaces';
 
 export const lookupValueSx = (value: unknown) => ({
   '& .MuiInputBase-input, & .MuiSelect-select': hasLookupValue(value)
-    ? { color: d365.primary, WebkitTextFillColor: d365.primary }
+    ? (theme: Theme) => ({
+        color: enterpriseSurfaces(theme).accent,
+        WebkitTextFillColor: enterpriseSurfaces(theme).accent,
+      })
     : {},
 });
 

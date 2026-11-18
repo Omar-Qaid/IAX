@@ -1,14 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Alert,
-  Box,
-  Button,
-  Typography,
-} from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { Alert, Box, Button, Typography } from '@mui/material';
+import { FastTab } from '@shared/components/fast-tabs/FastTab';
 import { AppActionDrawer } from '@shared/components/dialogs/AppActionDrawer';
 import { DataGrid } from '@shared/components/data-grid/DataGrid';
 import type { ColumnDef } from '@shared/components/data-grid/types';
@@ -78,7 +70,13 @@ const lineColumns: ColumnDef<DocumentCopyLine>[] = [
   { field: 'unitPrice', headerName: 'Unit price', width: 110, type: 'number', align: 'right' },
   { field: 'netAmount', headerName: 'Net amount', width: 110, type: 'number', align: 'right' },
   { field: 'discount', headerName: 'Discount', width: 100, type: 'number', align: 'right' },
-  { field: 'discountPercent', headerName: 'Discount percent', width: 125, type: 'number', align: 'right' },
+  {
+    field: 'discountPercent',
+    headerName: 'Discount percent',
+    width: 125,
+    type: 'number',
+    align: 'right',
+  },
 ];
 
 export function DocumentCopyDrawer({
@@ -131,7 +129,9 @@ export function DocumentCopyDrawer({
       busy={busy}
       actions={
         <>
-          <Button onClick={onClose} disabled={busy}>Cancel</Button>
+          <Button onClick={onClose} disabled={busy}>
+            Cancel
+          </Button>
           <Button
             variant="contained"
             disabled={busy || selectedLines.length === 0}
@@ -142,60 +142,73 @@ export function DocumentCopyDrawer({
         </>
       }
     >
-      <Typography variant="body2" color="text.secondary">Standard view</Typography>
-      {error && <Alert severity="error" sx={{ mt: 1 }}>{error}</Alert>}
-      <Accordion defaultExpanded disableGutters sx={{ mt: 1 }}>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}><Typography sx={{ fontWeight: 600 }}>{sourceSectionLabel}</Typography></AccordionSummary>
-        <AccordionDetails sx={{ pt: 0 }}>
-          <Typography variant="overline" sx={{ fontWeight: 700 }}>Headers</Typography>
-          <DataGrid
-            rows={sources}
-            columns={sourceColumns}
-            getRowId={(row) => row.id}
-            loading={loadingSources}
-            selectionMode="single"
-            checkboxSelection
-            selectedIds={selectedSourceIds}
-            onRowClick={selectSource}
-            onSelectionChange={(ids) => {
-              const id = ids.length ? String(ids[ids.length - 1]) : undefined;
-              selectSource(sources.find((source) => source.id === id));
-            }}
-            height={225}
-            rowHeight={24}
-            headerHeight={30}
-            showCellBorders
-            hideToolbar
-            hideFooter
-            hideColumnMenu
-            hideSidebar
-          />
-          <Typography variant="overline" sx={{ display: 'block', mt: 1, fontWeight: 700 }}>Lines</Typography>
-          <DataGrid
-            rows={lines}
-            columns={lineColumns}
-            getRowId={(row) => row.id}
-            loading={loadingLines}
-            selectionMode="multiple"
-            checkboxSelection
-            selectedIds={selectedLines}
-            onSelectionChange={setSelectedLines}
-            height={260}
-            rowHeight={24}
-            headerHeight={30}
-            showCellBorders
-            hideToolbar
-            hideFooter
-            hideColumnMenu
-            hideSidebar
-          />
-        </AccordionDetails>
-      </Accordion>
+      <Typography variant="body2" color="text.secondary">
+        Standard view
+      </Typography>
+      {error && (
+        <Alert severity="error" sx={{ mt: 1 }}>
+          {error}
+        </Alert>
+      )}
+      <FastTab
+        title={sourceSectionLabel}
+        appearance="enterprise"
+        sx={{ mt: 1 }}
+        detailsSx={{ pt: 0 }}
+      >
+        <Typography variant="overline" sx={{ fontWeight: 700 }}>
+          Headers
+        </Typography>
+        <DataGrid
+          rows={sources}
+          columns={sourceColumns}
+          getRowId={(row) => row.id}
+          loading={loadingSources}
+          selectionMode="single"
+          checkboxSelection
+          selectedIds={selectedSourceIds}
+          onRowClick={selectSource}
+          onSelectionChange={(ids) => {
+            const id = ids.length ? String(ids[ids.length - 1]) : undefined;
+            selectSource(sources.find((source) => source.id === id));
+          }}
+          height={225}
+          rowHeight={24}
+          headerHeight={30}
+          showCellBorders
+          hideToolbar
+          hideFooter
+          hideColumnMenu
+          hideSidebar
+        />
+        <Typography variant="overline" sx={{ display: 'block', mt: 1, fontWeight: 700 }}>
+          Lines
+        </Typography>
+        <DataGrid
+          rows={lines}
+          columns={lineColumns}
+          getRowId={(row) => row.id}
+          loading={loadingLines}
+          selectionMode="multiple"
+          checkboxSelection
+          selectedIds={selectedLines}
+          onSelectionChange={setSelectedLines}
+          height={260}
+          rowHeight={24}
+          headerHeight={30}
+          showCellBorders
+          hideToolbar
+          hideFooter
+          hideColumnMenu
+          hideSidebar
+        />
+      </FastTab>
       {additionalSections.map((label) => (
-        <Accordion key={label} disableGutters>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}><Typography sx={{ fontWeight: 600 }}>{label}</Typography></AccordionSummary>
-          <AccordionDetails><Box color="text.secondary">This source is not configured for the current document type.</Box></AccordionDetails>
-        </Accordion>
+        <FastTab key={label} title={label} appearance="enterprise" defaultExpanded={false}>
+          <Box color="text.secondary">
+            This source is not configured for the current document type.
+          </Box>
+        </FastTab>
       ))}
     </AppActionDrawer>
   );
