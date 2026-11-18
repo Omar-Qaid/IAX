@@ -37,14 +37,40 @@ for (const language of ['en', 'ar'] as const) {
       await expect(section).toBeVisible({ timeout: 60_000 });
       const header = section.locator('.MuiAccordionSummary-root').first();
       await expect(page.locator('html')).toHaveAttribute('dir', language === 'ar' ? 'rtl' : 'ltr');
-      await expect(header).toHaveCSS(
-        'background-color',
-        mode === 'light' ? 'rgb(255, 255, 255)' : 'rgb(37, 36, 35)'
+      // The section surfaces come from the theme, so these assert the relationship the
+      // theme defines rather than literal colors: a literal would re-encode the default
+      // palette here and go red for any other color preset even when the theme is right.
+      const surfaces = await page.evaluate(
+        ([headerEl, sectionEl]) => {
+          const read = (el: Element, property: string) =>
+            window.getComputedStyle(el).getPropertyValue(property);
+          return {
+            headerBackground: read(headerEl!, 'background-color'),
+            sectionBackground: read(sectionEl!, 'background-color'),
+            bodyColor: read(document.body, 'color'),
+          };
+        },
+        [await header.elementHandle(), await section.elementHandle()]
       );
+
+      // The page-section override paints the summary from the same paper surface as the
+      // section it belongs to.
+      expect(surfaces.headerBackground).toBe(surfaces.sectionBackground);
+
+      // The surface still has to follow the active mode.
+      const channels = surfaces.headerBackground.match(/\d+(\.\d+)?/g) ?? [];
+      const luminance =
+        (0.2126 * Number(channels[0]) +
+          0.7152 * Number(channels[1]) +
+          0.0722 * Number(channels[2])) /
+        255;
+      if (mode === 'light') expect(luminance).toBeGreaterThan(0.5);
+      else expect(luminance).toBeLessThan(0.5);
+
       await expect(header).toHaveCSS('min-height', '38px');
       await expect(
         section.getByText(language === 'ar' ? 'الحساب' : 'Account', { exact: true }).first()
-      ).toHaveCSS('color', mode === 'light' ? 'rgb(32, 31, 30)' : 'rgb(243, 242, 241)');
+      ).toHaveCSS('color', surfaces.bodyColor);
       await expect(header).toHaveAttribute('aria-expanded', 'true');
       await header.click();
       await expect(header).toHaveAttribute('aria-expanded', 'false');
