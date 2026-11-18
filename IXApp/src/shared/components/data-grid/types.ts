@@ -161,6 +161,19 @@ export interface DataGridProps<T> {
   hideAddRowButton?: boolean;
   onEditingChange?: (isEditing: boolean) => void;
   hideInlineEditActions?: boolean;
+  /**
+   * Highlight of the row being edited: 'outline' (default, tinted row with a
+   * border) or 'none' (cell-level editing look: only the edited cells show editors).
+   */
+  editRowHighlight?: 'outline' | 'none';
+  /**
+   * D365 "edit from view": editable cells show a pencil on hover while no row is
+   * being edited. Grids with `masterForm` get it by default (the pencil edits that
+   * row and focuses the cell). Pages that own edit mode pass this: the pencil calls
+   * it (the page switches to edit mode) and, once `masterForm` is on, the grid edits
+   * the row and focuses the clicked cell.
+   */
+  onCellEditRequest?: (row: T, field: string) => void;
   hideFilterRow?: boolean;
   hideColumnMenu?: boolean;
   hideToolbar?: boolean;

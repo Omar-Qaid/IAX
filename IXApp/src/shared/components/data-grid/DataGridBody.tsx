@@ -1,6 +1,7 @@
 import { uiDensity } from '@shared/constants/uiDensity';
 import React, { useRef, useState, useMemo, useCallback, memo } from 'react';
 import { Box, Typography } from '@mui/material';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { NEW_ROW_ID } from './hooks';
 import { defaultRangeExtractor, useVirtualizer } from '@tanstack/react-virtual';
 import type { ColumnDef } from './types';
@@ -22,6 +23,7 @@ import { DataGridLoadingState } from './DataGridLoadingState';
 import { APP_FONT_FAMILY } from '@shared/constants/fontFamilies';
 import { hasLookupValue } from '@shared/components/lookups/lookupValueStyle';
 import { RecordPreview } from '@shared/components/record-preview';
+import { CellEditHost } from './body/CellEditHost';
 
 interface GridBodyProps<T> {
   rows: T[];
@@ -55,6 +57,8 @@ interface GridBodyProps<T> {
   onSaveEdit?: () => void;
   onCancelEdit?: () => void;
   hideInlineEditActions?: boolean;
+  editRowHighlight?: 'outline' | 'none';
+  onCellEditRequest?: (row: T, field: string) => void;
 }
 
 export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>(
@@ -89,9 +93,12 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>(
     onSaveEdit,
     onCancelEdit,
     hideInlineEditActions = false,
+    editRowHighlight = 'outline',
+    onCellEditRequest,
   }: GridBodyProps<T>,
   ref: React.Ref<GridBodyHandle>
 ) {
+  const { t } = useAppTranslation();
   const [contextMenu, setContextMenu] = useState<{
     mouseX: number;
     mouseY: number;
@@ -433,14 +440,23 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>(
   // Read cells of master-data columns get the D365 hover preview.
   const renderCellWithPreview = useCallback(
     (row: T, col: ColumnDef<T>, rowIndex: number) => {
-      const content = renderCellImpl(row, col, rowIndex);
-      if (!col.preview) return content;
+      const rendered = renderCellImpl(row, col, rowIndex);
       const editing =
         masterForm &&
         col.editable &&
         editingRowId != null &&
         String(getRowId(row)) === String(editingRowId);
-      if (editing) return content;
+      if (editing) return rendered;
+      // D365: an editable cell in view shows a pencil on hover that starts editing it.
+      const content =
+        onCellEditRequest && col.editable && editingRowId == null ? (
+          <CellEditHost label={`${t('actions.edit')} ${t(col.headerName)}`} onEdit={() => onCellEditRequest(row, String(col.field))}>
+            {rendered}
+          </CellEditHost>
+        ) : (
+          rendered
+        );
+      if (!col.preview) return content;
       const key = col.preview.getKey
         ? col.preview.getKey(row)
         : getNestedValue(row, col.field as string);
@@ -450,7 +466,7 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>(
         </RecordPreview>
       );
     },
-    [renderCellImpl, masterForm, editingRowId, getRowId]
+    [renderCellImpl, masterForm, editingRowId, getRowId, onCellEditRequest, t]
   );
 
   // `editValues` changes on every keystroke, so a `renderCell` that carried it in
@@ -527,6 +543,7 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>(
               onSave={onSaveEdit}
               onCancel={onCancelEdit}
               hideInlineEditActions={hideInlineEditActions}
+              editRowHighlight={editRowHighlight}
             />
           );
         })}

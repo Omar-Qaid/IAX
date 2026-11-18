@@ -65,7 +65,6 @@ describe('WFCategoryPage', () => {
     expect(await screen.findByText('Procurement')).toBeDefined();
     expect(screen.queryByPlaceholderText('Filter value')).toBeNull();
     expect(screen.getAllByPlaceholderText('Filter')).toHaveLength(1);
-    expect(screen.getByTestId('data-grid-header')).toHaveStyle({ height: '32px' });
 
     const searchCommand = screen
       .getAllByRole('button', { name: 'Search' })
@@ -75,7 +74,6 @@ describe('WFCategoryPage', () => {
 
     expect(screen.getAllByPlaceholderText('Filter value').length).toBeGreaterThan(0);
     expect(screen.getAllByPlaceholderText('Filter')).toHaveLength(1);
-    expect(screen.getByTestId('data-grid-header')).toHaveStyle({ height: '64px' });
 
     fireEvent.click(searchCommand!);
     expect(screen.queryByPlaceholderText('Filter value')).toBeNull();

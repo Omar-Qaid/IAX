@@ -1,0 +1,173 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="07b358e0-67b9-4426-898f-45c8f41f6296" name="Omar.Qaid@IKK-IT-JD-L-OMQ 2026-11-18 10:33:01" runUser="IKKGROUP\Omar.Qaid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-18T10:33:01.6633348+03:00" queuing="2026-11-18T10:33:01.6633354+03:00" start="2026-11-18T10:32:27.4272564+03:00" finish="2026-11-18T10:33:53.0901033+03:00" />
+  <TestSettings name="default" id="f8bbf8aa-46bf-4fba-8855-dce22c97ba1e">
+    <Deployment runDeploymentRoot="Omar.Qaid_IKK-IT-JD-L-OMQ_2026-11-18_10_33_01" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="3a062cfb-1b6f-44f6-89e2-991e83fdbfff" testId="22ec0159-dc42-2e6f-3c13-f5c6e03f9a7f" testName="IXApi.Tests.TaxTransGeneralJournalAccountEntryTests.Migration_only_creates_the_association_table_and_its_indexes" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0786921" startTime="2026-11-18T10:33:01.5998510+03:00" endTime="2026-11-18T10:33:01.6000725+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3a062cfb-1b6f-44f6-89e2-991e83fdbfff" />
+    <UnitTestResult executionId="1f74a92e-51ea-4703-81bb-e716f7f15b2c" testId="f2c4c883-b0ba-b1f9-3b0b-fb83f65eaae7" testName="IXApi.Tests.FoundationSeedTests.Foundation_manifest_rejects_coverage_drift" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0020967" startTime="2026-11-18T10:33:16.8165021+03:00" endTime="2026-11-18T10:33:16.8167628+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1f74a92e-51ea-4703-81bb-e716f7f15b2c">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : Foundation table manifest differs from module coverage.</Message>
+          <StackTrace>   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Foundation.Data.FoundationExampleCatalog.Validate() in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Foundation\Data\FoundationExampleCatalog.cs:line 17&#xD;
+   at IXApi.Tests.FoundationSeedTests.Foundation_manifest_rejects_coverage_drift() in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\FoundationSeedTests.cs:line 180&#xD;
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="0491470a-be43-4ee6-a182-7819d94160ad" testId="3394b523-b871-dcf4-d325-3601be80f722" testName="IXApi.Tests.SeedPostingModelTests.Every_mapped_table_is_in_the_seed_coverage_review" computerName="IKK-IT-JD-L-OMQ" duration="00:00:22.2698536" startTime="2026-11-18T10:32:39.3850315+03:00" endTime="2026-11-18T10:33:01.4998628+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0491470a-be43-4ee6-a182-7819d94160ad" />
+    <UnitTestResult executionId="c223a477-99e3-4b8b-9b22-1ba92e361564" testId="651d4613-a786-66ec-197a-dc6ccc0d26a0" testName="IXApi.Tests.FoundationSeedTests.Registration_is_idempotent_and_dependencies_resolve" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0034706" startTime="2026-11-18T10:33:52.9135882+03:00" endTime="2026-11-18T10:33:52.9143731+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c223a477-99e3-4b8b-9b22-1ba92e361564" />
+    <UnitTestResult executionId="85c3b442-4041-40c4-97ee-3ec39f1976a5" testId="a899c981-274a-ce67-22e9-6d25c5fc504c" testName="IXApi.Tests.FoundationSeedTests.Tax_and_charge_examples_use_business_services_and_are_repeatable" computerName="IKK-IT-JD-L-OMQ" duration="00:00:01.0764027" startTime="2026-11-18T10:33:51.8360903+03:00" endTime="2026-11-18T10:33:52.9107418+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="85c3b442-4041-40c4-97ee-3ec39f1976a5">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : Foundation table manifest differs from module coverage.</Message>
+          <StackTrace>   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Foundation.Data.FoundationExampleCatalog.Validate() in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Foundation\Data\FoundationExampleCatalog.cs:line 17&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Foundation.Validation.FoundationCycleValidator.ValidateDefinition() in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Foundation\Validation\FoundationCycleValidator.cs:line 13&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Foundation.FoundationCycleSeeder.PrepareAsync(FoundationExampleOptions options, CancellationToken ct) in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Foundation\FoundationCycleSeeder.cs:line 14&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Foundation.FoundationTransactionExamples.RunAsync(FoundationExampleOptions options, CancellationToken ct) in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Foundation\FoundationTransactionExamples.cs:line 15&#xD;
+   at IXApi.Tests.FoundationSeedTests.Tax_and_charge_examples_use_business_services_and_are_repeatable() in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\FoundationSeedTests.cs:line 139&#xD;
+   at IXApi.Tests.FoundationSeedTests.Tax_and_charge_examples_use_business_services_and_are_repeatable() in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\FoundationSeedTests.cs:line 167&#xD;
+   at IXApi.Tests.FoundationSeedTests.Tax_and_charge_examples_use_business_services_and_are_repeatable() in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\FoundationSeedTests.cs:line 167&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="827927a3-377b-479d-b34b-fb96f0a66c81" testId="95b4015b-45a4-3192-cef0-93c62319b282" testName="IXApi.Tests.TaxTransGeneralJournalAccountEntryTests.SQLite_roundtrip_preserves_zero_references_bigint_ids_and_six_decimal_places" computerName="IKK-IT-JD-L-OMQ" duration="00:00:01.6987355" startTime="2026-11-18T10:33:01.6007439+03:00" endTime="2026-11-18T10:33:03.2796858+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="827927a3-377b-479d-b34b-fb96f0a66c81" />
+    <UnitTestResult executionId="62b3a2b5-43d3-4668-b460-4978cfbb05b4" testId="d44c92db-35d9-64ee-acb1-9632c39b420a" testName="IXApi.Tests.FoundationSeedTests.All_master_tables_are_populated_and_reruns_preserve_keys_and_conflicts_roll_back" computerName="IKK-IT-JD-L-OMQ" duration="00:00:03.8509935" startTime="2026-11-18T10:33:47.9838858+03:00" endTime="2026-11-18T10:33:51.8334923+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="62b3a2b5-43d3-4668-b460-4978cfbb05b4" />
+    <UnitTestResult executionId="1e1ccf8a-bf99-497c-890f-e7a9e5ee71fe" testId="44e7dde6-84cd-8cf1-3c2d-c67937a3a267" testName="IXApi.Tests.TaxTransGeneralJournalAccountEntryTests.SqlServer_model_uses_the_supplied_columns_and_generated_system_row_version" computerName="IKK-IT-JD-L-OMQ" duration="00:00:22.2700146" startTime="2026-11-18T10:32:39.3784253+03:00" endTime="2026-11-18T10:33:01.5980760+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1e1ccf8a-bf99-497c-890f-e7a9e5ee71fe" />
+    <UnitTestResult executionId="210bd251-5a36-4a07-a881-3c761d8c00be" testId="bc868e73-7387-5363-8068-5cf88325aa3a" testName="IXApi.Tests.SeedPostingModelTests.Posting_links_and_multiple_request_variables_have_persistable_keys" computerName="IKK-IT-JD-L-OMQ" duration="00:00:05.8598687" startTime="2026-11-18T10:33:01.5965984+03:00" endTime="2026-11-18T10:33:07.3589788+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="210bd251-5a36-4a07-a881-3c761d8c00be" />
+    <UnitTestResult executionId="42949fc9-3bb4-4f0e-84b1-8c39d7c788a0" testId="3b18f8be-d61a-e68c-0db1-4cc1fa123473" testName="IXApi.Tests.SeedPostingModelTests.AP_transaction_storage_has_documented_nullability_precision_and_restrictive_relationships" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0165684" startTime="2026-11-18T10:33:07.3602635+03:00" endTime="2026-11-18T10:33:07.3758263+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="42949fc9-3bb4-4f0e-84b1-8c39d7c788a0" />
+    <UnitTestResult executionId="b3325541-12c1-47d5-96c5-db4995a7e055" testId="f59352b4-889c-1b23-ce11-67dbfaad33cd" testName="IXApi.Tests.FoundationSeedTests.Foundation_preparation_reports_persisted_references_and_preserves_them_on_rerun" computerName="IKK-IT-JD-L-OMQ" duration="00:00:09.3954488" startTime="2026-11-18T10:33:07.3790100+03:00" endTime="2026-11-18T10:33:16.8034566+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b3325541-12c1-47d5-96c5-db4995a7e055">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : Foundation table manifest differs from module coverage.</Message>
+          <StackTrace>   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Foundation.Data.FoundationExampleCatalog.Validate() in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Foundation\Data\FoundationExampleCatalog.cs:line 17&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Foundation.Validation.FoundationCycleValidator.ValidateDefinition() in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Foundation\Validation\FoundationCycleValidator.cs:line 13&#xD;
+   at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Foundation.FoundationCycleSeeder.PrepareAsync(FoundationExampleOptions options, CancellationToken ct) in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Foundation\FoundationCycleSeeder.cs:line 14&#xD;
+   at IXApi.Tests.FoundationSeedTests.Foundation_preparation_reports_persisted_references_and_preserves_them_on_rerun() in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\FoundationSeedTests.cs:line 197&#xD;
+   at IXApi.Tests.FoundationSeedTests.Foundation_preparation_reports_persisted_references_and_preserves_them_on_rerun() in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\FoundationSeedTests.cs:line 210&#xD;
+   at IXApi.Tests.FoundationSeedTests.Foundation_preparation_reports_persisted_references_and_preserves_them_on_rerun() in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\FoundationSeedTests.cs:line 210&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="1e3981ee-b20a-42e1-8575-821bf78c054f" testId="3a8584a1-a545-7673-82b0-cbe44b83b2d6" testName="IXApi.Tests.FoundationSeedTests.Late_cross_company_reference_is_rejected_and_rolled_back" computerName="IKK-IT-JD-L-OMQ" duration="00:00:31.1853716" startTime="2026-11-18T10:33:16.8185155+03:00" endTime="2026-11-18T10:33:47.9829863+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1e3981ee-b20a-42e1-8575-821bf78c054f" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IXApi.Tests.TaxTransGeneralJournalAccountEntryTests.SqlServer_model_uses_the_supplied_columns_and_generated_system_row_version" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="44e7dde6-84cd-8cf1-3c2d-c67937a3a267">
+      <Execution id="1e1ccf8a-bf99-497c-890f-e7a9e5ee71fe" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxTransGeneralJournalAccountEntryTests" name="SqlServer_model_uses_the_supplied_columns_and_generated_system_row_version" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxTransGeneralJournalAccountEntryTests.Migration_only_creates_the_association_table_and_its_indexes" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="22ec0159-dc42-2e6f-3c13-f5c6e03f9a7f">
+      <Execution id="3a062cfb-1b6f-44f6-89e2-991e83fdbfff" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxTransGeneralJournalAccountEntryTests" name="Migration_only_creates_the_association_table_and_its_indexes" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.FoundationSeedTests.Registration_is_idempotent_and_dependencies_resolve" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="651d4613-a786-66ec-197a-dc6ccc0d26a0">
+      <Execution id="c223a477-99e3-4b8b-9b22-1ba92e361564" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.FoundationSeedTests" name="Registration_is_idempotent_and_dependencies_resolve" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.SeedPostingModelTests.Posting_links_and_multiple_request_variables_have_persistable_keys" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="bc868e73-7387-5363-8068-5cf88325aa3a">
+      <Execution id="210bd251-5a36-4a07-a881-3c761d8c00be" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.SeedPostingModelTests" name="Posting_links_and_multiple_request_variables_have_persistable_keys" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.SeedPostingModelTests.AP_transaction_storage_has_documented_nullability_precision_and_restrictive_relationships" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="3b18f8be-d61a-e68c-0db1-4cc1fa123473">
+      <Execution id="42949fc9-3bb4-4f0e-84b1-8c39d7c788a0" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.SeedPostingModelTests" name="AP_transaction_storage_has_documented_nullability_precision_and_restrictive_relationships" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.FoundationSeedTests.Tax_and_charge_examples_use_business_services_and_are_repeatable" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="a899c981-274a-ce67-22e9-6d25c5fc504c">
+      <Execution id="85c3b442-4041-40c4-97ee-3ec39f1976a5" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.FoundationSeedTests" name="Tax_and_charge_examples_use_business_services_and_are_repeatable" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.SeedPostingModelTests.Every_mapped_table_is_in_the_seed_coverage_review" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="3394b523-b871-dcf4-d325-3601be80f722">
+      <Execution id="0491470a-be43-4ee6-a182-7819d94160ad" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.SeedPostingModelTests" name="Every_mapped_table_is_in_the_seed_coverage_review" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.FoundationSeedTests.Late_cross_company_reference_is_rejected_and_rolled_back" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="3a8584a1-a545-7673-82b0-cbe44b83b2d6">
+      <Execution id="1e3981ee-b20a-42e1-8575-821bf78c054f" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.FoundationSeedTests" name="Late_cross_company_reference_is_rejected_and_rolled_back" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxTransGeneralJournalAccountEntryTests.SQLite_roundtrip_preserves_zero_references_bigint_ids_and_six_decimal_places" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="95b4015b-45a4-3192-cef0-93c62319b282">
+      <Execution id="827927a3-377b-479d-b34b-fb96f0a66c81" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxTransGeneralJournalAccountEntryTests" name="SQLite_roundtrip_preserves_zero_references_bigint_ids_and_six_decimal_places" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.FoundationSeedTests.Foundation_manifest_rejects_coverage_drift" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="f2c4c883-b0ba-b1f9-3b0b-fb83f65eaae7">
+      <Execution id="1f74a92e-51ea-4703-81bb-e716f7f15b2c" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.FoundationSeedTests" name="Foundation_manifest_rejects_coverage_drift" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.FoundationSeedTests.All_master_tables_are_populated_and_reruns_preserve_keys_and_conflicts_roll_back" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="d44c92db-35d9-64ee-acb1-9632c39b420a">
+      <Execution id="62b3a2b5-43d3-4668-b460-4978cfbb05b4" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.FoundationSeedTests" name="All_master_tables_are_populated_and_reruns_preserve_keys_and_conflicts_roll_back" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.FoundationSeedTests.Foundation_preparation_reports_persisted_references_and_preserves_them_on_rerun" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="f59352b4-889c-1b23-ce11-67dbfaad33cd">
+      <Execution id="b3325541-12c1-47d5-96c5-db4995a7e055" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.FoundationSeedTests" name="Foundation_preparation_reports_persisted_references_and_preserves_them_on_rerun" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="22ec0159-dc42-2e6f-3c13-f5c6e03f9a7f" executionId="3a062cfb-1b6f-44f6-89e2-991e83fdbfff" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f2c4c883-b0ba-b1f9-3b0b-fb83f65eaae7" executionId="1f74a92e-51ea-4703-81bb-e716f7f15b2c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3394b523-b871-dcf4-d325-3601be80f722" executionId="0491470a-be43-4ee6-a182-7819d94160ad" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="651d4613-a786-66ec-197a-dc6ccc0d26a0" executionId="c223a477-99e3-4b8b-9b22-1ba92e361564" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a899c981-274a-ce67-22e9-6d25c5fc504c" executionId="85c3b442-4041-40c4-97ee-3ec39f1976a5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="95b4015b-45a4-3192-cef0-93c62319b282" executionId="827927a3-377b-479d-b34b-fb96f0a66c81" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d44c92db-35d9-64ee-acb1-9632c39b420a" executionId="62b3a2b5-43d3-4668-b460-4978cfbb05b4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="44e7dde6-84cd-8cf1-3c2d-c67937a3a267" executionId="1e1ccf8a-bf99-497c-890f-e7a9e5ee71fe" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bc868e73-7387-5363-8068-5cf88325aa3a" executionId="210bd251-5a36-4a07-a881-3c761d8c00be" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3b18f8be-d61a-e68c-0db1-4cc1fa123473" executionId="42949fc9-3bb4-4f0e-84b1-8c39d7c788a0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f59352b4-889c-1b23-ce11-67dbfaad33cd" executionId="b3325541-12c1-47d5-96c5-db4995a7e055" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3a8584a1-a545-7673-82b0-cbe44b83b2d6" executionId="1e3981ee-b20a-42e1-8575-821bf78c054f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="12" executed="12" passed="9" failed="3" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.23)&#xD;
+[xUnit.net 00:00:00.94]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:02.50]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:02.64]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:00:40.32]       System.InvalidOperationException : Foundation table manifest differs from module coverage.&#xD;
+[xUnit.net 00:00:40.32]       Stack Trace:&#xD;
+[xUnit.net 00:00:40.32]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Foundation\Data\FoundationExampleCatalog.cs(17,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Foundation.Data.FoundationExampleCatalog.Validate()&#xD;
+[xUnit.net 00:00:40.32]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Foundation\Validation\FoundationCycleValidator.cs(13,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Foundation.Validation.FoundationCycleValidator.ValidateDefinition()&#xD;
+[xUnit.net 00:00:40.32]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Foundation\FoundationCycleSeeder.cs(14,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Foundation.FoundationCycleSeeder.PrepareAsync(FoundationExampleOptions options, CancellationToken ct)&#xD;
+[xUnit.net 00:00:40.32]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\FoundationSeedTests.cs(197,0): at IXApi.Tests.FoundationSeedTests.Foundation_preparation_reports_persisted_references_and_preserves_them_on_rerun()&#xD;
+[xUnit.net 00:00:40.32]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\FoundationSeedTests.cs(210,0): at IXApi.Tests.FoundationSeedTests.Foundation_preparation_reports_persisted_references_and_preserves_them_on_rerun()&#xD;
+[xUnit.net 00:00:40.32]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\FoundationSeedTests.cs(210,0): at IXApi.Tests.FoundationSeedTests.Foundation_preparation_reports_persisted_references_and_preserves_them_on_rerun()&#xD;
+[xUnit.net 00:00:40.32]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:40.33]       System.InvalidOperationException : Foundation table manifest differs from module coverage.&#xD;
+[xUnit.net 00:00:40.33]       Stack Trace:&#xD;
+[xUnit.net 00:00:40.33]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Foundation\Data\FoundationExampleCatalog.cs(17,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Foundation.Data.FoundationExampleCatalog.Validate()&#xD;
+[xUnit.net 00:00:40.33]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\FoundationSeedTests.cs(180,0): at IXApi.Tests.FoundationSeedTests.Foundation_manifest_rejects_coverage_drift()&#xD;
+[xUnit.net 00:00:40.33]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)&#xD;
+[xUnit.net 00:00:40.33]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)&#xD;
+[xUnit.net 00:01:16.43]       System.InvalidOperationException : Foundation table manifest differs from module coverage.&#xD;
+[xUnit.net 00:01:16.43]       Stack Trace:&#xD;
+[xUnit.net 00:01:16.43]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Foundation\Data\FoundationExampleCatalog.cs(17,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Foundation.Data.FoundationExampleCatalog.Validate()&#xD;
+[xUnit.net 00:01:16.43]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Foundation\Validation\FoundationCycleValidator.cs(13,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Foundation.Validation.FoundationCycleValidator.ValidateDefinition()&#xD;
+[xUnit.net 00:01:16.43]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Foundation\FoundationCycleSeeder.cs(14,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Foundation.FoundationCycleSeeder.PrepareAsync(FoundationExampleOptions options, CancellationToken ct)&#xD;
+[xUnit.net 00:01:16.43]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\src\Infrastructure\Persistence\SeedingERPV2\CycleErpExamples\Foundation\FoundationTransactionExamples.cs(15,0): at IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Foundation.FoundationTransactionExamples.RunAsync(FoundationExampleOptions options, CancellationToken ct)&#xD;
+[xUnit.net 00:01:16.43]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\FoundationSeedTests.cs(139,0): at IXApi.Tests.FoundationSeedTests.Tax_and_charge_examples_use_business_services_and_are_repeatable()&#xD;
+[xUnit.net 00:01:16.43]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\FoundationSeedTests.cs(167,0): at IXApi.Tests.FoundationSeedTests.Tax_and_charge_examples_use_business_services_and_are_repeatable()&#xD;
+[xUnit.net 00:01:16.43]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\FoundationSeedTests.cs(167,0): at IXApi.Tests.FoundationSeedTests.Tax_and_charge_examples_use_business_services_and_are_repeatable()&#xD;
+[xUnit.net 00:01:16.43]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:01:16.44]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="IKK-IT-JD-L-OMQ" outcome="Error" timestamp="2026-11-18T10:33:16.8078959+03:00">
+        <Text>[xUnit.net 00:00:40.32]     IXApi.Tests.FoundationSeedTests.Foundation_preparation_reports_persisted_references_and_preserves_them_on_rerun [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IKK-IT-JD-L-OMQ" outcome="Error" timestamp="2026-11-18T10:33:16.8183909+03:00">
+        <Text>[xUnit.net 00:00:40.33]     IXApi.Tests.FoundationSeedTests.Foundation_manifest_rejects_coverage_drift [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IKK-IT-JD-L-OMQ" outcome="Error" timestamp="2026-11-18T10:33:52.9113117+03:00">
+        <Text>[xUnit.net 00:01:16.43]     IXApi.Tests.FoundationSeedTests.Tax_and_charge_examples_use_business_services_and_are_repeatable [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

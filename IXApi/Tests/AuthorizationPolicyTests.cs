@@ -138,7 +138,7 @@ public sealed class AuthorizationPolicyTests
         AssertPermission(typeof(IAX.IXApi.Modules.Finance.AccountsReceivable.Customer.CustomerController), null, "AccountsReceivable", "Customers", null);
         AssertPermission(typeof(IAX.IXApi.Modules.Finance.AccountsPayable.VendorController), null, "AccountsPayable", "Vendors", null);
         AssertPermission(typeof(IAX.IXApi.Modules.Finance.Foundation.Currency.CurrencyController), null, "GeneralLedger", "Currencies", null);
-        AssertPermission(typeof(IAX.IXApi.Modules.Finance.Foundation.Tax.TaxTableController), null, "Tax", "TaxCodes", null);
+        AssertPermission(typeof(IAX.IXApi.Modules.Finance.Tax.TaxTableController), null, "Tax", "TaxCodes", null);
         AssertPermission(typeof(IAX.IXApi.Modules.Finance.GeneralLedger.FiscalCalendar.FiscalCalendarController), null, "GeneralLedger", "FiscalCalendars", null);
     }
 

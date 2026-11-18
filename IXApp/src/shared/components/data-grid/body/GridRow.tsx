@@ -44,6 +44,7 @@ interface GridRowProps<T> {
   onSave?: () => void;
   onCancel?: () => void;
   hideInlineEditActions?: boolean;
+  editRowHighlight?: 'outline' | 'none';
 }
 
 export const GridRow = memo(function GridRowInner<T>({
@@ -73,6 +74,7 @@ export const GridRow = memo(function GridRowInner<T>({
   onSave,
   onCancel,
   hideInlineEditActions = false,
+  editRowHighlight = 'outline',
 }: GridRowProps<T>) {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -91,7 +93,8 @@ export const GridRow = memo(function GridRowInner<T>({
       ? '#f3f6fa'
       : alpha(theme.palette.action.hover, 0.1);
 
-  const editingBg = isEditing
+  const highlightEditing = isEditing && editRowHighlight === 'outline';
+  const editingBg = highlightEditing
     ? alpha(theme.palette.warning.main, theme.palette.mode === 'light' ? 0.06 : 0.12)
     : undefined;
 
@@ -134,9 +137,9 @@ export const GridRow = memo(function GridRowInner<T>({
         transition: theme.transitions.create(['background-color', 'box-shadow'], {
           duration: theme.transitions.duration.shortest,
         }),
-        outline: isEditing ? `2px solid ${theme.palette.warning.main}` : undefined,
-        outlineOffset: isEditing ? '-2px' : undefined,
-        '&:hover': { bgcolor: isEditing ? editingBg : hoverBg },
+        outline: highlightEditing ? `2px solid ${theme.palette.warning.main}` : undefined,
+        outlineOffset: highlightEditing ? '-2px' : undefined,
+        '&:hover': { bgcolor: highlightEditing ? editingBg : hoverBg },
       }}
     >
       {selectionMode === 'multiple' && (

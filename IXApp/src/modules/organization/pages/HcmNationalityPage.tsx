@@ -5,7 +5,6 @@ import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { PERMISSIONS } from '@core/permissions/permissions';
 import { queryClient } from '@core/api/queryClient';
 import { useNotifications } from '@shared/hooks/useNotifications';
-import { uiDensity } from '@shared/constants/uiDensity';
 import { hcmNationalityApi, type HcmReferenceRecord } from '../api/hcmReferenceApi';
 import { useNavigate } from 'react-router-dom';
 
@@ -93,8 +92,6 @@ export function HcmNationalityPage(): React.ReactElement {
         storageKey: 'organization.hcm-nationalities.reference-view',
         masterForm: true,
         hideSidebar: false,
-        rowHeight: uiDensity.gridRowHeight,
-        headerHeight: uiDensity.gridRowHeight,
         onNewRow: () => ({
           id: `new-${crypto.randomUUID()}`,
           recId: 0,

@@ -72,6 +72,8 @@ function DataGridInternal<T>(
     hideAddRowButton = false,
     onEditingChange,
     hideInlineEditActions = false,
+    editRowHighlight = 'outline',
+    onCellEditRequest,
     onRefresh,
     onValidate,
     onExecute,
@@ -584,6 +586,35 @@ function DataGridInternal<T>(
       }
     },
   }));
+
+  // -- Pencil on a view cell: edit mode, then edit that row and focus the cell --
+  const [pendingCellEdit, setPendingCellEdit] = useState<{ id: string | number; field: string } | null>(null);
+  const requestCellEdit = useCallback(
+    (row: T, field: string) => {
+      setPendingCellEdit({ id: getRowId(row), field });
+      onCellEditRequest?.(row, field);
+    },
+    [getRowId, onCellEditRequest]
+  );
+  useEffect(() => {
+    const pending = pendingCellEdit;
+    if (!pending || !masterForm || editingRowId != null) return;
+    const row = processedRows.find((candidate) => String(getRowId(candidate)) === String(pending.id));
+    setPendingCellEdit(null);
+    if (!row) return;
+    startEdit(pending.id, row);
+    const selector = `[data-row-id="${CSS.escape(String(pending.id))}"] [data-field="${CSS.escape(pending.field)}"]`;
+    // Editors mount on the next frames; focus the clicked cell's control.
+    let frames = 0;
+    const focus = () => {
+      const control = gridRootRef.current
+        ?.querySelector(selector)
+        ?.querySelector<HTMLElement>('input, textarea, [role="combobox"], button');
+      if (control) control.focus();
+      else if (frames++ < 10) requestAnimationFrame(focus);
+    };
+    requestAnimationFrame(focus);
+  }, [pendingCellEdit, masterForm, editingRowId, processedRows, getRowId, startEdit]);
 
   // -- D365 line navigation in edit mode -------------------------------------
   const processedRowsRef = useRef(processedRows);
@@ -1206,6 +1237,9 @@ function DataGridInternal<T>(
                 onSaveEdit={() => void handleSaveEdit()}
                 onCancelEdit={() => handleCancelEdit()}
                 hideInlineEditActions={hideInlineEditActions}
+                editRowHighlight={editRowHighlight}
+                // Every editable grid: the pencil edits the cell (page edit mode first when the page owns it).
+                onCellEditRequest={onCellEditRequest || masterForm ? requestCellEdit : undefined}
                 ref={gridBodyRef}
               />
             )}

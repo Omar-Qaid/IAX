@@ -72,5 +72,5 @@ public static class FoundationTableCatalog
         "TaxReportPeriod",
         "TaxTable",
     };
-    public static IReadOnlySet<string> TransactionTypes { get; } = new HashSet<string>(StringComparer.Ordinal) { "TaxTrans", "TaxJournalTrans", "MarkupTrans" };
+    public static IReadOnlySet<string> TransactionTypes { get; } = new HashSet<string>(StringComparer.Ordinal) { "TaxTrans", "TaxTransGeneralJournalAccountEntry", "TaxJournalTrans", "MarkupTrans" };
 }

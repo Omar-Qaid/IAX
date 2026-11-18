@@ -1,3 +1,4 @@
+import { TAX_ROUTE_PATHS } from '@modules/finance/tax/routes/taxRoutePaths';
 import { localizedName } from '@shared/utilities/localizedName';
 import { useCompanyStore } from '@core/company/useCompanyStore';
 import { accountContacts } from '@modules/finance/foundation/contacts/routes/contactRoutes';
@@ -198,7 +199,7 @@ export function CustTablePage(): React.ReactElement {
               name: 'taxGroupId',
               label: t('fields.salesTaxGroup'),
               type: 'select',
-              masterRoute: FOUNDATION_ROUTE_PATHS.TAX_GROUPS,
+              masterRoute: TAX_ROUTE_PATHS.TAX_GROUPS,
               options: choices(lookups?.salesTaxGroups, record.taxGroupId),
             },
             {

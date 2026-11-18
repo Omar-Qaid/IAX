@@ -637,6 +637,8 @@ export function RecordList<T extends ListDetailRecord>({
             disabled={editing}
             onChange={(event) => onQueryChange(event.target.value)}
             slotProps={{
+              // A placeholder is not an accessible name; label the record-list filter.
+              htmlInput: { 'aria-label': filterLabel },
               input: {
                 startAdornment: (
                   <InputAdornment position="start">

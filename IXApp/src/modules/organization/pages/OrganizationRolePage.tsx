@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
 import type { ColumnDef } from '@shared/components/data-grid/types';
 import { queryClient } from '@core/api/queryClient';
-import { uiDensity } from '@shared/constants/uiDensity';
 import { useNotifications } from '@shared/hooks/useNotifications';
 import { organizationStructureApi as api } from '../api/organizationStructureApi';
 
@@ -108,8 +107,6 @@ export function OrganizationRolePage(): React.ReactElement {
         masterForm: true,
         hideSidebar: false,
         pageSize: 50,
-        rowHeight: uiDensity.gridRowHeight,
-        headerHeight: uiDensity.gridRowHeight,
         onNewRow: () => ({
           id: `new-${crypto.randomUUID()}`,
           recordId: 0,

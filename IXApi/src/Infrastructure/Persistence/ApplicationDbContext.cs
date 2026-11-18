@@ -412,6 +412,7 @@ namespace IAX.IXApi.Infrastructure.Persistence
         public DbSet<TaxOnItem> TaxOnItems => Set<TaxOnItem>();
         public DbSet<TaxJournalTrans> TaxJournalTrans => Set<TaxJournalTrans>();
         public DbSet<TaxTrans> TaxTrans => Set<TaxTrans>();
+        public DbSet<TaxTransGeneralJournalAccountEntry> TaxTransGeneralJournalAccountEntries => Set<TaxTransGeneralJournalAccountEntry>();
         #endregion
         
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

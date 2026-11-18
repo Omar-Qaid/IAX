@@ -1,0 +1,485 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="fa823605-a7dc-4211-bcda-5ace7cdc22c1" name="Omar.Qaid@IKK-IT-JD-L-OMQ 2026-11-18 14:58:51" runUser="IKKGROUP\Omar.Qaid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-18T14:58:51.1681970+03:00" queuing="2026-11-18T14:58:51.1681984+03:00" start="2026-11-18T14:58:44.9279470+03:00" finish="2026-11-18T14:58:51.6596673+03:00" />
+  <TestSettings name="default" id="cc20066c-75c9-42fa-87d7-c7c011328fdf">
+    <Deployment runDeploymentRoot="Omar.Qaid_IKK-IT-JD-L-OMQ_2026-11-18_14_58_51" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="49e81d52-f76b-4a27-96e6-d4e6848af451" testId="a63ebb05-7045-891a-b3df-bdcf7c619ea4" testName="IXApi.Tests.TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(field: &quot;Name&quot;, value: &quot;   &quot;)" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0004521" startTime="2026-11-18T14:58:51.0101478+03:00" endTime="2026-11-18T14:58:51.0104162+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="49e81d52-f76b-4a27-96e6-d4e6848af451">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Contains() Failure: Filter not matched in collection&#xD;
+Collection: []</Message>
+          <StackTrace>   at IXApi.Tests.TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(String field, String value) in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs:line 41&#xD;
+   at InvokeStub_TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="d9b6bc00-19e4-491b-bce0-2c7757978b82" testId="7310389b-19ad-09f6-8963-98e5bab53123" testName="IXApi.Tests.TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(field: &quot;Name&quot;, value: null)" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0008795" startTime="2026-11-18T14:58:50.9953803+03:00" endTime="2026-11-18T14:58:50.9955816+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d9b6bc00-19e4-491b-bce0-2c7757978b82">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Contains() Failure: Filter not matched in collection&#xD;
+Collection: []</Message>
+          <StackTrace>   at IXApi.Tests.TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(String field, String value) in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs:line 41&#xD;
+   at InvokeStub_TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="2b868dfa-f5a8-4fd1-b167-cf84ea318a4f" testId="63b378bb-cee3-e109-2191-1c266f0c1329" testName="IXApi.Tests.TaxAuthorityValidationTests.Accepts_values_at_the_existing_storage_limits" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0148610" startTime="2026-11-18T14:58:51.0906991+03:00" endTime="2026-11-18T14:58:51.0908460+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2b868dfa-f5a8-4fd1-b167-cf84ea318a4f" />
+    <UnitTestResult executionId="1c44e2b7-ad2b-4053-b218-0799b06f32a0" testId="ba34203a-432f-d1cf-14ac-72f256d001ec" testName="IXApi.Tests.TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(field: &quot;Name&quot;, value: &quot;&quot;)" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0039591" startTime="2026-11-18T14:58:50.9818405+03:00" endTime="2026-11-18T14:58:50.9829835+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1c44e2b7-ad2b-4053-b218-0799b06f32a0">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Contains() Failure: Filter not matched in collection&#xD;
+Collection: []</Message>
+          <StackTrace>   at IXApi.Tests.TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(String field, String value) in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs:line 41&#xD;
+   at InvokeStub_TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="8c842371-1401-4c44-9aaf-029d9025beeb" testId="acc72ee9-4fcc-5e5f-7859-bf0f52982368" testName="IXApi.Tests.TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(field: &quot;TaxAuthority&quot;, value: &quot;   &quot;)" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0004309" startTime="2026-11-18T14:58:50.9979033+03:00" endTime="2026-11-18T14:58:50.9981069+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8c842371-1401-4c44-9aaf-029d9025beeb" />
+    <UnitTestResult executionId="873cc63b-8ad1-4581-8933-c5547925f0a1" testId="cb69b25f-22fb-69dc-5a06-8788c63f1289" testName="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;Fax&quot;, limit: 20)" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0002674" startTime="2026-11-18T14:58:51.0856042+03:00" endTime="2026-11-18T14:58:51.0860713+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="873cc63b-8ad1-4581-8933-c5547925f0a1">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Contains() Failure: Filter not matched in collection&#xD;
+Collection: []</Message>
+          <StackTrace>   at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit) in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs:line 26&#xD;
+   at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="27b5a8bb-f16d-425a-ab60-64de4792dbfc" testId="455bce15-aa0f-e704-d8b8-e391f9f2dc6b" testName="IXApi.Tests.TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(field: &quot;TaxAuthority&quot;, value: &quot;&quot;)" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.1189171" startTime="2026-11-18T14:58:50.8736331+03:00" endTime="2026-11-18T14:58:50.9425980+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="27b5a8bb-f16d-425a-ab60-64de4792dbfc" />
+    <UnitTestResult executionId="4b064e04-a470-4ec4-aa40-3f5ca7a32456" testId="429bec86-d012-7051-8a2b-0d563dea3f3d" testName="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;TaxAuthorityId&quot;, limit: 50)" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0002750" startTime="2026-11-18T14:58:51.0886137+03:00" endTime="2026-11-18T14:58:51.0888129+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4b064e04-a470-4ec4-aa40-3f5ca7a32456">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Contains() Failure: Filter not matched in collection&#xD;
+Collection: []</Message>
+          <StackTrace>   at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit) in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs:line 26&#xD;
+   at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="7380a5e1-21de-49d2-8bc1-1231f568daea" testId="1be46de4-cc28-05ad-b219-af59a95605ee" testName="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;Name&quot;, limit: 150)" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0001410" startTime="2026-11-18T14:58:51.0714127+03:00" endTime="2026-11-18T14:58:51.0715521+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7380a5e1-21de-49d2-8bc1-1231f568daea">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Contains() Failure: Filter not matched in collection&#xD;
+Collection: []</Message>
+          <StackTrace>   at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit) in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs:line 26&#xD;
+   at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="4ac4d8e3-4b79-460c-baea-c284d3d6088a" testId="978009ae-54fe-49fe-304c-8c8c3ba9ef6f" testName="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;Url&quot;, limit: 255)" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0004003" startTime="2026-11-18T14:58:51.0726272+03:00" endTime="2026-11-18T14:58:51.0727701+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4ac4d8e3-4b79-460c-baea-c284d3d6088a">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Contains() Failure: Filter not matched in collection&#xD;
+Collection: []</Message>
+          <StackTrace>   at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit) in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs:line 26&#xD;
+   at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="1c6c292b-031e-4f2c-99d7-60407ce5873e" testId="44d0b700-f95d-7277-cdb4-ea134c0c3eb6" testName="IXApi.Tests.TaxAuthorityValidationTests.Contact_details_are_optional" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0005513" startTime="2026-11-18T14:58:51.0901546+03:00" endTime="2026-11-18T14:58:51.0903015+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1c6c292b-031e-4f2c-99d7-60407ce5873e" />
+    <UnitTestResult executionId="c6645395-9f57-46e1-99f9-a0ca193b2c1a" testId="93826195-c6b5-b9cc-f369-375b0dca3502" testName="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;TaxAuthority&quot;, limit: 10)" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0012722" startTime="2026-11-18T14:58:51.0210533+03:00" endTime="2026-11-18T14:58:51.0213008+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c6645395-9f57-46e1-99f9-a0ca193b2c1a">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Contains() Failure: Filter not matched in collection&#xD;
+Collection: []</Message>
+          <StackTrace>   at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit) in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs:line 26&#xD;
+   at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="2b122b99-2ebb-488c-9c47-43dae4fb7d6e" testId="07f9500a-f4cb-4645-37cd-bda39849312b" testName="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;Mobile&quot;, limit: 20)" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0008409" startTime="2026-11-18T14:58:51.0168351+03:00" endTime="2026-11-18T14:58:51.0171503+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2b122b99-2ebb-488c-9c47-43dae4fb7d6e">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Contains() Failure: Filter not matched in collection&#xD;
+Collection: []</Message>
+          <StackTrace>   at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit) in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs:line 26&#xD;
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="c11eb456-2e92-403e-a9ba-7315b7f15b07" testId="10f28570-e489-07db-bfdf-e9a37cdb86a3" testName="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;Extension&quot;, limit: 10)" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0002590" startTime="2026-11-18T14:58:51.0636448+03:00" endTime="2026-11-18T14:58:51.0637946+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c11eb456-2e92-403e-a9ba-7315b7f15b07">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Contains() Failure: Filter not matched in collection&#xD;
+Collection: []</Message>
+          <StackTrace>   at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit) in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs:line 26&#xD;
+   at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="dac4b01e-7581-4a2f-a80a-c2c45fc804b3" testId="76c8cdd1-acc0-f1d5-b155-345467ec3f58" testName="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;Address&quot;, limit: 500)" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0002847" startTime="2026-11-18T14:58:51.0620511+03:00" endTime="2026-11-18T14:58:51.0622581+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="dac4b01e-7581-4a2f-a80a-c2c45fc804b3">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Contains() Failure: Filter not matched in collection&#xD;
+Collection: []</Message>
+          <StackTrace>   at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit) in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs:line 26&#xD;
+   at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="d7622af5-509c-4537-a8be-c4b210da39af" testId="33451ad8-bb23-dec6-84fe-154a7e10546c" testName="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;Pager&quot;, limit: 20)" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0003252" startTime="2026-11-18T14:58:51.0653654+03:00" endTime="2026-11-18T14:58:51.0679681+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d7622af5-509c-4537-a8be-c4b210da39af">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Contains() Failure: Filter not matched in collection&#xD;
+Collection: []</Message>
+          <StackTrace>   at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit) in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs:line 26&#xD;
+   at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="add88843-7475-4f78-8ef7-a1fe8f218345" testId="f11da51a-cfe1-8731-735a-5e8d5592b65d" testName="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;AccountNum&quot;, limit: 20)" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0006533" startTime="2026-11-18T14:58:51.0242479+03:00" endTime="2026-11-18T14:58:51.0244097+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="add88843-7475-4f78-8ef7-a1fe8f218345">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Contains() Failure: Filter not matched in collection&#xD;
+Collection: []</Message>
+          <StackTrace>   at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit) in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs:line 26&#xD;
+   at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="886faf86-f312-4e0b-b07f-357b66508a1a" testId="f3bcfd95-652b-b2e1-7711-729737af5563" testName="IXApi.Tests.TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(field: &quot;TaxAuthority&quot;, value: null)" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0003048" startTime="2026-11-18T14:58:51.0129791+03:00" endTime="2026-11-18T14:58:51.0132620+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="886faf86-f312-4e0b-b07f-357b66508a1a" />
+    <UnitTestResult executionId="c3548133-8341-4fc9-ab40-4424df34172e" testId="c6944e7e-ce2a-e130-bba3-ce2278369623" testName="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;Telex&quot;, limit: 20)" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0002641" startTime="2026-11-18T14:58:51.0773029+03:00" endTime="2026-11-18T14:58:51.0777615+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c3548133-8341-4fc9-ab40-4424df34172e">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Contains() Failure: Filter not matched in collection&#xD;
+Collection: []</Message>
+          <StackTrace>   at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit) in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs:line 26&#xD;
+   at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="2f1b8cc4-045e-4703-9eb5-c69bec08dfdc" testId="4cb60d37-903b-40f2-86d9-257414e7d2f0" testName="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;Phone&quot;, limit: 20)" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0002604" startTime="2026-11-18T14:58:51.0751610+03:00" endTime="2026-11-18T14:58:51.0752977+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2f1b8cc4-045e-4703-9eb5-c69bec08dfdc">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Contains() Failure: Filter not matched in collection&#xD;
+Collection: []</Message>
+          <StackTrace>   at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit) in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs:line 26&#xD;
+   at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="64e37cd6-60a3-43e9-a6ec-2d09b62984e2" testId="8cff5cfe-624c-6b99-e510-bec516a83719" testName="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;Sms&quot;, limit: 20)" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0002819" startTime="2026-11-18T14:58:51.0737498+03:00" endTime="2026-11-18T14:58:51.0738838+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="64e37cd6-60a3-43e9-a6ec-2d09b62984e2">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Contains() Failure: Filter not matched in collection&#xD;
+Collection: []</Message>
+          <StackTrace>   at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit) in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs:line 26&#xD;
+   at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="2772c425-2627-4b0e-8ab8-07af0c90d7e2" testId="b1da9418-f357-6847-b948-ae557339d54f" testName="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;Email&quot;, limit: 100)" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0002795" startTime="2026-11-18T14:58:51.0696797+03:00" endTime="2026-11-18T14:58:51.0698207+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2772c425-2627-4b0e-8ab8-07af0c90d7e2">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Contains() Failure: Filter not matched in collection&#xD;
+Collection: []</Message>
+          <StackTrace>   at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit) in C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs:line 26&#xD;
+   at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IXApi.Tests.TaxAuthorityValidationTests.Contact_details_are_optional" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="44d0b700-f95d-7277-cdb4-ea134c0c3eb6">
+      <Execution id="1c6c292b-031e-4f2c-99d7-60407ce5873e" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxAuthorityValidationTests" name="Contact_details_are_optional" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;Phone&quot;, limit: 20)" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="4cb60d37-903b-40f2-86d9-257414e7d2f0">
+      <Execution id="2f1b8cc4-045e-4703-9eb5-c69bec08dfdc" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxAuthorityValidationTests" name="Rejects_values_that_exceed_existing_storage_limits" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;Pager&quot;, limit: 20)" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="33451ad8-bb23-dec6-84fe-154a7e10546c">
+      <Execution id="d7622af5-509c-4537-a8be-c4b210da39af" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxAuthorityValidationTests" name="Rejects_values_that_exceed_existing_storage_limits" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(field: &quot;TaxAuthority&quot;, value: null)" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="f3bcfd95-652b-b2e1-7711-729737af5563">
+      <Execution id="886faf86-f312-4e0b-b07f-357b66508a1a" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxAuthorityValidationTests" name="Requires_the_entity_required_code_and_name" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;Name&quot;, limit: 150)" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="1be46de4-cc28-05ad-b219-af59a95605ee">
+      <Execution id="7380a5e1-21de-49d2-8bc1-1231f568daea" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxAuthorityValidationTests" name="Rejects_values_that_exceed_existing_storage_limits" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;Email&quot;, limit: 100)" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="b1da9418-f357-6847-b948-ae557339d54f">
+      <Execution id="2772c425-2627-4b0e-8ab8-07af0c90d7e2" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxAuthorityValidationTests" name="Rejects_values_that_exceed_existing_storage_limits" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;TaxAuthorityId&quot;, limit: 50)" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="429bec86-d012-7051-8a2b-0d563dea3f3d">
+      <Execution id="4b064e04-a470-4ec4-aa40-3f5ca7a32456" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxAuthorityValidationTests" name="Rejects_values_that_exceed_existing_storage_limits" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(field: &quot;Name&quot;, value: &quot;&quot;)" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="ba34203a-432f-d1cf-14ac-72f256d001ec">
+      <Execution id="1c44e2b7-ad2b-4053-b218-0799b06f32a0" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxAuthorityValidationTests" name="Requires_the_entity_required_code_and_name" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxAuthorityValidationTests.Accepts_values_at_the_existing_storage_limits" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="63b378bb-cee3-e109-2191-1c266f0c1329">
+      <Execution id="2b868dfa-f5a8-4fd1-b167-cf84ea318a4f" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxAuthorityValidationTests" name="Accepts_values_at_the_existing_storage_limits" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;Extension&quot;, limit: 10)" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="10f28570-e489-07db-bfdf-e9a37cdb86a3">
+      <Execution id="c11eb456-2e92-403e-a9ba-7315b7f15b07" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxAuthorityValidationTests" name="Rejects_values_that_exceed_existing_storage_limits" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(field: &quot;Name&quot;, value: null)" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="7310389b-19ad-09f6-8963-98e5bab53123">
+      <Execution id="d9b6bc00-19e4-491b-bce0-2c7757978b82" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxAuthorityValidationTests" name="Requires_the_entity_required_code_and_name" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;AccountNum&quot;, limit: 20)" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="f11da51a-cfe1-8731-735a-5e8d5592b65d">
+      <Execution id="add88843-7475-4f78-8ef7-a1fe8f218345" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxAuthorityValidationTests" name="Rejects_values_that_exceed_existing_storage_limits" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;Telex&quot;, limit: 20)" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="c6944e7e-ce2a-e130-bba3-ce2278369623">
+      <Execution id="c3548133-8341-4fc9-ab40-4424df34172e" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxAuthorityValidationTests" name="Rejects_values_that_exceed_existing_storage_limits" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;Url&quot;, limit: 255)" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="978009ae-54fe-49fe-304c-8c8c3ba9ef6f">
+      <Execution id="4ac4d8e3-4b79-460c-baea-c284d3d6088a" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxAuthorityValidationTests" name="Rejects_values_that_exceed_existing_storage_limits" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(field: &quot;TaxAuthority&quot;, value: &quot;&quot;)" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="455bce15-aa0f-e704-d8b8-e391f9f2dc6b">
+      <Execution id="27b5a8bb-f16d-425a-ab60-64de4792dbfc" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxAuthorityValidationTests" name="Requires_the_entity_required_code_and_name" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;TaxAuthority&quot;, limit: 10)" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="93826195-c6b5-b9cc-f369-375b0dca3502">
+      <Execution id="c6645395-9f57-46e1-99f9-a0ca193b2c1a" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxAuthorityValidationTests" name="Rejects_values_that_exceed_existing_storage_limits" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(field: &quot;TaxAuthority&quot;, value: &quot;   &quot;)" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="acc72ee9-4fcc-5e5f-7859-bf0f52982368">
+      <Execution id="8c842371-1401-4c44-9aaf-029d9025beeb" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxAuthorityValidationTests" name="Requires_the_entity_required_code_and_name" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;Fax&quot;, limit: 20)" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="cb69b25f-22fb-69dc-5a06-8788c63f1289">
+      <Execution id="873cc63b-8ad1-4581-8933-c5547925f0a1" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxAuthorityValidationTests" name="Rejects_values_that_exceed_existing_storage_limits" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;Mobile&quot;, limit: 20)" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="07f9500a-f4cb-4645-37cd-bda39849312b">
+      <Execution id="2b122b99-2ebb-488c-9c47-43dae4fb7d6e" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxAuthorityValidationTests" name="Rejects_values_that_exceed_existing_storage_limits" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;Address&quot;, limit: 500)" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="76c8cdd1-acc0-f1d5-b155-345467ec3f58">
+      <Execution id="dac4b01e-7581-4a2f-a80a-c2c45fc804b3" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxAuthorityValidationTests" name="Rejects_values_that_exceed_existing_storage_limits" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(field: &quot;Name&quot;, value: &quot;   &quot;)" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="a63ebb05-7045-891a-b3df-bdcf7c619ea4">
+      <Execution id="49e81d52-f76b-4a27-96e6-d4e6848af451" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxAuthorityValidationTests" name="Requires_the_entity_required_code_and_name" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: &quot;Sms&quot;, limit: 20)" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="8cff5cfe-624c-6b99-e510-bec516a83719">
+      <Execution id="64e37cd6-60a3-43e9-a6ec-2d09b62984e2" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxAuthorityValidationTests" name="Rejects_values_that_exceed_existing_storage_limits" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="a63ebb05-7045-891a-b3df-bdcf7c619ea4" executionId="49e81d52-f76b-4a27-96e6-d4e6848af451" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7310389b-19ad-09f6-8963-98e5bab53123" executionId="d9b6bc00-19e4-491b-bce0-2c7757978b82" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="63b378bb-cee3-e109-2191-1c266f0c1329" executionId="2b868dfa-f5a8-4fd1-b167-cf84ea318a4f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ba34203a-432f-d1cf-14ac-72f256d001ec" executionId="1c44e2b7-ad2b-4053-b218-0799b06f32a0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="acc72ee9-4fcc-5e5f-7859-bf0f52982368" executionId="8c842371-1401-4c44-9aaf-029d9025beeb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="cb69b25f-22fb-69dc-5a06-8788c63f1289" executionId="873cc63b-8ad1-4581-8933-c5547925f0a1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="455bce15-aa0f-e704-d8b8-e391f9f2dc6b" executionId="27b5a8bb-f16d-425a-ab60-64de4792dbfc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="429bec86-d012-7051-8a2b-0d563dea3f3d" executionId="4b064e04-a470-4ec4-aa40-3f5ca7a32456" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1be46de4-cc28-05ad-b219-af59a95605ee" executionId="7380a5e1-21de-49d2-8bc1-1231f568daea" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="978009ae-54fe-49fe-304c-8c8c3ba9ef6f" executionId="4ac4d8e3-4b79-460c-baea-c284d3d6088a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="44d0b700-f95d-7277-cdb4-ea134c0c3eb6" executionId="1c6c292b-031e-4f2c-99d7-60407ce5873e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="93826195-c6b5-b9cc-f369-375b0dca3502" executionId="c6645395-9f57-46e1-99f9-a0ca193b2c1a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="07f9500a-f4cb-4645-37cd-bda39849312b" executionId="2b122b99-2ebb-488c-9c47-43dae4fb7d6e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="10f28570-e489-07db-bfdf-e9a37cdb86a3" executionId="c11eb456-2e92-403e-a9ba-7315b7f15b07" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="76c8cdd1-acc0-f1d5-b155-345467ec3f58" executionId="dac4b01e-7581-4a2f-a80a-c2c45fc804b3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="33451ad8-bb23-dec6-84fe-154a7e10546c" executionId="d7622af5-509c-4537-a8be-c4b210da39af" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f11da51a-cfe1-8731-735a-5e8d5592b65d" executionId="add88843-7475-4f78-8ef7-a1fe8f218345" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f3bcfd95-652b-b2e1-7711-729737af5563" executionId="886faf86-f312-4e0b-b07f-357b66508a1a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c6944e7e-ce2a-e130-bba3-ce2278369623" executionId="c3548133-8341-4fc9-ab40-4424df34172e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4cb60d37-903b-40f2-86d9-257414e7d2f0" executionId="2f1b8cc4-045e-4703-9eb5-c69bec08dfdc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8cff5cfe-624c-6b99-e510-bec516a83719" executionId="64e37cd6-60a3-43e9-a6ec-2d09b62984e2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b1da9418-f357-6847-b948-ae557339d54f" executionId="2772c425-2627-4b0e-8ab8-07af0c90d7e2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="22" executed="22" passed="5" failed="17" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.23)&#xD;
+[xUnit.net 00:00:01.06]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:02.43]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:02.59]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:00:02.83]       Assert.Contains() Failure: Filter not matched in collection&#xD;
+[xUnit.net 00:00:02.83]       Collection: []&#xD;
+[xUnit.net 00:00:02.83]       Stack Trace:&#xD;
+[xUnit.net 00:00:02.84]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs(41,0): at IXApi.Tests.TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(String field, String value)&#xD;
+[xUnit.net 00:00:02.84]            at InvokeStub_TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(Object, Span`1)&#xD;
+[xUnit.net 00:00:02.84]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+[xUnit.net 00:00:02.84]       Assert.Contains() Failure: Filter not matched in collection&#xD;
+[xUnit.net 00:00:02.84]       Collection: []&#xD;
+[xUnit.net 00:00:02.84]       Stack Trace:&#xD;
+[xUnit.net 00:00:02.84]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs(41,0): at IXApi.Tests.TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(String field, String value)&#xD;
+[xUnit.net 00:00:02.84]            at InvokeStub_TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(Object, Span`1)&#xD;
+[xUnit.net 00:00:02.84]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+[xUnit.net 00:00:02.85]       Assert.Contains() Failure: Filter not matched in collection&#xD;
+[xUnit.net 00:00:02.85]       Collection: []&#xD;
+[xUnit.net 00:00:02.85]       Stack Trace:&#xD;
+[xUnit.net 00:00:02.85]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs(41,0): at IXApi.Tests.TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(String field, String value)&#xD;
+[xUnit.net 00:00:02.86]            at InvokeStub_TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(Object, Span`1)&#xD;
+[xUnit.net 00:00:02.86]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+[xUnit.net 00:00:02.86]       Assert.Contains() Failure: Filter not matched in collection&#xD;
+[xUnit.net 00:00:02.86]       Collection: []&#xD;
+[xUnit.net 00:00:02.86]       Stack Trace:&#xD;
+[xUnit.net 00:00:02.86]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs(26,0): at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit)&#xD;
+[xUnit.net 00:00:02.86]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)&#xD;
+[xUnit.net 00:00:02.86]            at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)&#xD;
+[xUnit.net 00:00:02.87]       Assert.Contains() Failure: Filter not matched in collection&#xD;
+[xUnit.net 00:00:02.87]       Collection: []&#xD;
+[xUnit.net 00:00:02.87]       Stack Trace:&#xD;
+[xUnit.net 00:00:02.87]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs(26,0): at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit)&#xD;
+[xUnit.net 00:00:02.87]            at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+[xUnit.net 00:00:02.87]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+[xUnit.net 00:00:02.87]       Assert.Contains() Failure: Filter not matched in collection&#xD;
+[xUnit.net 00:00:02.87]       Collection: []&#xD;
+[xUnit.net 00:00:02.87]       Stack Trace:&#xD;
+[xUnit.net 00:00:02.87]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs(26,0): at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit)&#xD;
+[xUnit.net 00:00:02.87]            at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+[xUnit.net 00:00:02.87]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+[xUnit.net 00:00:02.91]       Assert.Contains() Failure: Filter not matched in collection&#xD;
+[xUnit.net 00:00:02.91]       Collection: []&#xD;
+[xUnit.net 00:00:02.91]       Stack Trace:&#xD;
+[xUnit.net 00:00:02.91]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs(26,0): at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit)&#xD;
+[xUnit.net 00:00:02.91]            at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+[xUnit.net 00:00:02.91]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+[xUnit.net 00:00:02.91]       Assert.Contains() Failure: Filter not matched in collection&#xD;
+[xUnit.net 00:00:02.91]       Collection: []&#xD;
+[xUnit.net 00:00:02.91]       Stack Trace:&#xD;
+[xUnit.net 00:00:02.91]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs(26,0): at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit)&#xD;
+[xUnit.net 00:00:02.91]            at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+[xUnit.net 00:00:02.91]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+[xUnit.net 00:00:02.91]       Assert.Contains() Failure: Filter not matched in collection&#xD;
+[xUnit.net 00:00:02.91]       Collection: []&#xD;
+[xUnit.net 00:00:02.91]       Stack Trace:&#xD;
+[xUnit.net 00:00:02.91]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs(26,0): at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit)&#xD;
+[xUnit.net 00:00:02.91]            at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+[xUnit.net 00:00:02.91]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+[xUnit.net 00:00:02.91]       Assert.Contains() Failure: Filter not matched in collection&#xD;
+[xUnit.net 00:00:02.91]       Collection: []&#xD;
+[xUnit.net 00:00:02.91]       Stack Trace:&#xD;
+[xUnit.net 00:00:02.91]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs(26,0): at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit)&#xD;
+[xUnit.net 00:00:02.91]            at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+[xUnit.net 00:00:02.91]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+[xUnit.net 00:00:02.92]       Assert.Contains() Failure: Filter not matched in collection&#xD;
+[xUnit.net 00:00:02.92]       Collection: []&#xD;
+[xUnit.net 00:00:02.92]       Stack Trace:&#xD;
+[xUnit.net 00:00:02.92]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs(26,0): at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit)&#xD;
+[xUnit.net 00:00:02.92]            at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+[xUnit.net 00:00:02.92]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+[xUnit.net 00:00:02.92]       Assert.Contains() Failure: Filter not matched in collection&#xD;
+[xUnit.net 00:00:02.92]       Collection: []&#xD;
+[xUnit.net 00:00:02.92]       Stack Trace:&#xD;
+[xUnit.net 00:00:02.92]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs(26,0): at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit)&#xD;
+[xUnit.net 00:00:02.92]            at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+[xUnit.net 00:00:02.92]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+[xUnit.net 00:00:02.92]       Assert.Contains() Failure: Filter not matched in collection&#xD;
+[xUnit.net 00:00:02.92]       Collection: []&#xD;
+[xUnit.net 00:00:02.92]       Stack Trace:&#xD;
+[xUnit.net 00:00:02.92]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs(26,0): at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit)&#xD;
+[xUnit.net 00:00:02.92]            at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+[xUnit.net 00:00:02.92]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+[xUnit.net 00:00:02.92]       Assert.Contains() Failure: Filter not matched in collection&#xD;
+[xUnit.net 00:00:02.92]       Collection: []&#xD;
+[xUnit.net 00:00:02.92]       Stack Trace:&#xD;
+[xUnit.net 00:00:02.92]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs(26,0): at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit)&#xD;
+[xUnit.net 00:00:02.92]            at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+[xUnit.net 00:00:02.92]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+[xUnit.net 00:00:02.92]       Assert.Contains() Failure: Filter not matched in collection&#xD;
+[xUnit.net 00:00:02.92]       Collection: []&#xD;
+[xUnit.net 00:00:02.92]       Stack Trace:&#xD;
+[xUnit.net 00:00:02.92]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs(26,0): at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit)&#xD;
+[xUnit.net 00:00:02.92]            at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+[xUnit.net 00:00:02.92]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+[xUnit.net 00:00:02.93]       Assert.Contains() Failure: Filter not matched in collection&#xD;
+[xUnit.net 00:00:02.93]       Collection: []&#xD;
+[xUnit.net 00:00:02.93]       Stack Trace:&#xD;
+[xUnit.net 00:00:02.93]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs(26,0): at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit)&#xD;
+[xUnit.net 00:00:02.93]            at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+[xUnit.net 00:00:02.93]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+[xUnit.net 00:00:02.93]       Assert.Contains() Failure: Filter not matched in collection&#xD;
+[xUnit.net 00:00:02.93]       Collection: []&#xD;
+[xUnit.net 00:00:02.93]       Stack Trace:&#xD;
+[xUnit.net 00:00:02.93]         C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\TaxAuthorityValidationTests.cs(26,0): at IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(String field, Int32 limit)&#xD;
+[xUnit.net 00:00:02.93]            at InvokeStub_TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(Object, Span`1)&#xD;
+[xUnit.net 00:00:02.93]            at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+[xUnit.net 00:00:02.94]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="IKK-IT-JD-L-OMQ" outcome="Error" timestamp="2026-11-18T14:58:50.9882264+03:00">
+        <Text>[xUnit.net 00:00:02.83]     IXApi.Tests.TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(field: "Name", value: "") [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IKK-IT-JD-L-OMQ" outcome="Error" timestamp="2026-11-18T14:58:50.9962966+03:00">
+        <Text>[xUnit.net 00:00:02.84]     IXApi.Tests.TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(field: "Name", value: null) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IKK-IT-JD-L-OMQ" outcome="Error" timestamp="2026-11-18T14:58:51.0113461+03:00">
+        <Text>[xUnit.net 00:00:02.85]     IXApi.Tests.TaxAuthorityValidationTests.Requires_the_entity_required_code_and_name(field: "Name", value: "   ") [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IKK-IT-JD-L-OMQ" outcome="Error" timestamp="2026-11-18T14:58:51.0183771+03:00">
+        <Text>[xUnit.net 00:00:02.86]     IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: "Mobile", limit: 20) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IKK-IT-JD-L-OMQ" outcome="Error" timestamp="2026-11-18T14:58:51.0218079+03:00">
+        <Text>[xUnit.net 00:00:02.86]     IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: "TaxAuthority", limit: 10) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IKK-IT-JD-L-OMQ" outcome="Error" timestamp="2026-11-18T14:58:51.0248151+03:00">
+        <Text>[xUnit.net 00:00:02.87]     IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: "AccountNum", limit: 20) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IKK-IT-JD-L-OMQ" outcome="Error" timestamp="2026-11-18T14:58:51.2376458+03:00">
+        <Text>[xUnit.net 00:00:02.91]     IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: "Address", limit: 500) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IKK-IT-JD-L-OMQ" outcome="Error" timestamp="2026-11-18T14:58:51.2380107+03:00">
+        <Text>[xUnit.net 00:00:02.91]     IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: "Extension", limit: 10) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IKK-IT-JD-L-OMQ" outcome="Error" timestamp="2026-11-18T14:58:51.2383326+03:00">
+        <Text>[xUnit.net 00:00:02.91]     IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: "Pager", limit: 20) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IKK-IT-JD-L-OMQ" outcome="Error" timestamp="2026-11-18T14:58:51.2584528+03:00">
+        <Text>[xUnit.net 00:00:02.91]     IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: "Email", limit: 100) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IKK-IT-JD-L-OMQ" outcome="Error" timestamp="2026-11-18T14:58:51.2604404+03:00">
+        <Text>[xUnit.net 00:00:02.92]     IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: "Name", limit: 150) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IKK-IT-JD-L-OMQ" outcome="Error" timestamp="2026-11-18T14:58:51.2614349+03:00">
+        <Text>[xUnit.net 00:00:02.92]     IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: "Url", limit: 255) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IKK-IT-JD-L-OMQ" outcome="Error" timestamp="2026-11-18T14:58:51.2617388+03:00">
+        <Text>[xUnit.net 00:00:02.92]     IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: "Sms", limit: 20) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IKK-IT-JD-L-OMQ" outcome="Error" timestamp="2026-11-18T14:58:51.2624739+03:00">
+        <Text>[xUnit.net 00:00:02.92]     IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: "Phone", limit: 20) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IKK-IT-JD-L-OMQ" outcome="Error" timestamp="2026-11-18T14:58:51.2636641+03:00">
+        <Text>[xUnit.net 00:00:02.92]     IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: "Telex", limit: 20) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IKK-IT-JD-L-OMQ" outcome="Error" timestamp="2026-11-18T14:58:51.2819792+03:00">
+        <Text>[xUnit.net 00:00:02.93]     IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: "Fax", limit: 20) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IKK-IT-JD-L-OMQ" outcome="Error" timestamp="2026-11-18T14:58:51.2927167+03:00">
+        <Text>[xUnit.net 00:00:02.93]     IXApi.Tests.TaxAuthorityValidationTests.Rejects_values_that_exceed_existing_storage_limits(field: "TaxAuthorityId", limit: 50) [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

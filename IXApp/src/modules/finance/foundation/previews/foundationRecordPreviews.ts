@@ -1,3 +1,4 @@
+import { TAX_ROUTE_PATHS } from '@modules/finance/tax/routes/taxRoutePaths';
 import { pagedRecordLoader, registerRecordPreview } from '@shared/components/record-preview';
 import { FOUNDATION_ROUTE_PATHS } from '../routes/foundationRoutePaths';
 
@@ -44,7 +45,7 @@ registerRecordPreview<CurrencyPreview>(FOUNDATION_RECORD_PREVIEWS.CURRENCY, {
 });
 
 registerRecordPreview<TaxGroupPreview>(FOUNDATION_RECORD_PREVIEWS.SALES_TAX_GROUP, {
-  masterRoute: FOUNDATION_ROUTE_PATHS.TAX_GROUPS,
+  masterRoute: TAX_ROUTE_PATHS.TAX_GROUPS,
   load: pagedRecordLoader('/v1/TaxGroup', 'TaxGroup'),
   fromOption: (option) => ({ taxGroup: option.code, taxGroupName: option.name ?? '' }),
   fields: [
@@ -54,7 +55,7 @@ registerRecordPreview<TaxGroupPreview>(FOUNDATION_RECORD_PREVIEWS.SALES_TAX_GROU
 });
 
 registerRecordPreview<TaxItemGroupPreview>(FOUNDATION_RECORD_PREVIEWS.ITEM_SALES_TAX_GROUP, {
-  masterRoute: FOUNDATION_ROUTE_PATHS.TAX_ITEM_GROUPS,
+  masterRoute: TAX_ROUTE_PATHS.TAX_ITEM_GROUPS,
   load: pagedRecordLoader('/v1/TaxItemGroup', 'TaxItemGroup'),
   fromOption: (option) => ({ taxItemGroup: option.code, name: option.name ?? '' }),
   fields: [
@@ -69,7 +70,7 @@ registerRecordPreview<TaxItemGroupPreview>(FOUNDATION_RECORD_PREVIEWS.ITEM_SALES
 });
 
 registerRecordPreview<TaxAuthorityPreview>(FOUNDATION_RECORD_PREVIEWS.TAX_AUTHORITY, {
-  masterRoute: FOUNDATION_ROUTE_PATHS.TAX_AUTHORITIES,
+  masterRoute: TAX_ROUTE_PATHS.TAX_AUTHORITIES,
   load: pagedRecordLoader('/v1/TaxAuthorityAddress', 'TaxAuthority'),
   fromOption: (option) => ({ taxAuthority: option.code, name: option.name ?? '' }),
   fields: [

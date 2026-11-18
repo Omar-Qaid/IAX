@@ -32,12 +32,17 @@ export function useSalesOrderDocumentData({ salesOrderId, editingOrderId, copyMo
     queryKey: salesOrderQueryKeys.detail(company, salesOrderId),
     queryFn: ({ signal }) => salesOrderListApi.get(salesOrderId!, signal),
     enabled: Boolean(salesOrderId),
+    // Moving through the record pane: show the list row at once, refresh in place.
+    placeholderData: orders.find((row) => row.id === salesOrderId),
   });
   const orderQuery = salesOrderId ? detailQuery : ordersQuery;
   // A 404 from the by-ID endpoint (older API build) falls back to the list row.
   const order = salesOrderId
     ? (detailQuery.data ?? orders.find((row) => row.id === salesOrderId))
     : orders[0];
+  // Still loading while the order is unknown and either source is pending
+  // (prevents a "no sales orders" flash before the list arrives).
+  const orderLoading = !order && (salesOrderId ? detailQuery.isPending || ordersQuery.isPending : ordersQuery.isPending);
   const headerEditing = Boolean(order) && editingOrderId === order?.id;
   /** Refreshes the open order and the record pane. */
   const refetchOrder = async (options?: { throwOnError?: boolean }) => {
@@ -117,6 +122,7 @@ export function useSalesOrderDocumentData({ salesOrderId, editingOrderId, copyMo
     ordersQuery,
     orders,
     orderQuery,
+    orderLoading,
     order,
     refetchOrder,
     customersQuery,

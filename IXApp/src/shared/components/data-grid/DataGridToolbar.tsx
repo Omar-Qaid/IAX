@@ -82,6 +82,8 @@ export const DataGridToolbar = memo(function DataGridToolbar({
               '& .MuiOutlinedInput-root': {
                 boxSizing: 'border-box',
                 height: 26,
+                // Space between the grid's top border and the Filter box.
+                marginTop: '5px',
                 borderRadius: 1,
                 bgcolor: 'background.paper',
                 fontSize: '0.8125rem',

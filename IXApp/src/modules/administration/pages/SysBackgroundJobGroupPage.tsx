@@ -6,7 +6,6 @@ import { queryClient } from '@core/api/queryClient';
 import { PERMISSIONS } from '@core/permissions/permissions';
 import { useNotifications } from '@shared/hooks/useNotifications';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
-import { uiDensity } from '@shared/constants/uiDensity';
 import {
   sysBackgroundJobGroupApi,
   type SysBackgroundJobGroupRecord,
@@ -79,7 +78,7 @@ export function SysBackgroundJobGroupPage(): React.ReactElement {
     columns={columns} dataGridProps={{
       storageKey: 'administration.batch-groups.reference-view', masterForm: true,
       hideSidebar: false, pageSize: 50,
-      rowHeight: uiDensity.gridRowHeight, headerHeight: uiDensity.gridRowHeight,
+
       onNewRow: () => ({ id: `new-${crypto.randomUUID()}`, recId: 0, groupCode: '',
         description: null, schedulingPriority: 1, maxConcurrency: 1, isActive: true, rowVersion: null }),
       onRowSave: async (values, isNew) => {

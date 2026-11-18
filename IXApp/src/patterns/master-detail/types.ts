@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { RecordPreviewOption } from '@shared/components/record-preview';
 import type { RelatedInformationSection } from '@shared/components/page/RelatedInformationPanel';
 import type { EnterpriseCommandUtilitiesProps } from '@shared/components/action-pane/EnterpriseCommandUtilities';
+import type { ActionPaneRibbonGroup } from '@shared/components/action-pane/ActionPaneRibbon';
 import type { DetailSectionConfig, DetailValue, DetailValues } from '@patterns/list-details/types';
 
 /** One record in the left navigation pane (D365 "list" of a details page). */
@@ -22,6 +23,25 @@ export interface MasterDetailAdvancedFilter<T> {
   fields: Array<{ id: string; label: string; getValue: (record: T) => unknown }>;
 }
 
+/** Action pane tab that opens a ribbon of grouped actions (D365 "Sales order", "Sell"). */
+export interface MasterDetailRibbon {
+  id: string;
+  label: string;
+  groups: readonly ActionPaneRibbonGroup[];
+  disabled?: boolean;
+  /** Remembers whether the user pinned this ribbon open. */
+  persistenceKey?: string;
+}
+
+/** Plain action pane command after the ribbons (D365 tabs not built yet are disabled). */
+export interface MasterDetailCommand {
+  id: string;
+  label: string;
+  icon?: ReactNode;
+  disabled?: boolean;
+  onClick?: () => void;
+}
+
 export interface MasterDetailPageProps<T extends MasterDetailRecord = MasterDetailRecord> {
   /** Records of the navigation pane. */
   records: T[];
@@ -40,6 +60,10 @@ export interface MasterDetailPageProps<T extends MasterDetailRecord = MasterDeta
   /** Action pane content (Edit/Save/Cancel, ribbon triggers, commands). */
   actionPane: ReactNode;
   backAction?: ReactNode;
+  /** Ribbon tabs after `actionPane`; locked while editing. */
+  ribbons?: readonly MasterDetailRibbon[];
+  /** Commands after the ribbons; locked while editing. */
+  commands?: readonly MasterDetailCommand[];
   /** Extra items at the end of the action pane, before the utilities. */
   endActions?: ReactNode;
   navigationLabel?: string;

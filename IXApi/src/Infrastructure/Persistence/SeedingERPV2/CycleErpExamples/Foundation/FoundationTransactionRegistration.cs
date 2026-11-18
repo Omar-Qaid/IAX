@@ -1,3 +1,4 @@
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Tax;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsPayable;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -9,6 +10,7 @@ public static class FoundationTransactionRegistration
         services.AddFoundationConfigurationAndMasterDataExamples();
         services.AddAccountsPayableTransactionExamples();
         services.TryAddScoped<FoundationTransactionExamples>();
+        services.TryAddScoped<TaxTransGeneralJournalAccountEntrySeeder>();
         return services;
     }
 }

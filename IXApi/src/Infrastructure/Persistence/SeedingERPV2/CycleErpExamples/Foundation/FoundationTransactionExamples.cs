@@ -1,3 +1,4 @@
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Tax;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Foundation.Reports;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsPayable;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsPayable.Data;
@@ -7,7 +8,8 @@ using IAX.IXApi.Modules.Finance.Entities;
 using Microsoft.EntityFrameworkCore;
 namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Foundation;
 /// <summary>Exercise Foundation tax and charges through the existing AP business-service examples.</summary>
-public sealed class FoundationTransactionExamples(ApplicationDbContext db, FoundationCycleSeeder preparation, AccountsPayableTransactionExamples transactions)
+public sealed class FoundationTransactionExamples(ApplicationDbContext db, FoundationCycleSeeder preparation, AccountsPayableTransactionExamples transactions,
+    TaxTransGeneralJournalAccountEntrySeeder taxAssociations)
 {
     public async Task<FoundationTransactionReport> RunAsync(FoundationExampleOptions options, CancellationToken ct = default)
     {
@@ -16,6 +18,7 @@ public sealed class FoundationTransactionExamples(ApplicationDbContext db, Found
         db.ChangeTracker.Clear();
         var report = await transactions.RunAsync(new AccountsPayableTransactionOptions(options.FiscalYear, options.Actor, ["04", "07"]), ct);
         var details = new List<FoundationTaxJournalReference>();
+        var associationTaxIds = new List<long>();
         var area = db.GetDataAreaId();
         var key = $"APV2-{options.FiscalYear}-04-DOC";
         var journal = await db.Set<LedgerJournalTable>().SingleAsync(x => x.DataAreaId == area && x.Name == key, ct);
@@ -34,8 +37,10 @@ public sealed class FoundationTransactionExamples(ApplicationDbContext db, Found
                     || detail.OperationLedgerDimension != source.OffsetLedgerDimension)
                     throw new InvalidOperationException("Foundation TaxJournalTrans does not reconcile to its source journal and posted TaxTrans.");
                 details.Add(new(detail.RecId, detail.TransRecId, detail.TransTableId, detail.TaxCode, detail.SourceCurrencyCode, detail.SourceTaxAmountCur, detail.TaxAmount, detail.OperationLedgerDimension));
+                if (tax.TaxAmount != 0m) associationTaxIds.Add(tax.RecId);
             }
         }
-        return new(report.Company, report.FiscalYear, report.Scenarios, details);
+        var associations = await taxAssociations.SeedAsync(associationTaxIds, ct);
+        return new(report.Company, report.FiscalYear, report.Scenarios, details) { TaxAccountingAssociationIds = associations };
     }
 }

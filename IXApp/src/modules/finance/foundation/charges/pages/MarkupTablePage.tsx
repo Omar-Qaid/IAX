@@ -1,3 +1,4 @@
+import { TAX_ROUTE_PATHS } from '@modules/finance/tax/routes/taxRoutePaths';
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
@@ -5,8 +6,7 @@ import type { DetailFieldConfig, DetailValue, DetailValues, EnterpriseListDetail
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { PERMISSIONS } from '@core/permissions/permissions';
 import { markupTableApi, type MarkupTableRecord } from '../api/markupTableApi';
-import { taxItemGroupApi } from '../../tax/api/taxItemGroupApi';
-import { FOUNDATION_ROUTE_PATHS } from '../../routes/foundationRoutePaths';
+import { taxItemGroupApi } from '@modules/finance/tax/api/taxItemGroupApi';
 
 const emptyMarkup = (): MarkupTableRecord => ({
   id: `new-${crypto.randomUUID()}`, recId: 0, markupCode: '', txt: '', moduleType: 3,
@@ -74,7 +74,7 @@ export function MarkupTablePage(): React.ReactElement {
     headerFields: [
       { id: 'markupCode', label: 'Charges code', getValue: (r) => r.markupCode, setValue: (r, value) => r.recId ? r : { ...r, markupCode: String(value) } },
       { id: 'txt', label: t('fields.description', 'Description'), getValue: (r) => r.txt, setValue: (r, value) => ({ ...r, txt: String(value) }) },
-      { id: 'taxItemGroup', label: 'Item sales tax group', type: 'select', masterRoute: FOUNDATION_ROUTE_PATHS.TAX_ITEM_GROUPS, options: (itemTaxGroups.data ?? []).map((x) => ({ value: x.taxItemGroup, label: `${x.taxItemGroup} - ${x.name}` })), getValue: (r) => r.taxItemGroup, setValue: (r, value) => ({ ...r, taxItemGroup: String(value) }) },
+      { id: 'taxItemGroup', label: 'Item sales tax group', type: 'select', masterRoute: TAX_ROUTE_PATHS.TAX_ITEM_GROUPS, options: (itemTaxGroups.data ?? []).map((x) => ({ value: x.taxItemGroup, label: `${x.taxItemGroup} - ${x.name}` })), getValue: (r) => r.taxItemGroup, setValue: (r, value) => ({ ...r, taxItemGroup: String(value) }) },
       { id: 'moduleType', label: 'Module', type: 'select', options: [option(1, 'Inventory'), option(2, 'Purchase'), option(3, 'Sales')], getValue: (r) => String(r.moduleType), setValue: (r, value) => ({ ...r, moduleType: Number(value) }) },
       { id: 'mcrProrate', label: 'Prorate', type: 'boolean', getValue: (r) => r.mcrProrate === 1, setValue: (r, value) => ({ ...r, mcrProrate: value ? 1 : 0 }) },
     ],

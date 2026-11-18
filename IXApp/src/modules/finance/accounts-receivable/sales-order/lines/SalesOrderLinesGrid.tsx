@@ -24,6 +24,7 @@ import type { ColumnDef, DataGridHandle } from '@shared/components/data-grid/typ
 import { ErrorState } from '@shared/components/feedback/ErrorState';
 import { LookupGridField } from '@shared/components/lookups/LookupGridField';
 import { DataGridLookupField } from '@shared/components/lookups/DataGridLookupField';
+import { CellEditHost } from '@shared/components/data-grid/body/CellEditHost';
 import { SalesLineValueField } from './SalesLineValueField';
 import { SalesLineGridSurface } from './SalesLineGridSurface';
 import { SalesLineCell, SalesLineCellProvider } from './SalesLineCell';
@@ -93,6 +94,8 @@ interface Props {
   lineFilterVisible: boolean;
   setLineFilterVisible: React.Dispatch<React.SetStateAction<boolean>>;
   refreshOrder: () => Promise<unknown>;
+  /** View mode: the cell pencil switches the page to edit mode (D365 edit from view). */
+  onRequestEdit?: () => void;
 }
 export function SalesOrderLinesGrid({
   order,
@@ -102,6 +105,7 @@ export function SalesOrderLinesGrid({
   lineFilterVisible,
   setLineFilterVisible,
   refreshOrder,
+  onRequestEdit,
 }: Props) {
   const company = useCompanyStore((state) => state.currentCompany);
   const { t, currentLanguage } = useAppTranslation();
@@ -135,6 +139,15 @@ export function SalesOrderLinesGrid({
   } = useSalesOrderLineState();
   const newRowFocusFrame = useRef<number | null>(null);
   const lineEditEnabled = editing || draftLine?.orderId === order.id;
+  // Cell whose pencil was clicked in view mode; edited once edit mode is on.
+  const [pendingCell, setPendingCell] = React.useState<{ rowId: string; field: string } | null>(null);
+  useEffect(() => {
+    if (!pendingCell || !lineEditEnabled) return;
+    const selector = `[data-row-id="${CSS.escape(pendingCell.rowId)}"] [data-field="${CSS.escape(pendingCell.field)}"] [data-grid-cell-focus]`;
+    setPendingCell(null);
+    // Focusing the display cell starts editing it (see its onFocus).
+    requestAnimationFrame(() => document.querySelector<HTMLElement>(selector)?.focus());
+  }, [pendingCell, lineEditEnabled]);
   useEffect(() => {
     if (editing || draftLine?.orderId === order.id) return;
     setDraftLine(null);
@@ -486,7 +499,7 @@ export function SalesOrderLinesGrid({
         order?.salesStatus.toLowerCase() === 'backorder' &&
         row.id === (activeDraft?.id ?? selectedLineId);
       const showChevron = lineIsActive && editable && DROPDOWN_LINE_FIELDS.has(field);
-      return (
+      const displayCell = (
         <div
           data-grid-cell-focus
           title={String(displayValue ?? '')}
@@ -536,6 +549,26 @@ export function SalesOrderLinesGrid({
             />
           )}
         </div>
+      );
+      const canRequestEdit =
+        !lineEditEnabled &&
+        Boolean(onRequestEdit) &&
+        editable &&
+        canEditLines &&
+        order?.salesStatus.toLowerCase() === 'backorder';
+      return canRequestEdit ? (
+        <CellEditHost
+          label={`${t('actions.edit')} ${t(column.headerName)}`}
+          onEdit={() => {
+            setSelectedLineId(row.id);
+            setPendingCell({ rowId: row.id, field });
+            onRequestEdit?.();
+          }}
+        >
+          {displayCell}
+        </CellEditHost>
+      ) : (
+        displayCell
       );
     }
     if (column.field === 'itemNumber' && !row.itemNumber)

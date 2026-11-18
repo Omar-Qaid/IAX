@@ -1,3 +1,4 @@
+import { LEGACY_TAX_ROUTE_PATHS } from '@modules/finance/tax/routes/taxRoutePaths';
 import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
 import { matchPath } from 'react-router-dom';
 import { PERMISSIONS, type PermissionCode } from '@core/permissions/permissions';
@@ -435,10 +436,10 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
   },
   {
     id: 'tax-authorities',
-    path: ROUTE_PATHS.FOUNDATION.TAX_AUTHORITIES,
+    path: ROUTE_PATHS.TAX.TAX_AUTHORITIES,
     permission: PERMISSIONS.TAX_AUTHORITY_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/foundation/tax/pages/TaxAuthorityPage'),
+      () => import('@modules/finance/tax/pages/TaxAuthorityPage'),
       (module) => module.TaxAuthorityPage
     ),
   },
@@ -453,37 +454,37 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
   },
   {
     id: 'tax-periods',
-    path: ROUTE_PATHS.FOUNDATION.TAX_PERIODS,
+    path: ROUTE_PATHS.TAX.TAX_PERIODS,
     permission: PERMISSIONS.TAX_PERIOD_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/foundation/tax/pages/TaxPeriodPage'),
+      () => import('@modules/finance/tax/pages/TaxPeriodPage'),
       (module) => module.TaxPeriodPage
     ),
   },
   {
     id: 'tax-codes',
-    path: ROUTE_PATHS.FOUNDATION.TAX_CODES,
+    path: ROUTE_PATHS.TAX.TAX_CODES,
     permission: PERMISSIONS.TAX_CODE_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/foundation/tax/pages/TaxTablePage'),
+      () => import('@modules/finance/tax/pages/TaxTablePage'),
       (module) => module.TaxTablePage
     ),
   },
   {
     id: 'tax-groups',
-    path: ROUTE_PATHS.FOUNDATION.TAX_GROUPS,
+    path: ROUTE_PATHS.TAX.TAX_GROUPS,
     permission: PERMISSIONS.TAX_GROUP_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/foundation/tax/pages/TaxGroupPage'),
+      () => import('@modules/finance/tax/pages/TaxGroupPage'),
       (module) => module.TaxGroupPage
     ),
   },
   {
     id: 'tax-item-groups',
-    path: ROUTE_PATHS.FOUNDATION.TAX_ITEM_GROUPS,
+    path: ROUTE_PATHS.TAX.TAX_ITEM_GROUPS,
     permission: PERMISSIONS.TAX_ITEM_GROUP_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/foundation/tax/pages/TaxItemGroupPage'),
+      () => import('@modules/finance/tax/pages/TaxItemGroupPage'),
       (module) => module.TaxItemGroupPage
     ),
   },
@@ -813,6 +814,11 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
       (module) => module.BatchJobHistoryPage
     ),
   },
+  { id: 'legacy-tax_authorities', path: LEGACY_TAX_ROUTE_PATHS.TAX_AUTHORITIES, permission: PERMISSIONS.TAX_AUTHORITY_VIEW, component: lazyPage(() => import('@modules/finance/tax/routes/LegacyTaxPageRedirect'), (module) => module.LegacyTaxPageRedirect) },
+  { id: 'legacy-tax_periods', path: LEGACY_TAX_ROUTE_PATHS.TAX_PERIODS, permission: PERMISSIONS.TAX_PERIOD_VIEW, component: lazyPage(() => import('@modules/finance/tax/routes/LegacyTaxPageRedirect'), (module) => module.LegacyTaxPageRedirect) },
+  { id: 'legacy-tax_codes', path: LEGACY_TAX_ROUTE_PATHS.TAX_CODES, permission: PERMISSIONS.TAX_CODE_VIEW, component: lazyPage(() => import('@modules/finance/tax/routes/LegacyTaxPageRedirect'), (module) => module.LegacyTaxPageRedirect) },
+  { id: 'legacy-tax_groups', path: LEGACY_TAX_ROUTE_PATHS.TAX_GROUPS, permission: PERMISSIONS.TAX_GROUP_VIEW, component: lazyPage(() => import('@modules/finance/tax/routes/LegacyTaxPageRedirect'), (module) => module.LegacyTaxPageRedirect) },
+  { id: 'legacy-tax_item_groups', path: LEGACY_TAX_ROUTE_PATHS.TAX_ITEM_GROUPS, permission: PERMISSIONS.TAX_ITEM_GROUP_VIEW, component: lazyPage(() => import('@modules/finance/tax/routes/LegacyTaxPageRedirect'), (module) => module.LegacyTaxPageRedirect) },
 ] as const;
 
 export const getPageDefinition = (path: string): AppPageDefinition | undefined =>

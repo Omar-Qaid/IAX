@@ -1,0 +1,20 @@
+using IAX.IXApi.Modules.Finance.Common;
+using IAX.IXApi.Shared.Domain.Entities;
+using IAX.IXApi.Modules.Finance.Entities;
+using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace IAX.IXApi.Modules.Finance.Tax
+{
+    public class TaxJournalTransConfiguration : IEntityTypeConfiguration<TaxJournalTrans>
+    {
+        public void Configure(EntityTypeBuilder<TaxJournalTrans> builder)
+        {
+            builder.ToTable("TaxJournalTrans");
+
+            // Primary Key
+            builder.HasKey(x => x.RecId);
+        }
+    }
+}

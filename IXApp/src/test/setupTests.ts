@@ -1,5 +1,9 @@
 import '@testing-library/jest-dom';
+import { configure } from '@testing-library/react';
 import '@core/localization/i18n';
+
+// findBy*/waitFor default to 1s, too short for full pages under full-suite load.
+configure({ asyncUtilTimeout: 5000 });
 
 if (typeof globalThis.ResizeObserver === 'undefined') {
   globalThis.ResizeObserver = class ResizeObserver {

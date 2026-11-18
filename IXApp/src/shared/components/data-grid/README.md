@@ -19,3 +19,12 @@ At widths below the Material UI `md` breakpoint, `DataGridMobileBody` replaces t
 Column pinning and resize handles use logical inline-start/inline-end edges. In RTL, a `pinned: 'left'` column is the leading column on the right and dragging its inner handle outward increases its width. Desktop cell text follows the language direction; mobile cards center labels, values, and actions.
 
 [Complete DataGrid guide](../../../../docs/shared/data-grid.md) · [Responsive standards](../../../../docs/ui-ux-and-responsive.md)
+
+## Edit from view (pencil)
+
+Editable cells (`editable: true`) show a pencil on hover while no row is being edited, as in D365:
+
+- **Always-editable grids** (`masterForm`): the pencil edits that row and focuses the clicked cell, the same as a double-click.
+- **Grids whose page owns edit mode** (document lines): pass `onCellEditRequest`. The pencil calls it so the page switches to edit mode. Once `masterForm` is on, the grid edits the row and focuses the clicked cell. Master-detail pages get this through `MasterDetailLinesGrid`.
+
+Each pencil is named "Edit <column>" for screen readers. Read-only grids show no pencil. `editRowHighlight: 'none'` drops the edited-row outline, giving the cell-editing look.

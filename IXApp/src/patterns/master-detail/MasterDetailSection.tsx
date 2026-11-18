@@ -48,7 +48,10 @@ export function MasterDetailSection({
           px: 1,
           minHeight: `${d365.sectionHeaderHeight}px !important`,
           borderBottom: `1px solid ${d365.border}`,
-          '& .MuiAccordionSummary-content, & .MuiAccordionSummary-content.Mui-expanded': { my: 0.5, minWidth: 0 },
+          '& .MuiAccordionSummary-content, & .MuiAccordionSummary-content.Mui-expanded': {
+            my: 0.5,
+            minWidth: 0,
+          },
           '& .MuiAccordionSummary-expandIconWrapper': {
             display: 'flex',
             alignItems: 'center',
@@ -59,13 +62,36 @@ export function MasterDetailSection({
           },
         }}
       >
-        <Typography sx={{ fontFamily: d365.fontFamily, fontSize: 14, lineHeight: 1.2, color: '#111', fontWeight: 600, flexShrink: 0 }}>
+        <Typography
+          sx={{
+            fontFamily: d365.fontFamily,
+            fontSize: 14,
+            lineHeight: 1.2,
+            color: '#111',
+            fontWeight: 600,
+            flexShrink: 0,
+          }}
+        >
           {title}
         </Typography>
         {summary && summary.length > 0 && (
-          <Box sx={{ display: 'flex', gap: 2, marginInlineStart: 'auto', paddingInlineEnd: 1.5, minWidth: 0, overflow: 'hidden' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 2,
+              marginInlineStart: 'auto',
+              paddingInlineEnd: 1.5,
+              minWidth: 0,
+              overflow: 'hidden',
+            }}
+          >
             {summary.map((item, index) => (
-              <Typography key={index} component="span" noWrap sx={{ fontSize: d365.fontSize, color: d365.mutedText }}>
+              <Typography
+                key={index}
+                component="span"
+                noWrap
+                sx={{ fontSize: d365.fontSize, color: d365.mutedText }}
+              >
                 {item}
               </Typography>
             ))}

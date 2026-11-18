@@ -50,7 +50,7 @@ function open() {
   );
 }
 describe('free text invoice list', () => {
-  it('defaults to recent drafts, filters by the selected customer and prevents deleting posted invoices', async () => {
+  it('lists the customer invoices like the sales order list and prevents changing posted invoices', async () => {
     vi.mocked(freeTextInvoiceApi.list).mockResolvedValue([
       draft,
       { ...draft, id: '2', recId: 2, invoiceId: 'POSTED-2', posted: true },
@@ -59,11 +59,8 @@ describe('free text invoice list', () => {
     open();
     expect(await screen.findByText('DRAFT-1')).toBeInTheDocument();
     expect(screen.queryByText('OTHER-CUSTOMER')).not.toBeInTheDocument();
-    expect(screen.queryByText('POSTED-2')).not.toBeInTheDocument();
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Status' }));
-    fireEvent.click(await screen.findByRole('option', { name: /^Posted$/ }));
-    expect(await screen.findByText('POSTED-2')).toBeInTheDocument();
-    fireEvent.click(screen.getByText('Consulting'));
+    expect(screen.getByText('POSTED-2')).toBeInTheDocument();
+    fireEvent.click(screen.getAllByText('Consulting')[1]);
     await waitFor(() => expect(screen.getByRole('button', { name: /^Delete$/ })).toBeDisabled());
     expect(screen.getByRole('button', { name: /^Totals$/ })).toBeEnabled();
     expect(screen.getByRole('button', { name: /^Post$/ })).toBeDisabled();

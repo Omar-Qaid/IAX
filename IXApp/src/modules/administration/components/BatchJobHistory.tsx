@@ -2,7 +2,6 @@ import React from 'react';
 import { Chip } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { SimpleListPage } from '@patterns/simple-list/SimpleListPage';
-import { uiDensity } from '@shared/constants/uiDensity';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { sysBackgroundJobApi, type SysJobExecutionStatus } from '../api/sysBackgroundJobApi';
 const executionStatusLabels = ['Waiting', 'Executing', 'Completed', 'Failed', 'Cancelled'];
@@ -29,8 +28,6 @@ export function BatchJobHistory({ jobId }: { jobId: number }): React.ReactElemen
         storageKey: 'administration.batch-job-history.reference-view',
         hideSidebar: false,
         pageSize: 50,
-        rowHeight: uiDensity.gridRowHeight,
-        headerHeight: uiDensity.gridRowHeight,
       }}
       dataSource={{
         type: 'controlled',

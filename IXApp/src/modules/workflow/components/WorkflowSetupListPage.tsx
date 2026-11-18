@@ -6,7 +6,6 @@ import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
 import type { ColumnDef, FetchRowsParams } from '@shared/components/data-grid/types';
 import { useNotifications } from '@shared/hooks/useNotifications';
-import { uiDensity } from '@shared/constants/uiDensity';
 import type { WorkflowMasterDto, WorkflowMasterRecord } from '../api/workflowMasterApi';
 import { apiClient } from '@core/api/apiClient';
 import type { ApiResponse } from '@core/api/apiResponse';
@@ -293,8 +292,6 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
         storageKey: `workflow.${resourceKey}.reference-view`,
         masterForm: true,
         hideSidebar: false,
-        rowHeight: uiDensity.gridRowHeight,
-        headerHeight: uiDensity.gridRowHeight,
         onNewRow: () => ({
           ...createRecord(),
           code: sequence?.manual ? '' : (sequence?.previewCode ?? null),

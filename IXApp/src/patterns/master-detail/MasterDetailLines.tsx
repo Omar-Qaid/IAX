@@ -1,13 +1,43 @@
 import React from 'react';
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { d365 } from '@shared/constants/enterpriseUiTokens';
+
+/**
+ * Grid settings of a lines grid (sales order look): compact rows, bordered
+ * cells, no own toolbar/footer (the lines toolbar and Search drive it).
+ * Spread into the page's `DataGrid`: `<DataGrid {...MASTER_DETAIL_LINES_GRID_PROPS} … />`.
+ */
+export const MASTER_DETAIL_LINES_GRID_PROPS = {
+  height: 232,
+  rowHeight: 24,
+  headerHeight: 27,
+  hideFooter: true,
+  hideColumnMenu: false,
+  showColumnBorders: true,
+  showCellBorders: true,
+  hideAddRowButton: true,
+  hideToolbar: true,
+  hideSidebarTabs: true,
+  hideInlineEditActions: true,
+  editRowHighlight: 'none',
+} as const;
+
+/** One line action in the toolbar (Add line, Remove...). */
+export interface MasterDetailLineAction {
+  id: string;
+  label: string;
+  icon?: React.ReactNode;
+  disabled?: boolean;
+  onClick: () => void;
+}
 
 /**
  * The lines area of a master-detail page: line action toolbar, keyboard help /
  * saving status, the lines grid and (optionally) the selected line's details.
  */
 export function MasterDetailLines({
+  actions,
   toolbar,
   toolbarLabel,
   saving = false,
@@ -15,7 +45,9 @@ export function MasterDetailLines({
   grid,
   details,
 }: {
-  /** Line actions (Add line, Remove, menus). Rendered as an ARIA toolbar. */
+  /** Standard line actions, rendered as toolbar buttons before `toolbar`. */
+  actions?: readonly MasterDetailLineAction[];
+  /** Extra toolbar content (menus...). Rendered with `actions` as an ARIA toolbar. */
   toolbar?: React.ReactNode;
   toolbarLabel: string;
   /** Shows "Saving..." in place of the keyboard help. */
@@ -30,7 +62,7 @@ export function MasterDetailLines({
   const { t } = useAppTranslation();
   return (
     <Box sx={{ minWidth: 0 }}>
-      {toolbar && (
+      {(toolbar || Boolean(actions?.length)) && (
         <Stack
           role="toolbar"
           aria-label={toolbarLabel}
@@ -44,6 +76,11 @@ export function MasterDetailLines({
             '& .MuiButton-root': { flexShrink: 0, fontSize: d365.fontSize, minWidth: 0, px: 0.75, py: 0.25, minHeight: d365.controlHeight },
           }}
         >
+          {actions?.map((action) => (
+            <Button key={action.id} size="small" startIcon={action.icon} disabled={action.disabled} onClick={action.onClick}>
+              {action.label}
+            </Button>
+          ))}
           {toolbar}
         </Stack>
       )}

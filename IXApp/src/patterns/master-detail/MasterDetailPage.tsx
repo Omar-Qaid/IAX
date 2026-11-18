@@ -1,11 +1,14 @@
 import React, { useMemo, useState } from 'react';
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, IconButton, Typography, useMediaQuery, useTheme } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { PageContainer } from '@shared/components/page/PageContainer';
 import { ActionPane } from '@shared/components/action-pane/ActionPane';
 import { EnterpriseCommandUtilities } from '@shared/components/action-pane/EnterpriseCommandUtilities';
 import { OptionsMenu } from '@shared/components/action-pane/OptionsMenu';
+import { ActionPaneButton } from '@shared/components/action-pane/ActionPaneButton';
+import { ActionPaneGroup } from '@shared/components/action-pane/ActionPaneGroup';
+import { ActionPaneRibbonTrigger } from '@shared/components/action-pane/ActionPaneRibbonTrigger';
 import { RecordAttachmentsButton } from '@shared/components/documents';
 import { RightUtilityRail } from '@shared/components/page/RightUtilityRail';
 import { RelatedInformationPanel } from '@shared/components/page/RelatedInformationPanel';
@@ -59,6 +62,8 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
   actionPane,
   children,
   backAction,
+  ribbons,
+  commands,
   endActions,
   navigationLabel,
   tabs,
@@ -84,7 +89,9 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
   canEditField,
 }: MasterDetailPageProps<T>): React.ReactElement {
   const { t } = useAppTranslation();
-  const [navigationOpen, setNavigationOpen] = useState(defaultNavigationOpen);
+  // The pane overlays the content on small screens, so it starts closed there.
+  const compact = useMediaQuery(useTheme().breakpoints.down('lg'), { noSsr: true });
+  const [navigationOpen, setNavigationOpen] = useState(defaultNavigationOpen && !compact);
   const [query, setQuery] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);
   const [informationOpen, setInformationOpen] = useState(false);
@@ -107,20 +114,13 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
     });
   }, [records, query, matchesSearch, conditions, advancedFilter]);
   const selected = records.find((record) => record.id === selectedId) ?? null;
+  const hasRail = Boolean(advancedFilter || relatedInformation);
 
   const header = (
     <Box sx={{ pt: '3px' }}>
       {(subtitle || viewLabel) && (
-        <Typography sx={{ height: 20, fontSize: d365.fontSize, lineHeight: '18px', color: 'primary.main' }}>
-          {subtitle}
-          {viewLabel && (
-            <Box
-              component="span"
-              sx={{ color: d365.text, borderInlineStart: `1px solid ${d365.border}`, marginInlineStart: 1, paddingInlineStart: 1 }}
-            >
-              {viewLabel}
-            </Box>
-          )}
+        <Typography color="primary" variant="body2" sx={{ mb: 1 }}>
+          {[subtitle, viewLabel].filter(Boolean).join(' | ')}
         </Typography>
       )}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, mb: 1 }}>
@@ -131,7 +131,7 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
         >
           {title}
         </Typography>
-        {status && <Box sx={{ fontSize: d365.fontSize, flexShrink: 0 }}>{status}</Box>}
+        {status && <Box sx={{ fontSize: d365.fontSize, flexShrink: 0, paddingInlineEnd: 1 }}>{status}</Box>}
       </Box>
       {!loading && !error && tabs}
     </Box>
@@ -166,7 +166,22 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
   );
 
   return (
-    <PageContainer sx={{ gap: 0, height: '100%', minHeight: 0, fontFamily: d365.fontFamily, display: 'flex', flexDirection: 'column' }}>
+    <PageContainer
+      sx={{
+        gap: 0,
+        height: '100%',
+        minHeight: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        // As list-details: the right rail spans the whole page (beside the action pane).
+        position: 'relative',
+        overflow: 'hidden',
+        paddingInlineEnd: hasRail ? { lg: `${d365.utilityRailWidth}px` } : undefined,
+        bgcolor: d365.canvas,
+        fontFamily: d365.fontFamily,
+        color: d365.text,
+      }}
+    >
       <ActionPane
         variant="flat"
         endActions={
@@ -198,19 +213,49 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
           aria-label={navigationLabel ?? t('actions.toggleList')}
           aria-pressed={navigationOpen}
           onClick={() => setNavigationOpen((open) => !open)}
+          size="small"
           sx={{
-            bgcolor: navigationOpen ? 'primary.main' : undefined,
-            color: navigationOpen ? 'primary.contrastText' : 'primary.main',
-            borderRadius: `${d365.radius}px`,
             width: 31,
             height: 31,
             mx: 0.5,
-            '&:hover': { bgcolor: navigationOpen ? 'primary.dark' : 'action.hover' },
+            bgcolor: navigationOpen ? d365.primary : 'transparent',
+            color: navigationOpen ? '#fff' : d365.primary,
+            borderRadius: d365.radius,
+            transition: 'background-color 140ms ease, color 140ms ease',
+            '&:hover': { bgcolor: navigationOpen ? '#2559d6' : 'action.hover' },
           }}
         >
           <MenuIcon sx={{ fontSize: 17 }} />
         </IconButton>
         {actionPane}
+        {ribbons && ribbons.length > 0 && (
+          <ActionPaneGroup>
+            {ribbons.map((ribbon) => (
+              <ActionPaneRibbonTrigger
+                key={ribbon.id}
+                id={ribbon.id}
+                label={ribbon.label}
+                groups={ribbon.groups}
+                disabled={editing || ribbon.disabled}
+                persistenceKey={ribbon.persistenceKey}
+              />
+            ))}
+          </ActionPaneGroup>
+        )}
+        {commands && commands.length > 0 && (
+          <ActionPaneGroup>
+            {commands.map((command) => (
+              <ActionPaneButton
+                key={command.id}
+                actionId={command.id}
+                label={command.label}
+                icon={command.icon}
+                disabled={editing || command.disabled}
+                onClick={command.onClick}
+              />
+            ))}
+          </ActionPaneGroup>
+        )}
         {showOptionsMenu && (
           <OptionsMenu<T>
             record={selected}
@@ -221,7 +266,14 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
           />
         )}
       </ActionPane>
-      <Box sx={{ display: 'flex', flex: 1, minHeight: 0, position: 'relative' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flex: 1,
+          minHeight: 0,
+          position: 'relative',
+        }}
+      >
         <Box sx={{ flex: 1, minWidth: 0, minHeight: 0 }}>
           <ListDetailsLayout
             listPane={listPane}
@@ -274,24 +326,24 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
             />
           </Box>
         )}
-        {(advancedFilter || relatedInformation) && (
-          <RightUtilityRail
-            filterLabel={t('actions.filter')}
-            informationLabel={t('common.information')}
-            filterActive={filterOpen}
-            informationActive={informationOpen}
-            onFilter={() => {
-              // Start with one empty condition on the first field (created once, stable ID).
-              if (!filterOpen && advancedFilter && draftConditions.length === 0)
-                setDraftConditions([createEnterpriseFilterCondition(advancedFilter.fields[0]?.id)]);
-              setFilterOpen((open) => !open);
-            }}
-            onInformation={() => setInformationOpen((open) => !open)}
-            showInformation={Boolean(relatedInformation)}
-            disabled={editing}
-          />
-        )}
       </Box>
+      {hasRail && (
+        <RightUtilityRail
+          filterLabel={t('actions.filter')}
+          informationLabel={t('common.information')}
+          filterActive={filterOpen}
+          informationActive={informationOpen}
+          onFilter={() => {
+            // Start with one empty condition on the first field (created once, stable ID).
+            if (!filterOpen && advancedFilter && draftConditions.length === 0)
+              setDraftConditions([createEnterpriseFilterCondition(advancedFilter.fields[0]?.id)]);
+            setFilterOpen((open) => !open);
+          }}
+          onInformation={() => setInformationOpen((open) => !open)}
+          showInformation={Boolean(relatedInformation)}
+          disabled={editing}
+        />
+      )}
     </PageContainer>
   );
 }

@@ -619,7 +619,7 @@ export function ListDetailsLayout({
                                       }
                                       numeric={field.type === 'number'}
                                       disabled={field.disabled}
-                                      lookup={field.type === 'select' || Boolean(field.masterRoute?.trim()) || Boolean(field.linkStyle) || (legalEntity && field.name === 'languageId')}
+                                      lookup={field.type === 'select' || Boolean(field.masterRoute?.trim()) || Boolean(field.previewEntity) || Boolean(field.linkStyle) || (legalEntity && field.name === 'languageId')}
                                       label={fieldLabel}
                                       onEdit={editField}
                                     />

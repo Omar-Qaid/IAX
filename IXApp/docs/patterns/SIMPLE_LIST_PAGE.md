@@ -9,3 +9,21 @@
 The enterprise configuration adds localized context/view labels, quick or field search, CRUD commands and permissions, utility commands, advanced filtering, related information, initial selection, and panel defaults. The underlying custom `DataGrid` can enable `masterForm` add/edit/save behavior through `onNewRow` and `onRowSave`.
 
 API-backed examples include exchange-rate types and reusable workflow setup lists. Customers and customer groups currently use shared mock datasets. Keep columns memoized, row IDs stable, and mutations in the module API/data-source callbacks.
+
+## Reference list page
+
+New document list pages copy `accounts-receivable/sales-order/pages/SalesOrderListPage.tsx`.
+`free-text-invoice/pages/CustFreeInvoiceListPage.tsx` follows it. The shape:
+
+| Part | How |
+| --- | --- |
+| Data | `useQuery` with company-scoped keys from the module's query keys file (`salesOrderQueryKeys.list(company)`); `dataSource={{ type: 'controlled', rows }}` |
+| Customer filter from a customer page | `?customerAccount=` filters rows and adds it to `contextLabel` |
+| Columns | memoized; `headerName` is a translation key; the number column links with `getDetailHref`; master data columns get `preview: { entity }` (hover card) |
+| Action pane | `backCommand`, `showSearchCommand`, `crud` (with permissions and `canEdit`/`canDelete` rules), `commands`/`getCommands` for document actions |
+| Search and filter | `searchFields` and `advancedFilter` (right rail), no custom filter bar |
+| Record info | `recordTableName` + `getAuditRecordId` (Options menu) |
+| Related information | `relatedInformation.sections(row)` with short `InfoValue` blocks |
+| Messages | success and errors through `useNotifications`, not inline alerts |
+| Dialogs | quick create, confirmations and totals in `dialogs` |
+| Grid | `storageKey` per page; `selectionMode` `multiple`, or `single` when commands act on one record |

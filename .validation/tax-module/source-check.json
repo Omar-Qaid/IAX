@@ -1,0 +1,13 @@
+{
+  "files": 98,
+  "implementationDrift": [],
+  "folders": {
+    "Configuration": 15,
+    "Controllers": 9,
+    "Dtos": 15,
+    "Entities": 14,
+    "Interfaces": 17,
+    "Services": 18,
+    "Validation": 10
+  }
+}

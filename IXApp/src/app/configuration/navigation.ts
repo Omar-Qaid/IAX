@@ -160,6 +160,11 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
             path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDERS,
             permission: PERMISSIONS.SALES_ORDER_VIEW,
           },
+          {
+            label: 'nav.freeTextInvoices',
+            path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.FREE_TEXT_INVOICES,
+            permission: PERMISSIONS.FREE_TEXT_INVOICE_VIEW,
+          },
         ],
       },
       {
@@ -205,6 +210,46 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
       },
     ],
   },
+  'mod-Tax': {
+    moduleId: 'mod-Tax',
+    label: 'nav.tax',
+    icon: 'receipt',
+    defaultPath: ROUTE_PATHS.TAX.TAX_CODES,
+    matchPath: ROUTE_PATHS.TAX.ROOT,
+    sections: [
+      {
+        id: 'setup',
+        title: 'nav.setup',
+        links: [
+          {
+            label: 'nav.salesTaxAuthorities',
+            path: ROUTE_PATHS.TAX.TAX_AUTHORITIES,
+            permission: PERMISSIONS.TAX_AUTHORITY_VIEW,
+          },
+          {
+            label: 'nav.salesTaxSettlementPeriods',
+            path: ROUTE_PATHS.TAX.TAX_PERIODS,
+            permission: PERMISSIONS.TAX_PERIOD_VIEW,
+          },
+          {
+            label: 'nav.salesTaxCodes',
+            path: ROUTE_PATHS.TAX.TAX_CODES,
+            permission: PERMISSIONS.TAX_CODE_VIEW,
+          },
+          {
+            label: 'nav.salesTaxGroups',
+            path: ROUTE_PATHS.TAX.TAX_GROUPS,
+            permission: PERMISSIONS.TAX_GROUP_VIEW,
+          },
+          {
+            label: 'nav.itemSalesTaxGroups',
+            path: ROUTE_PATHS.TAX.TAX_ITEM_GROUPS,
+            permission: PERMISSIONS.TAX_ITEM_GROUP_VIEW,
+          },
+        ],
+      },
+    ],
+  },
   'mod-GeneralLedger': {
     moduleId: 'mod-GeneralLedger',
     label: 'nav.generalLedger',
@@ -235,31 +280,6 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
             label: 'nav.chargesCodes',
             path: ROUTE_PATHS.FOUNDATION.CHARGES_CODES,
             permission: PERMISSIONS.MARKUP_TABLE_VIEW,
-          },
-          {
-            label: 'nav.salesTaxAuthorities',
-            path: ROUTE_PATHS.FOUNDATION.TAX_AUTHORITIES,
-            permission: PERMISSIONS.TAX_AUTHORITY_VIEW,
-          },
-          {
-            label: 'nav.salesTaxSettlementPeriods',
-            path: ROUTE_PATHS.FOUNDATION.TAX_PERIODS,
-            permission: PERMISSIONS.TAX_PERIOD_VIEW,
-          },
-          {
-            label: 'nav.salesTaxCodes',
-            path: ROUTE_PATHS.FOUNDATION.TAX_CODES,
-            permission: PERMISSIONS.TAX_CODE_VIEW,
-          },
-          {
-            label: 'nav.salesTaxGroups',
-            path: ROUTE_PATHS.FOUNDATION.TAX_GROUPS,
-            permission: PERMISSIONS.TAX_GROUP_VIEW,
-          },
-          {
-            label: 'nav.itemSalesTaxGroups',
-            path: ROUTE_PATHS.FOUNDATION.TAX_ITEM_GROUPS,
-            permission: PERMISSIONS.TAX_ITEM_GROUP_VIEW,
           },
         ],
       },

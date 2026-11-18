@@ -6,7 +6,6 @@ import { queryClient } from '@core/api/queryClient';
 import { PERMISSIONS } from '@core/permissions/permissions';
 import { useNotifications } from '@shared/hooks/useNotifications';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
-import { uiDensity } from '@shared/constants/uiDensity';
 import {
   batchJobActivePeriodApi,
   type BatchJobActivePeriodRecord,
@@ -91,7 +90,7 @@ export function BatchJobActivePeriodPage(): React.ReactElement {
     columns={columns} dataGridProps={{
       storageKey: 'administration.batch-job-active-periods.reference-view', masterForm: true,
       hideSidebar: false, pageSize: 50,
-      rowHeight: uiDensity.gridRowHeight, headerHeight: uiDensity.gridRowHeight,
+
       onNewRow: () => ({ id: `new-${crypto.randomUUID()}`, recId: 0, periodId: '', name: null,
         fromTimeUtc: minimumTime, toTimeUtc: maximumTime, fromTimeLocal: minimumTime,
         toTimeLocal: maximumTime, timeZoneFollowed: 0, isActive: true }),

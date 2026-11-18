@@ -1,0 +1,125 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="11a9a194-5ef3-426f-a8da-cca597b56c8e" name="Omar.Qaid@IKK-IT-JD-L-OMQ 2026-11-18 11:50:29" runUser="IKKGROUP\Omar.Qaid" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-18T11:50:29.6512784+03:00" queuing="2026-11-18T11:50:29.6512795+03:00" start="2026-11-18T11:49:55.6533230+03:00" finish="2026-11-18T11:53:10.4211276+03:00" />
+  <TestSettings name="default" id="8c00fbff-cdec-4648-b121-4499c560f269">
+    <Deployment runDeploymentRoot="Omar.Qaid_IKK-IT-JD-L-OMQ_2026-11-18_11_50_29" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="08b07568-066d-4408-9f56-d50d1f652cb1" testId="651d4613-a786-66ec-197a-dc6ccc0d26a0" testName="IXApi.Tests.FoundationSeedTests.Registration_is_idempotent_and_dependencies_resolve" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0028457" startTime="2026-11-18T11:53:10.2643848+03:00" endTime="2026-11-18T11:53:10.2667301+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="08b07568-066d-4408-9f56-d50d1f652cb1" />
+    <UnitTestResult executionId="6f2a6721-8fb1-4fe1-808e-e6fe6e1691f7" testId="95b4015b-45a4-3192-cef0-93c62319b282" testName="IXApi.Tests.TaxTransGeneralJournalAccountEntryTests.SQLite_roundtrip_preserves_zero_references_bigint_ids_and_six_decimal_places" computerName="IKK-IT-JD-L-OMQ" duration="00:00:03.2051508" startTime="2026-11-18T11:50:29.5732550+03:00" endTime="2026-11-18T11:50:32.7770332+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6f2a6721-8fb1-4fe1-808e-e6fe6e1691f7" />
+    <UnitTestResult executionId="b6d2d083-286b-4025-9fd5-6c599ad87591" testId="e32391b9-7e77-2915-3840-1ad933425bc9" testName="IXApi.Tests.FoundationServiceStageTests.Foundation_services_SQLite" computerName="IKK-IT-JD-L-OMQ" duration="00:01:43.8362107" startTime="2026-11-18T11:50:37.5556308+03:00" endTime="2026-11-18T11:52:21.3640313+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b6d2d083-286b-4025-9fd5-6c599ad87591" />
+    <UnitTestResult executionId="7dc9d7c3-ced6-4601-992a-1deab2c51c94" testId="3394b523-b871-dcf4-d325-3601be80f722" testName="IXApi.Tests.SeedPostingModelTests.Every_mapped_table_is_in_the_seed_coverage_review" computerName="IKK-IT-JD-L-OMQ" duration="00:00:25.3461852" startTime="2026-11-18T11:50:04.1840618+03:00" endTime="2026-11-18T11:50:29.4342734+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7dc9d7c3-ced6-4601-992a-1deab2c51c94" />
+    <UnitTestResult executionId="4bd42878-780c-4121-b9a0-53ad4f83a78b" testId="f2c4c883-b0ba-b1f9-3b0b-fb83f65eaae7" testName="IXApi.Tests.FoundationSeedTests.Foundation_manifest_rejects_coverage_drift" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0030427" startTime="2026-11-18T11:52:47.4674500+03:00" endTime="2026-11-18T11:52:47.4686545+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4bd42878-780c-4121-b9a0-53ad4f83a78b" />
+    <UnitTestResult executionId="568d6da0-b867-480c-b7a7-481d8e88d32d" testId="3a8584a1-a545-7673-82b0-cbe44b83b2d6" testName="IXApi.Tests.FoundationSeedTests.Late_cross_company_reference_is_rejected_and_rolled_back" computerName="IKK-IT-JD-L-OMQ" duration="00:00:02.8171867" startTime="2026-11-18T11:52:47.4687985+03:00" endTime="2026-11-18T11:52:50.2859649+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="568d6da0-b867-480c-b7a7-481d8e88d32d" />
+    <UnitTestResult executionId="d96fb648-4726-4714-8dd7-51f3b857e72a" testId="22ec0159-dc42-2e6f-3c13-f5c6e03f9a7f" testName="IXApi.Tests.TaxTransGeneralJournalAccountEntryTests.Migration_only_creates_the_association_table_and_its_indexes" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.1277329" startTime="2026-11-18T11:50:29.5267408+03:00" endTime="2026-11-18T11:50:29.5717121+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d96fb648-4726-4714-8dd7-51f3b857e72a" />
+    <UnitTestResult executionId="a8786c4e-8da9-4252-b26e-41c1e4f9a6d2" testId="f59352b4-889c-1b23-ce11-67dbfaad33cd" testName="IXApi.Tests.FoundationSeedTests.Foundation_preparation_reports_persisted_references_and_preserves_them_on_rerun" computerName="IKK-IT-JD-L-OMQ" duration="00:00:26.1015002" startTime="2026-11-18T11:52:21.3662304+03:00" endTime="2026-11-18T11:52:47.4655513+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a8786c4e-8da9-4252-b26e-41c1e4f9a6d2" />
+    <UnitTestResult executionId="52f7acbb-a699-4467-8f06-dbf1d59026bd" testId="cd7a5024-2b1b-ce16-53ff-f4cc9de1bccc" testName="IXApi.Tests.FoundationServiceStageTests.Foundation_services_SQLServer" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0010000" startTime="2026-11-18T11:50:37.5336671+03:00" endTime="2026-11-18T11:50:37.5343818+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="NotExecuted" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="52f7acbb-a699-4467-8f06-dbf1d59026bd">
+      <Output>
+        <ErrorInfo>
+          <Message>Set IXAPI_AP_PHASE_ONE_SQLSERVER to opt into a disposable local SQL Server database.</Message>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="1a31fbb3-351c-47fe-8f7b-94d07f3083ca" testId="3b18f8be-d61a-e68c-0db1-4cc1fa123473" testName="IXApi.Tests.SeedPostingModelTests.AP_transaction_storage_has_documented_nullability_precision_and_restrictive_relationships" computerName="IKK-IT-JD-L-OMQ" duration="00:00:00.0141521" startTime="2026-11-18T11:50:37.5161547+03:00" endTime="2026-11-18T11:50:37.5293806+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1a31fbb3-351c-47fe-8f7b-94d07f3083ca" />
+    <UnitTestResult executionId="5c02e826-984b-4518-86d9-3a166d47aa20" testId="a899c981-274a-ce67-22e9-6d25c5fc504c" testName="IXApi.Tests.FoundationSeedTests.Tax_and_charge_examples_use_business_services_and_are_repeatable" computerName="IKK-IT-JD-L-OMQ" duration="00:00:16.5239525" startTime="2026-11-18T11:52:53.7413224+03:00" endTime="2026-11-18T11:53:10.2637162+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5c02e826-984b-4518-86d9-3a166d47aa20" />
+    <UnitTestResult executionId="7b95e530-bb4a-47b3-8acc-532b0418d7fb" testId="d44c92db-35d9-64ee-acb1-9632c39b420a" testName="IXApi.Tests.FoundationSeedTests.All_master_tables_are_populated_and_reruns_preserve_keys_and_conflicts_roll_back" computerName="IKK-IT-JD-L-OMQ" duration="00:00:03.4539664" startTime="2026-11-18T11:52:50.2863457+03:00" endTime="2026-11-18T11:52:53.7401937+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7b95e530-bb4a-47b3-8acc-532b0418d7fb" />
+    <UnitTestResult executionId="b5fd9e3f-13b1-4b63-baa6-a1037eb2a7c9" testId="bc868e73-7387-5363-8068-5cf88325aa3a" testName="IXApi.Tests.SeedPostingModelTests.Posting_links_and_multiple_request_variables_have_persistable_keys" computerName="IKK-IT-JD-L-OMQ" duration="00:00:08.0704201" startTime="2026-11-18T11:50:29.5273131+03:00" endTime="2026-11-18T11:50:37.5150339+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b5fd9e3f-13b1-4b63-baa6-a1037eb2a7c9" />
+    <UnitTestResult executionId="137c4707-2457-41fd-98b7-222f19197b20" testId="44e7dde6-84cd-8cf1-3c2d-c67937a3a267" testName="IXApi.Tests.TaxTransGeneralJournalAccountEntryTests.SqlServer_model_uses_the_supplied_columns_and_generated_system_row_version" computerName="IKK-IT-JD-L-OMQ" duration="00:00:25.3450443" startTime="2026-11-18T11:50:04.1878298+03:00" endTime="2026-11-18T11:50:29.4930547+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="137c4707-2457-41fd-98b7-222f19197b20" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IXApi.Tests.SeedPostingModelTests.Every_mapped_table_is_in_the_seed_coverage_review" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="3394b523-b871-dcf4-d325-3601be80f722">
+      <Execution id="7dc9d7c3-ced6-4601-992a-1deab2c51c94" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.SeedPostingModelTests" name="Every_mapped_table_is_in_the_seed_coverage_review" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.FoundationSeedTests.Tax_and_charge_examples_use_business_services_and_are_repeatable" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="a899c981-274a-ce67-22e9-6d25c5fc504c">
+      <Execution id="5c02e826-984b-4518-86d9-3a166d47aa20" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.FoundationSeedTests" name="Tax_and_charge_examples_use_business_services_and_are_repeatable" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.FoundationServiceStageTests.Foundation_services_SQLServer" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="cd7a5024-2b1b-ce16-53ff-f4cc9de1bccc">
+      <Execution id="52f7acbb-a699-4467-8f06-dbf1d59026bd" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.FoundationServiceStageTests" name="Foundation_services_SQLServer" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.FoundationSeedTests.All_master_tables_are_populated_and_reruns_preserve_keys_and_conflicts_roll_back" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="d44c92db-35d9-64ee-acb1-9632c39b420a">
+      <Execution id="7b95e530-bb4a-47b3-8acc-532b0418d7fb" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.FoundationSeedTests" name="All_master_tables_are_populated_and_reruns_preserve_keys_and_conflicts_roll_back" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.SeedPostingModelTests.AP_transaction_storage_has_documented_nullability_precision_and_restrictive_relationships" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="3b18f8be-d61a-e68c-0db1-4cc1fa123473">
+      <Execution id="1a31fbb3-351c-47fe-8f7b-94d07f3083ca" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.SeedPostingModelTests" name="AP_transaction_storage_has_documented_nullability_precision_and_restrictive_relationships" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.FoundationSeedTests.Late_cross_company_reference_is_rejected_and_rolled_back" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="3a8584a1-a545-7673-82b0-cbe44b83b2d6">
+      <Execution id="568d6da0-b867-480c-b7a7-481d8e88d32d" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.FoundationSeedTests" name="Late_cross_company_reference_is_rejected_and_rolled_back" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxTransGeneralJournalAccountEntryTests.SqlServer_model_uses_the_supplied_columns_and_generated_system_row_version" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="44e7dde6-84cd-8cf1-3c2d-c67937a3a267">
+      <Execution id="137c4707-2457-41fd-98b7-222f19197b20" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxTransGeneralJournalAccountEntryTests" name="SqlServer_model_uses_the_supplied_columns_and_generated_system_row_version" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxTransGeneralJournalAccountEntryTests.SQLite_roundtrip_preserves_zero_references_bigint_ids_and_six_decimal_places" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="95b4015b-45a4-3192-cef0-93c62319b282">
+      <Execution id="6f2a6721-8fb1-4fe1-808e-e6fe6e1691f7" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxTransGeneralJournalAccountEntryTests" name="SQLite_roundtrip_preserves_zero_references_bigint_ids_and_six_decimal_places" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.FoundationSeedTests.Registration_is_idempotent_and_dependencies_resolve" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="651d4613-a786-66ec-197a-dc6ccc0d26a0">
+      <Execution id="08b07568-066d-4408-9f56-d50d1f652cb1" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.FoundationSeedTests" name="Registration_is_idempotent_and_dependencies_resolve" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.TaxTransGeneralJournalAccountEntryTests.Migration_only_creates_the_association_table_and_its_indexes" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="22ec0159-dc42-2e6f-3c13-f5c6e03f9a7f">
+      <Execution id="d96fb648-4726-4714-8dd7-51f3b857e72a" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.TaxTransGeneralJournalAccountEntryTests" name="Migration_only_creates_the_association_table_and_its_indexes" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.FoundationServiceStageTests.Foundation_services_SQLite" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="e32391b9-7e77-2915-3840-1ad933425bc9">
+      <Execution id="b6d2d083-286b-4025-9fd5-6c599ad87591" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.FoundationServiceStageTests" name="Foundation_services_SQLite" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.FoundationSeedTests.Foundation_manifest_rejects_coverage_drift" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="f2c4c883-b0ba-b1f9-3b0b-fb83f65eaae7">
+      <Execution id="4bd42878-780c-4121-b9a0-53ad4f83a78b" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.FoundationSeedTests" name="Foundation_manifest_rejects_coverage_drift" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.FoundationSeedTests.Foundation_preparation_reports_persisted_references_and_preserves_them_on_rerun" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="f59352b4-889c-1b23-ce11-67dbfaad33cd">
+      <Execution id="a8786c4e-8da9-4252-b26e-41c1e4f9a6d2" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.FoundationSeedTests" name="Foundation_preparation_reports_persisted_references_and_preserves_them_on_rerun" />
+    </UnitTest>
+    <UnitTest name="IXApi.Tests.SeedPostingModelTests.Posting_links_and_multiple_request_variables_have_persistable_keys" storage="c:\users\omar.qaid\desktop\iax\ixapi\tests\bin\taxschemavalidation\net9.0\ixapi.tests.dll" id="bc868e73-7387-5363-8068-5cf88325aa3a">
+      <Execution id="b5fd9e3f-13b1-4b63-baa6-a1037eb2a7c9" />
+      <TestMethod codeBase="C:\Users\Omar.Qaid\Desktop\IAX\IXApi\Tests\bin\TaxSchemaValidation\net9.0\IXApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IXApi.Tests.SeedPostingModelTests" name="Posting_links_and_multiple_request_variables_have_persistable_keys" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="651d4613-a786-66ec-197a-dc6ccc0d26a0" executionId="08b07568-066d-4408-9f56-d50d1f652cb1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="95b4015b-45a4-3192-cef0-93c62319b282" executionId="6f2a6721-8fb1-4fe1-808e-e6fe6e1691f7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e32391b9-7e77-2915-3840-1ad933425bc9" executionId="b6d2d083-286b-4025-9fd5-6c599ad87591" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3394b523-b871-dcf4-d325-3601be80f722" executionId="7dc9d7c3-ced6-4601-992a-1deab2c51c94" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f2c4c883-b0ba-b1f9-3b0b-fb83f65eaae7" executionId="4bd42878-780c-4121-b9a0-53ad4f83a78b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3a8584a1-a545-7673-82b0-cbe44b83b2d6" executionId="568d6da0-b867-480c-b7a7-481d8e88d32d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="22ec0159-dc42-2e6f-3c13-f5c6e03f9a7f" executionId="d96fb648-4726-4714-8dd7-51f3b857e72a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f59352b4-889c-1b23-ce11-67dbfaad33cd" executionId="a8786c4e-8da9-4252-b26e-41c1e4f9a6d2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="cd7a5024-2b1b-ce16-53ff-f4cc9de1bccc" executionId="52f7acbb-a699-4467-8f06-dbf1d59026bd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3b18f8be-d61a-e68c-0db1-4cc1fa123473" executionId="1a31fbb3-351c-47fe-8f7b-94d07f3083ca" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a899c981-274a-ce67-22e9-6d25c5fc504c" executionId="5c02e826-984b-4518-86d9-3a166d47aa20" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d44c92db-35d9-64ee-acb1-9632c39b420a" executionId="7b95e530-bb4a-47b3-8acc-532b0418d7fb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bc868e73-7387-5363-8068-5cf88325aa3a" executionId="b5fd9e3f-13b1-4b63-baa6-a1037eb2a7c9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="44e7dde6-84cd-8cf1-3c2d-c67937a3a267" executionId="137c4707-2457-41fd-98b7-222f19197b20" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="14" executed="13" passed="13" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.01] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 9.0.23)&#xD;
+[xUnit.net 00:00:02.44]   Discovering: IXApi.Tests&#xD;
+[xUnit.net 00:00:04.22]   Discovered:  IXApi.Tests&#xD;
+[xUnit.net 00:00:04.37]   Starting:    IXApi.Tests&#xD;
+[xUnit.net 00:00:37.92]       Set IXAPI_AP_PHASE_ONE_SQLSERVER to opt into a disposable local SQL Server database.&#xD;
+Test 'IXApi.Tests.FoundationServiceStageTests.Foundation_services_SQLServer' was skipped in the test run.&#xD;
+[xUnit.net 00:03:10.65]   Finished:    IXApi.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="IKK-IT-JD-L-OMQ" outcome="Warning" timestamp="2026-11-18T11:50:37.5466226+03:00">
+        <Text>[xUnit.net 00:00:37.92]     IXApi.Tests.FoundationServiceStageTests.Foundation_services_SQLServer [SKIP]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

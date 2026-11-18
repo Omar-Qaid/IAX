@@ -1,334 +1,250 @@
-import React from 'react';
-import { Alert, Button, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import React, { useMemo, useState } from 'react';
+import { Button, Stack, Typography } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
+import { ListInfoValue } from '@patterns/simple-list/ListInfoValue';
+import { AppDialog } from '@shared/components/dialogs/AppDialog';
+import { ConfirmationDialog } from '@shared/components/dialogs/ConfirmationDialog';
+import type { ColumnDef } from '@shared/components/data-grid/types';
+import { useNotifications } from '@shared/hooks/useNotifications';
+import { localizedName } from '@shared/utilities/localizedName';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { useCompanyStore } from '@core/company/useCompanyStore';
 import { useAuth } from '@core/auth/useAuth';
 import { PERMISSIONS } from '@core/permissions/permissions';
-import { useAppTranslation } from '@core/localization/useAppTranslation';
-import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
-import { AppDialog } from '@shared/components/dialogs/AppDialog';
-import { ConfirmationDialog } from '@shared/components/dialogs/ConfirmationDialog';
-import { useNotifications } from '@shared/hooks/useNotifications';
-import { localizedName } from '@shared/utilities/localizedName';
-import type { ColumnDef } from '@shared/components/data-grid/types';
+import { FOUNDATION_RECORD_PREVIEWS } from '../../../foundation/previews/foundationRecordPreviews';
 import { freeTextInvoiceApi, type FreeTextInvoiceRecord } from '../api/freeTextInvoiceApi';
 import { customerQuickCreateApi } from '../../customer/api/customerQuickCreateApi';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../../routes/accountsReceivableRoutePaths';
+import { ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS } from '../../previews/accountsReceivableRecordPreviews';
+import { freeTextInvoiceQueryKeys } from '../../queries/accountsReceivableQueryKeys';
 
-type InvoiceRow = FreeTextInvoiceRecord & { customerName: string; customerRecId?: number };
-const localDate = (date: Date) =>
-  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+type InvoiceRow = FreeTextInvoiceRecord & { customerName: string };
+
 const amount = (value: number) =>
-  new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(
-    value
-  );
+  new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
 
+/** Free text invoice list on SimpleList (reference: `SalesOrderListPage`); only page-specific config. */
 export function CustFreeInvoiceListPage(): React.ReactElement {
-  const company = useCompanyStore((state) => state.currentCompany);
-  return <CompanyFreeInvoiceListPage key={company} company={company} />;
-}
-function CompanyFreeInvoiceListPage({ company }: { company: string }) {
-  const { t, isRtl, currentLanguage } = useAppTranslation();
-  const { hasPermission } = useAuth();
-  const cache = useQueryClient();
+  const { t, isRtl } = useAppTranslation();
   const navigate = useNavigate();
-  const { notifySuccess } = useNotifications();
-  const [params] = useSearchParams();
-  const customerAccount = params.get('customerAccount');
-  const [filter, setFilter] = React.useState('');
-  const [invoiceNumber, setInvoiceNumber] = React.useState('');
-  const [status, setStatus] = React.useState('notPosted');
-  const [dateRange, setDateRange] = React.useState('30');
-  const [pendingPost, setPendingPost] = React.useState<InvoiceRow | null>(null);
-  const [totals, setTotals] = React.useState<InvoiceRow | null>(null);
-  const queryKey = ['accounts-receivable', 'free-text-invoices', company];
-  const query = useQuery({ queryKey, queryFn: ({ signal }) => freeTextInvoiceApi.list(signal) });
-  const customers = useQuery({
-    queryKey: ['accounts-receivable', 'customers', company],
+  const cache = useQueryClient();
+  const { hasPermission } = useAuth();
+  const { notifySuccess, notifyError } = useNotifications();
+  const company = useCompanyStore((state) => state.currentCompany);
+  const [pendingPost, setPendingPost] = useState<InvoiceRow | null>(null);
+  const [totals, setTotals] = useState<InvoiceRow | null>(null);
+  const invoiceQuery = useQuery({
+    queryKey: freeTextInvoiceQueryKeys.list(company),
+    queryFn: ({ signal }) => freeTextInvoiceApi.list(signal),
+  });
+  const customerQuery = useQuery({
+    queryKey: freeTextInvoiceQueryKeys.customers(company),
     queryFn: ({ signal }) => customerQuickCreateApi.list(signal),
     enabled: hasPermission(PERMISSIONS.CUSTOMER_VIEW),
   });
+  const [searchParams] = useSearchParams();
+  const customerAccount = searchParams.get('customerAccount');
   const postedLabel = t('freeTextInvoices.posted', 'Posted');
   const draftLabel = t('freeTextInvoices.notPosted', 'Not posted');
+
+  const refreshList = () => cache.invalidateQueries({ queryKey: freeTextInvoiceQueryKeys.list(company) });
   const post = useMutation({
-    mutationFn: async (row: InvoiceRow) => {
-      if (row.posted)
-        throw new Error(t('freeTextInvoices.postedReadOnly', 'Posted invoices cannot be changed.'));
-      return freeTextInvoiceApi.post(row.recId);
-    },
+    mutationFn: (row: InvoiceRow) => freeTextInvoiceApi.post(row.recId),
     onSuccess: async () => {
-      await cache.invalidateQueries({ queryKey });
+      await refreshList();
       notifySuccess(t('freeTextInvoices.postedSuccess', 'Invoice posted.'));
     },
+    onError: (error) => notifyError(error.message),
   });
   const remove = useMutation({
-    mutationFn: async (rows: InvoiceRow[]) => {
-      if (rows.length !== 1 || rows[0].posted)
-        throw new Error(
-          t('freeTextInvoices.deleteDraftOnly', 'Select one unposted invoice to delete.')
-        );
-      await freeTextInvoiceApi.remove(rows[0].recId);
-    },
+    mutationFn: (row: InvoiceRow) => freeTextInvoiceApi.remove(row.recId),
     onSuccess: async () => {
-      await cache.invalidateQueries({ queryKey });
+      await refreshList();
       notifySuccess(t('messages.deletedSuccessfully'));
     },
+    onError: (error) => notifyError(error.message),
   });
   const busy = post.isPending || remove.isPending;
-  const rows = React.useMemo(() => {
-    const today = new Date();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 29);
-    const from = localDate(firstDay),
-      through = localDate(today);
-    return (query.data ?? [])
-      .map((invoice) => {
-        const customer = hasPermission(PERMISSIONS.CUSTOMER_VIEW)
-          ? customers.data?.find((row) => row.accountNumber === invoice.customerAccount)
-          : undefined;
-        return {
-          ...invoice,
-          customerName: customer
-            ? localizedName({ name: customer.name, nameAlias: customer.nameAr }, isRtl)
-            : '',
-          customerRecId: customer?.recId,
-        };
-      })
-      .filter(
-        (row) =>
-          (!customerAccount || row.customerAccount === customerAccount) &&
-          (status === 'all' || row.posted === (status === 'posted')) &&
-          (dateRange === 'all' ||
-            (row.invoiceDate.slice(0, 10) >= from && row.invoiceDate.slice(0, 10) <= through)) &&
-          row.invoiceId.toLocaleLowerCase().includes(invoiceNumber.trim().toLocaleLowerCase()) &&
-          [
-            row.invoiceId,
-            row.customerAccount,
-            row.invoiceAccount,
-            row.customerName,
-            row.description,
-            row.currencyCode,
-          ]
-            .join(' ')
-            .toLocaleLowerCase()
-            .includes(filter.trim().toLocaleLowerCase())
-      );
-  }, [
-    query.data,
-    customers.data,
-    customerAccount,
-    status,
-    dateRange,
-    invoiceNumber,
-    filter,
-    isRtl,
-    hasPermission,
-  ]);
-  const columns = React.useMemo<ColumnDef<InvoiceRow>[]>(
+
+  const invoices = useMemo<InvoiceRow[]>(
+    () =>
+      (invoiceQuery.data ?? [])
+        .filter((invoice) => !customerAccount || invoice.customerAccount === customerAccount)
+        .map((invoice) => {
+          const customer = customerQuery.data?.find((row) => row.accountNumber === invoice.customerAccount);
+          return {
+            ...invoice,
+            customerName: customer ? localizedName({ name: customer.name, nameAlias: customer.nameAr }, isRtl) : '',
+          };
+        }),
+    [invoiceQuery.data, customerQuery.data, customerAccount, isRtl]
+  );
+
+  const columns = useMemo<ColumnDef<InvoiceRow>[]>(
     () => [
       {
         field: 'invoiceId',
-        headerName: t('freeTextInvoices.invoice', 'Invoice'),
-        width: 190,
+        headerName: 'freeTextInvoices.invoice',
+        width: 160,
         pinned: 'left',
         valueGetter: ({ row }) => row.invoiceId || draftLabel,
         getDetailHref: (row) => ACCOUNTS_RECEIVABLE_ROUTE_PATHS.freeTextInvoice(row.recId),
       },
-      {
-        field: 'customerAccount',
-        headerName: t('fields.customerAccount'),
-        width: 160,
-        getDetailHref: (row) =>
-          row.customerRecId
-            ? ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customer(String(row.customerRecId))
-            : '',
-      },
-      { field: 'invoiceAccount', headerName: t('fields.invoiceAccount'), width: 160 },
-      { field: 'customerName', headerName: t('fields.customerName'), minWidth: 220, flex: 1 },
+      { field: 'customerAccount', headerName: 'fields.customerAccount', width: 150, preview: { entity: ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.CUSTOMER } },
+      { field: 'customerName', headerName: 'fields.customerName', minWidth: 220, flex: 1 },
+      { field: 'invoiceAccount', headerName: 'fields.invoiceAccount', width: 150, preview: { entity: ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.CUSTOMER } },
+      { field: 'currencyCode', headerName: 'fields.currency', width: 95, preview: { entity: FOUNDATION_RECORD_PREVIEWS.CURRENCY } },
       {
         field: 'invoiceDate',
-        headerName: t('freeTextInvoices.date', 'Date'),
-        width: 140,
+        headerName: 'freeTextInvoices.invoiceDate',
+        width: 135,
         type: 'date',
+        // The API sends date-times; the list shows the date only.
+        valueGetter: ({ row }) => row.invoiceDate.slice(0, 10),
       },
-      { field: 'currencyCode', headerName: t('fields.currency'), width: 100 },
-      { field: 'posted', headerName: postedLabel, width: 100, type: 'boolean' },
-      { field: 'description', headerName: t('fields.description', 'Description'), width: 220 },
+      { field: 'description', headerName: 'fields.description', width: 220 },
       {
         field: 'invoiceAmount',
-        headerName: t('freeTextInvoices.invoiceAmount', 'Invoice amount'),
-        width: 150,
+        headerName: 'freeTextInvoices.invoiceAmount',
+        width: 140,
         type: 'number',
         align: 'right',
         renderCell: ({ row }) => amount(row.invoiceAmount),
       },
+      { field: 'posted', headerName: 'freeTextInvoices.posted', width: 95, type: 'boolean' },
     ],
-    [t, draftLabel, postedLabel]
+    [draftLabel]
   );
+
   const config: EnterpriseListConfig<InvoiceRow> = {
+    showSearchCommand: true,
     recordTableName: 'CustInvoiceTable',
-    initialSelection: 'first',
-    getAuditRecordId: (row) => row.recId,
-    contextLabel: customerAccount
-      ? `${t('freeTextInvoices.title', 'Free text invoices')} | ${customerAccount}`
-      : t('freeTextInvoices.title', 'Free text invoices'),
-    viewLabel: t('common.standardView'),
-    filterLabel: t('actions.filter'),
-    informationLabel: t('common.information'),
-    locale: currentLanguage.code,
-    backCommand: { label: t('actions.back'), onClick: () => navigate(-1) },
+    getAuditRecordId: (invoice) => invoice.recId,
+    contextLabel: customerAccount ? `${t('freeTextInvoices.title')} | ${customerAccount}` : undefined,
     searchFields: [
-      { field: 'invoiceId', label: t('freeTextInvoices.invoice', 'Invoice') },
+      { field: 'invoiceId', label: t('freeTextInvoices.invoice') },
       { field: 'customerAccount', label: t('fields.customerAccount') },
-      { field: 'customerName', label: t('fields.name', 'Name') },
+      { field: 'customerName', label: t('fields.customerName') },
     ],
     crud: {
-      editLabel: t('actions.edit'),
-      newLabel: t('actions.new'),
-      deleteLabel: t('actions.delete'),
       editPermission: PERMISSIONS.FREE_TEXT_INVOICE_EDIT,
       newPermission: PERMISSIONS.FREE_TEXT_INVOICE_CREATE,
       deletePermission: PERMISSIONS.FREE_TEXT_INVOICE_DELETE,
+      onEdit: (invoice) => navigate(`${ACCOUNTS_RECEIVABLE_ROUTE_PATHS.freeTextInvoice(invoice.recId)}?edit=true`),
       onNew: () => navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.newFreeTextInvoice(customerAccount ?? undefined)),
-      onEdit: (row) => { if (!row.posted) navigate(`${ACCOUNTS_RECEIVABLE_ROUTE_PATHS.freeTextInvoice(row.recId)}?edit=true`); },
-      canEdit: (row) => !row.posted,
+      // Posted invoices are read-only; delete works on one draft at a time.
+      canEdit: (invoice) => !invoice.posted,
       canDelete: (selected) => !busy && selected.length === 1 && !selected[0].posted,
-      onDelete: (selected) => remove.mutate(selected),
+      onDelete: (selected) => remove.mutate(selected[0]),
     },
-    getCommands: (row) => [
+    getCommands: (invoice) => [
       {
         id: 'post',
-        label: t('freeTextInvoices.post', 'Post'),
+        label: t('freeTextInvoices.post'),
         permission: PERMISSIONS.FREE_TEXT_INVOICE_POST,
-        disabled: !row || row.posted || busy,
-        onClick: () => setPendingPost(row),
+        disabled: !invoice || invoice.posted || busy,
+        onClick: () => setPendingPost(invoice),
       },
       {
         id: 'totals',
-        label: t('freeTextInvoices.totals', 'Totals'),
-        disabled: !row || busy,
-        onClick: () => setTotals(row),
+        label: t('freeTextInvoices.totals'),
+        disabled: !invoice || busy,
+        onClick: () => setTotals(invoice),
       },
     ],
-    utilities: {
-      personalizeLabel: t('utilities.personalize'),
-      guideLabel: t('utilities.guide'),
-      notificationsLabel: t('common.notifications'),
-      refreshLabel: t('actions.refresh'),
-      openWindowLabel: t('utilities.openWindow'),
+    advancedFilter: {
+      fieldLabel: t('freeTextInvoices.invoice'),
+      operatorLabel: t('filters.contains'),
+      fields: [
+        { field: 'invoiceId', label: t('freeTextInvoices.invoice') },
+        { field: 'customerAccount', label: t('fields.customerAccount') },
+        { field: 'customerName', label: t('fields.customerName') },
+        { field: 'invoiceAccount', label: t('fields.invoiceAccount') },
+        { field: 'currencyCode', label: t('fields.currency') },
+        { field: 'description', label: t('fields.description') },
+      ],
+      getValue: (invoice) => invoice.invoiceId,
     },
     relatedInformation: {
-      title: t('relatedInformation.title'),
-      sections: (row) => [
+      sections: (invoice) => [
         {
-          id: 'invoice',
-          label: t('freeTextInvoices.invoice', 'Invoice'),
+          id: 'customer',
+          label: t('fields.customer'),
           defaultExpanded: true,
           content: (
-            <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>
-              {row
-                ? `${row.invoiceId || draftLabel}\n${row.customerAccount}\n${row.currencyCode} ${amount(row.invoiceAmount)}\n${row.posted ? postedLabel : draftLabel}`
-                : t('freeTextInvoices.selectInvoice', 'Select an invoice.')}
-            </Typography>
+            <ListInfoValue
+              value={invoice ? `${invoice.customerAccount}\n${invoice.customerName}` : ''}
+              empty={t('freeTextInvoices.selectInvoice')}
+            />
+          ),
+        },
+        {
+          id: 'amounts',
+          label: t('freeTextInvoices.totals'),
+          content: (
+            <ListInfoValue
+              value={invoice ? `${invoice.currencyCode} ${amount(invoice.invoiceAmount)}` : ''}
+              empty={t('freeTextInvoices.selectInvoice')}
+            />
+          ),
+        },
+        {
+          id: 'status',
+          label: t('common.status'),
+          content: (
+            <ListInfoValue
+              value={invoice ? (invoice.posted ? postedLabel : draftLabel) : ''}
+              empty={t('freeTextInvoices.selectInvoice')}
+            />
           ),
         },
       ],
     },
   };
+
   return (
-    <SimpleListPage<InvoiceRow>
-      title={t('freeTextInvoices.title', 'Free text invoices')}
-      recordTableName="CustInvoiceTable"
+    <SimpleListPage
+      title={t('freeTextInvoices.title')}
       enterpriseConfig={config}
-      dataSource={{
-        type: 'controlled',
-        rows,
-        refresh: () => {
-          post.reset();
-          remove.reset();
-          void query.refetch();
-        },
-      }}
+      dataSource={{ type: 'controlled', rows: invoices }}
       columns={columns}
-      loading={query.isLoading}
-      error={query.error?.message}
-      onRetry={() => void query.refetch()}
+      loading={invoiceQuery.isLoading}
+      error={invoiceQuery.error instanceof Error ? invoiceQuery.error.message : null}
+      onRetry={() => invoiceQuery.refetch()}
       dataGridProps={{
-        storageKey: 'accounts-receivable.free-text-invoices',
+        storageKey: 'accounts-receivable.free-text-invoices.reference-view',
+        // Post and Delete act on one invoice.
         selectionMode: 'single',
       }}
-      filterBar={
-        <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1, mx: { xs: 1, sm: 2.5 }, mb: 1 }}>
-          {(post.error || remove.error) && (
-            <Alert severity="error" sx={{ width: '100%' }}>
-              {(post.error || remove.error)?.message}
-            </Alert>
-          )}
-          <TextField
-            size="small"
-            label={t('actions.filter')}
-            value={filter}
-            onChange={(event) => setFilter(event.target.value)}
-          />
-          <TextField
-            size="small"
-            label={t('freeTextInvoices.invoiceNumber', 'Invoice number')}
-            value={invoiceNumber}
-            onChange={(event) => setInvoiceNumber(event.target.value)}
-          />
-          <TextField
-            size="small"
-            select
-            label={t('common.status')}
-            value={status}
-            onChange={(event) => setStatus(event.target.value)}
-          >
-            <MenuItem value="notPosted">{draftLabel}</MenuItem>
-            <MenuItem value="posted">{postedLabel}</MenuItem>
-            <MenuItem value="all">{t('common.all', 'All')}</MenuItem>
-          </TextField>
-          <TextField
-            size="small"
-            select
-            label={t('freeTextInvoices.invoiceDate', 'Invoice date')}
-            value={dateRange}
-            onChange={(event) => setDateRange(event.target.value)}
-          >
-            <MenuItem value="30">{t('freeTextInvoices.last30Days', 'Last 30 days')}</MenuItem>
-            <MenuItem value="all">{t('freeTextInvoices.allDates', 'All dates')}</MenuItem>
-          </TextField>
-        </Stack>
-      }
       dialogs={
         <>
           <ConfirmationDialog
             open={Boolean(pendingPost)}
-            title={t('freeTextInvoices.post', 'Post')}
+            title={t('freeTextInvoices.post')}
             message={t(
               'freeTextInvoices.confirmPost',
               'Post the selected free text invoice? This creates posted accounting entries.'
             )}
-            confirmLabel={t('freeTextInvoices.post', 'Post')}
+            confirmLabel={t('freeTextInvoices.post')}
             loading={post.isPending}
             onClose={() => setPendingPost(null)}
             onConfirm={() => {
-              if (pendingPost) {
-                post.mutate(pendingPost);
-                setPendingPost(null);
-              }
+              if (pendingPost) post.mutate(pendingPost);
+              setPendingPost(null);
             }}
           />
           <AppDialog
             open={Boolean(totals)}
-            title={t('freeTextInvoices.totals', 'Totals')}
+            title={t('freeTextInvoices.totals')}
             onClose={() => setTotals(null)}
             actions={<Button onClick={() => setTotals(null)}>{t('actions.close')}</Button>}
           >
             {totals && (
               <Stack spacing={1}>
                 <Typography>
-                  {totals.invoiceId || draftLabel} | {totals.customerAccount} |{' '}
-                  {totals.currencyCode}
+                  {totals.invoiceId || draftLabel} | {totals.customerAccount} | {totals.currencyCode}
                 </Typography>
                 <Typography>
                   {t('freeTextInvoices.netAmount', 'Net amount')}: {amount(totals.netAmount)}
@@ -337,8 +253,7 @@ function CompanyFreeInvoiceListPage({ company }: { company: string }) {
                   {t('freeTextInvoices.taxAmount', 'Sales tax')}: {amount(totals.taxAmount)}
                 </Typography>
                 <Typography>
-                  {t('freeTextInvoices.invoiceAmount', 'Invoice amount')}:{' '}
-                  {amount(totals.invoiceAmount)}
+                  {t('freeTextInvoices.invoiceAmount', 'Invoice amount')}: {amount(totals.invoiceAmount)}
                 </Typography>
               </Stack>
             )}

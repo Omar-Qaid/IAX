@@ -4,7 +4,7 @@ using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
-using IAX.IXApi.Modules.Finance.Foundation.Tax;
+using IAX.IXApi.Modules.Finance.Tax;
 using IAX.IXApi.Shared.Application.Identity;
 using IAX.IXApi.Shared.Domain.Entities;
 using Microsoft.Data.Sqlite;

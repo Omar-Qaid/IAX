@@ -70,6 +70,7 @@ export function useSalesOrderDocument() {
   const {
     orders,
     orderQuery,
+    orderLoading,
     order,
     refetchOrder,
     customersQuery,
@@ -615,6 +616,7 @@ export function useSalesOrderDocument() {
     canEditLines,
     orders,
     orderQuery,
+    orderLoading,
     order,
     refetchOrder,
     customersQuery,

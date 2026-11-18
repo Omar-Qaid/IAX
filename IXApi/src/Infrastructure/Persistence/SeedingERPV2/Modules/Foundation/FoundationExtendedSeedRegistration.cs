@@ -1,3 +1,4 @@
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Tax;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;

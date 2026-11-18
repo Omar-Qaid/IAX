@@ -158,6 +158,21 @@ public sealed class FoundationSeedTests
         Assert.Equal(posted.TaxBaseAmount, detail.TaxBaseAmount);
         Assert.Equal(posted.TaxAmount, detail.TaxAmount);
         Assert.Equal(52.50m, detail.TaxAmount);
+        var association = await db.Set<TaxTransGeneralJournalAccountEntry>().SingleAsync();
+        Assert.Equal(association.RecId, Assert.Single(result.TaxAccountingAssociationIds));
+        Assert.Equal(posted.RecId, association.TaxTrans);
+        var accountEntry = await db.Set<GeneralJournalAccountEntry>().SingleAsync(x => x.RecId == association.GeneralJournalAccountEntry && x.DataAreaId == association.DataAreaId);
+        var voucher = await db.Set<GeneralJournalEntry>().SingleAsync(x => x.RecId == accountEntry.GeneralJournalEntry && x.DataAreaId == association.DataAreaId);
+        Assert.Equal(posted.Voucher, voucher.SubledgerVoucher);
+        Assert.Equal(posted.TransDate, voucher.AccountingDate);
+        Assert.Equal(accountEntry.LedgerDimension, association.LedgerDimension);
+        Assert.Equal(accountEntry.AccountingCurrencyAmount, association.AccountingCurrencyAmount);
+        Assert.Equal(accountEntry.TransactionCurrencyAmount, association.TransactionCurrencyAmount);
+        Assert.Equal(accountEntry.TransactionCurrencyCode, association.TransactionCurrency);
+        Assert.Null(association.TaxUncommitted);
+        Assert.Null(association.SubledgerJournalAccountEntry);
+        Assert.Null(association.TaxTransRelationship);
+        Assert.Null(association.MonetaryAmountType);
         Assert.True(await db.Set<DimensionAttributeValueCombination>().AnyAsync(x => x.DataAreaId == detail.DataAreaId && x.RecId == detail.OperationLedgerDimension));
         db.ChangeTracker.Clear();
         await examples.RunAsync(new(2026, "foundation-test"));
@@ -165,6 +180,30 @@ public sealed class FoundationSeedTests
         Assert.Equal(detail.RecId, await db.Set<TaxJournalTrans>().Select(x => x.RecId).SingleAsync());
         Assert.Equal(taxes, await db.Set<TaxTrans>().CountAsync());
         Assert.Equal(charges, await db.Set<IAX.IXApi.Modules.Finance.AccountsReceivable.MarkupTrans>().CountAsync());
+        Assert.Equal(association.RecId, await db.Set<TaxTransGeneralJournalAccountEntry>().Select(x => x.RecId).SingleAsync());
+        var associations = scope.ServiceProvider.GetRequiredService<IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Tax.TaxTransGeneralJournalAccountEntrySeeder>();
+        await Assert.ThrowsAsync<InvalidOperationException>(() => associations.SeedAsync([posted.RecId, long.MaxValue]));
+        Assert.Equal(association.RecId, await db.Set<TaxTransGeneralJournalAccountEntry>().Select(x => x.RecId).SingleAsync());
+        var conflicting = await db.Set<TaxTransGeneralJournalAccountEntry>().SingleAsync();
+        conflicting.LedgerDimension = long.MaxValue;
+        await db.SaveChangesAsync();
+        await Assert.ThrowsAsync<InvalidOperationException>(() => associations.SeedAsync([posted.RecId]));
+        Assert.Equal(long.MaxValue, (await db.Set<TaxTransGeneralJournalAccountEntry>().SingleAsync()).LedgerDimension);
+        var invalidSource = await db.Set<TaxTrans>().SingleAsync(x => x.RecId == posted.RecId);
+        invalidSource.SourceRecId = long.MaxValue;
+        await db.SaveChangesAsync();
+        var sourceError = await Assert.ThrowsAsync<InvalidOperationException>(() => associations.SeedAsync([posted.RecId]));
+        Assert.Contains("source vendor invoice or journal line", sourceError.Message);
+        (await db.Set<TaxTrans>().SingleAsync(x => x.RecId == posted.RecId)).SourceRecId = posted.SourceRecId;
+        (await db.Set<TaxTransGeneralJournalAccountEntry>().SingleAsync()).LedgerDimension = accountEntry.LedgerDimension;
+        var dimension = await db.Set<DimensionAttributeValueCombination>().SingleAsync(x => x.RecId == accountEntry.LedgerDimension);
+        db.Add(IAX.IXApi.Modules.Finance.Common.SubledgerPostingSupport.AccountEntry("dat", accountEntry.GeneralJournalEntry, dimension,
+            IAX.IXApi.Modules.Finance.Common.LedgerPostingType.Tax, accountEntry.TransactionCurrencyAmount,
+            accountEntry.AccountingCurrencyAmount, accountEntry.ReportingCurrencyAmount, "Ambiguous test fixture", 0m, accountEntry.TransactionCurrencyCode));
+        await db.SaveChangesAsync();
+        var ambiguous = await Assert.ThrowsAsync<InvalidOperationException>(() => associations.SeedAsync([posted.RecId]));
+        Assert.Contains("2 matching tax ledger entries", ambiguous.Message);
+        Assert.Equal(association.RecId, await db.Set<TaxTransGeneralJournalAccountEntry>().Select(x => x.RecId).SingleAsync());
     }
     private sealed class ExampleIdentity : IAX.IXApi.Shared.Application.Identity.ICompanyExecutionContext, IAX.IXApi.Infrastructure.Identity.ICurrentUserService
     {

@@ -1,6 +1,6 @@
 using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 using IAX.IXApi.Modules.Finance.Foundation.WorkerOrganizationAssignments;
-using IAX.IXApi.Modules.Finance.Foundation.Tax;
+using IAX.IXApi.Modules.Finance.Tax;
 using System.Reflection;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Finance.Entities;

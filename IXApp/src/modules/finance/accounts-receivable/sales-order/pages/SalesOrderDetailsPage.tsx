@@ -24,9 +24,9 @@ import { buildSalesOrderHeaderSections } from '../details/SalesOrderHeaderSectio
 
 export function SalesOrderDetailsPage(): React.ReactElement {
   const doc = useSalesOrderDocument();
-  const { orderQuery, refetchOrder, t, order } = doc;
-  if (orderQuery.isPending) return <LoadingState />;
-  if (orderQuery.isError)
+  const { orderQuery, orderLoading, refetchOrder, t, order } = doc;
+  if (orderLoading) return <LoadingState />;
+  if (orderQuery.isError && !order)
     return (
       <ErrorState message={orderQuery.error.message} onRetry={() => void refetchOrder()} />
     );

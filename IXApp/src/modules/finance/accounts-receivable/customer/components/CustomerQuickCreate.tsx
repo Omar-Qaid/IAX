@@ -1,3 +1,4 @@
+import { TAX_ROUTE_PATHS } from '@modules/finance/tax/routes/taxRoutePaths';
 import { useCompanyStore } from '@core/company/useCompanyStore';
 import React, { useCallback, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
@@ -24,7 +25,7 @@ export function CustomerQuickCreate({ open, nextAccount, onClose, onSave }: Cust
   });
   const lookup = lookups.data;
   const sections = useMemo<FastTabSection[]>(() => [{ id: 'details', title: t('customerQuickCreate.sections.details'), summary: <FastTabSummary values={['--', 'SAR', '--', '--', '--', '--']} />, fields: [
-    { name: 'accountNumber', label: t('fields.customerAccount'), disabled: true }, { name: 'salesTaxGroup', label: t('fields.salesTaxGroup'), type: 'select', masterRoute: FOUNDATION_ROUTE_PATHS.TAX_GROUPS, options: lookup?.salesTaxGroups ?? [] },
+    { name: 'accountNumber', label: t('fields.customerAccount'), disabled: true }, { name: 'salesTaxGroup', label: t('fields.salesTaxGroup'), type: 'select', masterRoute: TAX_ROUTE_PATHS.TAX_GROUPS, options: lookup?.salesTaxGroups ?? [] },
     { name: 'customerCategory', label: t('customerQuickCreate.fields.category'), type: 'select', required: true, options: [option('retail', 'customerQuickCreate.options.retail'), option('wholesale', 'customerQuickCreate.options.wholesale')] },
     { name: 'name', label: t('fields.customerName'), required: true },
     { name: 'nameAr', label: t('fields.arabicName') },

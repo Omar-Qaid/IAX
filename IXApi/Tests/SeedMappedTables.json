@@ -242,6 +242,7 @@
   "TaxReportPeriod",
   "TaxTable",
   "TaxTrans",
+  "TaxTransGeneralJournalAccountEntry",
   "UnitOfMeasure",
   "UnitOfMeasureBaseUnit",
   "UnitOfMeasureConversion",

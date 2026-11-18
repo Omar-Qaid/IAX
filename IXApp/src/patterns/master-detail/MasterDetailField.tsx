@@ -24,7 +24,12 @@ export function MasterDetailField({
   lookup = false,
 }: MasterDetailFieldProps): React.ReactElement {
   if (editing && editor) return <Box sx={{ minWidth: 0 }}>{editor}</Box>;
-  const text = value == null ? '' : typeof value === 'string' || typeof value === 'number' ? String(value) : value;
+  const text =
+    value == null
+      ? ''
+      : typeof value === 'string' || typeof value === 'number'
+        ? String(value)
+        : value;
   if ((masterRoute || previewEntity) && typeof text === 'string')
     return (
       <LookupDisplayField
@@ -39,11 +44,25 @@ export function MasterDetailField({
     );
   return (
     <Box sx={{ minWidth: 0 }}>
-      <Typography sx={{ display: 'block', mb: '6px', fontSize: d365.labelFontSize, lineHeight: 1.2, color: d365.text }}>
+      <Typography
+        sx={{
+          display: 'block',
+          mb: '6px',
+          fontSize: d365.labelFontSize,
+          lineHeight: 1.2,
+          color: d365.text,
+        }}
+      >
         {label}
       </Typography>
       {typeof text === 'string' ? (
-        <EditableViewField label={label} value={text} numeric={numeric} lookup={lookup} onEdit={onEdit} />
+        <EditableViewField
+          label={label}
+          value={text}
+          numeric={numeric}
+          lookup={lookup}
+          onEdit={onEdit}
+        />
       ) : (
         text
       )}
@@ -60,8 +79,19 @@ export function MasterDetailFieldGroup({
   children: React.ReactNode;
 }): React.ReactElement {
   return (
-    <Box role="group" aria-label={title} sx={{ minWidth: 0, display: 'grid', alignContent: 'start', gap: 1.25 }}>
-      <Typography sx={{ fontSize: d365.labelFontSize, fontWeight: 700, lineHeight: 1.5, textTransform: 'uppercase' }}>
+    <Box
+      role="group"
+      aria-label={title}
+      sx={{ minWidth: 0, display: 'grid', alignContent: 'start', gap: 1.25 }}
+    >
+      <Typography
+        sx={{
+          fontSize: d365.labelFontSize,
+          fontWeight: 700,
+          lineHeight: 1.5,
+          textTransform: 'uppercase',
+        }}
+      >
         {title}
       </Typography>
       {children}
@@ -78,7 +108,13 @@ export function MasterDetailFieldGroups({
   minColumnWidth?: number;
 }): React.ReactElement {
   return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(${minColumnWidth}px, 1fr))`, gap: 3 }}>
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(auto-fit, minmax(${minColumnWidth}px, 1fr))`,
+        gap: 3,
+      }}
+    >
       {children}
     </Box>
   );

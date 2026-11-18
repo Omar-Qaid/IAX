@@ -23,6 +23,9 @@ export default defineConfig({
     setupFiles: ['./src/test/setupTests.ts'],
     css: false,
     testTimeout: 60_000,
+    // Heavy page tests (sales order, process builder) starve each other when every
+    // core runs a jsdom worker; half the cores keeps the full suite stable.
+    maxWorkers: '50%',
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'json-summary'],

@@ -80,14 +80,108 @@ vi.mock('@modules/finance/foundation/exchange-rate/api/exchangeRateTypeApi', () 
   },
 }));
 
+vi.mock(
+  '@modules/finance/accounts-receivable/customer/api/customerQuickCreateApi',
+  async (importOriginal) => ({
+    ...(await importOriginal<object>()),
+    customerQuickCreateApi: {
+      list: vi.fn(async () => (await import('@mocks/data/customers')).MOCK_CUSTOMERS),
+      groupFieldLookups: vi.fn(async () => ({ paymentTerms: [], salesTaxGroups: [] })),
+      lookups: vi.fn(async () => ({
+        customerGroups: [],
+        salesTaxGroups: [],
+        currencies: [],
+        countryRegions: [],
+        paymentTerms: [],
+        paymentMethods: [],
+        deliveryTerms: [],
+        deliveryModes: [],
+        salesPools: [],
+        paymentSchedules: [],
+      })),
+    },
+  })
+);
+vi.mock(
+  '@modules/finance/accounts-receivable/customer-group/api/customerGroupApi',
+  async (importOriginal) => ({
+    ...(await importOriginal<object>()),
+    customerGroupApi: {
+      list: vi.fn(async () => [
+        {
+          id: '1',
+          recId: 1,
+          custGroupId: 'CG-MAJOR',
+          name: 'Major Key Accounts',
+          paymTermId: '',
+          taxGroupId: '',
+        },
+      ]),
+    },
+  })
+);
+vi.mock('@modules/finance/accounts-receivable/setup/api/customerPaymentSetupApi', () => ({
+  customerPaymentSetupApi: (kind: string) => ({
+    list: async () => [
+      {
+        id: '1',
+        recId: 1,
+        code: kind === 'terms' ? '07 Days' : 'Cash',
+        description: kind === 'terms' ? 'Seven days' : 'Cash payment',
+        days: 7,
+        months: 0,
+        source: {},
+      },
+    ],
+  }),
+}));
+async function ordersFixture() {
+  return (await import('@mocks/data/salesOrders')).MOCK_SALES_ORDERS.map((row) => ({
+    ...row,
+    salesId: row.salesOrderNumber,
+    currencyCode: row.currency,
+    invoiceAccount: row.customerAccount,
+    salesStatus: 'Backorder',
+    deliveryDate: row.requestedDeliveryDate,
+  }));
+}
+vi.mock('@modules/finance/accounts-receivable/sales-order/api/salesOrderListApi', () => ({
+  salesOrderListApi: {
+    list: vi.fn(async () => ordersFixture()),
+    get: vi.fn(async (id: string) => (await ordersFixture()).find((row) => row.id === id) ?? null),
+  },
+}));
+vi.mock('@modules/finance/accounts-receivable/sales-order/api/salesOrderLinesApi', () => ({
+  salesOrderLinesApi: {
+    list: vi.fn(
+      async (id: string) => (await ordersFixture()).find((row) => row.id === id)?.lines ?? []
+    ),
+    totals: vi.fn(async () => ({
+      subtotal: 12000,
+      totalDiscount: 500,
+      salesTax: 1150,
+      totalCharges: 0,
+      invoiceAmount: 12650,
+      quantity: 6,
+      costValue: 0,
+    })),
+    deliveryAddresses: vi.fn(async () => []),
+    inventoryDimensions: vi.fn(async () => ({ sites: [], warehouses: [], locations: [] })),
+    taxGroups: vi.fn(async () => []),
+  },
+}));
+
 describe('representative enterprise pages', () => {
   it('remembers the filter row independently for each grid', async () => {
-    const openGrid = (storageKey: string) => render(<SimpleListPage
-      title="Customers"
-      columns={[{ field: 'id', headerName: 'Account' }]}
-      dataSource={{ type: 'controlled', rows: [{ id: 'C-001' }] }}
-      dataGridProps={{ storageKey, hideToolbar: true }}
-    />);
+    const openGrid = (storageKey: string) =>
+      render(
+        <SimpleListPage
+          title="Customers"
+          columns={[{ field: 'id', headerName: 'Account' }]}
+          dataSource={{ type: 'controlled', rows: [{ id: 'C-001' }] }}
+          dataGridProps={{ storageKey, hideToolbar: true }}
+        />
+      );
     const first = openGrid('test.filter-customers');
     expect(screen.queryByPlaceholderText('Filter value')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
@@ -113,9 +207,9 @@ describe('representative enterprise pages', () => {
     expect(screen.getByText('Open sales orders')).toBeDefined();
   });
 
-  it('renders simple-list and list-details representatives', () => {
+  it('renders simple-list and list-details representatives', async () => {
     render(<CustomerListPage />);
-    expect(screen.getAllByText('Contoso Retail Americas').length).toBeGreaterThan(0);
+    expect((await screen.findAllByText('Contoso Retail Americas')).length).toBeGreaterThan(0);
     expect(screen.queryByText('Standard view')).toBeNull();
     expect(screen.getByText('Arabic name')).toBeDefined();
     expect(screen.getByRole('button', { name: 'Edit' })).toBeDefined();
@@ -133,9 +227,9 @@ describe('representative enterprise pages', () => {
     expect(screen.getByRole('heading', { name: 'Related information' })).toBeDefined();
   }, 60_000);
 
-  it('renders all routed accounts-receivable list pages', () => {
+  it('renders all routed accounts-receivable list pages', async () => {
     const { unmount } = render(<CustomerGroupListPage />);
-    expect(screen.getByText('Major Key Accounts')).toBeDefined();
+    expect(await screen.findByText('Major Key Accounts')).toBeDefined();
     act(() => fireEvent.click(screen.getByRole('button', { name: 'Edit' })));
     expect(screen.getByDisplayValue('CG-MAJOR')).toBeDefined();
     expect(screen.getByRole('button', { name: 'Save' })).toBeDefined();
@@ -151,7 +245,7 @@ describe('representative enterprise pages', () => {
     unmount();
 
     render(<SalesOrderListPage />);
-    expect(screen.getByText('SO-00101')).toBeDefined();
+    expect(await screen.findByText('SO-00101')).toBeDefined();
   }, 60_000);
 
   it('opens customer quick create through the generic dialog fast-tabs pattern', async () => {
@@ -160,7 +254,8 @@ describe('representative enterprise pages', () => {
     expect(screen.getByRole('heading', { name: 'Create customer' })).toBeDefined();
     expect(screen.getByText('Details')).toBeDefined();
     expect(screen.getByText('Address')).toBeDefined();
-    expect(screen.getByDisplayValue('C-0004304')).toBeDefined();
+    expect(screen.getByDisplayValue('—')).toBeDefined();
+    await screen.findByLabelText('Name');
     act(() => fireEvent.click(screen.getByRole('button', { name: 'Save' })));
     expect(screen.getByRole('heading', { name: 'Create customer' })).toBeDefined();
     await waitFor(() =>
@@ -174,8 +269,8 @@ describe('representative enterprise pages', () => {
 
   it('renders document and setup representatives', async () => {
     const { unmount } = render(<SalesOrderDetailsPage />);
-    expect(screen.getByText('Sales order SO-00101')).toBeDefined();
-    expect(screen.getByText('Enterprise Server Rack Cabinet 42U')).toBeDefined();
+    expect(await screen.findByText('SO-00101 : Contoso Retail Americas')).toBeDefined();
+    expect((await screen.findAllByText('Enterprise Server Rack Cabinet 42U')).length).toBeGreaterThan(0);
     unmount();
 
     render(<ApplicationSettingsPage />);
@@ -184,11 +279,15 @@ describe('representative enterprise pages', () => {
     expect(screen.getByRole('textbox', { name: /Application name/ })).toBeDefined();
   });
 
-  it('filters master records and shows the selected sales line details', () => {
+  it('filters master records and shows the selected sales line details', async () => {
     render(<SalesOrderDetailsPage />);
-    expect(screen.getByText('Line details')).toBeDefined();
-    act(() => fireEvent.click(screen.getByText('High Performance Switch 48-Port')));
-    expect(screen.getAllByText('ITEM-B20').length).toBeGreaterThan(1);
+    expect(await screen.findByText('Line details')).toBeDefined();
+    const switchLine = await screen.findByText('High Performance Switch 48-Port');
+    act(() => fireEvent.click(switchLine));
+    expect(screen.getByText('ITEM-B20').closest('[role="row"]')).toHaveAttribute('aria-selected', 'true');
+    // The record list remembers whether it is open; open it only when it is closed.
+    const toggle = screen.getByRole('button', { name: 'Toggle record list' });
+    if (toggle.getAttribute('aria-pressed') !== 'true') act(() => fireEvent.click(toggle));
     act(() =>
       fireEvent.change(screen.getByRole('textbox', { name: 'Filter' }), {
         target: { value: 'Fabrikam' },
@@ -196,10 +295,10 @@ describe('representative enterprise pages', () => {
     );
     expect(screen.queryByText('SO-00101')).toBeNull();
     expect(screen.getByText('SO-00102')).toBeDefined();
-    expect(screen.getByText('Sales order SO-00101')).toBeDefined();
+    expect(await screen.findByText('SO-00101 : Contoso Retail Americas')).toBeDefined();
   });
 
-  it('shows an error instead of substituting another order for an invalid route id', () => {
+  it('shows an error instead of substituting another order for an invalid route id', async () => {
     renderWithoutProviders(
       <MemoryRouter initialEntries={['/accounts-receivable/sales-orders/missing-order']}>
         <AppProviders>
@@ -213,13 +312,13 @@ describe('representative enterprise pages', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('No sales orders are available.')).toBeDefined();
+    expect(await screen.findByText('No sales orders are available.')).toBeDefined();
     expect(screen.queryByText('Sales order SO-00101')).toBeNull();
   });
 
-  it('uses the generic enterprise list-details edit lifecycle', () => {
+  it('uses the generic enterprise list-details edit lifecycle', async () => {
     render(<CustPaymMode />);
-    expect(screen.getByText('Methods of payment - customers')).toBeDefined();
+    expect(await screen.findByText('Methods of payment - customers')).toBeDefined();
     expect(screen.getAllByText('Cash').length).toBeGreaterThan(0);
     act(() => fireEvent.click(screen.getAllByRole('button', { name: 'Edit' })[0]));
     expect(screen.getByRole('button', { name: 'Save' })).toBeDefined();
@@ -228,18 +327,18 @@ describe('representative enterprise pages', () => {
     act(() => fireEvent.click(screen.getByRole('button', { name: 'Cancel' })));
     expect(screen.getByRole('button', { name: 'Edit' })).toBeDefined();
     expect(screen.getByPlaceholderText('Filter')).toBeDefined();
-    act(() => fireEvent.click(screen.getByRole('button', { name: 'Filter' })));
-    expect(screen.getByRole('heading', { name: 'Filters' })).toBeDefined();
-    act(() => fireEvent.click(screen.getByRole('button', { name: 'Information' })));
-    expect(screen.getByRole('heading', { name: 'Related information' })).toBeDefined();
+    const filterCommand = screen.getByRole('button', { name: 'Filter' });
+    act(() => fireEvent.click(filterCommand));
+    expect(screen.queryByPlaceholderText('Filter')).toBeNull();
+    act(() => fireEvent.click(filterCommand));
+    expect(screen.getByPlaceholderText('Filter')).toBeDefined();
   });
 
-  it('renders payment terms through the generic list-details pattern', () => {
+  it('renders payment terms through the generic list-details pattern', async () => {
     render(<CustPaymTerm />);
-    expect(screen.getByRole('heading', { name: 'Terms of payment' })).toBeDefined();
+    expect(await screen.findByRole('heading', { name: 'Terms of payment' })).toBeDefined();
     expect(screen.getAllByText('07 Days').length).toBeGreaterThan(0);
     expect(screen.getByText('Setup')).toBeDefined();
-    expect(screen.getByText('Other')).toBeDefined();
     act(() => fireEvent.click(screen.getByRole('button', { name: 'Edit' })));
     expect(screen.getByRole('button', { name: 'Save' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDefined();

@@ -1,3 +1,4 @@
+import { TAX_ROUTE_PATHS } from '@modules/finance/tax/routes/taxRoutePaths';
 import type { PostalAddressPreview } from '@shared/components/logistics';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../../routes/accountsReceivableRoutePaths';
 import { FOUNDATION_ROUTE_PATHS } from '../../../foundation/routes/foundationRoutePaths';
@@ -27,7 +28,7 @@ export const headerMasterRoutes: Partial<Record<keyof SalesOrderListRecord, stri
   currencyCode: FOUNDATION_ROUTE_PATHS.CURRENCIES,
   inventSiteId: INVENTORY_ROUTE_PATHS.SITES,
   inventLocationId: INVENTORY_ROUTE_PATHS.WAREHOUSES,
-  taxGroupId: FOUNDATION_ROUTE_PATHS.TAX_GROUPS,
+  taxGroupId: TAX_ROUTE_PATHS.TAX_GROUPS,
   paymentTerms: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_TERMS,
   paymentMethod: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_METHODS,
   chargesGroup: FOUNDATION_ROUTE_PATHS.CHARGES_CODES,
@@ -43,8 +44,8 @@ export const lineMasters: Partial<Record<keyof DetailLine, { masterRoute?: strin
   warehouse: { masterRoute: INVENTORY_ROUTE_PATHS.WAREHOUSES },
   unit: { masterRoute: INVENTORY_ROUTE_PATHS.UNITS_OF_MEASURE },
   packingUnit: { masterRoute: INVENTORY_ROUTE_PATHS.UNITS_OF_MEASURE },
-  taxGroup: { masterRoute: FOUNDATION_ROUTE_PATHS.TAX_GROUPS },
-  taxItemGroup: { masterRoute: FOUNDATION_ROUTE_PATHS.TAX_ITEM_GROUPS },
+  taxGroup: { masterRoute: TAX_ROUTE_PATHS.TAX_GROUPS },
+  taxItemGroup: { masterRoute: TAX_ROUTE_PATHS.TAX_ITEM_GROUPS },
   deliveryMode: { entity: FOUNDATION_RECORD_PREVIEWS.DELIVERY_MODE },
   deliveryTerms: { entity: FOUNDATION_RECORD_PREVIEWS.DELIVERY_TERMS },
 };

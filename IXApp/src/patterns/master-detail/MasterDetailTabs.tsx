@@ -26,10 +26,20 @@ export function MasterDetailTabs({
       value={value}
       onChange={(_, next: string) => onChange(next)}
       aria-label={ariaLabel}
-      sx={{ mb: 3, minHeight: 36, '& .MuiTab-root': { minHeight: 36, minWidth: 48, px: 1, fontSize: 13 } }}
+      sx={{
+        mb: 3,
+        minHeight: 36,
+        '& .MuiTab-root': { minHeight: 36, minWidth: 48, px: 1, fontSize: 13 },
+      }}
     >
       {tabs.map((tab) => (
-        <Tab key={tab.value} value={tab.value} label={tab.label} id={`${panelId}-${tab.value}-tab`} aria-controls={panelId} />
+        <Tab
+          key={tab.value}
+          value={tab.value}
+          label={tab.label}
+          id={`${panelId}-${tab.value}-tab`}
+          aria-controls={panelId}
+        />
       ))}
     </Tabs>
   );

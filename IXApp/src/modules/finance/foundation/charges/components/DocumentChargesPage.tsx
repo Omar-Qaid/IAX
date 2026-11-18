@@ -7,8 +7,8 @@ import { useNotifications } from '@shared/hooks/useNotifications';
 import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
 import type { ColumnDef } from '@shared/components/data-grid/types';
 import { currencyApi } from '../../currency/api/currencyApi';
-import { taxGroupApi } from '../../tax/api/taxGroupApi';
-import { taxItemGroupApi } from '../../tax/api/taxItemGroupApi';
+import { taxGroupApi } from '@modules/finance/tax/api/taxGroupApi';
+import { taxItemGroupApi } from '@modules/finance/tax/api/taxItemGroupApi';
 import { markupTransApi, type ChargeDocumentType, type ChargeLevel, type MarkupTransRecord } from '../api/markupTransApi';
 
 export interface DocumentChargesPageProps {

@@ -1,7 +1,7 @@
 ﻿import React, { useMemo, useState } from 'react';
-import { Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
+import { ListInfoValue } from '@patterns/simple-list/ListInfoValue';
 import { StatusBadge } from '@shared/components/status/StatusBadge';
 import { FOUNDATION_RECORD_PREVIEWS } from '../../../foundation/previews/foundationRecordPreviews';
 import type { ColumnDef } from '@shared/components/data-grid/types';
@@ -15,7 +15,7 @@ import { ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS } from '../../previews/accountsRece
 import { salesOrderQueryKeys } from '../../queries/accountsReceivableQueryKeys';
 
 export function SalesOrderListPage(): React.ReactElement {
-  const { t, currentLanguage } = useAppTranslation();
+  const { t } = useAppTranslation();
   const navigate = useNavigate();
   const company = useCompanyStore(state => state.currentCompany);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
@@ -54,25 +54,19 @@ export function SalesOrderListPage(): React.ReactElement {
   );
 
   const commandIds = ['sell', 'invoice', 'collect', 'general', 'options'] as const;
+  // Only what is specific to sales orders; labels, utilities, Back, filter texts
+  // and locale are the SimpleList defaults.
   const config: EnterpriseListConfig<SalesOrderListRecord> = {
-    backCommand: { label: t('actions.back'), onClick: () => navigate(-1) },
     showSearchCommand: true,
     recordTableName: 'SalesTable',
     getAuditRecordId: (order) => order.recId,
-    contextLabel: customerAccount ? `${t('pages.salesOrders.title')} | ${customerAccount}` : t('pages.salesOrders.title'),
-    viewLabel: t('pages.customers.standardView'),
-    filterLabel: t('actions.filter'),
-    informationLabel: t('common.information'),
+    contextLabel: customerAccount ? `${t('pages.salesOrders.title')} | ${customerAccount}` : undefined,
     searchFields: [
       { field: 'salesId', label: t('fields.salesOrderNumber') },
       { field: 'customerAccount', label: t('fields.customerAccount') },
       { field: 'customerName', label: t('fields.customerName') },
     ],
-    locale: currentLanguage.code,
     crud: {
-      editLabel: t('actions.edit'),
-      newLabel: t('actions.new'),
-      deleteLabel: t('actions.delete'),
       onEdit: (order) => navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrder(order.id)),
       onNew: () => setQuickCreateOpen(true),
     },
@@ -81,21 +75,9 @@ export function SalesOrderListPage(): React.ReactElement {
       label: t(`customerCommands.${id}`),
       disabled: true,
     })),
-    utilities: {
-      personalizeLabel: t('utilities.personalize'),
-      guideLabel: t('utilities.guide'),
-      notificationsLabel: t('common.notifications'),
-      refreshLabel: t('actions.refresh'),
-      openWindowLabel: t('utilities.openWindow'),
-      notificationCount: 0,
-    },
     advancedFilter: {
-      title: t('filters.title'),
-      addLabel: t('actions.add'),
       fieldLabel: t('fields.salesOrderNumber'),
       operatorLabel: t('filters.contains'),
-      applyLabel: t('actions.apply'),
-      resetLabel: t('actions.reset'),
       fields: [
         { field: 'salesId', label: t('fields.salesOrderNumber') },
         { field: 'customerAccount', label: t('fields.customerAccount') },
@@ -105,20 +87,15 @@ export function SalesOrderListPage(): React.ReactElement {
         { field: 'salesStatus', label: t('common.status') },
       ],
       getValue: (order) => order.salesId,
-      matches: (order, value) =>
-        order.salesId
-          .toLocaleLowerCase(currentLanguage.code)
-          .includes(value.trim().toLocaleLowerCase(currentLanguage.code)),
     },
     relatedInformation: {
-      title: t('relatedInformation.title'),
       sections: (order) => [
         {
           id: 'customer',
           label: t('fields.customer'),
           defaultExpanded: true,
           content: (
-            <InfoValue
+            <ListInfoValue
               value={order ? `${order.customerAccount}\n${order.customerName}` : ''}
               empty={t('relatedInformation.selectCustomer')}
             />
@@ -128,7 +105,7 @@ export function SalesOrderListPage(): React.ReactElement {
           id: 'delivery',
           label: t('fields.delivery', 'Delivery'),
           content: (
-            <InfoValue
+            <ListInfoValue
               value={order ? `${order.deliveryDate}\n${order.deliveryMode}` : ''}
               empty={t('relatedInformation.selectCustomer')}
             />
@@ -138,7 +115,7 @@ export function SalesOrderListPage(): React.ReactElement {
           id: 'payment',
           label: t('fields.payment', 'Payment'),
           content: (
-            <InfoValue
+            <ListInfoValue
               value={order ? `${order.paymentTerms}\n${order.currencyCode}` : ''}
               empty={t('relatedInformation.selectCustomer')}
             />
@@ -148,7 +125,7 @@ export function SalesOrderListPage(): React.ReactElement {
           id: 'status',
           label: t('common.status'),
           content: (
-            <InfoValue
+            <ListInfoValue
               value={order?.documentStatus}
               empty={t('relatedInformation.selectCustomer')}
             />
@@ -182,19 +159,5 @@ export function SalesOrderListPage(): React.ReactElement {
         />
       }
     />
-  );
-}
-
-function InfoValue({ value, empty }: { value?: string | null; empty: string }): React.ReactElement {
-  return (
-    <Typography
-      sx={{
-        fontSize: '0.75rem',
-        color: value ? 'text.primary' : 'text.secondary',
-        whiteSpace: 'pre-line',
-      }}
-    >
-      {value || empty}
-    </Typography>
   );
 }

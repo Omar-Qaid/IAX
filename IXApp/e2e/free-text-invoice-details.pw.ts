@@ -125,7 +125,8 @@ test('free text invoice details edits and saves the active line, cancels changes
     await route.fulfill({ json: { success: true, data } });
   });
   await page.goto('/accounts-receivable/free-text-invoices/7');
-  await expect(page.getByText('C-001 - Customer one', { exact: true })).toBeVisible({
+  // Title like sales order: "<invoice> : <customer name>".
+  await expect(page.getByRole('heading', { name: /: Customer one$/ })).toBeVisible({
     timeout: 60_000,
   });
   await expect(page.getByText('Free text invoice header', { exact: true })).toBeVisible();
@@ -143,16 +144,25 @@ test('free text invoice details edits and saves the active line, cancels changes
   await page.getByRole('button', { name: 'Cancel', exact: true }).click();
   expect(saves).toBe(1);
   await expect(page.getByText('Discard this', { exact: true })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Totals', exact: true }).click();
+  // Post and Totals sit on the "Free text invoice" ribbon tab, like sales order.
+  const openRibbon = async () => {
+    const tab = page.getByRole('button', { name: 'Free text invoice', exact: true });
+    if ((await tab.getAttribute('aria-expanded')) !== 'true') await tab.click();
+  };
+  const ribbon = page.locator('#free-text-invoice-action-ribbon');
+  await openRibbon();
+  await ribbon.getByRole('button', { name: 'Totals', exact: true }).click();
   await expect(page.getByRole('dialog')).toContainText('115.00');
   await page.getByRole('dialog').getByRole('button', { name: 'OK', exact: true }).click();
-  await page.getByRole('button', { name: 'Post', exact: true }).click();
+  await openRibbon();
+  await ribbon.getByRole('button', { name: 'Post', exact: true }).click();
   expect(posts).toBe(0);
   await page.getByRole('dialog').getByRole('button', { name: 'Post', exact: true }).click();
   await expect.poll(() => posts).toBe(1);
   await expect(page.getByRole('button', { name: 'Edit', exact: true })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Delete', exact: true })).toBeDisabled();
-  await expect(page.getByRole('button', { name: 'Post', exact: true })).toBeDisabled();
+  await openRibbon();
+  await expect(ribbon.getByRole('button', { name: 'Post', exact: true })).toBeDisabled();
   await page.screenshot({ path: info.outputPath('free-text-invoice-details.png'), fullPage: true });
   await page.getByRole('button', { name: 'New', exact: true }).click();
   await expect(page).toHaveURL(/free-text-invoices\/new\?customerAccount=C-001$/);
@@ -161,7 +171,7 @@ test('free text invoice details edits and saves the active line, cancels changes
     page.getByRole('alert').filter({ hasText: 'Select a customer and invoice date' })
   ).toBeVisible();
   expect(creates).toBe(0);
-  await page.getByRole('button', { name: '+ Add line', exact: true }).click();
+  await page.getByRole('button', { name: 'Add line', exact: true }).click();
   await expect(page.locator('[data-row-id]')).toHaveCount(2);
   await page.getByRole('button', { name: 'Remove', exact: true }).click();
   await expect(page.locator('[data-row-id]')).toHaveCount(1);
@@ -176,6 +186,8 @@ test('free text invoice details edits and saves the active line, cancels changes
   await page.getByRole('tab', { name: 'Lines', exact: true }).click();
   await page.locator('[data-row-id]').getByText('New consulting', { exact: true }).dblclick();
   await page.getByRole('combobox', { name: 'Ledger account', exact: true }).click();
+  await expect(page.getByRole('option').filter({ hasText: 'Consulting revenue' }).first()).toBeVisible();
+  await page.screenshot({ path: info.outputPath('free-text-invoice-line-edit.png') });
   await page.getByRole('option').filter({ hasText: 'Consulting revenue' }).first().click();
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect.poll(() => creates).toBe(1);

@@ -3,6 +3,7 @@ import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '@modules/finance/accounts-recei
 import { ADMINISTRATION_ROUTE_PATHS } from '@modules/administration/routes/administrationRoutePaths';
 import { INVENTORY_ROUTE_PATHS } from '@modules/finance/inventory/routes/inventoryRoutePaths';
 import { FOUNDATION_ROUTE_PATHS } from '@modules/finance/foundation/routes/foundationRoutePaths';
+import { TAX_ROUTE_PATHS } from '@modules/finance/tax/routes/taxRoutePaths';
 import { ORGANIZATION_ROUTE_PATHS } from '@modules/organization/routes/organizationRoutePaths';
 
 export const ROUTE_PATHS = {
@@ -18,6 +19,7 @@ export const ROUTE_PATHS = {
   ACCOUNTS_RECEIVABLE: ACCOUNTS_RECEIVABLE_ROUTE_PATHS,
 
   FOUNDATION: FOUNDATION_ROUTE_PATHS,
+  TAX: TAX_ROUTE_PATHS,
 
   INVENTORY: INVENTORY_ROUTE_PATHS,
 

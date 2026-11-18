@@ -473,6 +473,7 @@ export function buildSalesOrderHeaderSections(scope: Scope) {
           lineFilterVisible={lineFilterVisible}
           setLineFilterVisible={setLineFilterVisible}
           refreshOrder={() => refetchOrder()}
+          onRequestEdit={canEditHeader ? startHeaderEdit : undefined}
         />
       ),
     tab === 'lines' &&

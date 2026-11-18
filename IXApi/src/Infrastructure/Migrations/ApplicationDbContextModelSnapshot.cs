@@ -27073,6 +27073,105 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("TaxTrans", (string)null);
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.TaxTransGeneralJournalAccountEntry", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<decimal?>("AccountingCurrencyAmount")
+                        .HasPrecision(32, 6)
+                        .HasColumnType("decimal(32,6)");
+
+                    b.Property<decimal?>("AllocationFactor")
+                        .HasPrecision(32, 6)
+                        .HasColumnType("decimal(32,6)");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<long?>("GeneralJournalAccountEntry")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long?>("LedgerDimension")
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("MonetaryAmountType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("Partition")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion")
+                        .HasColumnName("SysRowVersion");
+
+                    b.Property<long?>("SubledgerJournalAccountEntry")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("SysDataStateCode")
+                        .HasColumnType("int");
+
+                    b.Property<long?>("TaxTrans")
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("TaxTransRelationship")
+                        .HasColumnType("int");
+
+                    b.Property<long?>("TaxUncommitted")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("TransactionCurrency")
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.Property<decimal?>("TransactionCurrencyAmount")
+                        .HasPrecision(32, 6)
+                        .HasColumnType("decimal(32,6)");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("DataAreaId", "GeneralJournalAccountEntry");
+
+                    b.HasIndex("DataAreaId", "SubledgerJournalAccountEntry");
+
+                    b.HasIndex("DataAreaId", "TaxTrans");
+
+                    b.ToTable("TaxTransGeneralJournalAccountEntry", (string)null);
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.UnitOfMeasure", b =>
                 {
                     b.Property<long>("RecId")

@@ -54,9 +54,10 @@ export interface EnterpriseListCommand {
 }
 
 export interface EnterpriseListCrudConfig<T> {
-  editLabel: string;
-  newLabel: string;
-  deleteLabel: string;
+  /** Defaults: Edit / New / Delete. */
+  editLabel?: string;
+  newLabel?: string;
+  deleteLabel?: string;
   editPermission?: string;
   newPermission?: string;
   deletePermission?: string;
@@ -68,43 +69,48 @@ export interface EnterpriseListCrudConfig<T> {
 }
 
 export interface EnterpriseListAdvancedFilter<T> {
-  title: string;
-  addLabel: string;
-  fieldLabel: string;
-  operatorLabel: string;
-  applyLabel: string;
-  resetLabel: string;
-  matches: (row: T, value: string) => boolean;
+  /** Labels default to the shared filter pane texts. */
+  title?: string;
+  addLabel?: string;
+  fieldLabel?: string;
+  operatorLabel?: string;
+  applyLabel?: string;
+  resetLabel?: string;
+  /** Fallback match for conditions on a field the row does not have (default: `getValue` contains). */
+  matches?: (row: T, value: string) => boolean;
   getValue?: (row: T) => unknown;
   fields?: Array<{ field: keyof T & string; label: string }>;
 }
 
+/**
+ * Page configuration of an enterprise list. Only what is specific to the page
+ * is required; labels, utilities, back command, filter texts and locale come
+ * from the shared defaults (the reference design: sales order list). Any
+ * default can still be overridden per page without touching the pattern.
+ */
 export interface EnterpriseListConfig<T> {
   readOnly?: boolean;
-  contextLabel: string;
-  viewLabel: string;
-  filterLabel: string;
-  informationLabel: string;
+  /** Breadcrumb above the grid (default: the page title). */
+  contextLabel?: string;
+  viewLabel?: string;
+  filterLabel?: string;
+  informationLabel?: string;
   searchByLabel?: string;
   searchMode?: 'quick' | 'field';
-  searchFields: EnterpriseListSearchField<T>[];
+  /** Default: every column. */
+  searchFields?: EnterpriseListSearchField<T>[];
   defaultSearchField?: keyof T & string;
+  /** Default: the current language. */
   locale?: string;
-  crud: EnterpriseListCrudConfig<T>;
+  crud?: EnterpriseListCrudConfig<T>;
   commands?: EnterpriseListCommand[];
   getCommands?: (selectedRow: T | null) => EnterpriseListCommand[];
   attachments?: { refTableId: number; getRefRecId?: (record: T) => number };
-  utilities: {
-    personalizeLabel: string;
-    guideLabel: string;
-    notificationsLabel: string;
-    refreshLabel: string;
-    openWindowLabel: string;
-    notificationCount?: number;
-  };
+  utilities?: Partial<ResolvedListUtilities>;
   advancedFilter?: EnterpriseListAdvancedFilter<T>;
   relatedInformation?: {
-    title: string;
+    /** Default: "Related information". */
+    title?: string;
     sections: (selectedRow: T | null) => RelatedInformationSection[];
   };
   initialSelection?: 'first' | 'none';
@@ -112,11 +118,38 @@ export interface EnterpriseListConfig<T> {
   advancedFilterOpenOnLoad?: boolean;
   informationOpenOnLoad?: boolean;
   onReset?: () => void;
-  backCommand?: { label: string; onClick: () => void };
+  /** Default: "Back" to the previous page. */
+  backCommand?: { label?: string; onClick?: () => void };
   showSearchCommand?: boolean;
   recordTableName?: string;
   getAuditRecordId?: (record: T) => string | number;
 }
+
+interface ResolvedListUtilities {
+  personalizeLabel: string;
+  guideLabel: string;
+  notificationsLabel: string;
+  refreshLabel: string;
+  openWindowLabel: string;
+  notificationCount?: number;
+}
+
+/** The configuration after defaults are applied (what the page renders from). */
+type ResolvedEnterpriseListConfig<T> = Omit<
+  EnterpriseListConfig<T>,
+  'contextLabel' | 'viewLabel' | 'filterLabel' | 'informationLabel' | 'searchFields' | 'crud' | 'utilities' | 'advancedFilter' | 'relatedInformation'
+> & {
+  contextLabel: string;
+  viewLabel: string;
+  filterLabel: string;
+  informationLabel: string;
+  searchFields: EnterpriseListSearchField<T>[];
+  crud: EnterpriseListCrudConfig<T> & { editLabel: string; newLabel: string; deleteLabel: string };
+  utilities: ResolvedListUtilities;
+  advancedFilter?: Required<Omit<EnterpriseListAdvancedFilter<T>, 'getValue' | 'fields'>> &
+    Pick<EnterpriseListAdvancedFilter<T>, 'getValue' | 'fields'>;
+  relatedInformation?: { title: string; sections: (selectedRow: T | null) => RelatedInformationSection[] };
+};
 
 export interface SimpleListPageProps<T extends { id: string } = { id: string }> {
   title: string;
@@ -166,13 +199,13 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
     containerSx,
     contentSx,
   } = props;
-  const { t } = useAppTranslation();
-  const enterpriseConfig = useMemo<EnterpriseListConfig<T> | undefined>(() => {
+  const { t, currentLanguage } = useAppTranslation();
+  const enterpriseConfig = useMemo<ResolvedEnterpriseListConfig<T> | undefined>(() => {
     const searchFields = props.columns.map((column) => ({
       field: column.field as keyof T & string,
       label: column.headerName,
     }));
-    const defaults: EnterpriseListConfig<T> = {
+    const defaults: ResolvedEnterpriseListConfig<T> = {
       readOnly: true,
       recordTableName: props.recordTableName,
       contextLabel: title,
@@ -180,16 +213,18 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
       filterLabel: t('actions.filter'),
       informationLabel: t('common.information'),
       searchFields,
-      crud: { editLabel: '', newLabel: '', deleteLabel: '' },
+      locale: currentLanguage.code,
+      crud: { editLabel: t('actions.edit'), newLabel: t('actions.new'), deleteLabel: t('actions.delete') },
       utilities: {
         personalizeLabel: t('utilities.personalize'),
         guideLabel: t('utilities.guide'),
         notificationsLabel: t('common.notifications'),
         refreshLabel: t('actions.refresh'),
         openWindowLabel: t('utilities.openWindow'),
+        notificationCount: 0,
       },
       advancedFilter: {
-        title: t('actions.filter'),
+        title: t('filters.title'),
         addLabel: t('actions.add'),
         fieldLabel: t('filters.field'),
         operatorLabel: t('filters.operator'),
@@ -198,13 +233,43 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
         matches: () => true,
       },
     };
+    if (!suppliedConfig) return { ...defaults, readOnly: true };
+    // Deep merge: a page sets only what differs from the shared design.
+    const filter = suppliedConfig.advancedFilter;
+    const locale = suppliedConfig.locale ?? defaults.locale;
     return {
       ...defaults,
       ...suppliedConfig,
-      readOnly: suppliedConfig?.readOnly ?? !suppliedConfig,
-      advancedFilter: suppliedConfig?.advancedFilter ?? defaults.advancedFilter,
+      readOnly: suppliedConfig.readOnly ?? false,
+      contextLabel: suppliedConfig.contextLabel ?? defaults.contextLabel,
+      viewLabel: suppliedConfig.viewLabel ?? defaults.viewLabel,
+      filterLabel: suppliedConfig.filterLabel ?? defaults.filterLabel,
+      informationLabel: suppliedConfig.informationLabel ?? defaults.informationLabel,
+      searchFields: suppliedConfig.searchFields ?? defaults.searchFields,
+      locale,
+      crud: { ...defaults.crud, ...stripUndefined(suppliedConfig.crud ?? {}) },
+      utilities: { ...defaults.utilities, ...stripUndefined(suppliedConfig.utilities ?? {}) },
+      advancedFilter: filter
+        ? {
+            ...defaults.advancedFilter!,
+            ...stripUndefined(filter),
+            matches:
+              filter.matches ??
+              ((row: T, value: string) =>
+                String(filter.getValue?.(row) ?? '')
+                  .toLocaleLowerCase(locale)
+                  .includes(value.trim().toLocaleLowerCase(locale))),
+          }
+        : defaults.advancedFilter,
+      relatedInformation: suppliedConfig.relatedInformation
+        ? {
+            title: suppliedConfig.relatedInformation.title ?? t('relatedInformation.title'),
+            sections: suppliedConfig.relatedInformation.sections,
+          }
+        : undefined,
+      backCommand: suppliedConfig.backCommand,
     };
-  }, [suppliedConfig, props.columns, props.recordTableName, title, t]);
+  }, [suppliedConfig, props.columns, props.recordTableName, title, t, currentLanguage.code]);
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const gridRef = useRef<DataGridHandle>(null);
@@ -664,3 +729,8 @@ const getFilterOperatorOptions = (
   { value: 'notEquals' as const, label: t('filters.notEquals') },
   { value: 'doesNotContain' as const, label: t('filters.doesNotContain') },
 ];
+
+/** Copy of an object without its undefined values (so they do not override defaults). */
+function stripUndefined<V extends object>(value: V): Partial<V> {
+  return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined)) as Partial<V>;
+}

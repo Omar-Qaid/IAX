@@ -2,7 +2,7 @@ using System.Reflection;
 using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Finance.Entities;
-using IAX.IXApi.Modules.Finance.Foundation.Tax;
+using IAX.IXApi.Modules.Finance.Tax;
 using IAX.IXApi.Shared.Domain.Entities;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;

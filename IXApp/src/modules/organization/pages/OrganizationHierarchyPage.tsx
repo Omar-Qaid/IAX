@@ -6,7 +6,6 @@ import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
 import type { ColumnDef } from '@shared/components/data-grid/types';
 import { localizedName } from '@shared/utilities/localizedName';
-import { uiDensity } from '@shared/constants/uiDensity';
 import { DataGridLookupField } from '@shared/components/lookups/DataGridLookupField';
 import { organizationStructureApi as api } from '../api/organizationStructureApi';
 
@@ -168,8 +167,6 @@ export function OrganizationHierarchyPage(): React.ReactElement {
         masterForm: true,
         hideSidebar: false,
         pageSize: 50,
-        rowHeight: uiDensity.gridRowHeight,
-        headerHeight: uiDensity.gridRowHeight,
         onRowDoubleClick: (row) =>
           navigate(
             '/organization-administration/organization-hierarchies/' + row.recordId + '/nodes'

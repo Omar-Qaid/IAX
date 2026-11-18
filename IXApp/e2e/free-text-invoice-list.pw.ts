@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('free text invoice list reuses the sales-list pattern, filters records, deletes drafts and posts only after confirmation', async ({
+test('free text invoice list follows the sales order list, deletes drafts and posts only after confirmation', async ({
   page,
 }, info) => {
   test.setTimeout(180_000);
@@ -80,22 +80,16 @@ test('free text invoice list reuses the sales-list pattern, filters records, del
   await page.getByRole('button', { name: 'Free text invoices', exact: true }).click();
   await expect(page).toHaveURL(/free-text-invoices\?customerAccount=C-001$/);
   await expect(page.getByText('DRAFT-1', { exact: true })).toBeVisible();
-  await expect(page.getByText('POSTED-2', { exact: true })).toHaveCount(0);
-  await expect(page.getByText('OLD-3', { exact: true })).toHaveCount(0);
+  // Like the sales order list: every invoice of the customer, posted or not.
+  await expect(page.getByText('POSTED-2', { exact: true })).toBeVisible();
+  await expect(page.getByText('OLD-3', { exact: true })).toBeVisible();
   await expect(page.getByText('OTHER-CUSTOMER', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'New', exact: true })).toBeEnabled();
-  await expect(page.getByRole('button', { name: 'Edit', exact: true })).toBeEnabled();
-  await page.getByRole('combobox', { name: 'Invoice date', exact: true }).click();
-  await page.getByRole('option', { name: 'All dates', exact: true }).click();
-  await expect(page.getByText('OLD-3', { exact: true })).toBeVisible();
-  await page.getByRole('combobox', { name: 'Invoice date', exact: true }).click();
-  await page.getByRole('option', { name: 'Last 30 days', exact: true }).click();
-  await page.getByRole('textbox', { name: 'Invoice number', exact: true }).fill('DRAFT-5');
+  await expect(page.getByRole('button', { name: 'Search', exact: true }).first()).toBeVisible();
   await page.locator('[data-row-id="5"]').getByText('Consulting', { exact: true }).click();
   await page.getByRole('button', { name: 'Delete', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Delete', exact: true }).click();
   await expect.poll(() => deletes).toBe(1);
-  await page.getByRole('textbox', { name: 'Invoice number', exact: true }).fill('');
   await page.locator('[data-row-id="1"]').getByText('Consulting', { exact: true }).click();
   await page.getByRole('button', { name: 'Totals', exact: true }).click();
   await expect(
@@ -106,9 +100,8 @@ test('free text invoice list reuses the sales-list pattern, filters records, del
   expect(posts).toBe(0);
   await page.getByRole('dialog').getByRole('button', { name: 'Post', exact: true }).click();
   await expect.poll(() => posts).toBe(1);
-  await page.getByRole('combobox', { name: 'Status', exact: true }).click();
-  await page.getByRole('option', { name: 'Posted', exact: true }).click();
-  await page.locator('[data-row-id="1"]').getByText('Consulting', { exact: true }).click();
+  // A posted invoice: Totals only.
+  await page.locator('[data-row-id="2"]').getByText('Consulting', { exact: true }).click();
   await expect(page.getByRole('button', { name: 'Totals', exact: true })).toBeEnabled();
   await expect(page.getByRole('button', { name: 'Post', exact: true })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Delete', exact: true })).toBeDisabled();

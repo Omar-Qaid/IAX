@@ -12,7 +12,7 @@ using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Foundation.Currency;
 using IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses;
-using IAX.IXApi.Modules.Finance.Foundation.Tax;
+using IAX.IXApi.Modules.Finance.Tax;
 using IAX.IXApi.Modules.Finance.Foundation.LegalEntities;
 using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 using IAX.IXApi.Modules.Finance.Foundation.HcmShowrooms;
@@ -42,7 +42,8 @@ namespace IXApi.Tests;
 public sealed class FoundationServiceStageTests
 {
     private static readonly Type[] CrudServices = typeof(FinanceModule).Assembly.GetTypes()
-        .Where(t => !t.IsAbstract && t.Namespace?.StartsWith("IAX.IXApi.Modules.Finance.Foundation.") == true
+        .Where(t => !t.IsAbstract && (t.Namespace?.StartsWith("IAX.IXApi.Modules.Finance.Foundation.", StringComparison.Ordinal) == true
+            || t.Namespace?.StartsWith("IAX.IXApi.Modules.Finance.Tax", StringComparison.Ordinal) == true)
             && t.BaseType is { IsGenericType: true } b && b.GetGenericTypeDefinition() == typeof(BaseService<>))
         .OrderBy(t => t.FullName, StringComparer.Ordinal).ToArray();
 
@@ -122,6 +123,9 @@ public sealed class FoundationServiceStageTests
             await numbers.AddAsync(new SysNumberSequence { DataAreaId = "dat", NumberSequence = name, Txt = "Foundation service test", Format = "FT-######", AnnotatedFormat = "FT-{SEQ}", Lowest = 1, Highest = 999999, NextRec = 1, InUse = 1 });
         await Stage("Foundation CRUD inventory", () =>
         {
+            Assert.Contains(typeof(TaxGroupService), CrudServices);
+            Assert.Contains(typeof(TaxItemGroupService), CrudServices);
+            Assert.Contains(typeof(TaxPeriodHeadCrudService), CrudServices);
             Assert.True(CrudServices.Length >= 30); return Task.CompletedTask;
         });
         foreach (var type in CrudServices)

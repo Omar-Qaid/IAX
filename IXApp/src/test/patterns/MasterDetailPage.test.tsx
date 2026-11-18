@@ -60,7 +60,7 @@ describe('MasterDetailPage', () => {
   it('renders the D365 details layout: pane, breadcrumb, title, status, tabs and sections', () => {
     renderPage();
     expect(screen.getByRole('heading', { name: 'SO-001 : Consulting' })).toBeInTheDocument();
-    expect(screen.getByText('Standard view')).toBeInTheDocument();
+    expect(screen.getByText('Sales order details | Standard view')).toBeInTheDocument();
     expect(screen.getByText('Backorder')).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Lines' })).toBeInTheDocument();
     expect(screen.getByRole('group', { name: 'Warehouse' })).toBeInTheDocument();

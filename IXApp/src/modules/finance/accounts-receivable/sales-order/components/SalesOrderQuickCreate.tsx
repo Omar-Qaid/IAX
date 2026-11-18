@@ -1,4 +1,5 @@
-﻿import { localizedName } from '@shared/utilities/localizedName';
+import { TAX_ROUTE_PATHS } from '@modules/finance/tax/routes/taxRoutePaths';
+import { localizedName } from '@shared/utilities/localizedName';
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FastTabsDrawer } from '@patterns/drawer-fast-tabs';
@@ -326,7 +327,7 @@ export function SalesOrderQuickCreate({
           },
           {
             name: 'taxGroupId',
-            masterRoute: FOUNDATION_ROUTE_PATHS.TAX_GROUPS,
+            masterRoute: TAX_ROUTE_PATHS.TAX_GROUPS,
             label: t('fields.salesTaxGroup', 'Sales tax group'),
             type: 'select',
             valueGetter: (values) => values.taxGroupId || customerFor(values)?.taxGroupId || '',
