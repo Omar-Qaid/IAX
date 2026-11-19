@@ -92,6 +92,8 @@ export interface EnterpriseListConfig<T> {
   readOnly?: boolean;
   /** Breadcrumb above the grid (default: the page title). */
   contextLabel?: string;
+  /** Main title for the selected record; the page label stays in the blue caption. */
+  getRecordTitle?: (record: T) => string;
   viewLabel?: string;
   filterLabel?: string;
   informationLabel?: string;
@@ -220,8 +222,8 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
     const defaults: ResolvedEnterpriseListConfig<T> = {
       readOnly: true,
       recordTableName: props.recordTableName,
-      contextLabel: title,
-      viewLabel: t('common.standardView'),
+      contextLabel: props.contextLabel ?? title,
+      viewLabel: props.viewLabel ?? t('common.standardView'),
       filterLabel: t('actions.filter'),
       informationLabel: t('common.information'),
       searchFields,
@@ -285,7 +287,16 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
         : undefined,
       backCommand: suppliedConfig.backCommand,
     };
-  }, [suppliedConfig, props.columns, props.recordTableName, title, t, currentLanguage.code]);
+  }, [
+    suppliedConfig,
+    props.columns,
+    props.recordTableName,
+    props.contextLabel,
+    props.viewLabel,
+    title,
+    t,
+    currentLanguage.code,
+  ]);
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const gridRef = useRef<DataGridHandle>(null);
@@ -679,7 +690,12 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
         >
           <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <EnterpriseListHeader
-              contextLabel={config?.contextLabel ?? props.contextLabel ?? title}
+              pageTitle={title}
+              contextLabel={
+                selectedRow && config?.getRecordTitle
+                  ? config.getRecordTitle(selectedRow)
+                  : (config?.contextLabel ?? props.contextLabel ?? title)
+              }
               viewLabel={config?.viewLabel ?? props.viewLabel ?? title}
               onViewClick={onViewClick}
             />

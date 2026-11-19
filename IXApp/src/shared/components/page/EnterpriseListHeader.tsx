@@ -1,35 +1,33 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
-import { APP_FONT_FAMILY } from '@shared/constants/fontFamilies';
+import { Box } from '@mui/material';
+import { DocumentHeader } from './DocumentHeader';
+import { documentTypographySx } from './documentLayoutStyles';
 
 export interface EnterpriseListHeaderProps {
   contextLabel: string;
+  pageTitle?: string;
   viewLabel: string;
   onViewClick?: () => void;
 }
 
-export const EnterpriseListHeader: React.FC<EnterpriseListHeaderProps> = ({ contextLabel }) => (
+export const EnterpriseListHeader: React.FC<EnterpriseListHeaderProps> = ({
+  contextLabel,
+  pageTitle,
+  viewLabel,
+}) => (
   <Box
     sx={{
       px: { xs: 1, sm: 2.5 },
       pt: 0.25,
-      pb: 2.625,
-      fontFamily: APP_FONT_FAMILY,
-      textAlign: { xs: 'center', sm: 'start' },
+      color: 'text.primary',
+      textAlign: 'start',
+      ...documentTypographySx,
     }}
   >
-    <Typography
-      component="h1"
-      sx={{
-        color: '#1b1b1b',
-        fontFamily: 'inherit',
-        fontSize: { xs: 24, sm: 29 },
-        fontWeight: 600,
-        lineHeight: 1.3,
-        textAlign: { xs: 'center', sm: 'start' },
-      }}
-    >
-      {contextLabel}
-    </Typography>
+    <DocumentHeader
+      title={contextLabel}
+      subtitle={pageTitle ?? contextLabel}
+      viewLabel={viewLabel}
+    />
   </Box>
 );

@@ -103,6 +103,13 @@ export function CustomerListPage(): React.ReactElement {
     recordTableName: 'CustTable',
     getAuditRecordId: (customer) => customer.recId,
     contextLabel: t('pages.customers.allCustomers'),
+    getRecordTitle: (customer) =>
+      [
+        customer.accountNumber,
+        localizedName({ name: customer.name, nameAlias: customer.nameAr }, isRtl),
+      ]
+        .filter(Boolean)
+        .join(' | '),
     viewLabel: t('pages.customers.standardView'),
     searchByLabel: t('fields.searchBy'),
     searchMode: 'field',
