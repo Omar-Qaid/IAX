@@ -10,6 +10,7 @@ import {
   useTheme,
   type Theme,
 } from '@mui/material';
+import { DocumentFieldLabel } from '@shared/components/fields/DocumentFieldLabel';
 import { FastTab } from '@shared/components/fast-tabs/FastTab';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import type { DetailSectionConfig, DetailValue, DetailValues } from './types';
@@ -354,7 +355,7 @@ export function ListDetailsLayout({
                           `repeat(${section.columns ?? Math.min(5, section.groups?.length ?? 1)}, minmax(120px,1fr))`,
                       },
                       justifyContent: section.gridTemplateColumns ? 'start' : 'space-between',
-                      columnGap: section.columnGap ?? `${d365.fieldGap}px`,
+                      columnGap: section.columnGap ?? 3,
                       rowGap: 1,
                     }}
                   >
@@ -374,9 +375,10 @@ export function ListDetailsLayout({
                           <Typography
                             aria-hidden={!group.title}
                             sx={{
-                              mb: 1,
+                              mb: 1.25,
                               fontSize: d365.labelFontSize,
                               fontWeight: 700,
+                              lineHeight: 1.5,
                               textTransform: 'uppercase',
                               visibility: group.title ? 'visible' : 'hidden',
                             }}
@@ -395,7 +397,7 @@ export function ListDetailsLayout({
                                 }
                               : '1fr',
                             columnGap: 2,
-                            rowGap: '12px',
+                            rowGap: '10px',
                           }}
                         >
                           {group.fields.map((field) => {
@@ -446,16 +448,13 @@ export function ListDetailsLayout({
                                 )}
                                 {(!field.renderOwnLabel ||
                                   (!fieldEditing && field.render && field.type === 'select')) && (
-                                  <Typography
-                                    noWrap
+                                  <DocumentFieldLabel
                                     title={fieldLabel}
-                                    sx={{
-                                      mb: '6px',
-                                      fontFamily: d365.fontFamily,
-                                      fontSize: legalEntity ? 12 : d365.labelFontSize,
-                                      lineHeight: 1.2,
-                                      color: 'text.primary',
-                                    }}
+                                    lookup={Boolean(
+                                      field.masterRoute ||
+                                      field.previewEntity ||
+                                      field.type === 'select'
+                                    )}
                                   >
                                     {/* Open details on master fields in view mode only (D365). */}
                                     {(field.type === 'select' || field.masterRoute) &&
@@ -467,7 +466,7 @@ export function ListDetailsLayout({
                                     ) : (
                                       fieldLabel
                                     )}
-                                  </Typography>
+                                  </DocumentFieldLabel>
                                 )}
                                 {/* D365 record preview for master-data fields (resolved by masterRoute). */}
                                 <RecordPreview

@@ -43,7 +43,7 @@ import { topBarTokens as topBar } from './topBarTokens';
 import { useNotificationStore } from '@shared/services/notificationStore';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { legalEntityApiRepository } from '@modules/organization/api/legalEntityApiRepository';
-import { getRouteBreadcrumbs } from '@app/routes/routeMetadata';
+import { useRouteBreadcrumbs } from '@app/routes/useRouteBreadcrumbs';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 
 // Static sx objects - moved outside render to prevent re-creation
@@ -212,7 +212,7 @@ export const AppTopBar: React.FC = memo(() => {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join('');
-  const breadcrumbs = getRouteBreadcrumbs(location.pathname, location.search).slice(1);
+  const breadcrumbs = useRouteBreadcrumbs().slice(1);
   const isHorizontal = navLayout === 'horizontal';
 
   return (
@@ -306,7 +306,7 @@ export const AppTopBar: React.FC = memo(() => {
                     '&:hover': item.path ? { textDecoration: 'underline' } : undefined,
                   }}
                 >
-                  {t(item.labelKey)}
+                  {item.label ?? t(item.labelKey)}
                 </Typography>
               </React.Fragment>
             ))}

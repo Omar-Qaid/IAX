@@ -1,3 +1,4 @@
+import { SalesOrderDetailsPageV2 } from '@modules/finance/accounts-receivable/salesorderV2/pages/SalesOrderDetailsPageV2';
 import React from 'react';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
@@ -611,4 +612,27 @@ it('edits a line cell from view mode with the cell pencil (D365 edit from view)'
   // The page switches to edit mode and the clicked cell is being edited.
   expect(await screen.findByRole('button', { name: 'Save' })).toBeEnabled();
   await waitFor(() => expect(grid.getByRole('spinbutton', { name: 'Quantity' })).toHaveFocus());
+});
+
+it('renders the V2 sales order in the master-details pattern', async () => {
+  const { container } = render(
+    <MemoryRouter initialEntries={['/accounts-receivable/sales-orders/1/master-details']}>
+      <AppProviders>
+        <Routes>
+          <Route
+            path="/accounts-receivable/sales-orders/:salesOrderId/master-details"
+            element={<SalesOrderDetailsPageV2 />}
+          />
+        </Routes>
+      </AppProviders>
+    </MemoryRouter>
+  );
+  expect(await screen.findByText('SO-LIVE-001 : Live customer')).toBeDefined();
+  expect(container.querySelector('[data-master-detail-viewport]')).toBeTruthy();
+  expect(screen.getByRole('tab', { name: 'Lines' })).toBeDefined();
+  expect(screen.getByRole('tab', { name: 'Header' })).toBeDefined();
+  fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+  expect(await screen.findByRole('button', { name: 'Cancel' })).toBeDefined();
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  expect(await screen.findByRole('button', { name: 'Edit' })).toBeDefined();
 });

@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from 'react';
+import { usePageBreadcrumb } from '@shared/hooks/usePageBreadcrumb';
 import { Box, IconButton, Typography, useMediaQuery, useTheme } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import { documentBodySx, documentTypographySx } from '@shared/components/page/documentLayoutStyles';
 import { DocumentHeader } from '@shared/components/page/DocumentHeader';
 import { PageContainer } from '@shared/components/page/PageContainer';
 import { ActionPane } from '@shared/components/action-pane/ActionPane';
@@ -56,6 +58,7 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
   records,
   selectedId,
   onSelect,
+  breadcrumb,
   title,
   subtitle,
   viewLabel,
@@ -92,6 +95,7 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
   canEditField,
 }: MasterDetailPageProps<T>): React.ReactElement {
   const { t } = useAppTranslation();
+  usePageBreadcrumb(breadcrumb, subtitle ?? title);
   // The pane overlays the content on small screens, so it starts closed there.
   const compact = useMediaQuery(useTheme().breakpoints.down('lg'), { noSsr: true });
   const [navigationOpen, setNavigationOpen] = useState(defaultNavigationOpen && !compact);
@@ -181,8 +185,7 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
         overflow: 'hidden',
         paddingInlineEnd: hasRail ? { lg: `${d365.utilityRailWidth}px` } : undefined,
         bgcolor: (theme) => enterpriseSurfaces(theme).canvas,
-        fontFamily: d365.fontFamily,
-        '& .MuiTypography-root, & .MuiButton-root, & .MuiInputBase-root, & input, & textarea': { fontFamily: ` !important` },
+        ...documentTypographySx,
         color: 'text.primary',
       }}
     >
@@ -282,14 +285,7 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
           />
         )}
       </ActionPane>
-      <Box
-        sx={{
-          display: 'flex',
-          flex: 1,
-          minHeight: 0,
-          position: 'relative',
-        }}
-      >
+      <Box sx={documentBodySx}>
         <Box
           data-master-detail-viewport
           sx={{

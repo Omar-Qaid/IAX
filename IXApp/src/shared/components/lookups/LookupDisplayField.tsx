@@ -1,6 +1,6 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
-import { d365 } from '@shared/constants/enterpriseUiTokens';
+import { Box } from '@mui/material';
+import { DocumentFieldLabel } from '../fields/DocumentFieldLabel';
 import { EditableViewField } from '@shared/components/fields/EditableViewField';
 import { LookupNavigationLabel } from './LookupNavigationLabel';
 import { RecordPreview, type RecordPreviewOption } from '@shared/components/record-preview';
@@ -31,17 +31,9 @@ export function LookupDisplayField({
   return (
     <Box sx={{ minWidth: 0 }}>
       {label && (
-        <Typography
-          sx={{
-            display: 'block',
-            mb: '6px',
-            fontSize: d365.labelFontSize,
-            lineHeight: 1.2,
-            color: 'text.primary',
-          }}
-        >
+        <DocumentFieldLabel lookup>
           <LookupNavigationLabel label={label} masterRoute={masterRoute} />
-        </Typography>
+        </DocumentFieldLabel>
       )}
       <RecordPreview
         entity={previewEntity}

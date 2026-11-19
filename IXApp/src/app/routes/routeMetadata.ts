@@ -4,6 +4,7 @@ import { AVAILABLE_MODULE_NAV_CONFIGS } from '@app/configuration/navigation';
 
 export interface BreadcrumbDefinition {
   labelKey: string;
+  label?: string;
   path?: string;
 }
 
@@ -35,6 +36,27 @@ const navigationMetadata: RouteMetadata[] = Object.values(AVAILABLE_MODULE_NAV_C
 );
 
 export const ROUTE_METADATA: RouteMetadata[] = [
+  ...[
+    {
+      path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.FREE_TEXT_INVOICE_NEW,
+      labelKey: 'freeTextInvoices.newInvoice',
+    },
+    {
+      path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.FREE_TEXT_INVOICE_DETAILS,
+      labelKey: 'freeTextInvoices.freeTextInvoice',
+    },
+  ].map(({ path, labelKey }) => ({
+    path,
+    breadcrumbs: [
+      home,
+      { labelKey: 'nav.accountsReceivable', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMERS },
+      {
+        labelKey: 'nav.freeTextInvoices',
+        path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.FREE_TEXT_INVOICES,
+      },
+      { labelKey },
+    ],
+  })),
   {
     path: ROUTE_PATHS.PROCESS_BUILDER,
     breadcrumbs: [home, { labelKey: 'pages.wfProcessBuilder.title' }],

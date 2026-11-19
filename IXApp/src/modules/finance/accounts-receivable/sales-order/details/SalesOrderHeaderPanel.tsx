@@ -10,6 +10,7 @@ import { RecordPreview } from '@shared/components/record-preview';
 import { type SalesOrderHeaderInput, type SalesOrderListRecord } from '../api/salesOrderListApi';
 import { LookupField } from '@shared/components/lookups/LookupField';
 import { LookupDisplayField } from '@shared/components/lookups/LookupDisplayField';
+import { DocumentFieldLabel } from '@shared/components/fields/DocumentFieldLabel';
 import { EditableViewField } from '@shared/components/fields/EditableViewField';
 import { d365 } from '@shared/constants/enterpriseUiTokens';
 import {
@@ -43,9 +44,7 @@ export function buildSalesOrderHeaderPanel(scope: Scope) {
   } = scope;
   const field = (label: string, value?: React.ReactNode, editable = false, lookup = false) => (
     <Box key={label}>
-      <Typography variant="caption" color="text.secondary">
-        {label}
-      </Typography>
+      <DocumentFieldLabel>{label}</DocumentFieldLabel>
       <EditableViewField
         label={label}
         value={value == null ? '' : String(value)}

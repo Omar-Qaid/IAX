@@ -30,33 +30,16 @@ function Draft() {
   );
 }
 
-describe('enterprise sales-order page defaults', () => {
-  it('provides the title/status header, Lines/Header tabs and collapsed navigation without page markup', () => {
-    render(<ListDetailsPage variant="enterprise" title="Document 001" config={config} />);
-    expect(screen.getByRole('heading', { name: 'Document 001' })).toBeInTheDocument();
-    expect(screen.getByText('Document details | Standard view')).toBeInTheDocument();
-    expect(screen.getByText('Open')).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Lines' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('tab', { name: 'Header' })).toBeInTheDocument();
-    expect(screen.queryByText('Navigation record')).toBeNull();
-    expect(screen.queryByText('Header fields')).not.toBeVisible();
-  });
-
-  it('keeps nested drafts mounted when switching document views', () => {
-    render(
-      <ListDetailsPage
-        variant="enterprise"
-        title="Document 001"
-        config={{ ...config, initialMode: 'edit' }}
-      />
-    );
-    fireEvent.change(screen.getByRole('textbox', { name: 'Line draft' }), {
-      target: { value: 'Changed line' },
-    });
-    fireEvent.click(screen.getByRole('tab', { name: 'Header' }));
-    expect(screen.getByText('Header fields')).toBeVisible();
-    expect(screen.queryByRole('textbox', { name: 'Line draft' })).toBeNull();
-    fireEvent.click(screen.getByRole('tab', { name: 'Lines' }));
-    expect(screen.getByRole('textbox', { name: 'Line draft' })).toHaveValue('Changed line');
-  });
+describe('enterprise setup page defaults', () => {
+  it.each(['Customer payment terms', 'Tax codes', 'Tax groups', 'Exchange rates'])(
+    'renders %s without document tabs and shows every detail section', (title) => {
+      render(<ListDetailsPage variant="enterprise" title={title} config={config} />);
+      expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
+      expect(screen.queryByRole('tab', { name: 'Lines' })).toBeNull();
+      expect(screen.queryByRole('tab', { name: 'Header' })).toBeNull();
+      expect(screen.getByText('Header fields')).toBeVisible();
+      expect(screen.getByRole('textbox', { name: 'Line draft' })).toBeVisible();
+      expect(screen.queryByText('Navigation record')).toBeNull();
+    }
+  );
 });

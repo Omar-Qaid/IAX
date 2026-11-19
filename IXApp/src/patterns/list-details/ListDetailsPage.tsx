@@ -1,4 +1,5 @@
 import React from 'react';
+import { usePageBreadcrumb } from '@shared/hooks/usePageBreadcrumb';
 import { useNavigate } from 'react-router-dom';
 import {
   Alert,
@@ -19,6 +20,7 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import { documentBodySx, documentTypographySx } from '@shared/components/page/documentLayoutStyles';
 import { DocumentHeader } from '@shared/components/page/DocumentHeader';
 import { PageContainer } from '@shared/components/page/PageContainer';
 import { PageHeader } from '@shared/components/page/PageHeader';
@@ -37,7 +39,6 @@ import { EnterpriseFilterPanel } from '@shared/components/data-grid/EnterpriseFi
 import { PatternDataGrid as DataGrid } from '@shared/components/data-grid/PatternDataGrid';
 import { PATTERN_GRID_DEFAULTS } from '@shared/components/data-grid/patternGridDefaults';
 import { PageEditSessionContext } from '@shared/components/data-grid/PageEditSession';
-import { DocumentViewTabs as MasterDetailTabs } from '@shared/components/page/DocumentViewTabs';
 import { ENTERPRISE_LIST_DETAILS_DEFAULTS } from './defaults';
 import type { DataGridProps } from '@shared/components/data-grid/types';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
@@ -100,6 +101,7 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
 }: Omit<EnterpriseListDetailsProps<T>, 'variant'>): React.ReactElement {
   const { t } = useAppTranslation();
   const navigate = useNavigate();
+  usePageBreadcrumb(config.breadcrumb, config.subtitle ?? title);
   const listVisibilityStorageKey =
     config.presentation?.listVisibilityStorageKey ??
     (config.recordTableName
@@ -126,13 +128,6 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
     }
   }, [listPaneVisible, listVisibilityStorageKey]);
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = React.useState(false);
-  const detailTabs = config.detailTabs === false ? null : config.detailTabs;
-  const showDetailTabs =
-    config.detailTabs !== false && (!config.detailHeader || Boolean(config.detailTabs));
-  const [selectedTab, setSelectedTab] = React.useState(
-    detailTabs?.initialValue ?? detailTabs?.items?.[0]?.value ?? 'lines'
-  );
-  const activeTab = detailTabs?.value ?? selectedTab;
   const state = useListDetailsPage(config);
   const selectionChangeRef = React.useRef(config.onSelectionChange);
   React.useLayoutEffect(() => {
@@ -315,11 +310,8 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
           zIndex: fullscreen ? 1300 : undefined,
           paddingInlineEnd: { lg: `${d365.utilityRailWidth}px` },
           bgcolor: (theme) => enterpriseSurfaces(theme).canvas,
-          fontFamily: d365.fontFamily,
           color: 'text.primary',
-          '& .MuiTypography-root, & .MuiButton-root, & .MuiInputBase-root, & input, & textarea': {
-            fontFamily: `${d365.fontFamily} !important`,
-          },
+          ...documentTypographySx,
         }}
       >
         <ActionPane
@@ -471,19 +463,7 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
             )}
           </ActionPaneGroup>
         </ActionPane>
-        <Box
-          sx={{
-            display: 'flex',
-            flex: 1,
-            height: '100%',
-            minHeight: 0,
-            gap: '23px',
-            marginInlineStart: '1px',
-            overflow: 'hidden',
-            position: 'relative',
-            alignItems: 'stretch',
-          }}
-        >
+        <Box sx={documentBodySx}>
           {state.error && !state.records.length && !state.editing ? (
             <ErrorState message={state.error} onRetry={state.refresh} />
           ) : state.loading && !state.records.length ? (
@@ -494,7 +474,6 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
                 config.presentation?.detailEndPadding ??
                 ENTERPRISE_LIST_DETAILS_DEFAULTS.detailEndPadding
               }
-              activeTab={showDetailTabs ? activeTab : undefined}
               editing={displayedEditing}
               values={config.getValues(displayedRecord)}
               yesLabel={labels.yes}
@@ -552,23 +531,6 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
                       minHeight={config.presentation?.recordHeaderMinHeight}
                       compact={config.presentation?.compactRecordHeader}
                       onChange={record ? state.changeHeader : () => undefined}
-                    />
-                  )}
-                  {showDetailTabs && (
-                    <MasterDetailTabs
-                      tabs={
-                        detailTabs?.items ?? [
-                          { value: 'lines', label: t('fields.lines', 'Lines') },
-                          { value: 'header', label: t('fields.header', 'Header') },
-                        ]
-                      }
-                      value={activeTab}
-                      onChange={(next) => {
-                        setSelectedTab(next);
-                        detailTabs?.onChange?.(next);
-                      }}
-                      ariaLabel={title}
-                      panelId="enterprise-detail-panel"
                     />
                   )}
                   {state.error && (
@@ -988,7 +950,12 @@ function RecordHeader<T>({
     );
   return (
     <Box sx={{ px: 0, minHeight, boxSizing: 'border-box' }}>
-      <DocumentHeader title={title} subtitle={subtitle ?? title} viewLabel={viewLabel} status={status} />
+      <DocumentHeader
+        title={title}
+        subtitle={subtitle ?? title}
+        viewLabel={viewLabel}
+        status={status}
+      />
       <Box
         sx={{
           display: 'grid',

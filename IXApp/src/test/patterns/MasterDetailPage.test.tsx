@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AppProviders } from '@app/providers/AppProviders';
+import { DocumentFieldLabel } from '@shared/components/fields/DocumentFieldLabel';
 import {
   MasterDetailField,
   MasterDetailFieldGroup,
@@ -81,6 +82,30 @@ const renderPage = (props: Partial<React.ComponentProps<typeof MasterDetailPage>
 };
 
 describe('MasterDetailPage', () => {
+  it('uses sales-order heading and status typography', () => {
+    renderPage();
+    expect(screen.getByRole('heading', { name: 'SO-001 : Consulting' })).toHaveStyle({
+      'font-size': '16px',
+      'font-weight': '600',
+      'line-height': '1.4',
+    });
+    expect(screen.getByText('Backorder')).toHaveStyle({ 'font-size': '12px' });
+  });
+
+  it('uses sales-order caption sizing and lookup label spacing', () => {
+    render(
+      <AppProviders>
+        <DocumentFieldLabel>Plain label</DocumentFieldLabel>
+        <DocumentFieldLabel lookup>Lookup label</DocumentFieldLabel>
+      </AppProviders>
+    );
+    expect(screen.getByText('Plain label')).toHaveStyle({
+      'font-size': '11px',
+      'line-height': '1.2',
+    });
+    expect(screen.getByText('Lookup label')).toHaveStyle({ 'font-size': '10px', 'margin-bottom': '6px' });
+  });
+
   it('keeps the title and view tabs outside the constrained details scroll region', () => {
     renderPage();
     const viewport = document.querySelector('[data-master-detail-viewport]');

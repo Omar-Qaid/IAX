@@ -5,7 +5,8 @@
 - `pageRegistry.ts`: lazy feature-page imports.
 - `routeConfig.tsx`: layout and route composition.
 - `routePaths.ts`: path constants.
-- `routeMetadata.ts`: titles, breadcrumbs, and related metadata.
+- `routeMetadata.ts`: route breadcrumb fallbacks.
+- `useRouteBreadcrumbs.ts`: combines route fallbacks with breadcrumb metadata published by mounted master-details/list-details patterns.
 - `RouteGuard.tsx`: authenticated and permission-protected access.
 - `AppAccessDeniedState.tsx`: route-specific denial presentation.
 - `AppRoutes.tsx`: router-facing root component.

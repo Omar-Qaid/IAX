@@ -938,6 +938,10 @@ function InvoiceEditor({
   return (
     <>
       <MasterDetailPage
+        breadcrumb={{
+          listPath: paths.FREE_TEXT_INVOICES,
+          labelKey: isNew ? 'freeTextInvoices.newInvoice' : 'freeTextInvoices.freeTextInvoice',
+        }}
         records={navigationRecords}
         selectedId={invoice.id}
         onSelect={(id) => {

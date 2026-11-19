@@ -4,13 +4,13 @@ import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import { useLocation, Link as RouterLink } from 'react-router-dom';
 import { ROUTE_PATHS } from '@app/routes/routePaths';
-import { getRouteBreadcrumbs } from '@app/routes/routeMetadata';
+import { useRouteBreadcrumbs } from '@app/routes/useRouteBreadcrumbs';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 
 export const PageBreadcrumbs: React.FC = () => {
   const location = useLocation();
   const { t } = useAppTranslation();
-  const breadcrumbs = getRouteBreadcrumbs(location.pathname, location.search);
+  const breadcrumbs = useRouteBreadcrumbs();
 
   if (location.pathname === ROUTE_PATHS.DASHBOARD || location.pathname === '/') {
     return null;
@@ -43,11 +43,11 @@ export const PageBreadcrumbs: React.FC = () => {
               color="text.primary"
               sx={{ fontSize: '0.75rem', fontWeight: 600 }}
             >
-              {t(item.labelKey)}
+              {item.label ?? t(item.labelKey)}
             </Typography>
           ) : (
             <Link component={RouterLink} underline="hover" color="inherit" to={item.path} key={key}>
-              {t(item.labelKey)}
+              {item.label ?? t(item.labelKey)}
             </Link>
           );
         })}

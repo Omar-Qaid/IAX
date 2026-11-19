@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { d365 } from '@shared/constants/enterpriseUiTokens';
+import { DocumentFieldLabel } from '@shared/components/fields/DocumentFieldLabel';
 import { EditableViewField } from '@shared/components/fields/EditableViewField';
 import { LookupDisplayField } from '@shared/components/lookups/LookupDisplayField';
 import type { MasterDetailFieldProps } from './types';
@@ -44,17 +45,7 @@ export function MasterDetailField({
     );
   return (
     <Box sx={{ minWidth: 0 }}>
-      <Typography
-        sx={{
-          display: 'block',
-          mb: '6px',
-          fontSize: d365.labelFontSize,
-          lineHeight: 1.2,
-          color: 'text.primary',
-        }}
-      >
-        {label}
-      </Typography>
+      <DocumentFieldLabel>{label}</DocumentFieldLabel>
       {typeof text === 'string' ? (
         <EditableViewField
           label={label}

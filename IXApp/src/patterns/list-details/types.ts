@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { PageBreadcrumbConfig } from '@shared/services/pageBreadcrumbStore';
 import type { ColumnDef } from '@shared/components/data-grid/types';
 import type { RelatedInformationSection } from '@shared/components/page/RelatedInformationPanel';
 import type { ActionPaneRibbonGroup } from '@shared/components/action-pane/ActionPaneRibbon';
@@ -110,6 +111,7 @@ export interface ListDetailsHeaderField<T> extends Omit<DetailFieldConfig, 'name
 }
 
 export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
+  breadcrumb?: PageBreadcrumbConfig | false;
   /** Keep the parent stable while its nested editor has unsaved changes. */
   interactionLocked?: boolean;
   /** Shows records as a selectable reference list without record-level CRUD actions. */
@@ -122,18 +124,9 @@ export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
   onCancel?: () => void;
   detailHeader?: ReactNode;
   detailNotice?: ReactNode;
-  /** Small document description above the record title, as on sales order details. */
+  /** Small description above the record title. */
   subtitle?: string;
   status?: ReactNode | ((record: T) => ReactNode);
-  /** Lines/Header views are built in. Use false for a page with only one view. */
-  detailTabs?:
-    | false
-    | {
-        items?: Array<{ value: string; label: string }>;
-        initialValue?: string;
-        value?: string;
-        onChange?: (value: string) => void;
-      };
   onSearch?: () => void;
   backCommand?: { onClick: () => void };
   dataSource: ListDetailsDataSource<T>;

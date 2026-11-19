@@ -2,9 +2,9 @@
 
 Implements a master-list/detail layout through `ListDetailsPage`, `ListDetailsLayout`, `TabularDetailPanel`, `useListDetailsPage`, and typed contracts. Shared enterprise presentation values live in `shared/constants/enterpriseUiTokens.ts` so lower-level primitives and patterns depend in the correct direction.
 
-Use when selection in a persistent list drives an adjacent editor/details panel. The feature owns loading, mutation, fields, row identity, and API access; the hook owns selection/page interaction. Document pages can configure Lines/Header views and nested line grids using the same controller.
+Use when selection in a persistent list drives an adjacent editor/details panel. The feature owns loading, mutation, fields, row identity, and API access; the hook owns selection/page interaction. Use this pattern for setup records such as customer payment terms, tax codes, tax groups and exchange rates. Use master-details for sales-order documents.
 
-New enterprise pages inherit sales-order details chrome: title/status row, subtitle and Standard view label, Lines/Header tabs, collapsed resizable navigation and the shared action pane. Use `subtitle`, `status` and section `tab` values to configure the page rather than recreating the layout in `detailHeader`. See the guide for a complete configuration blueprint. Sales order details consumes these same defaults.
+Enterprise pages provide a title/status row, subtitle and Standard view label, collapsed resizable navigation and the shared action pane. Detail sections appear together without automatic Lines/Header tabs. Sales-order documents use the master-details pattern.
 
 Grids use `PatternDataGrid`, shared with master-details and the free-text invoice: 24px rows, 27px headers, bordered cells, table presentation, and initially hidden filters. Custom editors use the same row-height wrapper. Explicit page settings remain supported.
 

@@ -4,6 +4,7 @@ import type { RelatedInformationSection } from '@shared/components/page/RelatedI
 import type { EnterpriseCommandUtilitiesProps } from '@shared/components/action-pane/EnterpriseCommandUtilities';
 import type { ActionPaneRibbonGroup } from '@shared/components/action-pane/ActionPaneRibbon';
 import type { DetailSectionConfig, DetailValue, DetailValues } from '@patterns/list-details/types';
+import type { PageBreadcrumbConfig } from '@shared/services/pageBreadcrumbStore';
 
 /** One record in the left navigation pane (D365 "list" of a details page). */
 export interface MasterDetailRecord {
@@ -43,15 +44,17 @@ export interface MasterDetailCommand {
 }
 
 export interface MasterDetailPageProps<T extends MasterDetailRecord = MasterDetailRecord> {
+  /** Shell breadcrumb hierarchy; inferred from the parent list route when omitted. */
+  breadcrumb?: PageBreadcrumbConfig | false;
   /** Records of the navigation pane. */
   records: T[];
   selectedId?: string;
   onSelect: (id: string) => void;
   /** Page title, e.g. "SO-2026-000001 : Consulting Customer". */
   title: string;
-  /** Breadcrumb above the title, e.g. "Sales order details". */
+  /** Document description above the title, e.g. "Sales order details". */
   subtitle?: string;
-  /** Shown after the breadcrumb, e.g. "Standard view". */
+  /** Shown after the document description, e.g. "Standard view". */
   viewLabel?: string;
   /** Right side of the title row, e.g. the document status. */
   status?: ReactNode;
