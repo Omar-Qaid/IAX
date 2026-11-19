@@ -23,7 +23,7 @@ import type { buildSalesOrderTotals } from './salesOrderTotals';
 
 type Scope = SalesOrderDocumentView & ReturnType<typeof buildSalesOrderTotals>;
 
-export function buildSalesOrderHeaderPanel(scope: Scope) {
+export function buildSalesOrderHeaderFields(scope: Scope) {
   const {
     activeHeader,
     canEditHeader,

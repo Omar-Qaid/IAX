@@ -1,18 +1,20 @@
+import { MasterDetailLineDetails } from '@patterns/master-detail';
 import React from 'react';
 import { Box, Typography } from '@mui/material';
-import type { SalesOrderDocumentView } from './useSalesOrderDocument';
-import type { buildSalesOrderTotals } from './salesOrderTotals';
-import type { buildSalesOrderHeaderPanel } from './SalesOrderHeaderPanel';
+import type { SalesOrderDocumentView } from '../details/useSalesOrderDocument';
+import type { buildSalesOrderTotals } from '../details/salesOrderTotals';
+import type { buildSalesOrderHeaderFields } from '../details/SalesOrderHeaderFields';
 import type { buildSalesOrderLineFields } from './SalesOrderLineFields';
 
 type Scope = SalesOrderDocumentView &
   ReturnType<typeof buildSalesOrderTotals> &
-  ReturnType<typeof buildSalesOrderHeaderPanel> &
+  ReturnType<typeof buildSalesOrderHeaderFields> &
   ReturnType<typeof buildSalesOrderLineFields>;
 
 export function buildSalesOrderLineTabs(scope: Scope) {
   const {
     lineTab,
+    setLineTab,
     t,
     currentLanguage,
     salesDeliveryTypeOptions,
@@ -539,7 +541,30 @@ export function buildSalesOrderLineTabs(scope: Scope) {
         );
     }
   };
-  return {
-    lineTabContent,
-  };
+  const lineDetails = (
+    <MasterDetailLineDetails
+      ariaLabel={t('salesOrder.lineDetails', 'Line details')}
+      value={lineTab}
+      onChange={setLineTab}
+      hasLine={Boolean(displayedLine)}
+      emptyLabel={t('salesOrder.selectLine', 'Select a sales order line to view its details.')}
+      tabs={[
+        'General',
+        'Setup',
+        'Address',
+        'Product',
+        'Packing',
+        'Delivery',
+        'Sourcing',
+        'Price and discount',
+        'Foreign trade',
+        'Financial dimensions',
+        'Loads',
+        'Financial tags',
+      ].map((label) => ({ value: label, label }))}
+    >
+      {displayedLine && lineTabContent()}
+    </MasterDetailLineDetails>
+  );
+  return { lineDetails };
 }

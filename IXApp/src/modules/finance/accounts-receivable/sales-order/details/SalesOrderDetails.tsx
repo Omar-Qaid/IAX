@@ -5,13 +5,13 @@ import { ActionPaneBackButton } from '@shared/components/action-pane/ActionPaneB
 import { ErrorState } from '@shared/components/feedback/ErrorState';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../../routes/accountsReceivableRoutePaths';
-import { SalesOrderDetailsDialogs } from '../components/SalesOrderDetailsDialogs';
+import { SalesOrderDetailsDialogs } from './SalesOrderDetailsDialogs';
 import { SalesOrderLinesProvider, SalesOrderDocumentActions } from '../lines/SalesOrderLineState';
 import { useSalesOrderDocument } from './useSalesOrderDocument';
 import { buildSalesOrderTotals } from './salesOrderTotals';
-import { buildSalesOrderHeaderPanel } from './SalesOrderHeaderPanel';
-import { buildSalesOrderLineFields } from './SalesOrderLineFields';
-import { buildSalesOrderLineTabs } from './SalesOrderLineTabs';
+import { buildSalesOrderHeaderFields } from './SalesOrderHeaderFields';
+import { buildSalesOrderLineFields } from '../lines/SalesOrderLineFields';
+import { buildSalesOrderLineTabs } from '../lines/SalesOrderLineTabs';
 import { buildSalesOrderHeaderSections } from './SalesOrderHeaderSections';
 
 /** Sales-order workflows presented using the shared master-details pattern. */
@@ -31,7 +31,7 @@ export function SalesOrderDetails({
     );
   const s0 = { ...doc, order };
   const s1 = { ...s0, ...buildSalesOrderTotals(s0) };
-  const s2 = { ...s1, ...buildSalesOrderHeaderPanel(s1) };
+  const s2 = { ...s1, ...buildSalesOrderHeaderFields(s1) };
   const s3 = { ...s2, ...buildSalesOrderLineFields(s2) };
   const s4 = { ...s3, ...buildSalesOrderLineTabs(s3) };
   const scope = { ...s4, ...buildSalesOrderHeaderSections(s4) };

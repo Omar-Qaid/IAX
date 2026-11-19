@@ -4,10 +4,10 @@ import { LogisticsPostalAddressDrawer } from '@shared/components/logistics/Logis
 import { DocumentTotalsDrawer } from '@patterns/document/DocumentTotalsDrawer';
 import { DocumentCopyDrawer } from '@patterns/document/DocumentCopyDrawer';
 import { salesOrderCopyApi } from '../api/salesOrderCopyApi';
-import { SalesOrderConfirmationDialog } from './SalesOrderConfirmationDialog';
-import { SalesOrderPackingSlipPostingDialog } from './SalesOrderPackingSlipPostingDialog';
-import type { SalesOrderDocumentView } from '../details/useSalesOrderDocument';
-import type { buildSalesOrderTotals } from '../details/salesOrderTotals';
+import { SalesOrderConfirmationDialog } from '../components/SalesOrderConfirmationDialog';
+import { SalesOrderPackingSlipPostingDialog } from '../components/SalesOrderPackingSlipPostingDialog';
+import type { SalesOrderDocumentView } from './useSalesOrderDocument';
+import type { buildSalesOrderTotals } from './salesOrderTotals';
 
 type DialogScope = SalesOrderDocumentView & ReturnType<typeof buildSalesOrderTotals>;
 

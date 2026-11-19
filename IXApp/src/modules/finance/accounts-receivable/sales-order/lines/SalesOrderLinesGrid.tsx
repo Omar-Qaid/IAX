@@ -1,3 +1,4 @@
+import { useSalesOrderLineColumns } from './useSalesOrderLineColumns';
 import React, { useRef, useMemo, useEffect, useCallback } from 'react';
 import {
   Alert,
@@ -19,7 +20,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { PERMISSIONS } from '@core/permissions/permissions';
 import { usePermission } from '@core/permissions/usePermission';
-import { DataGrid } from '@shared/components/data-grid/DataGrid';
+import { PatternDataGrid } from '@shared/components/data-grid/PatternDataGrid';
 import type { ColumnDef, DataGridHandle } from '@shared/components/data-grid/types';
 import { ErrorState } from '@shared/components/feedback/ErrorState';
 import { LookupGridField } from '@shared/components/lookups/LookupGridField';
@@ -233,90 +234,7 @@ export function SalesOrderLinesGrid({
   });
   const lines = linesQuery.data ?? EMPTY_LINES;
   const selectedLine = lines.find((line) => line.id === selectedLineId);
-  const columns = useMemo<ColumnDef<DetailLine>[]>(
-    () => [
-      {
-        field: 'lineType',
-        headerName: t('salesOrder.lineType', 'Type'),
-        width: 110,
-        minWidth: 85,
-        type: 'number',
-      },
-      {
-        field: 'itemNumber',
-        headerName: t('salesOrder.itemNumber', 'Item number'),
-        width: 160,
-        minWidth: 120,
-      },
-      { field: 'description', headerName: t('salesOrder.productName', 'Product name'), width: 220 },
-      {
-        field: 'quantity',
-        headerName: t('fields.quantity', 'Quantity'),
-        width: 85,
-        type: 'number',
-        align: 'right',
-        headerAlign: 'right',
-      },
-      { field: 'unit', headerName: t('salesOrder.unit', 'Unit'), width: 100 },
-      {
-        field: 'unitPrice',
-        headerName: t('fields.unitPrice'),
-        width: 110,
-        type: 'number',
-        align: 'right',
-        headerAlign: 'right',
-      },
-      {
-        field: 'lineDiscount',
-        headerName: t('salesOrder.lineDiscount', 'Discount'),
-        width: 110,
-        type: 'number',
-        align: 'right',
-        headerAlign: 'right',
-      },
-      {
-        field: 'lineDiscountPercent',
-        headerName: t('salesOrder.lineDiscountPercent', 'Discount %'),
-        width: 110,
-        type: 'number',
-        align: 'right',
-        headerAlign: 'right',
-      },
-      {
-        field: 'deliveryDate',
-        headerName: t('fields.requestedDelivery'),
-        width: 150,
-        type: 'date',
-      },
-      {
-        field: 'netAmount',
-        headerName: t('salesOrder.netAmount', 'Net Amount'),
-        width: 130,
-        type: 'number',
-        align: 'right',
-        headerAlign: 'right',
-        valueGetter: ({ row }) => row.lineTotal,
-      },
-      {
-        field: 'deliveryType',
-        headerName: t('salesOrder.deliveryType', 'Delivery type'),
-        width: 180,
-      },
-      {
-        field: 'site',
-        headerName: t('salesOrderQuickCreate.site', 'Site'),
-        width: 120,
-        preview: { entity: INVENTORY_RECORD_PREVIEWS.SITE },
-      },
-      {
-        field: 'warehouse',
-        headerName: t('salesOrderQuickCreate.warehouse', 'Warehouse'),
-        width: 140,
-        preview: { entity: INVENTORY_RECORD_PREVIEWS.WAREHOUSE },
-      },
-    ],
-    [t]
-  );
+  const columns = useSalesOrderLineColumns();
   const activeDraft = editing && draftLine?.orderId === order?.id ? draftLine : null;
   const activeDraftId = activeDraft?.id;
   const handleRowClick = useCallback(
@@ -1087,7 +1005,7 @@ export function SalesOrderLinesGrid({
         }}
       >
         <SalesLineCellProvider renderCell={renderLineCell}>
-          <DataGrid
+          <PatternDataGrid
             ref={lineGridRef}
             key={order.id}
             rows={gridRows}
@@ -1097,18 +1015,8 @@ export function SalesOrderLinesGrid({
             onRowClick={handleRowClick}
             onRowDoubleClick={handleRowDoubleClick}
             columns={gridColumns}
-            height={232}
-            rowHeight={24}
-            headerHeight={27}
-            hideFooter
-            hideColumnMenu={false}
-            showColumnBorders
-            showCellBorders
-            hideAddRowButton
-            hideToolbar
             loading={linesQuery.isLoading}
             hideFilterRow={!lineFilterVisible}
-            hideSidebarTabs
             onRefresh={handleRefreshLines}
             storageKey="accounts-receivable.sales-order-lines.compact.v6"
           />

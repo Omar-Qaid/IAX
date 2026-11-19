@@ -1,3 +1,5 @@
+import React from 'react';
+import { MasterDetailTotals } from '@patterns/master-detail';
 import { type DocumentTotalsSection } from '@patterns/document/DocumentTotalsDrawer';
 import type { SalesOrderDocumentView } from './useSalesOrderDocument';
 
@@ -149,7 +151,18 @@ export function buildSalesOrderTotals(scope: Scope) {
       ],
     },
   ];
+  const totalsContent = (
+    <MasterDetailTotals
+      items={[
+        { id: 'subtotal', label: t('fields.subtotal'), value: amount(subtotal) },
+        { id: 'discount', label: t('fields.discount'), value: amount(totalDiscount) },
+        { id: 'tax', label: t('fields.tax'), value: amount(salesTax) },
+        { id: 'total', label: t('fields.total'), value: amount(invoiceAmount), emphasis: true },
+      ]}
+    />
+  );
   return {
+    totalsContent,
     amount,
     number,
     calculatedLineDiscount,

@@ -1,5 +1,13 @@
 import React from 'react';
-import { act, render, renderHook, screen } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  render,
+  renderHook,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AppProviders } from '@app/providers/AppProviders';
@@ -50,6 +58,18 @@ it('loads the extracted details editor through the free-text invoice route', asy
   expect(await screen.findByRole('button', { name: 'Save' })).toBeInTheDocument();
   expect(container.querySelector('[data-master-detail-viewport]')).toBeTruthy();
   expect(screen.getByRole('tab', { name: 'Header' })).toBeInTheDocument();
+  const lineTabs = within(screen.getByRole('tablist', { name: 'Line details' }));
+  fireEvent.click(lineTabs.getByRole('tab', { name: 'Setup' }));
+  expect(screen.getByRole('tabpanel', { name: 'Setup' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('tab', { name: 'Header' }));
+  await waitFor(() => expect(screen.queryByRole('grid')).toBeNull());
+  fireEvent.click(screen.getByRole('tab', { name: 'Lines' }));
+  expect(await screen.findByRole('grid')).toBeInTheDocument();
+  expect(
+    within(screen.getByRole('tablist', { name: 'Line details' })).getByRole('tab', {
+      name: 'Setup',
+    })
+  ).toHaveAttribute('aria-selected', 'true');
 });
 
 it('retains the invoice draft after invalid Save and accepts a corrected line', async () => {

@@ -1,10 +1,21 @@
-import { mkdtempSync, mkdirSync, readFileSync, existsSync, rmSync, realpathSync } from 'node:fs';
+import {
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  existsSync,
+  rmSync,
+  realpathSync,
+  renameSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve, basename } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import ts from 'typescript';
 import { generateMasterDetail, masterDetailFiles } from './generate-master-detail.mjs';
+import { masterDetailStructure } from './master-detail-structure.mjs';
+import { auditMasterDetail } from './audit-master-detail.mjs';
 
 function fixture(run) {
   const root = realpathSync(mkdtempSync(join(tmpdir(), 'ixapp-master-detail-')));
@@ -81,3 +92,58 @@ test('generated TypeScript parses for different feature names', () => {
     }
   }
 });
+
+test('twelve future features use exactly the same file map and pass the structure audit', () =>
+  fixture((projectRoot) => {
+    const names = [
+      'PurchaseOrder',
+      'TransferOrder',
+      'GeneralJournal',
+      'PaymentJournal',
+      'InventoryJournal',
+      'ReturnOrder',
+      'VendorInvoice',
+      'CustomerInvoice',
+      'ServiceOrder',
+      'ReceiptJournal',
+      'ShipmentOrder',
+      'AdjustmentJournal',
+    ];
+    for (const name of names) {
+      const files = masterDetailFiles(name);
+      assert.deepEqual(Object.keys(files), Object.values(masterDetailStructure(name)));
+      generateMasterDetail({ projectRoot, feature: `finance/example/${name.toLowerCase()}`, name });
+    }
+    const result = auditMasterDetail(projectRoot);
+    assert.deepEqual(result.problems, []);
+    assert.equal(result.compositions, 12);
+    assert.equal(result.standardFeatures, 12);
+  }));
+
+test('audit catches renamed standard files and a removed structure marker', () =>
+  fixture((projectRoot) => {
+    const feature = 'finance/example/sample-order';
+    generateMasterDetail({ projectRoot, feature, name: 'SampleOrder' });
+    const root = join(projectRoot, 'src/modules', feature);
+    const columns = join(root, 'lines/SampleOrderLineColumns.ts');
+    const renamed = join(root, 'lines/DifferentColumns.ts');
+    renameSync(columns, renamed);
+    assert.ok(
+      auditMasterDetail(projectRoot).problems.some((problem) =>
+        problem.includes('missing standard columns file')
+      )
+    );
+    renameSync(renamed, columns);
+    renameSync(columns, `${columns}x`);
+    assert.deepEqual(auditMasterDetail(projectRoot).problems, []);
+    const readme = join(root, 'README.md');
+    writeFileSync(
+      readme,
+      readFileSync(readme, 'utf8').replace('<!-- master-detail-feature: SampleOrder -->', '')
+    );
+    assert.ok(
+      auditMasterDetail(projectRoot).problems.some((problem) =>
+        problem.includes('structure marker')
+      )
+    );
+  }));

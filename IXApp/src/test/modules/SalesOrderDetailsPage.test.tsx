@@ -431,20 +431,20 @@ it('keeps header changes available after a failed save and supports cancel', asy
   vi.mocked(salesOrderListApi.updateHeader).mockRejectedValueOnce(new Error('Header save failed'));
   openOrder('1');
   await screen.findByText('SO-LIVE-001 : Live customer');
-  fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
-  expect(screen.queryByRole('button', { name: 'Edit' })).toBeNull();
-  expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
-  fireEvent.change(screen.getByRole('textbox', { name: 'Customer reference' }), {
+  fireEvent.click(screen.getByLabelText('Edit', { selector: 'button' }));
+  expect(screen.queryByLabelText('Edit', { selector: 'button' })).toBeNull();
+  expect(screen.getByLabelText('Cancel', { selector: 'button' })).toBeEnabled();
+  fireEvent.change(screen.getByLabelText('Customer reference'), {
     target: { value: 'RETRY' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  fireEvent.click(screen.getByLabelText('Save', { selector: 'button' }));
   expect(await screen.findByText('Header save failed')).toBeDefined();
-  expect(screen.getByRole('textbox', { name: 'Customer reference' })).toHaveValue('RETRY');
-  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
-  expect(screen.getByRole('button', { name: 'Edit' })).toBeEnabled();
-  expect(screen.queryByRole('button', { name: 'Save' })).toBeNull();
-  expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull();
-  expect(screen.queryByRole('textbox', { name: 'Customer reference' })).toBeNull();
+  expect(screen.getByLabelText('Customer reference')).toHaveValue('RETRY');
+  fireEvent.click(screen.getByLabelText('Cancel', { selector: 'button' }));
+  expect(screen.getByLabelText('Edit', { selector: 'button' })).toBeEnabled();
+  expect(screen.queryByLabelText('Save', { selector: 'button' })).toBeNull();
+  expect(screen.queryByLabelText('Cancel', { selector: 'button' })).toBeNull();
+  expect(screen.queryByLabelText('Customer reference')).toBeNull();
 });
 
 it('keeps page and line in edit mode on invalid Save, then closes both after a valid Save', async () => {
@@ -630,6 +630,10 @@ it('renders sales order in the master-details pattern', async () => {
   expect(container.querySelector('[data-master-detail-viewport]')).toBeTruthy();
   expect(screen.getByRole('tab', { name: 'Lines' })).toBeDefined();
   expect(screen.getByRole('tab', { name: 'Header' })).toBeDefined();
+  const lineTabs = within(screen.getByRole('tablist', { name: 'Line details' }));
+  expect(lineTabs.getAllByRole('tab')).toHaveLength(12);
+  fireEvent.click(lineTabs.getByRole('tab', { name: 'Setup' }));
+  expect(screen.getByRole('tabpanel', { name: 'Setup' })).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
   expect(await screen.findByRole('button', { name: 'Cancel' })).toBeDefined();
   fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));

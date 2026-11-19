@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, IconButton, Stack, Tab, Tabs, TextField, Typography } from '@mui/material';
+import { Box, IconButton, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import type { DetailFieldConfig, DetailSectionConfig } from '@patterns/list-details/types';
 import { POSTAL_ADDRESS_RECORD_PREVIEW } from '@shared/components/logistics/postalAddressRecordPreview';
@@ -11,18 +11,19 @@ import { SalesOrderLinesGrid } from '../lines/SalesOrderLinesGrid';
 import { headerMasterRoutes, headerPreviewEntities } from './salesOrderDetailsConfig';
 import type { SalesOrderDocumentView } from './useSalesOrderDocument';
 import type { buildSalesOrderTotals } from './salesOrderTotals';
-import type { buildSalesOrderHeaderPanel } from './SalesOrderHeaderPanel';
-import type { buildSalesOrderLineFields } from './SalesOrderLineFields';
-import type { buildSalesOrderLineTabs } from './SalesOrderLineTabs';
+import type { buildSalesOrderHeaderFields } from './SalesOrderHeaderFields';
+import type { buildSalesOrderLineFields } from '../lines/SalesOrderLineFields';
+import type { buildSalesOrderLineTabs } from '../lines/SalesOrderLineTabs';
 
 type Scope = SalesOrderDocumentView &
   ReturnType<typeof buildSalesOrderTotals> &
-  ReturnType<typeof buildSalesOrderHeaderPanel> &
+  ReturnType<typeof buildSalesOrderHeaderFields> &
   ReturnType<typeof buildSalesOrderLineFields> &
   ReturnType<typeof buildSalesOrderLineTabs>;
 
 export function buildSalesOrderHeaderSections(scope: Scope) {
   const {
+    totalsContent,
     activeHeader,
     canEditHeader,
     startHeaderEdit,
@@ -33,8 +34,6 @@ export function buildSalesOrderHeaderSections(scope: Scope) {
     savingHeader,
     lineFilterVisible,
     setLineFilterVisible,
-    lineTab,
-    setLineTab,
     tab,
     selectedLineId,
     setSelectedLineId,
@@ -46,17 +45,10 @@ export function buildSalesOrderHeaderSections(scope: Scope) {
     lookupsQuery,
     deliveryAddressesQuery,
     taxGroupsQuery,
-    amount,
-    subtotal,
-    totalDiscount,
-    salesTax,
-    invoiceAmount,
-    field,
     orderAddressPreview,
     orderAddressKey,
     header,
-    displayedLine,
-    lineTabContent,
+    lineDetails,
   } = scope;
   const section = (
     title: string,
@@ -657,77 +649,8 @@ export function buildSalesOrderHeaderSections(scope: Scope) {
           onRequestEdit={canEditHeader ? startHeaderEdit : undefined}
         />
       ),
-    tab === 'lines' &&
-      section(
-        t('salesOrder.lineDetails', 'Line details'),
-        <>
-          <Tabs
-            value={lineTab}
-            onChange={(_, value: string) => setLineTab(value)}
-            variant="scrollable"
-            scrollButtons="auto"
-            aria-label={t('salesOrder.lineDetails', 'Line details')}
-            sx={{
-              mb: 2,
-              minHeight: 34,
-              '& .MuiTab-root': { fontSize: 12, minHeight: 34, minWidth: 0, px: 1.25 },
-            }}
-          >
-            {[
-              'General',
-              'Setup',
-              'Address',
-              'Product',
-              'Packing',
-              'Delivery',
-              'Sourcing',
-              'Price and discount',
-              'Foreign trade',
-              'Financial dimensions',
-              'Loads',
-              'Financial tags',
-            ].map((label) => (
-              <Tab
-                key={label}
-                value={label}
-                label={label}
-                id={`line-tab-${label.replaceAll(' ', '-')}`}
-                aria-controls="line-details-panel"
-              />
-            ))}
-          </Tabs>
-          <Box
-            role="tabpanel"
-            id="line-details-panel"
-            aria-labelledby={`line-tab-${lineTab.replaceAll(' ', '-')}`}
-          >
-            {!displayedLine ? (
-              <Typography variant="body2" color="text.secondary" sx={{ minHeight: 100 }}>
-                {t('salesOrder.selectLine', 'Select a sales order line to view its details.')}
-              </Typography>
-            ) : (
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-                  gap: 2,
-                }}
-              >
-                {lineTabContent()}
-              </Box>
-            )}
-          </Box>
-        </>
-      ),
-    section(
-      t('fields.totals', 'Totals'),
-      <Stack direction="row" spacing={4} useFlexGap sx={{ flexWrap: 'wrap' }}>
-        {field(t('fields.subtotal'), amount(subtotal))}
-        {field(t('fields.discount'), amount(totalDiscount))}
-        {field(t('fields.tax'), amount(salesTax))}
-        {field(t('fields.total'), amount(invoiceAmount))}
-      </Stack>
-    ),
+    tab === 'lines' && section(t('salesOrder.lineDetails', 'Line details'), lineDetails),
+    section(t('fields.totals', 'Totals'), totalsContent),
   ].filter((value): value is DetailSectionConfig => Boolean(value));
   return {
     section,

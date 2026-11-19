@@ -127,3 +127,32 @@ The shared controller commits grid edits before document validation and Save. Re
 `npm run audit:master-detail` checks actual master-details compositions for the common directory/controller/header-section structure. It runs as part of `audit:static`. Generator tests run with `node --test scripts/generate-master-detail.checks.mjs`.
 
 Existing sales-order and invoice controllers keep their specialized posting and draft behavior; they follow the same folder responsibilities without forcing different business workflows into identical logic.
+
+### One file map for all future features
+
+`scripts/master-detail-structure.mjs` is the single source for the eight standard filenames. The generator and audit both use it. Generated README files carry a feature marker so the audit can verify the model, API adapter, thin route page, controller, details composition, header sections and line columns. Renaming a required file away from the standard fails verification. Header sections and line columns may use `.tsx` when custom editors need JSX. Additional helpers are allowed only for feature-specific behavior; they do not replace the standard entry files.
+
+The sales-order and free-text-invoice implementations retain their existing specialized files. Every newly generated feature uses the exact standard file map. Regression checks generate twelve temporary features and confirm that all twelve follow the same map; no sample features or routes are added to the application.
+
+## Existing sales-order and free-text-invoice structure
+
+Both production features now organize their document code by the same responsibilities:
+
+```text
+details/
+  <Feature>Details.tsx
+  use<Feature>Document.ts[x]
+  <Feature>HeaderFields.tsx
+  <Feature>HeaderSections.ts[x]
+  <feature>Totals.tsx
+  <Feature>DetailsDialogs.tsx
+lines/
+  <Feature>LinesGrid.tsx
+  <Feature>LineFields.tsx
+  <Feature>LineTabs.tsx
+  use<Feature>LineColumns.ts[x]
+```
+
+Header fields, totals and document dialogs stay in `details/`; grid actions, line editors and line tabs stay in `lines/`. Both line-tab builders use `MasterDetailLineDetails`, both totals builders use `MasterDetailTotals`, and both grids inherit `PatternDataGrid` defaults. Invoice uses `MasterDetailLinesGrid` for page-controlled rows; sales order retains its cell-save and keyboard adapters around the same generic grid. Sales-specific discount, pricing and posting helpers remain feature-owned.
+
+The structural audit verifies these common roles in both existing features. This refactor does not introduce any new feature or route.

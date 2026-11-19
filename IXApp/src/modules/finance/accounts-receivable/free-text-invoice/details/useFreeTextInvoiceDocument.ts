@@ -296,3 +296,5 @@ export function useFreeTextInvoiceDocument({
     runConfirmed,
   };
 }
+
+export type FreeTextInvoiceDocument = ReturnType<typeof useFreeTextInvoiceDocument>;

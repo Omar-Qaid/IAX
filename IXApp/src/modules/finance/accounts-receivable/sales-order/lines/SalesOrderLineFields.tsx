@@ -8,16 +8,16 @@ import { RecordPreview } from '@shared/components/record-preview';
 import { LookupField } from '@shared/components/lookups/LookupField';
 import { LookupDisplayField } from '@shared/components/lookups/LookupDisplayField';
 import { d365 } from '@shared/constants/enterpriseUiTokens';
-import { synchronizeSalesLineDiscount } from '../lines/salesLineDiscount';
+import { synchronizeSalesLineDiscount } from './salesLineDiscount';
 import { salesOrderQueryKeys } from '../../queries/accountsReceivableQueryKeys';
-import { lineMasters, toAddressPreview, type DetailLine } from './salesOrderDetailsConfig';
-import type { SalesOrderDocumentView } from './useSalesOrderDocument';
-import type { buildSalesOrderTotals } from './salesOrderTotals';
-import type { buildSalesOrderHeaderPanel } from './SalesOrderHeaderPanel';
+import { lineMasters, toAddressPreview, type DetailLine } from '../details/salesOrderDetailsConfig';
+import type { SalesOrderDocumentView } from '../details/useSalesOrderDocument';
+import type { buildSalesOrderTotals } from '../details/salesOrderTotals';
+import type { buildSalesOrderHeaderFields } from '../details/SalesOrderHeaderFields';
 
 type Scope = SalesOrderDocumentView &
   ReturnType<typeof buildSalesOrderTotals> &
-  ReturnType<typeof buildSalesOrderHeaderPanel>;
+  ReturnType<typeof buildSalesOrderHeaderFields>;
 
 export function buildSalesOrderLineFields(scope: Scope) {
   const {
