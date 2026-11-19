@@ -1,3 +1,4 @@
+import { alpha } from '@mui/material/styles';
 import React from 'react';
 import {
   Alert,
@@ -391,9 +392,9 @@ function DocumentPreview({
             position: 'absolute',
             top: 8,
             insetInlineEnd: 8,
-            bgcolor: 'rgba(255,255,255,.94)',
+            bgcolor: (theme) => alpha(theme.palette.background.paper, 0.94),
             boxShadow: 1,
-            '&:hover': { bgcolor: '#fff' },
+            '&:hover': { bgcolor: 'background.paper' },
           }}
         >
           {t('documents.docuView.openGallery')}

@@ -2,6 +2,7 @@ import type { Components, Theme } from '@mui/material/styles';
 import { uiDensity } from '@shared/constants/uiDensity';
 import { APP_FONT_FAMILY_CSS_VARIABLE } from '@shared/constants/fontFamilies';
 import { d365 } from '@shared/constants/enterpriseUiTokens';
+import { enterpriseSurfaces } from '@shared/constants/enterpriseSurfaces';
 
 export const getComponentOverrides = (theme: Theme): Components => ({
   MuiTypography: {
@@ -51,7 +52,7 @@ export const getComponentOverrides = (theme: Theme): Components => ({
       '*': {
         boxSizing: 'border-box',
         scrollbarWidth: 'thin',
-        scrollbarColor: `${theme.palette.mode === 'light' ? '#a8a8a8' : '#667085'} transparent`,
+        scrollbarColor: `${enterpriseSurfaces(theme).scrollbarThumb} transparent`,
       },
       '*::-webkit-scrollbar': {
         width: uiDensity.scrollbarSize,
@@ -59,7 +60,7 @@ export const getComponentOverrides = (theme: Theme): Components => ({
       },
       '*::-webkit-scrollbar-track': { backgroundColor: 'transparent' },
       '*::-webkit-scrollbar-thumb': {
-        backgroundColor: theme.palette.mode === 'light' ? '#a8a8a8' : '#667085',
+        backgroundColor: enterpriseSurfaces(theme).scrollbarThumb,
         borderRadius: 999,
       },
     },

@@ -666,3 +666,25 @@ Related implementation [ReportViewer.tsx](../src/patterns/report-viewer/ReportVi
 
 The refactoring carried out after this review, and its verification, are recorded in
 [ui-refactoring-log.md](ui-refactoring-log.md).
+
+## Second pass (2026-11-19)
+
+Plan items 1–4 above are implemented in the current checkout: FastTab composes ListDetailsLayout and MasterDetailSection, the HCM reference pages share [HcmReferencePage.tsx](../src/modules/organization/components/HcmReferencePage.tsx), SimpleListPage defaults replace repeated labels, and page-level row/header heights were removed so every simple list inherits the Sales order list look.
+
+The largest remaining inconsistency was literal light-mode colors in page files. They ignored dark mode, high contrast and the primary color preset. This pass moved these pages to theme palette keys (`divider`, `text.*`, `action.*`, `primary.*`, `background.paper`) and `theme.palette.enterprise`, and removed page-local scrollbar colors so the global theme scrollbar applies:
+
+- [SysNumberSequencePage.tsx](../src/modules/administration/pages/SysNumberSequencePage.tsx): selected segment uses `enterprise.selectedRow`; grid lines use `divider`.
+- [LegalEntityPage.tsx](../src/modules/organization/pages/LegalEntityPage.tsx): logo frame and caption rule.
+- [WfGenericReportPage.tsx](../src/modules/workflow/pages/WfGenericReportPage.tsx): filter field surfaces and the Run button.
+- [WfRequestFromPage.tsx](../src/modules/workflow/pages/WfRequestFromPage.tsx): form surface, border and scrollbar.
+- [WfMailPage.tsx](../src/modules/workflow/pages/WfMailPage.tsx): field rows, tracking timeline, folder navigation and scrollbars.
+
+Follow-up in the same pass:
+
+- Scrollbar greys now come from `enterprise.scrollbarThumb` / `scrollbarThumbHover`, used by the global theme scrollbar and the DataGrid (the grid previously used a lighter grey).
+- Workflow form controls ([DynamicControlRenderer.tsx](../src/modules/workflow/components/DynamicControlRenderer.tsx), [DynamicForm.tsx](../src/modules/workflow/components/DynamicForm.tsx), [MailFieldValue.tsx](../src/modules/workflow/components/MailFieldValue.tsx)), [WfRequestSubmissionPage.tsx](../src/modules/workflow/pages/WfRequestSubmissionPage.tsx) and [DocuView.tsx](../src/modules/organization/documents/pages/DocuView.tsx) use palette keys and `alpha()` of theme colors. Neutral drop shadows and the user-configured note color are unchanged.
+
+Remaining work:
+
+- Specialized workspaces still hold literal colors: Process Builder (about 68), DynamicSpecialControls (about 40), report designer/viewer (about 40) and HcmWorkerAssignmentDiagram. They need visual review per control before mapping to palette keys.
+- WfMailPage has no unit test; its color change was checked by type-check and lint only.

@@ -88,7 +88,7 @@ const MOCK_ROWS: GenericReportRow[] = [
 ];
 
 const compactFieldSx = {
-  '& .MuiInputBase-root': { height: 30, borderRadius: 0, bgcolor: '#f6f8fa' },
+  '& .MuiInputBase-root': { height: 30, borderRadius: 0, bgcolor: 'action.hover' },
   '& .MuiOutlinedInput-notchedOutline': { border: 0 },
   '& .MuiInputBase-input': { fontSize: 12, py: 0.5, textAlign: 'start' },
 };
@@ -234,7 +234,7 @@ function ReportParametersDialog({
         <Box
           sx={{
             mt: 2,
-            '& .MuiInputBase-root': { bgcolor: '#f6f8fa', borderRadius: 0 },
+            '& .MuiInputBase-root': { bgcolor: 'action.hover', borderRadius: 0 },
             '& .MuiOutlinedInput-notchedOutline': { border: 0 },
           }}
         >
@@ -306,7 +306,7 @@ function ReportParametersDialog({
                   sx={{
                     height: 30,
                     borderRadius: 0,
-                    bgcolor: '#f6f8fa',
+                    bgcolor: 'action.hover',
                     fontSize: 11,
                     '& .MuiOutlinedInput-notchedOutline': { border: 0 },
                   }}
@@ -390,7 +390,7 @@ function ReportParametersDialog({
                 mt: 1,
                 height: 30,
                 borderRadius: 0,
-                bgcolor: '#f6f8fa',
+                bgcolor: 'action.hover',
                 fontSize: 11,
                 '& .MuiOutlinedInput-notchedOutline': { border: 0 },
               }}
@@ -428,11 +428,12 @@ function ReportParametersDialog({
           sx={{
             minWidth: 96,
             borderRadius: 0,
-            bgcolor: '#050505',
+            bgcolor: 'text.primary',
+            color: 'background.paper',
             fontSize: 10,
             fontWeight: 700,
             textTransform: 'none',
-            '&:hover': { bgcolor: '#222' },
+            '&:hover': { bgcolor: 'text.secondary' },
           }}
         >
           {t('genericReport.runReport')}

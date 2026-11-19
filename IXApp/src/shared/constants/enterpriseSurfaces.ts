@@ -24,6 +24,10 @@ export interface EnterprisePalette {
   accent: string;
   /** Text of the selected record, and other emphasized accents. */
   accentStrong: string;
+  /** Scrollbar thumb of every scroll area (global default and data grids). */
+  scrollbarThumb: string;
+  /** Scrollbar thumb under the pointer. */
+  scrollbarThumbHover: string;
 }
 
 /**
@@ -44,6 +48,8 @@ export const createEnterprisePalette = (
         selectedBar: palette.primary.main,
         accent: palette.primary.main,
         accentStrong: palette.primary.dark,
+        scrollbarThumb: '#a8a8a8',
+        scrollbarThumbHover: '#8f8f8f',
       }
     : {
         canvas: palette.background.default,
@@ -53,6 +59,8 @@ export const createEnterprisePalette = (
         selectedBar: palette.primary.main,
         accent: palette.primary.light,
         accentStrong: palette.primary.light,
+        scrollbarThumb: '#667085',
+        scrollbarThumbHover: '#8290a3',
       };
 
 /**

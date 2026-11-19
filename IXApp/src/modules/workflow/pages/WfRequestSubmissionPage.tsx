@@ -1,3 +1,4 @@
+import { alpha } from '@mui/material/styles';
 import React from 'react';
 import { Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
 import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined';
@@ -77,12 +78,12 @@ function CategoryRequestForm({ category }: { category: WfCategoryRecord }) {
                     flexDirection: 'column',
                     gap: 0.75,
                     borderColor: 'divider',
-                    bgcolor: '#fff',
+                    bgcolor: 'background.paper',
                     color: 'text.primary',
                     textTransform: 'none',
                     '&:hover': {
                       borderColor: 'primary.main',
-                      bgcolor: 'rgba(99, 91, 255, 0.08)',
+                      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
                       color: 'primary.main',
                     },
                   }}

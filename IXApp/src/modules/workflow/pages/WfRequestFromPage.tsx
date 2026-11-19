@@ -370,9 +370,9 @@ export function RequestFromPage(): React.ReactElement {
               minHeight: { md: 420 },
               maxHeight: { xs: 'none', md: 'calc(100dvh - 172px)' },
               border: '1px solid',
-              borderColor: '#c9c9c9',
+              borderColor: 'divider',
               borderRadius: 1.25,
-              bgcolor: '#fff',
+              bgcolor: 'background.paper',
               overflow: 'hidden',
               boxShadow: '0 1px 3px rgba(15,23,42,.08)',
             }}
@@ -388,19 +388,6 @@ export function RequestFromPage(): React.ReactElement {
                 overflowX: 'hidden',
                 p: { xs: 0.5, sm: 0.75 },
                 scrollbarGutter: 'stable',
-                scrollbarWidth: 'thin',
-                scrollbarColor: '#9b9b9b #f1f1f1',
-                '&::-webkit-scrollbar': { width: 11 },
-                '&::-webkit-scrollbar-track': {
-                  bgcolor: '#f1f1f1',
-                  borderInlineStart: '1px solid #e1e1e1',
-                },
-                '&::-webkit-scrollbar-thumb': {
-                  bgcolor: '#9b9b9b',
-                  borderRadius: 6,
-                  border: '3px solid #f1f1f1',
-                },
-                '&::-webkit-scrollbar-thumb:hover': { bgcolor: '#707070' },
               }}
             >
               <Box
@@ -408,7 +395,7 @@ export function RequestFromPage(): React.ReactElement {
                   display:
                     displayMode === 'normal' || Boolean(publishedTemplate.data) ? 'block' : 'none',
                   p: displayMode === 'printTemplate' ? { xs: 0.5, md: 1.5 } : 0,
-                  bgcolor: '#fff',
+                  bgcolor: 'background.paper',
                   overflow: 'auto',
                 }}
               >
@@ -430,7 +417,7 @@ export function RequestFromPage(): React.ReactElement {
                   sx={{
                     minHeight: 320,
                     p: { xs: 0.5, md: 1.5 },
-                    bgcolor: '#fff',
+                    bgcolor: 'background.paper',
                     overflow: 'auto',
                   }}
                 >

@@ -43,6 +43,7 @@ import { computeFlexWidths, generateCSV, downloadFile } from './DataGridUtils';
 import { useNotifications } from '@shared/hooks/useNotifications';
 import { uiDensity } from '@shared/constants/uiDensity';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import { enterpriseSurfaces } from '@shared/constants/enterpriseSurfaces';
 const getDefaultRowId = <T,>(row: T) => (row as { id: string | number }).id;
 function DataGridInternal<T>(
   {
@@ -1200,19 +1201,19 @@ function DataGridInternal<T>(
                 width: uiDensity.scrollbarSize,
                 height: uiDensity.scrollbarSize,
               },
-              scrollbarColor: `${theme.palette.mode === 'light' ? '#b8b8b8' : '#5f6b7a'} transparent`,
+              scrollbarColor: `${enterpriseSurfaces(theme).scrollbarThumb} transparent`,
               scrollbarWidth: 'thin',
               '&::-webkit-scrollbar-track': {
                 bgcolor: theme.palette.mode === 'light' ? '#f7f7f7' : 'transparent',
               },
               '&::-webkit-scrollbar-thumb': {
-                bgcolor: theme.palette.mode === 'light' ? '#b8b8b8' : '#5f6b7a',
+                bgcolor: enterpriseSurfaces(theme).scrollbarThumb,
                 borderRadius: 4,
                 border: '2px solid transparent',
                 backgroundClip: 'content-box',
               },
               '&::-webkit-scrollbar-thumb:hover': {
-                bgcolor: theme.palette.mode === 'light' ? '#8f8f8f' : '#8290a3',
+                bgcolor: enterpriseSurfaces(theme).scrollbarThumbHover,
               },
             }}
           >

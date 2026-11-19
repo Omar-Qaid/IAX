@@ -12,6 +12,8 @@ import type {
   DetailValues,
   EnterpriseListDetailsConfig,
 } from '@patterns/list-details/types';
+import type { Theme } from '@mui/material/styles';
+import { enterpriseSurfaces } from '@shared/constants/enterpriseSurfaces';
 import { sysNumberSequenceApi, type SysNumberSequenceRecord } from '../api/sysNumberSequenceApi';
 
 const nullableNumber = (value: DetailValue | undefined): number | null =>
@@ -135,14 +137,14 @@ function NumberSequenceSegments({
               onClick={() => setSelectedIndex(index)}
               sx={{
                 ...segmentCellSx,
-                bgcolor: selectedIndex === index ? '#dbe7ff' : 'transparent',
+                bgcolor: selectedIndex === index ? selectedRowBg : 'transparent',
               }}
             />
             <Box
               onClick={() => setSelectedIndex(index)}
               sx={{
                 ...segmentCellSx,
-                bgcolor: selectedIndex === index ? '#dbe7ff' : 'transparent',
+                bgcolor: selectedIndex === index ? selectedRowBg : 'transparent',
               }}
             >
               {editing ? (
@@ -170,7 +172,7 @@ function NumberSequenceSegments({
               onClick={() => setSelectedIndex(index)}
               sx={{
                 ...segmentCellSx,
-                bgcolor: selectedIndex === index ? '#dbe7ff' : 'transparent',
+                bgcolor: selectedIndex === index ? selectedRowBg : 'transparent',
               }}
             >
               {editing ? (
@@ -190,7 +192,7 @@ function NumberSequenceSegments({
               sx={{
                 ...segmentCellSx,
                 justifyContent: 'flex-end',
-                bgcolor: selectedIndex === index ? '#dbe7ff' : 'transparent',
+                bgcolor: selectedIndex === index ? selectedRowBg : 'transparent',
               }}
             >
               {segment.value.length}
@@ -225,14 +227,16 @@ const segmentActionSx = {
   '& .MuiButton-startIcon': { mr: 0.25 },
   '& svg': { fontSize: 17 },
 };
-const segmentHeaderSx = { px: 0.75, py: 0.5, borderBottom: '1px solid #c8c6c4' };
+const selectedRowBg = (theme: Theme) => enterpriseSurfaces(theme).selectedRow;
+const segmentHeaderSx = { px: 0.75, py: 0.5, borderBottom: 1, borderColor: 'divider' };
 const segmentCellSx = {
   minHeight: 31,
   px: 0.75,
   display: 'flex',
   alignItems: 'center',
-  borderBottom: '1px solid #c8c6c4',
-  borderInlineEnd: '1px solid #c8c6c4',
+  borderBottom: 1,
+  borderInlineEnd: 1,
+  borderColor: 'divider',
   fontSize: 12,
   cursor: 'default',
 };

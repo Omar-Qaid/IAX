@@ -1,3 +1,4 @@
+import { alpha } from '@mui/material/styles';
 import React from 'react';
 import { dateBoundValid } from './dateBounds';
 import { inputMaskValid, supportedSubmissionRule } from './submissionRules';
@@ -613,7 +614,7 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, DynamicFormProps>
             borderInlineStart: '3px solid',
             borderColor: 'primary.light',
             borderRadius: 0.6,
-            bgcolor: 'rgba(0, 91, 161, .035)',
+            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.035),
           }}
         >
           {fullRow && (
@@ -813,7 +814,7 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, DynamicFormProps>
       displayMode === 'printTemplate' && printTemplate && printCompany ? (
         <Box
           data-testid="dynamic-form-print-template"
-          sx={{ bgcolor: '#fff', width: '100%', minWidth: 0 }}
+          sx={{ bgcolor: 'background.paper', width: '100%', minWidth: 0 }}
         >
           {unboundRows.length > 0 && (
             <Box
@@ -891,7 +892,7 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, DynamicFormProps>
               height: 'auto',
               alignSelf: 'flex-start',
               p: { xs: 1.1, sm: 1.35 },
-              borderColor: '#d5d7dc',
+              borderColor: 'divider',
               borderRadius: 1,
               boxShadow: '0 2px 7px rgba(32,42,64,.10)',
             }}
@@ -970,7 +971,7 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, DynamicFormProps>
               px: { xs: 1.25, sm: 2.5 },
               py: 0.8,
               mx: { xs: -0.25, sm: -0.5 },
-              bgcolor: 'rgba(255,255,255,.98)',
+              bgcolor: (theme) => alpha(theme.palette.background.paper, 0.98),
               backdropFilter: 'blur(8px)',
               boxShadow: '0 -2px 8px rgba(32,42,64,.12)',
             }}
@@ -1004,7 +1005,7 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, DynamicFormProps>
                   color: 'primary.contrastText',
                   display: { xs: 'grid', sm: 'none' },
                   placeItems: 'center',
-                  boxShadow: '0 2px 7px rgba(0,91,161,.30)',
+                  boxShadow: (theme) => `0 2px 7px ${alpha(theme.palette.primary.main, 0.3)}`,
                 }}
               >
                 <Stack spacing={0} sx={{ alignItems: 'center' }}>
@@ -1022,7 +1023,7 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, DynamicFormProps>
                   border: { sm: '1px solid' },
                   borderColor: { sm: 'divider' },
                   borderRadius: { sm: 1 },
-                  bgcolor: { sm: '#f8f8f8' },
+                  bgcolor: { sm: 'action.hover' },
                 }}
               >
                 <Typography

@@ -1,4 +1,5 @@
 import React from 'react';
+import type { Theme } from '@mui/material/styles';
 import {
   Alert,
   Box,
@@ -29,6 +30,9 @@ import {
   normalizeDynamicControlType,
 } from '../components/DynamicControlRenderer';
 import { MailFieldValue } from '../components/MailFieldValue';
+
+/** Hairline separators follow the theme divider in light and dark mode. */
+const dividerBorder = (theme: Theme) => `1px solid ${theme.palette.divider}`;
 import { WorkflowMailReportViewerViewer } from '../report-viewer/pages/WorkflowMailReportViewerPage';
 import { WorkflowOfficialFormViewer } from '../report-viewer/pages/WorkflowOfficialFormViewerPage';
 import { reportDesignerApi } from '../report-designer/api/reportDesignerApi';
@@ -125,7 +129,7 @@ function LabelValue({
         display: 'grid',
         gridTemplateColumns: stacked ? 'minmax(0, 1fr)' : '132px minmax(0, 1fr)',
         minHeight: compact ? 40 : 48,
-        borderBottom: '1px solid #e5e5e5',
+        borderBottom: dividerBorder,
       }}
     >
       <Typography
@@ -135,8 +139,8 @@ function LabelValue({
           minHeight: stacked ? 31 : '100%',
           display: 'flex',
           alignItems: stacked ? 'center' : 'flex-start',
-          bgcolor: '#f7f7f7',
-          color: '#111',
+          bgcolor: 'action.hover',
+          color: 'text.primary',
           fontSize: 12,
           fontWeight: 600,
           textAlign: 'start',
@@ -147,8 +151,8 @@ function LabelValue({
       <Box
         sx={{
           p: stacked ? 0 : compact ? '6px 10px' : '8px 12px',
-          bgcolor: '#fff',
-          color: '#222',
+          bgcolor: 'primary.contrastText',
+          color: 'text.primary',
           fontSize: 12,
           fontWeight: 400,
           minWidth: 0,
@@ -198,7 +202,7 @@ function MailAttachments({ requestId, detailIds }: { requestId: number; detailId
       <Stack
         direction="row"
         spacing={0.75}
-        sx={{ alignItems: 'center', px: 1.25, minHeight: 36, borderBottom: '1px solid #e2e2e2' }}
+        sx={{ alignItems: 'center', px: 1.25, minHeight: 36, borderBottom: dividerBorder }}
       >
         <AttachFileOutlined sx={{ fontSize: 16 }} />
         <Typography sx={{ flex: 1, fontSize: 12.5, fontWeight: 700 }}>
@@ -246,7 +250,7 @@ function MailAttachments({ requestId, detailIds }: { requestId: number; detailId
             minHeight: 51,
             px: 1.25,
             borderRadius: 0,
-            borderBottom: '1px solid #eeeeee',
+            borderBottom: dividerBorder,
             color: 'text.primary',
             textAlign: 'start',
             textTransform: 'none',
@@ -317,7 +321,7 @@ function CurrentActivityControls({
       sx={{
         mt: 1.25,
         pt: 1.25,
-        borderTop: '1px solid #e5e7eb',
+        borderTop: dividerBorder,
         display: 'grid',
         gap: 1.25,
       }}
@@ -403,7 +407,7 @@ export function TrackingTimeline({
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
-        color: '#171717',
+        color: 'text.primary',
         fontFamily: APP_FONT_FAMILY,
         textAlign: 'start',
       }}
@@ -433,9 +437,8 @@ export function TrackingTimeline({
           px: 0.5,
           pb: 0.5,
           scrollbarWidth: 'thin',
-          scrollbarColor: '#b8b8b8 transparent',
           '&::-webkit-scrollbar': { width: 6 },
-          '&::-webkit-scrollbar-thumb': { bgcolor: '#b8b8b8', borderRadius: 3 },
+          '&::-webkit-scrollbar-thumb': { bgcolor: 'action.disabled', borderRadius: 3 },
           '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
           '&::before': {
             content: '""',
@@ -444,7 +447,7 @@ export function TrackingTimeline({
             top: 12,
             bottom: 14,
             width: '1px',
-            bgcolor: '#e5e7eb',
+            bgcolor: 'action.selected',
           },
         }}
       >
@@ -480,23 +483,24 @@ export function TrackingTimeline({
                   width: entry.isCurrent ? 14 : 11,
                   height: entry.isCurrent ? 14 : 11,
                   borderRadius: '50%',
-                  bgcolor: entry.isCurrent ? '#fff' : '#d8dadd',
-                  border: entry.isCurrent ? '2px solid #1976d2' : 0,
-                  boxShadow: '0 0 0 2px #fff',
+                  bgcolor: entry.isCurrent ? 'background.paper' : 'action.selected',
+                  border: entry.isCurrent ? 2 : 0,
+                  borderColor: 'primary.main',
+                  boxShadow: (theme) => `0 0 0 2px ${theme.palette.background.paper}`,
                   '&::before': entry.isCurrent
                     ? {
                         content: '""',
                         width: 6,
                         height: 6,
                         borderRadius: '50%',
-                        bgcolor: '#1976d2',
+                        bgcolor: 'primary.main',
                       }
                     : undefined,
                   '&::after':
                     entry.isCompleted && !entry.isCurrent
                       ? {
                           content: '"✓"',
-                          color: '#fff',
+                          color: 'primary.contrastText',
                           fontSize: 8,
                           lineHeight: 1,
                           fontWeight: 800,
@@ -514,8 +518,9 @@ export function TrackingTimeline({
                 boxSizing: 'border-box',
                 p: '14px 12px',
                 borderRadius: '6px',
-                border: `1px solid ${entry.isCurrent ? '#1976d2' : '#e5e7eb'}`,
-                bgcolor: '#fff',
+                border: 1,
+                borderColor: entry.isCurrent ? 'primary.main' : 'divider',
+                bgcolor: 'primary.contrastText',
                 boxShadow: '0 1px 2px rgba(0,0,0,.02)',
               }}
             >
@@ -526,7 +531,7 @@ export function TrackingTimeline({
                 <Box dir="auto" sx={{ minWidth: 0, textAlign: 'start' }}>
                   <Typography
                     sx={{
-                      color: entry.isCurrent ? '#171717' : '#444',
+                      color: entry.isCurrent ? 'text.primary' : 'text.secondary',
                       fontSize: 13,
                       lineHeight: 1.45,
                       fontWeight: entry.isCurrent ? 600 : 500,
@@ -537,7 +542,7 @@ export function TrackingTimeline({
                   <Typography
                     sx={{
                       mt: 0.15,
-                      color: entry.isCurrent ? '#1976d2' : '#757575',
+                      color: entry.isCurrent ? 'primary.main' : 'text.secondary',
                       fontSize: 11,
                       lineHeight: 1.5,
                     }}
@@ -548,7 +553,7 @@ export function TrackingTimeline({
                 <Typography
                   sx={{
                     flexShrink: 0,
-                    color: '#777',
+                    color: 'text.secondary',
                     fontSize: 11,
                     lineHeight: 1.6,
                   }}
@@ -562,8 +567,8 @@ export function TrackingTimeline({
                     px: entry.isCurrent ? 0.875 : 0.75,
                     py: entry.isCurrent ? 0.375 : 0.25,
                     borderRadius: '3px',
-                    bgcolor: entry.isCurrent ? '#1976d2' : '#e8e8e8',
-                    color: entry.isCurrent ? '#fff' : '#666',
+                    bgcolor: entry.isCurrent ? 'primary.main' : 'action.selected',
+                    color: entry.isCurrent ? 'primary.contrastText' : 'text.secondary',
                     fontSize: 10,
                     lineHeight: 1.35,
                     fontWeight: 600,
@@ -579,24 +584,24 @@ export function TrackingTimeline({
                   gridTemplateColumns: 'max-content minmax(0, 1fr)',
                   columnGap: '6px',
                   rowGap: 0.55,
-                  color: entry.isCurrent ? '#171717' : '#737373',
+                  color: entry.isCurrent ? 'text.primary' : 'text.secondary',
                   fontSize: 11,
                   lineHeight: 1.7,
                 }}
               >
-                <Box component="span" sx={{ color: '#555' }}>
+                <Box component="span" sx={{ color: 'text.secondary' }}>
                   {t('mail.timeline.responsible')}
                 </Box>
                 <Box component="span" dir="auto">
                   {entry.responsible}
                 </Box>
-                <Box component="span" sx={{ color: '#555' }}>
+                <Box component="span" sx={{ color: 'text.secondary' }}>
                   {t('mail.timeline.action')}
                 </Box>
                 <Box component="span" dir="auto">
                   {entry.action}
                 </Box>
-                <Box component="span" sx={{ color: '#555' }}>
+                <Box component="span" sx={{ color: 'text.secondary' }}>
                   {t('mail.timeline.notes')}
                 </Box>
                 <Box component="span" dir="auto" sx={{ overflowWrap: 'anywhere' }}>
@@ -714,15 +719,17 @@ function MailDetails({ request }: { request: MailRecord }) {
                 scrollbarWidth: 'thin',
                 px: 0.5,
                 pb: 0.5,
-                scrollbarColor: '#b8b8b8 transparent',
                 '&::-webkit-scrollbar': { width: 10 },
                 '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
                 '&::-webkit-scrollbar-thumb': {
-                  bgcolor: '#b8b8b8',
+                  bgcolor: 'action.disabled',
                   border: '2px solid transparent',
                   borderRadius: 8,
                 },
-                '&:focus-visible': { outline: '2px solid #2f6fed', outlineOffset: -2 },
+                '&:focus-visible': {
+                  outline: (theme) => `2px solid ${theme.palette.primary.main}`,
+                  outlineOffset: -2,
+                },
               }}
             >
               {details && (
@@ -731,8 +738,8 @@ function MailDetails({ request }: { request: MailRecord }) {
                   sx={{
                     overflow: 'hidden',
                     borderRadius: '6px',
-                    borderColor: '#e5e7eb',
-                    bgcolor: '#fff',
+                    borderColor: 'divider',
+                    bgcolor: 'primary.contrastText',
                     boxShadow: '0 1px 2px rgba(0,0,0,.02)',
                   }}
                 >
@@ -816,7 +823,7 @@ function MailDetails({ request }: { request: MailRecord }) {
                   value={100}
                   size={42}
                   thickness={3.5}
-                  sx={{ color: '#e5e5e5' }}
+                  sx={{ color: 'text.disabled' }}
                 />
                 <CircularProgress
                   variant="determinate"
@@ -1099,7 +1106,7 @@ export function MailPage(): React.ReactElement {
             height: 46,
             p: '5px 6px',
             boxSizing: 'border-box',
-            borderBottom: '1px solid #e1e1e1',
+            borderBottom: dividerBorder,
           }}
         >
           {folderButtons.map((item) => (
@@ -1114,14 +1121,14 @@ export function MailPage(): React.ReactElement {
                 minHeight: 32,
                 px: '14px',
                 borderRadius: '3px',
-                bgcolor: folder === item.id ? '#1f5fa8' : 'transparent',
-                color: folder === item.id ? '#fff' : '#004b8d',
+                bgcolor: folder === item.id ? 'primary.main' : 'transparent',
+                color: folder === item.id ? 'primary.contrastText' : 'primary.dark',
                 boxShadow: 'none',
                 fontSize: 12,
                 fontWeight: 500,
                 textTransform: 'none',
                 '&:hover': {
-                  bgcolor: folder === item.id ? '#1b5596' : 'rgba(0,75,141,.06)',
+                  bgcolor: folder === item.id ? 'primary.dark' : 'action.hover',
                   boxShadow: 'none',
                 },
               }}

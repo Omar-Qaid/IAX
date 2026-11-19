@@ -497,9 +497,10 @@ function CompanyImagePanel({
               display: 'grid',
               placeItems: 'center',
               overflow: 'hidden',
-              border: source && mode === 'logo' ? '1px solid #315efb' : '1px solid transparent',
+              border: 1,
+              borderColor: source && mode === 'logo' ? 'primary.main' : 'transparent',
               borderRadius: 0.5,
-              bgcolor: '#fff',
+              bgcolor: 'background.paper',
             }}
           >
             {source ? (
@@ -521,7 +522,15 @@ function CompanyImagePanel({
             <Typography sx={{ mb: 1, fontSize: 12, color: 'text.secondary' }}>
               {t('legalEntities.images.type')}
             </Typography>
-            <Typography sx={{ width: 152, pb: 0.5, borderBottom: '1px solid #777', fontSize: 12 }}>
+            <Typography
+              sx={{
+                width: 152,
+                pb: 0.5,
+                borderBottom: 1,
+                borderColor: 'text.secondary',
+                fontSize: 12,
+              }}
+            >
               {t('legalEntities.images.banner')}
             </Typography>
           </Box>

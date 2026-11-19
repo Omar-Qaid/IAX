@@ -1,3 +1,4 @@
+import { alpha } from '@mui/material/styles';
 import React from 'react';
 import { dateBoundValid, resolveDateBound } from './dateBounds';
 import {
@@ -130,7 +131,7 @@ export function DynamicControlRenderer({
           gap: 0.45,
           '& .MuiOutlinedInput-root': {
             borderRadius: '3px',
-            bgcolor: disabled ? 'action.disabledBackground' : '#fff',
+            bgcolor: disabled ? 'action.disabledBackground' : 'background.paper',
           },
           '&& .MuiAutocomplete-root .MuiOutlinedInput-root.MuiInputBase-sizeSmall': {
             py: 0,
@@ -219,7 +220,7 @@ export function DynamicControlRenderer({
           py: 1,
           borderInlineStart: '4px solid',
           borderColor: noteColor,
-          bgcolor: 'rgba(245, 158, 11, .08)',
+          bgcolor: (theme) => alpha(theme.palette.warning.main, 0.08),
           borderRadius: 0.75,
         }}
       >
@@ -355,7 +356,7 @@ export function DynamicControlRenderer({
               sx={{
                 display: 'grid',
                 gridTemplateColumns: `repeat(${columns.length}, minmax(130px, 1fr)) 34px`,
-                bgcolor: '#f3f6f9',
+                bgcolor: 'action.hover',
                 borderBottom: '1px solid',
                 borderColor: 'divider',
               }}
@@ -402,7 +403,7 @@ export function DynamicControlRenderer({
                     }}
                     sx={{
                       px: 1,
-                      boxShadow: 'inset 0 0 0 1px #c7c7c7',
+                      boxShadow: (theme) => `inset 0 0 0 1px ${theme.palette.divider}`,
                       '& .MuiInputBase-root': { minHeight: 31, fontSize: 12 },
                     }}
                   />
@@ -412,7 +413,10 @@ export function DynamicControlRenderer({
                   disabled={disabled}
                   aria-label={`${t('actions.delete')} ${rowIndex + 1}`}
                   onClick={() => updateRows(rows.filter((_, index) => index !== rowIndex))}
-                  sx={{ borderRadius: 0, boxShadow: 'inset 0 0 0 1px #c7c7c7' }}
+                  sx={{
+                    borderRadius: 0,
+                    boxShadow: (theme) => `inset 0 0 0 1px ${theme.palette.divider}`,
+                  }}
                 >
                   <DeleteOutline sx={{ fontSize: 16 }} />
                 </IconButton>
@@ -519,7 +523,7 @@ export function DynamicControlRenderer({
         sx={{
           '& .MuiOutlinedInput-root': {
             borderRadius: '3px',
-            bgcolor: disabled ? 'action.disabledBackground' : '#fff',
+            bgcolor: disabled ? 'action.disabledBackground' : 'background.paper',
           },
         }}
       >

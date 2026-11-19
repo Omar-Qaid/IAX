@@ -60,7 +60,7 @@ function TableFieldValue({ value, rtl }: { value: string; rtl: boolean }): React
   if (columns.length === 0) return <Box>—</Box>;
 
   return (
-    <Box sx={{ width: '100%', overflowX: 'auto', border: '1px solid #b8b8b8' }}>
+    <Box sx={{ width: '100%', overflowX: 'auto', border: 1, borderColor: 'divider' }}>
       <Box
         component="table"
         dir={rtl ? 'rtl' : 'ltr'}
@@ -70,7 +70,7 @@ function TableFieldValue({ value, rtl }: { value: string; rtl: boolean }): React
           tableLayout: 'fixed',
         }}
       >
-        <Box component="thead" sx={{ bgcolor: '#e7e7e7' }}>
+        <Box component="thead" sx={{ bgcolor: 'action.selected' }}>
           <Box component="tr">
             {columns.map((column) => (
               <Box
@@ -80,7 +80,8 @@ function TableFieldValue({ value, rtl }: { value: string; rtl: boolean }): React
                   width: column === 'sequence' ? 42 : column === 'payment_statement' ? 120 : 'auto',
                   px: 0.75,
                   py: 0.6,
-                  border: '1px solid #aaa',
+                  border: 1,
+                  borderColor: 'divider',
                   fontSize: 9.5,
                   fontWeight: 700,
                   lineHeight: 1.2,
@@ -103,7 +104,8 @@ function TableFieldValue({ value, rtl }: { value: string; rtl: boolean }): React
                   sx={{
                     px: 0.75,
                     py: 0.65,
-                    border: '1px solid #bbb',
+                    border: 1,
+                    borderColor: 'divider',
                     fontSize: 10,
                     textAlign: 'center',
                     overflowWrap: 'anywhere',

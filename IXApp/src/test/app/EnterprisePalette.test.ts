@@ -10,6 +10,8 @@ describe('enterprise surface palette', () => {
       'accent',
       'accentStrong',
       'canvas',
+      'scrollbarThumb',
+      'scrollbarThumbHover',
       'selectedBar',
       'selectedRow',
       'strongBorder',
