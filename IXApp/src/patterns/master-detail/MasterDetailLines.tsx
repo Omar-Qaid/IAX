@@ -4,7 +4,7 @@ import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { d365 } from '@shared/constants/enterpriseUiTokens';
 
 /**
- * Grid settings of a lines grid (sales order look): compact rows, bordered
+ * Default lines-grid appearance, matching the free-text invoice: compact rows, bordered
  * cells, no own toolbar/footer (the lines toolbar and Search drive it).
  * Spread into the page's `DataGrid`: `<DataGrid {...MASTER_DETAIL_LINES_GRID_PROPS} … />`.
  */
@@ -12,6 +12,8 @@ export const MASTER_DETAIL_LINES_GRID_PROPS = {
   height: 232,
   rowHeight: 24,
   headerHeight: 27,
+  mobilePresentation: 'table',
+  hideFilterRow: true,
   hideFooter: true,
   hideColumnMenu: false,
   showColumnBorders: true,

@@ -98,13 +98,6 @@ const newInvoice = (customerAccount: string): Invoice => ({
   lines: [newLine()],
 });
 
-/** Lookup editor box inside a grid cell (same height as the row editors). */
-const GridLookupCell = ({ children }: { children: React.ReactNode }) => (
-  <Box sx={{ width: '100%', minWidth: 0, height: 24, display: 'flex', alignItems: 'center' }}>
-    {children}
-  </Box>
-);
-
 /**
  * Free text invoice details on the master-detail pattern, laid out like sales
  * order: Lines tab (header FastTab, lines, line details, totals) and Header tab
@@ -632,7 +625,7 @@ function InvoiceEditor({
         row.ledgerDisplay ||
         (row.ledgerDimension ? String(row.ledgerDimension) : ''),
       renderEditCell: ({ row, value, onChange, disabled }) => (
-        <GridLookupCell>
+        <>
           <DataGridLookupField
             name="ledgerDimension"
             label={t('freeTextInvoices.ledgerAccount')}
@@ -664,7 +657,7 @@ function InvoiceEditor({
               onChange(Number(next) || 0);
             }}
           />
-        </GridLookupCell>
+        </>
       ),
     },
     ...(['taxGroup', 'taxItemGroup'] as const).map((field): ColumnDef<Line> => ({
@@ -680,7 +673,7 @@ function InvoiceEditor({
             : FOUNDATION_PREVIEWS.ITEM_SALES_TAX_GROUP,
       },
       renderEditCell: ({ value, onChange, disabled }) => (
-        <GridLookupCell>
+        <>
           <DataGridLookupField
             name={field}
             label={
@@ -696,7 +689,7 @@ function InvoiceEditor({
             disabled={disabled || taxes.isLoading}
             onChange={(next) => onChange(String(next ?? ''))}
           />
-        </GridLookupCell>
+        </>
       ),
     })),
     {
@@ -838,8 +831,6 @@ function InvoiceEditor({
                     rows={display.lines}
                     columns={lineColumns}
                     storageKey="accounts-receivable.free-invoice-lines"
-                    mobilePresentation="table"
-                    hideInlineEditActions
                     hideFilterRow={!filterVisible}
                     selectionMode="single"
                     selectedIds={selectedLineId ? [selectedLineId] : []}
