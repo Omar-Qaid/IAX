@@ -156,3 +156,11 @@ lines/
 Header fields, totals and document dialogs stay in `details/`; grid actions, line editors and line tabs stay in `lines/`. Both line-tab builders use `MasterDetailLineDetails`, both totals builders use `MasterDetailTotals`, and both grids inherit `PatternDataGrid` defaults. Invoice uses `MasterDetailLinesGrid` for page-controlled rows; sales order retains its cell-save and keyboard adapters around the same generic grid. Sales-specific discount, pricing and posting helpers remain feature-owned.
 
 The structural audit verifies these common roles in both existing features. This refactor does not introduce any new feature or route.
+
+## Account contact forms
+
+The existing `/contacts/:kind/:accountNum/:contactId` route uses `MasterDetailPage` for new, view and edit contacts. `ContactPersonPage` remains the route entry; `contacts/details` owns the composition, controller, field mappings, sections and contact model, while `contacts/api/contactPersonApi.ts` retains the existing account-scoped endpoints.
+
+This record form has no sales lines, so it does not add document tabs, a line model or an empty `lines/` folder. Existing address and electronic-contact panels remain in their FastTabs and share the page edit session. The contact controller reuses the generic CRUD state hook; it does not render the list-details UI. Validation/API failures retain the draft, Cancel restores or leaves the new form, successful creation opens the saved contact, and delete requires confirmation.
+
+For master-details forms without line filtering, `searchNavigation` exposes the shared Search command that opens and focuses the record-list filter. Existing document pages continue using their own `onSearch` callbacks for line filters. Contact names and Arabic names remain separate stored/editable values, with localized display-only captions.

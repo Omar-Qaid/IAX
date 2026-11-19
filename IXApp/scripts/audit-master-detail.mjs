@@ -5,8 +5,9 @@ import { masterDetailFeatureName, masterDetailStructure } from './master-detail-
 
 // Existing complex documents keep their feature-owned workflow helpers.
 const existingFeatures = new Map([
-  ['finance/accounts-receivable/sales-order', 'SalesOrder'],
-  ['finance/accounts-receivable/free-text-invoice', 'FreeTextInvoice'],
+  ['finance/accounts-receivable/sales-order', { name: 'SalesOrder', hasLines: true }],
+  ['finance/accounts-receivable/free-text-invoice', { name: 'FreeTextInvoice', hasLines: true }],
+  ['finance/foundation/contacts', { name: 'ContactPerson', hasLines: false }],
 ]);
 
 export function auditMasterDetail(projectRoot = resolve(import.meta.dirname, '..')) {
@@ -22,21 +23,25 @@ export function auditMasterDetail(projectRoot = resolve(import.meta.dirname, '..
       file.endsWith('.tsx') && /<MasterDetailPage(?:\s|>|<)/.test(readFileSync(file, 'utf8'))
   );
   const problems = [];
-  for (const [path, name] of existingFeatures) {
+  for (const [path, { name, hasLines }] of existingFeatures) {
     const feature = join(modules, path);
     if (!existsSync(feature)) continue;
     const camel = name[0].toLowerCase() + name.slice(1);
     const roles = [
       `details/${name}Details.tsx`,
       `details/use${name}Document.ts`,
-      `details/${name}HeaderFields.tsx`,
+      `details/${name}HeaderFields.ts`,
       `details/${name}HeaderSections.ts`,
-      `details/${camel}Totals.tsx`,
-      `details/${name}DetailsDialogs.tsx`,
-      `lines/${name}LinesGrid.tsx`,
-      `lines/${name}LineFields.tsx`,
-      `lines/${name}LineTabs.tsx`,
-      `lines/use${name}LineColumns.ts`,
+      ...(hasLines
+        ? [
+            `details/${camel}Totals.tsx`,
+            `details/${name}DetailsDialogs.tsx`,
+            `lines/${name}LinesGrid.tsx`,
+            `lines/${name}LineFields.tsx`,
+            `lines/${name}LineTabs.tsx`,
+            `lines/use${name}LineColumns.ts`,
+          ]
+        : []),
     ];
     for (const role of roles) {
       if (
@@ -61,7 +66,14 @@ export function auditMasterDetail(projectRoot = resolve(import.meta.dirname, '..
     const label = relative(modules, file);
     if (dirname(file) !== join(feature, 'details'))
       problems.push(`${label}: put the composition in details/.`);
-    for (const directory of ['pages', 'details', 'lines', 'api']) {
+    const profile = existingFeatures.get(relative(modules, feature).split(sep).join('/'));
+    const directories = [
+      'pages',
+      'details',
+      'api',
+      ...(profile?.hasLines === false ? [] : ['lines']),
+    ];
+    for (const directory of directories) {
       if (!existsSync(join(feature, directory))) problems.push(`${label}: missing ${directory}/.`);
     }
     const details = files.filter((path) => dirname(path) === join(feature, 'details'));

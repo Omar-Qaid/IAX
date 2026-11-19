@@ -76,6 +76,8 @@ export interface MasterDetailPageProps<T extends MasterDetailRecord = MasterDeta
   viewTabs?: { value: string; onChange: (value: string) => void; ariaLabel?: string };
   /** Standard Search command. Pages decide how to reveal their line filters. */
   onSearch?: () => void;
+  /** Search opens and focuses the record-list filter for forms without line filters. */
+  searchNavigation?: boolean;
   /** Edit mode: navigation, filter, options and utilities are locked, like D365. */
   editing?: boolean;
   loading?: boolean;

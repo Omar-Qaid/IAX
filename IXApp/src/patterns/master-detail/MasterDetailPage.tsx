@@ -77,6 +77,7 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
   tabs,
   viewTabs,
   onSearch,
+  searchNavigation = false,
   editing = false,
   loading = false,
   error = null,
@@ -103,6 +104,7 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
   // The pane overlays the content on small screens, so it starts closed there.
   const compact = useMediaQuery(useTheme().breakpoints.down('lg'), { noSsr: true });
   const [navigationOpen, setNavigationOpen] = useState(defaultNavigationOpen && !compact);
+  const navigationFilter = React.useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);
   const [informationOpen, setInformationOpen] = useState(false);
@@ -172,6 +174,7 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
   const listPane = (
     <>
       <RecordList<T>
+        filterInputRef={navigationFilter}
         records={visible}
         selectedId={selectedId ?? null}
         editing={editing}
@@ -292,14 +295,20 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
             ))}
           </ActionPaneGroup>
         )}
-        {onSearch && (
+        {(onSearch || searchNavigation) && (
           <ActionPaneGroup>
             <ActionPaneButton
               actionId="search"
               label={t('common.search', 'Search')}
               icon={<SearchIcon />}
               disabled={editing}
-              onClick={onSearch}
+              onClick={() => {
+                onSearch?.();
+                if (searchNavigation) {
+                  setNavigationOpen(true);
+                  requestAnimationFrame(() => navigationFilter.current?.focus());
+                }
+              }}
             />
           </ActionPaneGroup>
         )}

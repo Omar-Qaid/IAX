@@ -626,6 +626,7 @@ export function RecordList<T extends ListDetailRecord>({
   query,
   filterVisible,
   filterLabel,
+  filterInputRef,
   getPrimaryText,
   getSecondaryText,
   getProgress,
@@ -642,6 +643,7 @@ export function RecordList<T extends ListDetailRecord>({
   query: string;
   filterVisible: boolean;
   filterLabel: string;
+  filterInputRef?: React.Ref<HTMLInputElement>;
   getPrimaryText: (record: T) => string;
   getSecondaryText?: (record: T) => string;
   getProgress?: (record: T) => number;
@@ -693,6 +695,7 @@ export function RecordList<T extends ListDetailRecord>({
             fullWidth
             size="small"
             placeholder={filterLabel}
+            inputRef={filterInputRef}
             value={query}
             disabled={editing}
             onChange={(event) => onQueryChange(event.target.value)}

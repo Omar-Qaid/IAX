@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AppProviders } from '@app/providers/AppProviders';
 import { DocumentFieldLabel } from '@shared/components/fields/DocumentFieldLabel';
@@ -242,4 +242,18 @@ it('provides shared document views and Search and locks Search during editing', 
 it('disables the shared document Search command while editing', () => {
   renderPage({ tabs: undefined, editing: true, onSearch: vi.fn() });
   expect(screen.getByRole('button', { name: 'Search' })).toBeDisabled();
+});
+
+it('opens and focuses navigation Search for a record form without line filters', async () => {
+  renderPage({ tabs: undefined, searchNavigation: true, defaultNavigationOpen: false });
+  expect(screen.getByRole('button', { name: 'Toggle record list' })).toHaveAttribute(
+    'aria-pressed',
+    'false'
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+  const filter = await screen.findByLabelText('Filter');
+  await waitFor(() => expect(filter).toHaveFocus());
+  fireEvent.change(filter, { target: { value: 'Retail' } });
+  expect(screen.getByText('CUST-200 - Retail')).toBeInTheDocument();
+  expect(screen.queryByText('CUST-100 - Consulting')).toBeNull();
 });
