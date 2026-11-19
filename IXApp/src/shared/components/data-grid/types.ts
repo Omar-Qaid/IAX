@@ -156,6 +156,8 @@ export interface DataGridProps<T> {
 
   // ── Master-form inline editing ────────────────────────────────────────────
   masterForm?: boolean;
+  /** Temporarily lock editors without changing the owning page's edit mode. */
+  editDisabled?: boolean;
   onRowSave?: (row: Partial<T>, isNew: boolean) => Promise<void> | void;
   onNewRow?: () => Partial<T>;
   hideAddRowButton?: boolean;

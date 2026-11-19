@@ -1,6 +1,5 @@
 import React from 'react';
 import { Alert, Snackbar, Stack, Tab, Tabs, Typography } from '@mui/material';
-import { EnterpriseCrudActions } from '@shared/components/action-pane/EnterpriseCrudActions';
 import { ActionPaneGroup } from '@shared/components/action-pane/ActionPaneGroup';
 import { ActionPaneRibbonTrigger } from '@shared/components/action-pane/ActionPaneRibbonTrigger';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
@@ -13,7 +12,7 @@ import { DocumentCopyDrawer } from '@patterns/document/DocumentCopyDrawer';
 import { salesOrderCopyApi } from '../api/salesOrderCopyApi';
 import { SalesOrderConfirmationDialog } from '../components/SalesOrderConfirmationDialog';
 import { SalesOrderPackingSlipPostingDialog } from '../components/SalesOrderPackingSlipPostingDialog';
-import { SalesOrderLinesProvider } from '../lines/SalesOrderLineState';
+import { SalesOrderLinesProvider, SalesOrderDocumentActions } from '../lines/SalesOrderLineState';
 import { salesOrderRibbonPinnedStorageKey } from '../details/salesOrderDetailsConfig';
 import { useSalesOrderDocument } from '../details/useSalesOrderDocument';
 import { buildSalesOrderTotals } from '../details/salesOrderTotals';
@@ -213,7 +212,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
           },
           actionPaneAfterListContent: (
             <>
-              <EnterpriseCrudActions
+              <SalesOrderDocumentActions
                 editLabel={t('actions.edit')}
                 newLabel={t('actions.new')}
                 deleteLabel={t('actions.delete')}

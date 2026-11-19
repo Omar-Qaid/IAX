@@ -78,6 +78,7 @@ function DataGridInternal<T>(
     onServerImport,
     onDownloadTemplate,
     masterForm = false,
+    editDisabled = false,
     onRowSave,
     onNewRow,
     hideAddRowButton = false,
@@ -180,33 +181,34 @@ function DataGridInternal<T>(
     setSaving,
     cancelEdit,
   } = useInlineEdit<T>();
+  const previousMasterForm = useRef(masterForm);
 
   const handleInlineEdit = useCallback(
     (row: T) => {
-      if (!masterForm) return;
+      if (!masterForm || editDisabled) return;
       startEdit(getRowId(row), row);
     },
-    [masterForm, startEdit, getRowId]
+    [masterForm, editDisabled, startEdit, getRowId]
   );
 
   const handleAddRow = useCallback(() => {
-    if (!masterForm) return;
+    if (!masterForm || editDisabled) return;
     startAdd(onNewRow ? onNewRow() : {});
     focusedCellRef.current = { r: 0, c: 0 };
     requestAnimationFrame(() => {
       if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = 0;
       gridBodyRef.current?.scrollToIndex(0);
     });
-  }, [masterForm, startAdd, onNewRow, scrollContainerRef]);
+  }, [masterForm, editDisabled, startAdd, onNewRow, scrollContainerRef]);
 
   const handleRowDoubleClick = useCallback(
     (row: T) => {
-      if (masterForm) {
+      if (masterForm && !editDisabled) {
         startEdit(getRowId(row), row);
       }
       onRowDoubleClick?.(row);
     },
-    [masterForm, startEdit, getRowId, onRowDoubleClick]
+    [masterForm, editDisabled, startEdit, getRowId, onRowDoubleClick]
   );
 
   const handleCancelEdit = useCallback(
@@ -272,7 +274,7 @@ function DataGridInternal<T>(
   );
 
   useEffect(() => {
-    if (editingRowId == null || saving) return;
+    if (editingRowId == null || saving || editDisabled) return;
 
     const saveWhenClickingOutsideRow = (event: MouseEvent) => {
       const target = event.target;
@@ -290,7 +292,7 @@ function DataGridInternal<T>(
 
     document.addEventListener('mousedown', saveWhenClickingOutsideRow, true);
     return () => document.removeEventListener('mousedown', saveWhenClickingOutsideRow, true);
-  }, [editingRowId, saving, handleSaveEdit]);
+  }, [editingRowId, saving, editDisabled, handleSaveEdit]);
 
   // Remote saves commonly replace the rows array after the mutation. Restore
   // the exact viewport offset after that render instead of jumping to row 0.
@@ -598,7 +600,7 @@ function DataGridInternal<T>(
     startAddRow: handleAddRow,
     startEditRow: (id: string | number) => {
       const rowToEdit = processedRows.find((r) => getRowId(r) === id);
-      if (rowToEdit) {
+      if (masterForm && !editDisabled && rowToEdit) {
         startEdit(id, rowToEdit);
       }
     },
@@ -619,6 +621,13 @@ function DataGridInternal<T>(
     id: string | number;
     field: string;
   } | null>(null);
+  React.useLayoutEffect(() => {
+    if (previousMasterForm.current && !masterForm) {
+      cancelEdit();
+      setPendingCellEdit(null);
+    }
+    previousMasterForm.current = masterForm;
+  }, [masterForm, cancelEdit]);
   const requestCellEdit = useCallback(
     (row: T, field: string) => {
       setPendingCellEdit({ id: getRowId(row), field });
@@ -628,7 +637,7 @@ function DataGridInternal<T>(
   );
   useEffect(() => {
     const pending = pendingCellEdit;
-    if (!pending || !masterForm || editingRowId != null) return;
+    if (!pending || !masterForm || editDisabled || editingRowId != null) return;
     const row = processedRows.find(
       (candidate) => String(getRowId(candidate)) === String(pending.id)
     );
@@ -646,7 +655,7 @@ function DataGridInternal<T>(
       else if (frames++ < 10) requestAnimationFrame(focus);
     };
     requestAnimationFrame(focus);
-  }, [pendingCellEdit, masterForm, editingRowId, processedRows, getRowId, startEdit]);
+  }, [pendingCellEdit, masterForm, editDisabled, editingRowId, processedRows, getRowId, startEdit]);
 
   // -- D365 line navigation in edit mode -------------------------------------
   const processedRowsRef = useRef(processedRows);
@@ -721,6 +730,10 @@ function DataGridInternal<T>(
       if (typeof e.key !== 'string') return;
       const activeEl = document.activeElement as HTMLElement | null;
       if (!activeEl || !gridRootRef.current?.contains(activeEl)) return;
+      if (editDisabled) {
+        if (e.key === 'Escape') e.preventDefault();
+        return;
+      }
       const isInputActive =
         activeEl &&
         (activeEl.tagName === 'INPUT' ||
@@ -928,6 +941,17 @@ function DataGridInternal<T>(
         }
       }
 
+      // Escape always cancels a grid edit, including edits opened through its ref.
+      // Consume it before the shared page-level Cancel shortcut runs.
+      if (e.key === 'Escape') {
+        if (e.defaultPrevented || e.isComposing) return;
+        if (editingRowId != null) {
+          e.preventDefault();
+          if (!saving) handleCancelEdit();
+        }
+        return;
+      }
+
       if (!masterForm) return;
 
       // -- Master Form Shortcuts ----------------------------------------
@@ -950,13 +974,6 @@ function DataGridInternal<T>(
         // D365 Alt+N while a line is open saves it first, then opens the new line.
         if (editingRowId == null) handleAddRow();
         else void handleSaveEdit(false).then((saved) => saved && handleAddRow());
-      } else if (e.key === 'Escape') {
-        // Esc that closes an open dropdown list must not also discard the line.
-        if (e.defaultPrevented) return;
-        if (editingRowId != null) {
-          e.preventDefault();
-          handleCancelEdit();
-        }
       } else if (e.key === 'Enter') {
         // A closed dropdown opens its list on Enter; that must not also save the line.
         if (e.defaultPrevented) return;
@@ -1003,6 +1020,7 @@ function DataGridInternal<T>(
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [
     masterForm,
+    editDisabled,
     editingRowId,
     selectedIds,
     processedRows,
@@ -1012,6 +1030,7 @@ function DataGridInternal<T>(
     handleAddRow,
     cancelEdit,
     handleCancelEdit,
+    saving,
     onDeleteSelected,
     onDelete,
     handleSelectAll,
@@ -1276,14 +1295,16 @@ function DataGridInternal<T>(
                 masterForm={masterForm}
                 editingRowId={editingRowId}
                 editValues={editValues}
-                saving={saving}
+                saving={saving || editDisabled}
                 onFieldChange={updateField}
                 onSaveEdit={() => void handleSaveEdit()}
                 onCancelEdit={() => handleCancelEdit()}
                 hideInlineEditActions={hideInlineEditActions}
                 editRowHighlight={editRowHighlight}
                 // Every editable grid: the pencil edits the cell (page edit mode first when the page owns it).
-                onCellEditRequest={onCellEditRequest || masterForm ? requestCellEdit : undefined}
+                onCellEditRequest={
+                  !editDisabled && (onCellEditRequest || masterForm) ? requestCellEdit : undefined
+                }
                 ref={gridBodyRef}
               />
             )}

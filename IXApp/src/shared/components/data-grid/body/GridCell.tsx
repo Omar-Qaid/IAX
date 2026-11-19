@@ -69,8 +69,6 @@ const GridCellInternal = <T,>({
         textAlign: cellAlign(col),
         '--grid-cell-edit-space': '0px',
         '&:hover, &:focus-within': { '--grid-cell-edit-space': '22px' },
-        '--grid-cell-edit-space': '0px',
-        '&:hover, &:focus-within': { '--grid-cell-edit-space': '22px' },
         '& input, & textarea': { textAlign: cellAlign(col) },
         '& .MuiSelect-select': { textAlign: cellAlign(col), paddingRight: '0 !important' },
         '& .MuiAutocomplete-inputRoot': { paddingInlineEnd: '0 !important' },
@@ -88,7 +86,6 @@ const GridCellInternal = <T,>({
             opacity: 1,
           },
         '@media (hover: none)': {
-          '--grid-cell-edit-space': '22px',
           '--grid-cell-edit-space': '22px',
           '& .MuiSelect-icon, & .MuiAutocomplete-endAdornment, & .MuiInputAdornment-positionEnd, & .grid-cell-edit':
             { opacity: 1 },

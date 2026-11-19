@@ -1,8 +1,7 @@
 import React from 'react';
-import { Box } from '@mui/material';
-import { DataGrid } from '@shared/components/data-grid/DataGrid';
+
+import { PatternDataGrid } from '@shared/components/data-grid/PatternDataGrid';
 import type { DataGridHandle, DataGridProps } from '@shared/components/data-grid/types';
-import { MASTER_DETAIL_LINES_GRID_PROPS } from './MasterDetailLines';
 
 export type MasterDetailLinesGridProps<T> = DataGridProps<T> & {
   ref?: React.Ref<DataGridHandle>;
@@ -31,39 +30,12 @@ export function MasterDetailLinesGrid<T>({
   ref,
   ...grid
 }: MasterDetailLinesGridProps<T>): React.ReactElement {
-  const rowHeight = grid.rowHeight ?? MASTER_DETAIL_LINES_GRID_PROPS.rowHeight;
-  const columns = React.useMemo(
-    () =>
-      grid.columns.map((column) => {
-        const renderEditCell = column.renderEditCell;
-        return renderEditCell
-          ? {
-              ...column,
-              renderEditCell: (params: Parameters<NonNullable<typeof renderEditCell>>[0]) => (
-                <Box
-                  sx={{
-                    width: '100%',
-                    minWidth: 0,
-                    height: rowHeight,
-                    display: 'flex',
-                    alignItems: 'center',
-                  }}
-                >
-                  {renderEditCell(params)}
-                </Box>
-              ),
-            }
-          : column;
-      }),
-    [grid.columns, rowHeight]
-  );
   return (
-    <DataGrid<T>
-      {...MASTER_DETAIL_LINES_GRID_PROPS}
+    <PatternDataGrid<T>
       {...grid}
-      columns={columns}
       ref={ref}
-      masterForm={editing && !busy}
+      masterForm={editing && canEdit}
+      editDisabled={busy}
       onCellEditRequest={canEdit && !editing && !busy ? () => onEdit() : undefined}
     />
   );

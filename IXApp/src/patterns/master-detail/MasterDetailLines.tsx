@@ -8,22 +8,7 @@ import { d365 } from '@shared/constants/enterpriseUiTokens';
  * cells, no own toolbar/footer (the lines toolbar and Search drive it).
  * Spread into the page's `DataGrid`: `<DataGrid {...MASTER_DETAIL_LINES_GRID_PROPS} … />`.
  */
-export const MASTER_DETAIL_LINES_GRID_PROPS = {
-  height: 232,
-  rowHeight: 24,
-  headerHeight: 27,
-  mobilePresentation: 'table',
-  hideFilterRow: true,
-  hideFooter: true,
-  hideColumnMenu: false,
-  showColumnBorders: true,
-  showCellBorders: true,
-  hideAddRowButton: true,
-  hideToolbar: true,
-  hideSidebarTabs: true,
-  hideInlineEditActions: true,
-  editRowHighlight: 'none',
-} as const;
+export { PATTERN_GRID_DEFAULTS as MASTER_DETAIL_LINES_GRID_PROPS } from '@shared/components/data-grid/patternGridDefaults';
 
 /** One line action in the toolbar (Add line, Remove...). */
 export interface MasterDetailLineAction {

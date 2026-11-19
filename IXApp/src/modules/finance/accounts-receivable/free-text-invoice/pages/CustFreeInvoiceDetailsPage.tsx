@@ -52,6 +52,13 @@ import { ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS as AR_PREVIEWS } from '../../previe
 import { FOUNDATION_RECORD_PREVIEWS as FOUNDATION_PREVIEWS } from '../../../foundation/previews/foundationRecordPreviews';
 
 type Line = FreeTextInvoiceLine & { id: string; ledgerDisplay?: string };
+const isValidInvoiceLine = (line: Line) =>
+  Boolean(line.description.trim()) &&
+  Number.isFinite(line.quantity) &&
+  line.quantity > 0 &&
+  Number.isFinite(line.unitPrice) &&
+  line.unitPrice >= 0 &&
+  line.ledgerDimension > 0;
 type Invoice = Omit<FreeTextInvoiceRecord, 'lines'> & { lines: Line[] };
 const asInvoice = (record: FreeTextInvoiceRecord): Invoice => ({
   ...record,
@@ -280,15 +287,7 @@ function InvoiceEditor({
         !record.customerAccount.trim() ||
         !record.invoiceDate ||
         !record.lines.length ||
-        record.lines.some(
-          (line) =>
-            !line.description.trim() ||
-            !Number.isFinite(line.quantity) ||
-            line.quantity <= 0 ||
-            !Number.isFinite(line.unitPrice) ||
-            line.unitPrice < 0 ||
-            line.ledgerDimension <= 0
-        )
+        record.lines.some((line) => !isValidInvoiceLine(line))
       ) {
         throw new Error(
           t(
@@ -841,21 +840,26 @@ function InvoiceEditor({
                     onRowSave={(row) => {
                       const current = draftRef.current;
                       if (!current || !row.id) return;
+                      const original = current.lines.find((line) => line.id === row.id);
+                      if (!original) return;
+                      const updated = {
+                        ...original,
+                        ...row,
+                        quantity: Number(row.quantity ?? original.quantity),
+                        unitPrice: Number(row.unitPrice ?? original.unitPrice),
+                        ledgerDimension: Number(row.ledgerDimension ?? original.ledgerDimension),
+                      };
+                      if (!isValidInvoiceLine(updated)) {
+                        throw new Error(
+                          t(
+                            'freeTextInvoices.requiredLines',
+                            'Select a customer and invoice date. Add at least one line with a description, ledger account, positive quantity and non-negative unit price.'
+                          )
+                        );
+                      }
                       changeDraft({
                         ...current,
-                        lines: current.lines.map((line) =>
-                          line.id === row.id
-                            ? {
-                                ...line,
-                                ...row,
-                                quantity: Number(row.quantity ?? line.quantity),
-                                unitPrice: Number(row.unitPrice ?? line.unitPrice),
-                                ledgerDimension: Number(
-                                  row.ledgerDimension ?? line.ledgerDimension
-                                ),
-                              }
-                            : line
-                        ),
+                        lines: current.lines.map((line) => (line.id === row.id ? updated : line)),
                       });
                     }}
                   />

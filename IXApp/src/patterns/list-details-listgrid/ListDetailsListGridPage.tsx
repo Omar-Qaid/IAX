@@ -54,14 +54,9 @@ export function ListGridDetailsPanel<T extends ListDetailRecord>({
         gap: '17px',
         minWidth: 0,
         alignItems: 'start',
-        '--data-grid-cell-padding': '7px',
-        '& [role="gridcell"]': { borderBottom: 0, borderInlineEnd: 0 },
-        '& [role="row"][aria-selected="true"] > [role="gridcell"]:first-of-type': {
-          borderInlineStart: '3px solid #315efb',
-        },
       }}
     >
-      <TabularDetailPanel {...grid} height={218} rowHeight={31} />
+      <TabularDetailPanel {...grid} />
       <Box sx={{ minWidth: 0, pt: { xs: 0, lg: '30px' } }}>{details}</Box>
     </Box>
   );

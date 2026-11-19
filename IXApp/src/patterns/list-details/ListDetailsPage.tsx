@@ -33,7 +33,8 @@ import { ActionPaneBackButton } from '@shared/components/action-pane/ActionPaneB
 import { RightUtilityRail } from '@shared/components/page/RightUtilityRail';
 import { RelatedInformationPanel } from '@shared/components/page/RelatedInformationPanel';
 import { EnterpriseFilterPanel } from '@shared/components/data-grid/EnterpriseFilterPanel';
-import { DataGrid } from '@shared/components/data-grid/DataGrid';
+import { PatternDataGrid as DataGrid } from '@shared/components/data-grid/PatternDataGrid';
+import { PATTERN_GRID_DEFAULTS } from '@shared/components/data-grid/patternGridDefaults';
 import type { DataGridProps } from '@shared/components/data-grid/types';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { EmptyState } from '@shared/components/feedback/EmptyState';
@@ -237,8 +238,10 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
           columns={config.presentation.columns}
           loading={state.loading}
           height="100%"
-          rowHeight={config.presentation.masterRowHeight}
-          headerHeight={config.presentation.masterHeaderHeight}
+          rowHeight={config.presentation.masterRowHeight ?? PATTERN_GRID_DEFAULTS.rowHeight}
+          headerHeight={
+            config.presentation.masterHeaderHeight ?? PATTERN_GRID_DEFAULTS.headerHeight
+          }
           hideToolbar
           hideFooter
           hideSidebar
@@ -1080,7 +1083,7 @@ function LegacyListDetailsPage<T extends ListDetailRecord>({
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: selectedId ? 5 : 12, lg: selectedId ? 4 : 12 }}>
           <Box sx={{ height: 600, width: '100%' }}>
-            <DataGrid {...dataGridProps} />
+            <DataGrid height="100%" {...dataGridProps} />
           </Box>
         </Grid>
         {selectedId && (

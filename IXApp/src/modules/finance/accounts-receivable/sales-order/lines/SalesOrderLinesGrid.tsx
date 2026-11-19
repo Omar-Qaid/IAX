@@ -132,12 +132,13 @@ export function SalesOrderLinesGrid({
     setLineError,
     savedNewRowIdRef,
     pendingSaveRef,
+    commitLineRef,
     savingLineRef,
     navigatingCellRef,
     totalsRefreshTimerRef,
   } = useSalesOrderLineState();
   const newRowFocusFrame = useRef<number | null>(null);
-  const lineEditEnabled = editing || draftLine?.orderId === order.id;
+  const lineEditEnabled = editing;
   // Cell whose pencil was clicked in view mode; edited once edit mode is on.
   const [pendingCell, setPendingCell] = React.useState<{ rowId: string; field: string } | null>(
     null
@@ -150,7 +151,7 @@ export function SalesOrderLinesGrid({
     requestAnimationFrame(() => document.querySelector<HTMLElement>(selector)?.focus());
   }, [pendingCell, lineEditEnabled]);
   useEffect(() => {
-    if (editing || draftLine?.orderId === order.id) return;
+    if (editing) return;
     setDraftLine(null);
     setLineBaseline(null);
     setActiveField('');
@@ -316,7 +317,7 @@ export function SalesOrderLinesGrid({
     ],
     [t]
   );
-  const activeDraft = draftLine?.orderId === order?.id ? draftLine : null;
+  const activeDraft = editing && draftLine?.orderId === order?.id ? draftLine : null;
   const activeDraftId = activeDraft?.id;
   const handleRowClick = useCallback(
     (line: DetailLine) => {
@@ -764,6 +765,11 @@ export function SalesOrderLinesGrid({
     });
     return work;
   };
+  React.useLayoutEffect(() => {
+    const commit = () => saveLine(activeDraft);
+    commitLineRef.current = commit;
+    // Drafts and their save handler survive switching to the Header tab.
+  });
   const persistLine = async (line = activeDraft) => {
     if (!line || !order) return true;
     if (savingLineRef.current) return false;

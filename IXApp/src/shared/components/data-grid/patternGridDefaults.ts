@@ -1,0 +1,16 @@
+export const PATTERN_GRID_DEFAULTS = {
+  height: 232,
+  rowHeight: 24,
+  headerHeight: 27,
+  mobilePresentation: 'table',
+  hideFilterRow: true,
+  hideFooter: true,
+  hideColumnMenu: false,
+  showColumnBorders: true,
+  showCellBorders: true,
+  hideAddRowButton: true,
+  hideToolbar: true,
+  hideSidebarTabs: true,
+  hideInlineEditActions: true,
+  editRowHighlight: 'none',
+} as const;

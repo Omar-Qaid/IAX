@@ -2,6 +2,7 @@ import React from 'react';
 import { SvgIcon, type SvgIconProps } from '@mui/material';
 import { ActionPaneGroup } from './ActionPaneGroup';
 import { ActionPaneButton } from './ActionPaneButton';
+import { useEscapeCancel } from '@shared/hooks/useEscapeCancel';
 
 const EditIcon = (props: SvgIconProps) => (
   <SvgIcon {...props}>
@@ -71,48 +72,51 @@ export const EnterpriseCrudActions: React.FC<EnterpriseCrudActionsProps> = ({
   cancelLabel = 'Cancel',
   onSave,
   onCancel,
-}) => (
-  <ActionPaneGroup>
-    {editing ? (
-      <>
-        <ActionPaneButton
-          label={saveLabel}
-          permission={savePermission}
-          icon={<SaveIcon sx={{ fontSize: 16 }} />}
-          disabled={saving}
-          onClick={onSave}
-        />
-        <ActionPaneButton
-          label={cancelLabel}
-          icon={<CancelIcon sx={{ fontSize: 16 }} />}
-          disabled={saving}
-          onClick={onCancel}
-        />
-      </>
-    ) : (
-      <>
-        <ActionPaneButton
-          label={editLabel}
-          permission={editPermission}
-          icon={<EditIcon sx={{ fontSize: 16 }} />}
-          disabled={!canEdit}
-          onClick={onEdit}
-        />
-        <ActionPaneButton
-          label={newLabel}
-          permission={newPermission}
-          icon={<AddIcon sx={{ fontSize: 16 }} />}
-          disabled={!canNew}
-          onClick={onNew}
-        />
-        <ActionPaneButton
-          label={deleteLabel}
-          permission={deletePermission}
-          icon={<DeleteIcon sx={{ fontSize: 16 }} />}
-          disabled={!canDelete}
-          onClick={onDelete}
-        />
-      </>
-    )}
-  </ActionPaneGroup>
-);
+}) => {
+  useEscapeCancel(editing && !saving, onCancel);
+  return (
+    <ActionPaneGroup>
+      {editing ? (
+        <>
+          <ActionPaneButton
+            label={saveLabel}
+            permission={savePermission}
+            icon={<SaveIcon sx={{ fontSize: 16 }} />}
+            disabled={saving}
+            onClick={onSave}
+          />
+          <ActionPaneButton
+            label={cancelLabel}
+            icon={<CancelIcon sx={{ fontSize: 16 }} />}
+            disabled={saving}
+            onClick={onCancel}
+          />
+        </>
+      ) : (
+        <>
+          <ActionPaneButton
+            label={editLabel}
+            permission={editPermission}
+            icon={<EditIcon sx={{ fontSize: 16 }} />}
+            disabled={!canEdit}
+            onClick={onEdit}
+          />
+          <ActionPaneButton
+            label={newLabel}
+            permission={newPermission}
+            icon={<AddIcon sx={{ fontSize: 16 }} />}
+            disabled={!canNew}
+            onClick={onNew}
+          />
+          <ActionPaneButton
+            label={deleteLabel}
+            permission={deletePermission}
+            icon={<DeleteIcon sx={{ fontSize: 16 }} />}
+            disabled={!canDelete}
+            onClick={onDelete}
+          />
+        </>
+      )}
+    </ActionPaneGroup>
+  );
+};

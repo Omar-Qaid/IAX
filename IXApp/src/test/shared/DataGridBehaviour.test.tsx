@@ -162,6 +162,36 @@ describe('keyboard', () => {
 });
 
 describe('D365 line editing', () => {
+  it('discards changed values on Escape without saving', async () => {
+    const { ref, onRowSave } = renderEditable();
+    act(() => ref.current!.startEditRow('a'));
+    const input = document.querySelector<HTMLInputElement>(
+      '[data-row-id="a"] [data-field="code"] input'
+    )!;
+    input.focus();
+    fireEvent.change(input, { target: { value: 'UNSAVED' } });
+    fireEvent.keyDown(input, { key: 'Escape' });
+    await waitFor(() => expect(editingRowId()).toBeUndefined());
+    expect(onRowSave).not.toHaveBeenCalled();
+    act(() => ref.current!.startEditRow('a'));
+    expect(
+      document.querySelector<HTMLInputElement>('[data-row-id="a"] [data-field="code"] input')!.value
+    ).toBe('A-1');
+  });
+
+  it('does not discard a row when an inner control consumes Escape', () => {
+    const { ref } = renderEditable();
+    act(() => ref.current!.startEditRow('a'));
+    const input = document.querySelector<HTMLInputElement>(
+      '[data-row-id="a"] [data-field="code"] input'
+    )!;
+    input.focus();
+    const event = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    event.preventDefault();
+    fireEvent(input, event);
+    expect(editingRowId()).toBe('a');
+  });
+
   it('does not write a line that was opened but not changed', async () => {
     const { ref, onRowSave } = renderEditable();
     act(() => ref.current!.startEditRow('a'));

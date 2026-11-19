@@ -2,8 +2,9 @@ import React from 'react';
 import { Box, Button, type Theme } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
-import { DataGrid } from './DataGrid';
-import type { ColumnDef, DataGridHandle } from './types';
+import { PatternDataGrid as DataGrid } from './PatternDataGrid';
+import { PATTERN_GRID_DEFAULTS } from './patternGridDefaults';
+import type { ColumnDef, DataGridHandle, DataGridProps } from './types';
 import { d365 } from '@shared/constants/enterpriseUiTokens';
 import { enterpriseSurfaces } from '@shared/constants/enterpriseSurfaces';
 
@@ -38,6 +39,7 @@ export interface TabularDetailPanelProps<T extends { id: string }> {
   onRowSave?: (row: Partial<T>, isNew: boolean) => Promise<void> | void;
   onNewRow?: () => Partial<T>;
   onEditingChange?: (isEditing: boolean) => void;
+  onCellEditRequest?: DataGridProps<T>['onCellEditRequest'];
 }
 
 export function TabularDetailPanel<T extends { id: string }>({
@@ -51,8 +53,8 @@ export function TabularDetailPanel<T extends { id: string }>({
   onRemove,
   filterContent,
   storageKey,
-  height = 218,
-  rowHeight = d365.detailGridRowHeight,
+  height = PATTERN_GRID_DEFAULTS.height,
+  rowHeight = PATTERN_GRID_DEFAULTS.rowHeight,
   disabled = false,
   showFilterRow = false,
   actions,
@@ -61,6 +63,7 @@ export function TabularDetailPanel<T extends { id: string }>({
   onRowSave,
   onNewRow,
   onEditingChange,
+  onCellEditRequest,
 }: TabularDetailPanelProps<T>): React.ReactElement {
   return (
     <Box sx={{ minWidth: 0 }}>
@@ -116,11 +119,12 @@ export function TabularDetailPanel<T extends { id: string }>({
         onSelectionChange={(ids) => onSelectionChange(ids as (string | number)[])}
         storageKey={storageKey}
         rowHeight={rowHeight}
-        headerHeight={d365.detailGridHeaderHeight}
+        headerHeight={PATTERN_GRID_DEFAULTS.headerHeight}
         masterForm={masterForm}
         onRowSave={onRowSave}
         onNewRow={onNewRow}
         onEditingChange={onEditingChange}
+        onCellEditRequest={disabled ? undefined : onCellEditRequest}
         hideAddRowButton
       />
     </Box>

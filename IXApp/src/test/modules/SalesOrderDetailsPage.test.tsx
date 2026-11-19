@@ -447,6 +447,44 @@ it('keeps header changes available after a failed save and supports cancel', asy
   expect(screen.queryByRole('textbox', { name: 'Customer reference' })).toBeNull();
 });
 
+it('keeps page and line in edit mode on invalid Save, then closes both after a valid Save', async () => {
+  queryClient.removeQueries({ queryKey: salesOrderQueryKeys.all });
+  vi.mocked(salesOrderLinesApi.list).mockResolvedValueOnce([
+    {
+      id: '42',
+      lineNumber: 1,
+      itemNumber: 'ITEM-42',
+      description: 'Save test',
+      quantity: 2,
+      unit: 'Pcs',
+      unitPrice: 5,
+      lineTotal: 10,
+      deliveryDate: '2026-09-09',
+    },
+  ]);
+  openOrder('1');
+  await screen.findAllByText('ITEM-42');
+  fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+  fireEvent.click(screen.getByLabelText('Quantity'));
+  const quantity = screen.getByRole('spinbutton', { name: 'Quantity' });
+  fireEvent.change(quantity, { target: { value: '0' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  await waitFor(() => expect(quantity).toHaveAttribute('aria-invalid', 'true'));
+  expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
+  expect(salesOrderListApi.updateHeader).not.toHaveBeenCalled();
+  fireEvent.change(quantity, { target: { value: '3' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  await waitFor(() =>
+    expect(salesOrderLinesApi.update).toHaveBeenCalledWith(
+      '1',
+      expect.objectContaining({ id: '42', quantity: 3 })
+    )
+  );
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Edit' })).toBeEnabled());
+  expect(within(screen.getByRole('grid')).queryByRole('spinbutton')).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull();
+});
+
 it('keeps invalid cell edits focused and moves to Unit after a successful Tab save', async () => {
   queryClient.removeQueries({ queryKey: salesOrderQueryKeys.all });
   vi.mocked(salesOrderLinesApi.update).mockClear();
