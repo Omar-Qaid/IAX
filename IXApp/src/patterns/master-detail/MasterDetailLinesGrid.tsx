@@ -30,13 +30,35 @@ export function MasterDetailLinesGrid<T>({
   ref,
   ...grid
 }: MasterDetailLinesGridProps<T>): React.ReactElement {
+  const allowEditRequest = canEdit && !editing && !busy;
+  const latest = React.useRef({ grid, onEdit });
+  React.useLayoutEffect(() => {
+    latest.current = { grid, onEdit };
+  });
+  // Pages usually pass inline handlers; hand the grid stable wrappers that call the
+  // latest handler so it does not re-render on every page render. A wrapper exists
+  // only while the page passes that handler (undefined still means "not handled").
+  const handlerKeys = Object.keys(grid)
+    .filter((key) => key.startsWith('on') && typeof grid[key as keyof typeof grid] === 'function')
+    .sort()
+    .join(',');
+  const handlers = React.useMemo(() => {
+    const wrapped: Record<string, (...args: unknown[]) => unknown> = {};
+    for (const key of handlerKeys ? handlerKeys.split(',') : []) {
+      wrapped[key] = (...args) =>
+        (latest.current.grid[key as keyof typeof grid] as (...a: unknown[]) => unknown)(...args);
+    }
+    return wrapped as Partial<DataGridProps<T>>;
+  }, [handlerKeys]);
+  const requestEdit = React.useCallback(() => latest.current.onEdit(), []);
   return (
     <PatternDataGrid<T>
       {...grid}
+      {...handlers}
       ref={ref}
       masterForm={editing && canEdit}
       editDisabled={busy}
-      onCellEditRequest={canEdit && !editing && !busy ? () => onEdit() : undefined}
+      onCellEditRequest={allowEditRequest ? requestEdit : undefined}
     />
   );
 }

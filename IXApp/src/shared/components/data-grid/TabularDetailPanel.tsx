@@ -4,6 +4,7 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { PatternDataGrid as DataGrid } from './PatternDataGrid';
 import { PATTERN_GRID_DEFAULTS } from './patternGridDefaults';
+import { PageEditSessionContext } from './PageEditSession';
 import type { ColumnDef, DataGridHandle, DataGridProps } from './types';
 import { d365 } from '@shared/constants/enterpriseUiTokens';
 import { enterpriseSurfaces } from '@shared/constants/enterpriseSurfaces';
@@ -55,7 +56,7 @@ export function TabularDetailPanel<T extends { id: string }>({
   storageKey,
   height = PATTERN_GRID_DEFAULTS.height,
   rowHeight = PATTERN_GRID_DEFAULTS.rowHeight,
-  disabled = false,
+  disabled: panelDisabled = false,
   showFilterRow = false,
   actions,
   gridRef,
@@ -65,6 +66,8 @@ export function TabularDetailPanel<T extends { id: string }>({
   onEditingChange,
   onCellEditRequest,
 }: TabularDetailPanelProps<T>): React.ReactElement {
+  const session = React.useContext(PageEditSessionContext);
+  const disabled = panelDisabled || Boolean(session && (!session.editing || session.saving));
   return (
     <Box sx={{ minWidth: 0 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0, height: 25, mb: '5px' }}>
@@ -121,10 +124,11 @@ export function TabularDetailPanel<T extends { id: string }>({
         rowHeight={rowHeight}
         headerHeight={PATTERN_GRID_DEFAULTS.headerHeight}
         masterForm={masterForm}
+        editDisabled={panelDisabled || session?.saving}
         onRowSave={onRowSave}
         onNewRow={onNewRow}
         onEditingChange={onEditingChange}
-        onCellEditRequest={disabled ? undefined : onCellEditRequest}
+        onCellEditRequest={panelDisabled || session?.saving ? undefined : onCellEditRequest}
         hideAddRowButton
       />
     </Box>

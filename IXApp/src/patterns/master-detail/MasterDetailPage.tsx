@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Box, IconButton, Typography, useMediaQuery, useTheme } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import { DocumentHeader } from '@shared/components/page/DocumentHeader';
 import { PageContainer } from '@shared/components/page/PageContainer';
 import { ActionPane } from '@shared/components/action-pane/ActionPane';
 import { EnterpriseCommandUtilities } from '@shared/components/action-pane/EnterpriseCommandUtilities';
@@ -23,6 +24,7 @@ import { ErrorState } from '@shared/components/feedback/ErrorState';
 import { d365 } from '@shared/constants/enterpriseUiTokens';
 import { RecordList } from '@patterns/list-details/ListDetailsPage';
 import { ListDetailsLayout } from '@patterns/list-details/ListDetailsLayout';
+import { ENTERPRISE_LIST_DETAILS_DEFAULTS } from '@patterns/list-details/defaults';
 import type { DetailSectionConfig } from '@patterns/list-details/types';
 import type { MasterDetailPageProps, MasterDetailRecord } from './types';
 import { enterpriseSurfaces } from '@shared/constants/enterpriseSurfaces';
@@ -120,41 +122,10 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
   const hasRail = Boolean(advancedFilter || relatedInformation);
 
   const header = (
-    <Box sx={{ pt: '3px' }}>
-      {(subtitle || viewLabel) && (
-        <Typography color="primary" variant="body2" sx={{ mb: 1 }}>
-          {[subtitle, viewLabel].filter(Boolean).join(' | ')}
-        </Typography>
-      )}
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 2,
-          mb: 1,
-        }}
-      >
-        <Typography
-          component="h1"
-          noWrap
-          sx={{
-            fontSize: { xs: 18, sm: d365.titleFontSize },
-            lineHeight: 1.2,
-            fontWeight: 600,
-            color: 'text.primary',
-          }}
-        >
-          {title}
-        </Typography>
-        {status && (
-          <Box sx={{ fontSize: d365.fontSize, flexShrink: 0, paddingInlineEnd: 1 }}>{status}</Box>
-        )}
-      </Box>
+    <DocumentHeader title={title} subtitle={subtitle} viewLabel={viewLabel} status={status}>
       {!loading && !error && tabs}
-    </Box>
+    </DocumentHeader>
   );
-
   // Field-config sections first, then the page's own content (lines etc.).
   const bodySections: DetailSectionConfig[] = loading
     ? [{ id: 'master-detail-loading', title: '', hideHeader: true, content: <LoadingState /> }]
@@ -211,6 +182,7 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
         paddingInlineEnd: hasRail ? { lg: `${d365.utilityRailWidth}px` } : undefined,
         bgcolor: (theme) => enterpriseSurfaces(theme).canvas,
         fontFamily: d365.fontFamily,
+        '& .MuiTypography-root, & .MuiButton-root, & .MuiInputBase-root, & input, & textarea': { fontFamily: ` !important` },
         color: 'text.primary',
       }}
     >
@@ -318,8 +290,19 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
           position: 'relative',
         }}
       >
-        <Box sx={{ flex: 1, minWidth: 0, minHeight: 0 }}>
+        <Box
+          data-master-detail-viewport
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+            minWidth: 0,
+            minHeight: 0,
+            overflow: 'hidden',
+          }}
+        >
           <ListDetailsLayout
+            detailEndPadding={ENTERPRISE_LIST_DETAILS_DEFAULTS.detailEndPadding}
             listPane={listPane}
             header={header}
             sections={bodySections}
@@ -330,7 +313,7 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
             onChange={(name, value) => onFieldChange?.(name, value)}
             onFieldEdit={onFieldEdit}
             canEditField={canEditField}
-            listWidth={d365.listWidth}
+            listWidth={ENTERPRISE_LIST_DETAILS_DEFAULTS.listWidth}
             listPaneVisible={navigationOpen}
             onListPaneClose={() => setNavigationOpen(false)}
             listWidthStorageKey={navigationWidthStorageKey}

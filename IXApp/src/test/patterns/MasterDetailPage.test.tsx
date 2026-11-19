@@ -81,6 +81,25 @@ const renderPage = (props: Partial<React.ComponentProps<typeof MasterDetailPage>
 };
 
 describe('MasterDetailPage', () => {
+  it('keeps the title and view tabs outside the constrained details scroll region', () => {
+    renderPage();
+    const viewport = document.querySelector('[data-master-detail-viewport]');
+    const scrollRegion = document.querySelector('[data-details-scroll-region]');
+    const fixedHeader = document.querySelector('[data-details-fixed-header]');
+    expect(viewport).toHaveStyle({ display: 'flex', minHeight: '0', overflow: 'hidden' });
+    expect(scrollRegion).toHaveStyle({
+      overflowY: 'auto',
+      minHeight: '0',
+      overscrollBehaviorY: 'contain',
+    });
+    expect(fixedHeader).toHaveStyle({ flexShrink: '0' });
+    expect(fixedHeader).toContainElement(screen.getByRole('tablist', { name: 'Views' }));
+    expect(scrollRegion).not.toContainElement(
+      screen.getByRole('heading', { name: 'SO-001 : Consulting' })
+    );
+    expect(scrollRegion).toContainElement(screen.getByText('grid'));
+  });
+
   it('renders the D365 details layout: pane, breadcrumb, title, status, tabs and sections', () => {
     renderPage();
     expect(screen.getByRole('heading', { name: 'SO-001 : Consulting' })).toBeInTheDocument();

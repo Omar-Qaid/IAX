@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, Snackbar, Stack, Tab, Tabs, Typography } from '@mui/material';
+import { Alert, Snackbar, Typography } from '@mui/material';
 import { ActionPaneGroup } from '@shared/components/action-pane/ActionPaneGroup';
 import { ActionPaneRibbonTrigger } from '@shared/components/action-pane/ActionPaneRibbonTrigger';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
@@ -204,11 +204,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
           },
           presentation: {
             mode: 'list',
-            listWidth: 280,
-            listResizable: true,
-            listInitiallyVisible: false,
             listVisibilityStorageKey: 'ixapp.sales-order.list-visible',
-            detailEndPadding: 8,
           },
           actionPaneAfterListContent: (
             <>
@@ -257,48 +253,11 @@ export function SalesOrderDetailsPage(): React.ReactElement {
             'Transportation',
             'Credit management',
           ].map((label) => ({ id: label, label, disabled: true })),
-          detailHeader: (
-            <>
-              {headerError && <Alert severity="error">{headerError}</Alert>}
-              <Typography color="primary" variant="body2" sx={{ mb: 1 }}>
-                {t('salesOrder.details', 'Sales order details')} |{' '}
-                {t('pages.customers.standardView')}
-              </Typography>
-              <Stack
-                direction="row"
-                sx={{ mb: 1, justifyContent: 'space-between', alignItems: 'center' }}
-              >
-                <Typography variant="h5">{`${order.salesId} : ${order.customerName}`}</Typography>
-                <Typography variant="body2" sx={{ marginInlineEnd: 3, flexShrink: 0 }}>
-                  {t(`status.${order.salesStatus.toLowerCase()}`, order.salesStatus)}
-                </Typography>
-              </Stack>
-
-              <Tabs
-                value={tab}
-                onChange={(_, value: string) => setTab(value)}
-                sx={{
-                  mb: 3,
-                  minHeight: 36,
-                  '& .MuiTab-root': { minHeight: 36, minWidth: 48, px: 1, fontSize: 13 },
-                }}
-                aria-label={t('pages.salesOrders.title')}
-              >
-                <Tab
-                  value="lines"
-                  label={t('fields.lines', 'Lines')}
-                  id="sales-lines-tab"
-                  aria-controls="sales-detail-panel"
-                />
-                <Tab
-                  value="header"
-                  label={t('fields.header', 'Header')}
-                  id="sales-header-tab"
-                  aria-controls="sales-detail-panel"
-                />
-              </Tabs>
-            </>
-          ),
+          detailNotice: headerError ? <Alert severity="error">{headerError}</Alert> : undefined,
+          subtitle: t('salesOrder.details', 'Sales order details'),
+          viewLabel: t('pages.customers.standardView'),
+          status: t(`status.${order.salesStatus.toLowerCase()}`, order.salesStatus),
+          detailTabs: { value: tab, onChange: setTab },
         }}
       />
       <DocumentTotalsDrawer

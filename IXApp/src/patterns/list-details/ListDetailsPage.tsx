@@ -19,6 +19,7 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import { DocumentHeader } from '@shared/components/page/DocumentHeader';
 import { PageContainer } from '@shared/components/page/PageContainer';
 import { PageHeader } from '@shared/components/page/PageHeader';
 import { ActionPane } from '@shared/components/action-pane/ActionPane';
@@ -35,6 +36,9 @@ import { RelatedInformationPanel } from '@shared/components/page/RelatedInformat
 import { EnterpriseFilterPanel } from '@shared/components/data-grid/EnterpriseFilterPanel';
 import { PatternDataGrid as DataGrid } from '@shared/components/data-grid/PatternDataGrid';
 import { PATTERN_GRID_DEFAULTS } from '@shared/components/data-grid/patternGridDefaults';
+import { PageEditSessionContext } from '@shared/components/data-grid/PageEditSession';
+import { DocumentViewTabs as MasterDetailTabs } from '@shared/components/page/DocumentViewTabs';
+import { ENTERPRISE_LIST_DETAILS_DEFAULTS } from './defaults';
 import type { DataGridProps } from '@shared/components/data-grid/types';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { EmptyState } from '@shared/components/feedback/EmptyState';
@@ -96,9 +100,15 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
 }: Omit<EnterpriseListDetailsProps<T>, 'variant'>): React.ReactElement {
   const { t } = useAppTranslation();
   const navigate = useNavigate();
-  const listVisibilityStorageKey = config.presentation?.listVisibilityStorageKey;
+  const listVisibilityStorageKey =
+    config.presentation?.listVisibilityStorageKey ??
+    (config.recordTableName
+      ? 'ixapp.list-details.' + config.recordTableName + '.list-visible'
+      : undefined);
   const [listPaneVisible, setListPaneVisible] = React.useState(() => {
-    const initial = config.presentation?.listInitiallyVisible ?? true;
+    const initial =
+      config.presentation?.listInitiallyVisible ??
+      ENTERPRISE_LIST_DETAILS_DEFAULTS.listInitiallyVisible;
     if (!listVisibilityStorageKey) return initial;
     try {
       const saved = globalThis.localStorage?.getItem(listVisibilityStorageKey);
@@ -116,6 +126,13 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
     }
   }, [listPaneVisible, listVisibilityStorageKey]);
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = React.useState(false);
+  const detailTabs = config.detailTabs === false ? null : config.detailTabs;
+  const showDetailTabs =
+    config.detailTabs !== false && (!config.detailHeader || Boolean(config.detailTabs));
+  const [selectedTab, setSelectedTab] = React.useState(
+    detailTabs?.initialValue ?? detailTabs?.items?.[0]?.value ?? 'lines'
+  );
+  const activeTab = detailTabs?.value ?? selectedTab;
   const state = useListDetailsPage(config);
   const selectionChangeRef = React.useRef(config.onSelectionChange);
   React.useLayoutEffect(() => {
@@ -199,7 +216,7 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
       records: state.records,
       visibleRecords: state.visibleRecords,
       selectedId: state.selectedId,
-      editing: state.editing,
+      editing: state.editing && (state.isNew ? canCreate : canEdit),
       loading: state.loading,
       query: state.query,
       filterVisible: state.filterVisible,
@@ -274,316 +291,369 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
   );
   const fullscreen = config.presentation?.fullscreenCanvas;
   return (
-    <PageContainer
-      sx={{
-        gap: 0,
-        minHeight: { xs: 520, lg: 0 },
-        height: fullscreen ? 'calc(100dvh - 5px)' : { xs: '100%', lg: '100%' },
-        maxHeight: fullscreen ? 'calc(100dvh - 5px)' : { lg: '100%' },
-        overflow: 'hidden',
-        position: fullscreen ? 'fixed' : 'relative',
-        inset: fullscreen ? '5px 0 0 5px' : undefined,
-        zIndex: fullscreen ? 1300 : undefined,
-        paddingInlineEnd: { lg: `${d365.utilityRailWidth}px` },
-        bgcolor: (theme) => enterpriseSurfaces(theme).canvas,
-        fontFamily: d365.fontFamily,
-        color: 'text.primary',
-        '& .MuiTypography-root, & .MuiButton-root, & .MuiInputBase-root, & input, & textarea': {
-          fontFamily: `${d365.fontFamily} !important`,
-        },
-      }}
+    <PageEditSessionContext.Provider
+      value={
+        config.readOnly
+          ? null
+          : {
+              editing: state.editing && (state.isNew ? canCreate : canEdit),
+              saving: state.saving || Boolean(config.interactionLocked),
+              requestEdit: canEdit && !config.interactionLocked ? state.startEdit : undefined,
+              registerEditor: state.registerEditor,
+            }
+      }
     >
-      <ActionPane
-        variant="flat"
-        expandedContent={config.actionPaneExpandedContent}
-        onClickAway={config.onActionPaneClickAway}
-        endActions={
-          <>
-            {config.actionPaneEndContent}
-            <EnterpriseCommandUtilities
-              disabled={state.editing}
-              {...utilities}
-              attachmentAction={
-                config.showAttachmentAction === false ? (
-                  false
-                ) : (
-                  <RecordAttachmentsButton
-                    refTableId={attachmentTableId}
-                    refRecId={attachmentRecId}
-                    disabled={state.editing}
-                  />
-                )
-              }
-              onRefresh={state.refresh}
-            />
-          </>
-        }
+      <PageContainer
+        sx={{
+          gap: 0,
+          minHeight: { xs: 520, lg: 0 },
+          height: fullscreen ? 'calc(100dvh - 5px)' : { xs: '100%', lg: '100%' },
+          maxHeight: fullscreen ? 'calc(100dvh - 5px)' : { lg: '100%' },
+          overflow: 'hidden',
+          position: fullscreen ? 'fixed' : 'relative',
+          inset: fullscreen ? '5px 0 0 5px' : undefined,
+          zIndex: fullscreen ? 1300 : undefined,
+          paddingInlineEnd: { lg: `${d365.utilityRailWidth}px` },
+          bgcolor: (theme) => enterpriseSurfaces(theme).canvas,
+          fontFamily: d365.fontFamily,
+          color: 'text.primary',
+          '& .MuiTypography-root, & .MuiButton-root, & .MuiInputBase-root, & input, & textarea': {
+            fontFamily: `${d365.fontFamily} !important`,
+          },
+        }}
       >
-        <ActionPaneBackButton
-          label={t('actions.back')}
-          onClick={config.backCommand?.onClick ?? (() => navigate(-1))}
-          disabled={state.editing}
-        />
-        <IconButton
-          size="small"
-          aria-label={t('actions.toggleList')}
-          aria-pressed={listPaneVisible}
-          onClick={() => setListPaneVisible((visible) => !visible)}
-          sx={{
-            width: 31,
-            height: 31,
-            bgcolor: (theme) =>
-              listPaneVisible ? enterpriseSurfaces(theme).accent : 'transparent',
-            color: (theme) =>
-              listPaneVisible
-                ? theme.palette.primary.contrastText
-                : enterpriseSurfaces(theme).accent,
-            borderRadius: d365.radius,
-            transition: 'background-color 140ms ease, color 140ms ease',
-            '&:hover': {
-              bgcolor: (theme) =>
-                listPaneVisible
-                  ? enterpriseSurfaces(theme).accentStrong
-                  : theme.palette.action.hover,
-            },
-          }}
-        >
-          <MenuIcon sx={{ fontSize: 17 }} />
-        </IconButton>
-        {config.actionPaneAfterListContent}
-        {!config.readOnly && (
-          <EnterpriseCrudActions
-            editing={state.editing}
-            {...crud}
-            saving={state.saving}
-            canNew={!config.interactionLocked && !state.saving}
-            canEdit={
-              Boolean(state.selected) && canEdit && !state.saving && !config.interactionLocked
-            }
-            canDelete={
-              Boolean(state.selected) && canDelete && !state.saving && !config.interactionLocked
-            }
-            editPermission={config.permissions?.edit}
-            savePermission={state.isNew ? config.permissions?.create : config.permissions?.edit}
-            newPermission={config.permissions?.create}
-            deletePermission={config.permissions?.delete}
-            onEdit={state.startEdit}
-            onNew={canCreate ? state.startNew : undefined}
-            onDelete={() => setDeleteConfirmationOpen(true)}
-            onSave={state.save}
-            onCancel={state.cancel}
-          />
-        )}
-        {(standaloneCommands.length > 0 || commandMenus.length > 0) && (
-          <ActionPaneGroup>
-            {standaloneCommands.map((command) => {
-              const unavailable =
-                state.editing || command.disabled || (command.requiresSelection && !state.selected);
-              return command.groups?.length ? (
-                <ActionPaneRibbonTrigger
-                  key={command.id}
-                  id={command.id}
-                  label={command.label}
-                  groups={command.groups}
-                  disabled={unavailable}
-                  persistenceKey={command.ribbonPersistenceKey}
-                />
-              ) : (
-                <ActionPaneButton
-                  key={command.id}
-                  label={command.label}
-                  disabled={unavailable}
-                  onClick={() => command.onClick?.(state.selected)}
-                />
-              );
-            })}
-            {commandMenus.map((menuLabel) => (
-              <ActionPaneMenu
-                key={menuLabel}
-                label={menuLabel}
+        <ActionPane
+          variant="flat"
+          expandedContent={config.actionPaneExpandedContent}
+          onClickAway={config.onActionPaneClickAway}
+          endActions={
+            <>
+              {config.actionPaneEndContent}
+              <EnterpriseCommandUtilities
                 disabled={state.editing}
-                actions={resolvedCommands
-                  .filter((command) => command.menuLabel === menuLabel)
-                  .map((command) => ({
-                    id: command.id,
-                    label: command.label,
-                    disabled: command.disabled || (command.requiresSelection && !state.selected),
-                    onClick: command.onClick ? () => command.onClick?.(state.selected) : undefined,
-                  }))}
+                {...utilities}
+                attachmentAction={
+                  config.showAttachmentAction === false ? (
+                    false
+                  ) : (
+                    <RecordAttachmentsButton
+                      refTableId={attachmentTableId}
+                      refRecId={attachmentRecId}
+                      disabled={state.editing}
+                    />
+                  )
+                }
+                onRefresh={state.refresh}
               />
-            ))}
-          </ActionPaneGroup>
-        )}
-        <ActionPaneGroup>
-          <ActionPaneButton
-            label={t('common.search', 'Search')}
-            icon={<SearchIcon />}
+            </>
+          }
+        >
+          <ActionPaneBackButton
+            label={t('actions.back')}
+            onClick={config.backCommand?.onClick ?? (() => navigate(-1))}
             disabled={state.editing}
-            onClick={
-              config.onSearch ??
-              (() => {
-                setListPaneVisible(true);
-                if (!state.filterVisible) state.toggleFilter();
-              })
-            }
           />
-          {config.showOptionsMenu !== false && (
-            <OptionsMenu
-              record={state.selected}
-              tableName={config.recordTableName ?? title}
-              getRecordId={config.getAuditRecordId}
-              title={title}
-              disabled={state.editing}
+          <IconButton
+            size="small"
+            aria-label={t('actions.toggleList')}
+            aria-pressed={listPaneVisible}
+            onClick={() => setListPaneVisible((visible) => !visible)}
+            sx={{
+              width: 31,
+              height: 31,
+              bgcolor: (theme) =>
+                listPaneVisible ? enterpriseSurfaces(theme).accent : 'transparent',
+              color: (theme) =>
+                listPaneVisible
+                  ? theme.palette.primary.contrastText
+                  : enterpriseSurfaces(theme).accent,
+              borderRadius: d365.radius,
+              transition: 'background-color 140ms ease, color 140ms ease',
+              '&:hover': {
+                bgcolor: (theme) =>
+                  listPaneVisible
+                    ? enterpriseSurfaces(theme).accentStrong
+                    : theme.palette.action.hover,
+              },
+            }}
+          >
+            <MenuIcon sx={{ fontSize: 17 }} />
+          </IconButton>
+          {config.actionPaneAfterListContent}
+          {!config.readOnly && (
+            <EnterpriseCrudActions
+              editing={state.editing}
+              {...crud}
+              saving={state.saving}
+              canNew={!config.interactionLocked && !state.saving}
+              canEdit={
+                Boolean(state.selected) && canEdit && !state.saving && !config.interactionLocked
+              }
+              canDelete={
+                Boolean(state.selected) && canDelete && !state.saving && !config.interactionLocked
+              }
+              editPermission={config.permissions?.edit}
+              savePermission={state.isNew ? config.permissions?.create : config.permissions?.edit}
+              newPermission={config.permissions?.create}
+              deletePermission={config.permissions?.delete}
+              onEdit={state.startEdit}
+              onNew={canCreate ? state.startNew : undefined}
+              onDelete={() => setDeleteConfirmationOpen(true)}
+              onSave={state.save}
+              onCancel={state.cancel}
             />
           )}
-        </ActionPaneGroup>
-      </ActionPane>
-      <Box
-        sx={{
-          display: 'flex',
-          flex: 1,
-          height: '100%',
-          minHeight: 0,
-          gap: '23px',
-          marginInlineStart: '1px',
-          overflow: 'hidden',
-          position: 'relative',
-          alignItems: 'stretch',
-        }}
-      >
-        {state.error && !state.records.length && !state.editing ? (
-          <ErrorState message={state.error} onRetry={state.refresh} />
-        ) : state.loading && !state.records.length ? (
-          <LoadingState />
-        ) : (
-          <ListDetailsLayout
-            detailEndPadding={config.presentation?.detailEndPadding}
-            editing={displayedEditing}
-            values={config.getValues(displayedRecord)}
-            yesLabel={labels.yes}
-            noLabel={labels.no}
-            sections={sections as DetailSectionConfig[]}
-            onChange={record ? state.changeValue : () => undefined}
-            onFieldEdit={requestFieldEdit}
-            canEditField={config.canEditField}
-            listWidth={config.presentation?.listWidth}
-            listMinWidth={config.presentation?.listMinWidth}
-            listMaxWidth={config.presentation?.listMaxWidth}
-            listResizable={config.presentation?.listResizable}
-            listPaneVisible={listPaneVisible}
-            onListPaneClose={() => setListPaneVisible(false)}
-            listWidthStorageKey={
-              config.presentation?.listWidthStorageKey ??
-              // One width per page type, not per record: record URLs differ by id.
-              config.recordTableName ??
-              globalThis.location?.pathname
-            }
-            listPane={listPane}
-            header={
-              <>
-                {config.detailHeader ?? (
-                  <RecordHeader
-                    onFieldEdit={requestFieldEdit}
-                    canEditField={config.canEditField}
-                    title={title}
-                    viewLabel={config.viewLabel}
-                    yesLabel={labels.yes}
-                    noLabel={labels.no}
-                    record={displayedRecord}
-                    fields={config.headerFields.map((field) =>
-                      config.numberSequence && field.id === String(config.numberSequence.field)
-                        ? { ...field, disabled: !state.numberSequenceMetadata?.manual }
-                        : field
-                    )}
-                    editing={displayedEditing}
-                    maxWidth={config.presentation?.headerMaxWidth}
-                    minHeight={config.presentation?.recordHeaderMinHeight}
-                    compact={config.presentation?.compactRecordHeader}
-                    onChange={record ? state.changeHeader : () => undefined}
+          {(standaloneCommands.length > 0 || commandMenus.length > 0) && (
+            <ActionPaneGroup>
+              {standaloneCommands.map((command) => {
+                const unavailable =
+                  state.editing ||
+                  command.disabled ||
+                  (command.requiresSelection && !state.selected);
+                return command.groups?.length ? (
+                  <ActionPaneRibbonTrigger
+                    key={command.id}
+                    id={command.id}
+                    label={command.label}
+                    groups={command.groups}
+                    disabled={unavailable}
+                    persistenceKey={command.ribbonPersistenceKey}
                   />
-                )}
-                {state.error && (
-                  <Alert severity="error" sx={{ mb: 1 }}>
-                    {state.error}
-                  </Alert>
-                )}
-                {record && Object.keys(state.validationErrors).length > 0 && (
-                  <Alert severity="error" sx={{ mb: 1 }}>
-                    <Typography sx={{ fontWeight: 600, fontSize: '0.75rem' }}>
-                      {config.validationTitle ??
-                        t('validation.correctErrors', 'Please correct the validation errors.')}
-                    </Typography>
-                    {Object.entries(state.validationErrors).map(([field, message]) => (
-                      <Typography key={field} sx={{ fontSize: '0.6875rem' }}>
-                        {message}
-                      </Typography>
-                    ))}
-                  </Alert>
-                )}
-              </>
-            }
-          />
-        )}
-        {!record && !state.loading && !state.error && (
-          <Box sx={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-            <EmptyDataWatermark />
-          </Box>
-        )}
-        {state.filterPanelOpen && config.advancedFilter && (
-          <Box sx={sidePanelSx}>
-            <EnterpriseFilterPanel
-              title={config.advancedFilter.title ?? t('filters.title')}
-              addLabel={config.advancedFilter.addLabel ?? t('actions.add')}
-              fieldOptions={
-                config.advancedFilter.fields?.map(({ id, label }) => ({ value: id, label })) ?? [
-                  { value: 'default', label: config.advancedFilter.fieldLabel },
-                ]
+                ) : (
+                  <ActionPaneButton
+                    key={command.id}
+                    label={command.label}
+                    disabled={unavailable}
+                    onClick={() => command.onClick?.(state.selected)}
+                  />
+                );
+              })}
+              {commandMenus.map((menuLabel) => (
+                <ActionPaneMenu
+                  key={menuLabel}
+                  label={menuLabel}
+                  disabled={state.editing}
+                  actions={resolvedCommands
+                    .filter((command) => command.menuLabel === menuLabel)
+                    .map((command) => ({
+                      id: command.id,
+                      label: command.label,
+                      disabled: command.disabled || (command.requiresSelection && !state.selected),
+                      onClick: command.onClick
+                        ? () => command.onClick?.(state.selected)
+                        : undefined,
+                    }))}
+                />
+              ))}
+            </ActionPaneGroup>
+          )}
+          <ActionPaneGroup>
+            <ActionPaneButton
+              label={t('common.search', 'Search')}
+              icon={<SearchIcon />}
+              disabled={state.editing}
+              onClick={
+                config.onSearch ??
+                (() => {
+                  setListPaneVisible(true);
+                  if (!state.filterVisible) state.toggleFilter();
+                })
               }
-              conditions={state.draftAdvancedFilters}
-              operatorOptions={getFilterOperatorOptions(t)}
-              applyLabel={config.advancedFilter.applyLabel ?? t('actions.apply')}
-              resetLabel={config.advancedFilter.resetLabel ?? t('actions.reset')}
-              onConditionsChange={state.setDraftAdvancedFilters}
-              onApply={state.applyAdvancedFilter}
-              onReset={state.resetAdvancedFilter}
             />
-          </Box>
-        )}
-        {state.informationPanelOpen && config.relatedInformation && (
-          <Box sx={sidePanelSx}>
-            <RelatedInformationPanel
-              title={config.relatedInformation.title ?? t('relatedInformation.title')}
-              sections={config.relatedInformation.sections(state.selected)}
+            {config.showOptionsMenu !== false && (
+              <OptionsMenu
+                record={state.selected}
+                tableName={config.recordTableName ?? title}
+                getRecordId={config.getAuditRecordId}
+                title={title}
+                disabled={state.editing}
+              />
+            )}
+          </ActionPaneGroup>
+        </ActionPane>
+        <Box
+          sx={{
+            display: 'flex',
+            flex: 1,
+            height: '100%',
+            minHeight: 0,
+            gap: '23px',
+            marginInlineStart: '1px',
+            overflow: 'hidden',
+            position: 'relative',
+            alignItems: 'stretch',
+          }}
+        >
+          {state.error && !state.records.length && !state.editing ? (
+            <ErrorState message={state.error} onRetry={state.refresh} />
+          ) : state.loading && !state.records.length ? (
+            <LoadingState />
+          ) : (
+            <ListDetailsLayout
+              detailEndPadding={
+                config.presentation?.detailEndPadding ??
+                ENTERPRISE_LIST_DETAILS_DEFAULTS.detailEndPadding
+              }
+              activeTab={showDetailTabs ? activeTab : undefined}
+              editing={displayedEditing}
+              values={config.getValues(displayedRecord)}
+              yesLabel={labels.yes}
+              noLabel={labels.no}
+              sections={(sections as DetailSectionConfig[]).map((section) => ({
+                ...section,
+                columns: section.columns ?? 4,
+                visualVariant: section.visualVariant ?? 'legalEntity',
+              }))}
+              onChange={record ? state.changeValue : () => undefined}
+              onFieldEdit={requestFieldEdit}
+              canEditField={config.canEditField}
+              listWidth={
+                config.presentation?.listWidth ?? ENTERPRISE_LIST_DETAILS_DEFAULTS.listWidth
+              }
+              listMinWidth={config.presentation?.listMinWidth}
+              listMaxWidth={config.presentation?.listMaxWidth}
+              listResizable={
+                config.presentation?.listResizable ?? ENTERPRISE_LIST_DETAILS_DEFAULTS.listResizable
+              }
+              listPaneVisible={listPaneVisible}
+              onListPaneClose={() => setListPaneVisible(false)}
+              listWidthStorageKey={
+                config.presentation?.listWidthStorageKey ??
+                // One width per page type, not per record: record URLs differ by id.
+                config.recordTableName ??
+                globalThis.location?.pathname
+              }
+              listPane={listPane}
+              header={
+                <>
+                  {config.detailNotice}
+                  {config.detailHeader ?? (
+                    <RecordHeader
+                      onFieldEdit={requestFieldEdit}
+                      canEditField={config.canEditField}
+                      title={title}
+                      subtitle={config.subtitle}
+                      status={
+                        typeof config.status === 'function'
+                          ? config.status(displayedRecord)
+                          : config.status
+                      }
+                      viewLabel={config.viewLabel ?? t('common.standardView', 'Standard view')}
+                      yesLabel={labels.yes}
+                      noLabel={labels.no}
+                      record={displayedRecord}
+                      fields={config.headerFields.map((field) =>
+                        config.numberSequence && field.id === String(config.numberSequence.field)
+                          ? { ...field, disabled: !state.numberSequenceMetadata?.manual }
+                          : field
+                      )}
+                      editing={displayedEditing}
+                      maxWidth={config.presentation?.headerMaxWidth}
+                      minHeight={config.presentation?.recordHeaderMinHeight}
+                      compact={config.presentation?.compactRecordHeader}
+                      onChange={record ? state.changeHeader : () => undefined}
+                    />
+                  )}
+                  {showDetailTabs && (
+                    <MasterDetailTabs
+                      tabs={
+                        detailTabs?.items ?? [
+                          { value: 'lines', label: t('fields.lines', 'Lines') },
+                          { value: 'header', label: t('fields.header', 'Header') },
+                        ]
+                      }
+                      value={activeTab}
+                      onChange={(next) => {
+                        setSelectedTab(next);
+                        detailTabs?.onChange?.(next);
+                      }}
+                      ariaLabel={title}
+                      panelId="enterprise-detail-panel"
+                    />
+                  )}
+                  {state.error && (
+                    <Alert severity="error" sx={{ mb: 1 }}>
+                      {state.error}
+                    </Alert>
+                  )}
+                  {record && Object.keys(state.validationErrors).length > 0 && (
+                    <Alert severity="error" sx={{ mb: 1 }}>
+                      <Typography sx={{ fontWeight: 600, fontSize: '0.75rem' }}>
+                        {config.validationTitle ??
+                          t('validation.correctErrors', 'Please correct the validation errors.')}
+                      </Typography>
+                      {Object.entries(state.validationErrors).map(([field, message]) => (
+                        <Typography key={field} sx={{ fontSize: '0.6875rem' }}>
+                          {message}
+                        </Typography>
+                      ))}
+                    </Alert>
+                  )}
+                </>
+              }
             />
-          </Box>
-        )}
-      </Box>
-      <RightUtilityRail
-        filterLabel={labels.filter}
-        informationLabel={labels.information}
-        filterActive={config.advancedFilter ? state.filterPanelOpen : state.filterVisible}
-        informationActive={state.informationPanelOpen}
-        onFilter={state.toggleFilter}
-        onInformation={state.toggleInformation}
-        showInformation={Boolean(config.relatedInformation) || Boolean(config.showInformation)}
-        disabled={state.editing}
-      />
-      {dialogs}
-      <ConfirmationDialog
-        open={deleteConfirmationOpen}
-        onClose={() => setDeleteConfirmationOpen(false)}
-        onConfirm={() => {
-          setDeleteConfirmationOpen(false);
-          void state.remove();
-        }}
-        severity="error"
-        title={t('dialogs.confirmDeleteTitle')}
-        message={t('dialogs.confirmDeleteOne')}
-        confirmLabel={t('actions.delete')}
-        cancelLabel={t('actions.cancel')}
-        loading={state.saving}
-      />
-    </PageContainer>
+          )}
+          {!record && !state.loading && !state.error && (
+            <Box sx={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+              <EmptyDataWatermark />
+            </Box>
+          )}
+          {state.filterPanelOpen && config.advancedFilter && (
+            <Box sx={sidePanelSx}>
+              <EnterpriseFilterPanel
+                title={config.advancedFilter.title ?? t('filters.title')}
+                addLabel={config.advancedFilter.addLabel ?? t('actions.add')}
+                fieldOptions={
+                  config.advancedFilter.fields?.map(({ id, label }) => ({ value: id, label })) ?? [
+                    { value: 'default', label: config.advancedFilter.fieldLabel },
+                  ]
+                }
+                conditions={state.draftAdvancedFilters}
+                operatorOptions={getFilterOperatorOptions(t)}
+                applyLabel={config.advancedFilter.applyLabel ?? t('actions.apply')}
+                resetLabel={config.advancedFilter.resetLabel ?? t('actions.reset')}
+                onConditionsChange={state.setDraftAdvancedFilters}
+                onApply={state.applyAdvancedFilter}
+                onReset={state.resetAdvancedFilter}
+              />
+            </Box>
+          )}
+          {state.informationPanelOpen && config.relatedInformation && (
+            <Box sx={sidePanelSx}>
+              <RelatedInformationPanel
+                title={config.relatedInformation.title ?? t('relatedInformation.title')}
+                sections={config.relatedInformation.sections(state.selected)}
+              />
+            </Box>
+          )}
+        </Box>
+        <RightUtilityRail
+          filterLabel={labels.filter}
+          informationLabel={labels.information}
+          filterActive={config.advancedFilter ? state.filterPanelOpen : state.filterVisible}
+          informationActive={state.informationPanelOpen}
+          onFilter={state.toggleFilter}
+          onInformation={state.toggleInformation}
+          showInformation={Boolean(config.relatedInformation) || Boolean(config.showInformation)}
+          disabled={state.editing}
+        />
+        {dialogs}
+        <ConfirmationDialog
+          open={deleteConfirmationOpen}
+          onClose={() => setDeleteConfirmationOpen(false)}
+          onConfirm={() => {
+            setDeleteConfirmationOpen(false);
+            void state.remove();
+          }}
+          severity="error"
+          title={t('dialogs.confirmDeleteTitle')}
+          message={t('dialogs.confirmDeleteOne')}
+          confirmLabel={t('actions.delete')}
+          cancelLabel={t('actions.cancel')}
+          loading={state.saving}
+        />
+      </PageContainer>
+    </PageEditSessionContext.Provider>
   );
 }
 
@@ -786,6 +856,8 @@ export function RecordList<T extends ListDetailRecord>({
 
 function RecordHeader<T>({
   title,
+  subtitle,
+  status,
   viewLabel,
   yesLabel,
   noLabel,
@@ -793,13 +865,15 @@ function RecordHeader<T>({
   fields,
   editing,
   maxWidth,
-  minHeight = 104,
+  minHeight = 0,
   compact = false,
   onChange,
   onFieldEdit,
   canEditField,
 }: {
   title: string;
+  subtitle?: string;
+  status?: React.ReactNode;
   viewLabel?: string;
   yesLabel: string;
   noLabel: string;
@@ -913,26 +987,12 @@ function RecordHeader<T>({
       </Box>
     );
   return (
-    <Box sx={{ px: 0, pt: '3px', pb: '3px', minHeight, boxSizing: 'border-box' }}>
-      {viewLabel && (
-        <Typography sx={{ height: 20, fontSize: 12, lineHeight: '18px' }}>{viewLabel}</Typography>
-      )}
-      <Typography
-        component="h1"
-        sx={{
-          mt: 0,
-          mb: { xs: 1.25, sm: '21px' },
-          fontSize: { xs: 21, sm: d365.titleFontSize },
-          lineHeight: 1.2,
-          fontWeight: 600,
-        }}
-      >
-        {title}
-      </Typography>
+    <Box sx={{ px: 0, minHeight, boxSizing: 'border-box' }}>
+      <DocumentHeader title={title} subtitle={subtitle ?? title} viewLabel={viewLabel} status={status} />
       <Box
         sx={{
           display: 'grid',
-          mt: '5px',
+          mt: fields.length ? '5px' : 0,
           width: '100%',
           maxWidth,
           gridTemplateColumns: {
@@ -946,7 +1006,7 @@ function RecordHeader<T>({
                       : (field.width ?? 'minmax(100px, 1fr)')
                   )
                   .join(' ')
-              : `repeat(${Math.min(7, fields.length)},minmax(140px,1fr))`,
+              : `repeat(${Math.max(1, Math.min(7, fields.length))},minmax(140px,1fr))`,
           },
           gap: '10px',
         }}

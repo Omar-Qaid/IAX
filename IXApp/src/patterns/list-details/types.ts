@@ -45,6 +45,8 @@ export interface DetailFieldGroup {
   width?: number | string;
 }
 export interface DetailSectionConfig {
+  /** Omit for sections shared by both document views. */
+  tab?: string;
   /** Document pages may own Save/Cancel and override custom field presentation. */
   editing?: boolean;
   expanded?: boolean;
@@ -119,6 +121,19 @@ export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
   initialMode?: 'view' | 'edit' | 'new';
   onCancel?: () => void;
   detailHeader?: ReactNode;
+  detailNotice?: ReactNode;
+  /** Small document description above the record title, as on sales order details. */
+  subtitle?: string;
+  status?: ReactNode | ((record: T) => ReactNode);
+  /** Lines/Header views are built in. Use false for a page with only one view. */
+  detailTabs?:
+    | false
+    | {
+        items?: Array<{ value: string; label: string }>;
+        initialValue?: string;
+        value?: string;
+        onChange?: (value: string) => void;
+      };
   onSearch?: () => void;
   backCommand?: { onClick: () => void };
   dataSource: ListDetailsDataSource<T>;

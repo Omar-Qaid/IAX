@@ -14,6 +14,12 @@ page returns to View. A custom line editor must follow the same rule and flush
 its active line before the page Save completes. A draft's existence alone must
 never enable editing in View mode.
 
+Scrolling is part of the shared layout: the action pane, title and Lines/Header
+tabs stay fixed; only the details below them scroll. The viewport constrains its
+flex children, and wheel scrolling stays inside the details region. Pages should
+provide their content without adding an outer page scrollbar or height workaround.
+Free-text invoice uses this default directly, matching sales-order details.
+
 See [Master-detail page](../../../docs/patterns/MASTER_DETAILS_PAGE.md)
 for the option table mapped from sales order. Tests:
 `src/test/patterns/MasterDetailPage.test.tsx`.

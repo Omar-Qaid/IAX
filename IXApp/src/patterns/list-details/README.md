@@ -2,8 +2,12 @@
 
 Implements a master-list/detail layout through `ListDetailsPage`, `ListDetailsLayout`, `TabularDetailPanel`, `useListDetailsPage`, and typed contracts. Shared enterprise presentation values live in `shared/constants/enterpriseUiTokens.ts` so lower-level primitives and patterns depend in the correct direction.
 
-Use when selection in a persistent list drives an adjacent editor/details panel. The feature owns loading, mutation, fields, row identity, and API access; the hook owns selection/page interaction. Do not use for header/line transactions.
+Use when selection in a persistent list drives an adjacent editor/details panel. The feature owns loading, mutation, fields, row identity, and API access; the hook owns selection/page interaction. Document pages can configure Lines/Header views and nested line grids using the same controller.
 
-Grids use `PatternDataGrid`, shared with master-details and the free-text invoice: 24px rows, 27px headers, bordered cells, table presentation, and initially hidden filters. Custom editors use the same row-height wrapper. Explicit page settings remain supported. `TabularDetailPanel.onCellEditRequest` lets the owning page enter edit mode from a cell pencil while retaining its permissions and save handlers.
+New enterprise pages inherit sales-order details chrome: title/status row, subtitle and Standard view label, Lines/Header tabs, collapsed resizable navigation and the shared action pane. Use `subtitle`, `status` and section `tab` values to configure the page rather than recreating the layout in `detailHeader`. See the guide for a complete configuration blueprint. Sales order details consumes these same defaults.
+
+Grids use `PatternDataGrid`, shared with master-details and the free-text invoice: 24px rows, 27px headers, bordered cells, table presentation, and initially hidden filters. Custom editors use the same row-height wrapper. Explicit page settings remain supported.
+
+Pattern-owned pages provide a shared edit session. Nested pattern grids register automatically: Save commits their active rows before validating and saving the page, and a line failure keeps the page and grid in Edit mode. Save and Cancel clear row editors when returning to View. Grid pencils request page Edit mode first; line Add/Remove actions require page Edit mode. Saving locks the editors without switching modes. Custom externally controlled pages (`readOnly` with their own actions) retain responsibility for their edit lifecycle.
 
 [List-details guide](../../../docs/patterns/LIST_DETAILS_PAGE.md) · [Shared grid](../../shared/components/data-grid/README.md)

@@ -24,6 +24,7 @@ import { FieldPresentationProvider } from '@shared/components/fields/FieldPresen
 import { enterpriseSurfaces } from '@shared/constants/enterpriseSurfaces';
 
 export interface ListDetailsLayoutProps {
+  activeTab?: string;
   detailEndPadding?: number;
   listPane: React.ReactNode;
   header: React.ReactNode;
@@ -45,6 +46,7 @@ export interface ListDetailsLayoutProps {
 }
 
 export function ListDetailsLayout({
+  activeTab,
   detailEndPadding,
   listPane,
   header,
@@ -239,14 +241,28 @@ export function ListDetailsLayout({
         <Box sx={{ width: 23, flexShrink: 0, display: { xs: 'none', md: 'block' } }} />
       )}
       <Box
-        sx={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+        sx={{
+          minWidth: 0,
+          minHeight: 0,
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }}
       >
-        {header}
+        <Box data-details-fixed-header sx={{ flexShrink: 0 }}>
+          {header}
+        </Box>
         <Box
+          data-details-scroll-region
+          id={activeTab ? 'enterprise-detail-panel' : undefined}
+          role={activeTab ? 'tabpanel' : undefined}
+          aria-labelledby={activeTab ? `enterprise-detail-panel-${activeTab}-tab` : undefined}
           sx={{
             minHeight: 0,
             flex: 1,
             overflowY: 'auto',
+            overscrollBehaviorY: 'contain',
             overflowX: 'hidden',
             paddingInlineEnd:
               detailEndPadding != null ? `${detailEndPadding}px` : { xs: 0, sm: 1, md: '28px' },
@@ -257,13 +273,24 @@ export function ListDetailsLayout({
             const legalEntity = section.visualVariant === 'legalEntity';
             if (section.hideHeader)
               return (
-                <Box key={section.id} sx={{ mb: `${d365.sectionGap}px` }}>
+                <Box
+                  key={section.id}
+                  sx={{
+                    mb: `${d365.sectionGap}px`,
+                    display:
+                      activeTab && section.tab && section.tab !== activeTab ? 'none' : undefined,
+                  }}
+                >
                   {section.content}
                 </Box>
               );
             return (
               <FastTab
                 key={section.id}
+                sx={{
+                  display:
+                    activeTab && section.tab && section.tab !== activeTab ? 'none' : undefined,
+                }}
                 title={section.title}
                 appearance={legalEntity ? 'legalEntity' : 'enterprise'}
                 defaultExpanded={section.defaultExpanded ?? true}
@@ -729,7 +756,10 @@ const d365SwitchSx = {
     bgcolor: 'background.paper',
     opacity: 1,
   },
-  '& .Mui-checked + .MuiSwitch-track': { bgcolor: (theme: Theme) => `${theme.palette.text.secondary} !important`, opacity: '1 !important' },
+  '& .Mui-checked + .MuiSwitch-track': {
+    bgcolor: (theme: Theme) => `${theme.palette.text.secondary} !important`,
+    opacity: '1 !important',
+  },
 };
 const legalEntitySwitchSx = {
   width: 36,
@@ -740,6 +770,10 @@ const legalEntitySwitchSx = {
     '&.Mui-checked': { transform: 'translateX(16px)', color: '#fff' },
   },
   '& .MuiSwitch-thumb': { width: 14, height: 14 },
-  '& .MuiSwitch-track': { borderRadius: '10px', bgcolor: (theme: Theme) => theme.palette.text.secondary, opacity: '1 !important' },
+  '& .MuiSwitch-track': {
+    borderRadius: '10px',
+    bgcolor: (theme: Theme) => theme.palette.text.secondary,
+    opacity: '1 !important',
+  },
   '& .Mui-disabled + .MuiSwitch-track': { opacity: '1 !important' },
 };

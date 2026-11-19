@@ -1,4 +1,13 @@
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type SetStateAction,
+} from 'react';
+import type { PageEditor } from '@shared/components/data-grid/PageEditSession';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { DetailValue, EnterpriseListDetailsConfig, ListDetailRecord } from './types';
 import {
@@ -97,9 +106,23 @@ export function useListDetailsPage<T extends ListDetailRecord>(
   const [saving, setSaving] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const selected = records.find((record) => record.id === selectedId) ?? null;
-  const [draft, setDraft] = useState<T | null>(() =>
+  const [draft, storeDraft] = useState<T | null>(() =>
     config.initialMode === 'new' ? config.createRecord() : selected
   );
+  const draftRef = useRef(draft);
+  const setDraft = useCallback((value: SetStateAction<T | null>) => {
+    const next = typeof value === 'function' ? value(draftRef.current) : value;
+    draftRef.current = next;
+    storeDraft(next);
+  }, []);
+  const editors = useRef(new Set<PageEditor>());
+  const saveLock = useRef(false);
+  const registerEditor = useCallback((editor: PageEditor) => {
+    editors.current.add(editor);
+    return () => {
+      editors.current.delete(editor);
+    };
+  }, []);
 
   useEffect(() => {
     if (source.type !== 'remote') return;
@@ -221,27 +244,29 @@ export function useListDetailsPage<T extends ListDetailRecord>(
     setValidationErrors({});
   };
   const save = async () => {
-    if (!draft) return;
-    let preparedDraft: T;
-    try {
-      preparedDraft = config.prepareSave ? await config.prepareSave(draft) : draft;
-    } catch (reason: unknown) {
-      setError(reason instanceof Error ? reason.message : String(reason));
-      return;
-    }
-    setDraft(preparedDraft);
-    const errors = (await config.validate?.(preparedDraft)) ?? {};
-    if (isNew && config.numberSequence && numberSequenceQuery.data?.manual) {
-      const code = preparedDraft[config.numberSequence.field];
-      if (typeof code !== 'string' || !code.trim())
-        errors[String(config.numberSequence.field)] =
-          'Code is required for a manual number sequence.';
-    }
-    setValidationErrors(errors);
-    if (Object.keys(errors).length) return;
+    if (!draftRef.current || saveLock.current || config.interactionLocked) return;
+    saveLock.current = true;
     setSaving(true);
     setError(null);
     try {
+      for (const editor of editors.current) {
+        if (!(await editor.saveEdit())) return;
+      }
+      const currentDraft = draftRef.current;
+      if (!currentDraft) return;
+      const preparedDraft = config.prepareSave
+        ? await config.prepareSave(currentDraft)
+        : currentDraft;
+      setDraft(preparedDraft);
+      const errors = (await config.validate?.(preparedDraft)) ?? {};
+      if (isNew && config.numberSequence && numberSequenceQuery.data?.manual) {
+        const code = preparedDraft[config.numberSequence.field];
+        if (typeof code !== 'string' || !code.trim())
+          errors[String(config.numberSequence.field)] =
+            'Code is required for a manual number sequence.';
+      }
+      setValidationErrors(errors);
+      if (Object.keys(errors).length) return;
       const createPayload =
         isNew && config.numberSequence && !numberSequenceQuery.data?.manual
           ? { ...preparedDraft, [config.numberSequence.field]: null }
@@ -260,16 +285,20 @@ export function useListDetailsPage<T extends ListDetailRecord>(
       );
       setDraft(persisted);
       setSelectedId(persisted.id);
+      editors.current.forEach((editor) => editor.cancelEdit());
       setEditing(false);
       setIsNew(false);
       if (isNew && config.numberSequence) await numberSequenceQuery.refetch();
     } catch (reason: unknown) {
       setError(reason instanceof Error ? reason.message : String(reason));
     } finally {
+      saveLock.current = false;
       setSaving(false);
     }
   };
   const cancel = () => {
+    if (saveLock.current) return;
+    editors.current.forEach((editor) => editor.cancelEdit());
     if (isNew) setSelectedId(records[0]?.id ?? null);
     setDraft(isNew ? (records[0] ?? null) : selected);
     setEditing(false);
@@ -360,5 +389,6 @@ export function useListDetailsPage<T extends ListDetailRecord>(
     changeValue,
     changeHeader,
     changeRecord: setDraft,
+    registerEditor,
   };
 }

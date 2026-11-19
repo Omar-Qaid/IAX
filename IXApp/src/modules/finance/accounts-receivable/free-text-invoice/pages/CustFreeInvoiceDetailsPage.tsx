@@ -220,9 +220,15 @@ function InvoiceEditor({
     queryFn: ({ signal }) =>
       freeTextInvoiceApi.ledgerDimensions({ pageNumber: 1, pageSize: 100, search: '', signal }),
   });
-  const ledgerText = (id: number) =>
-    ledgerLabels[id] ||
-    ledgerReferences.data?.data.find((option) => String(option.id) === String(id))?.code;
+  const ledgerCodes = React.useMemo(() => {
+    const codes = new Map<string, string | undefined>();
+    ledgerReferences.data?.data.forEach((option) => codes.set(String(option.id), option.code));
+    return codes;
+  }, [ledgerReferences.data]);
+  const ledgerText = React.useCallback(
+    (id: number) => ledgerLabels[id] || ledgerCodes.get(String(id)),
+    [ledgerLabels, ledgerCodes]
+  );
   const invoices = useQuery({
     queryKey: freeTextInvoiceQueryKeys.list(company),
     queryFn: ({ signal }) => freeTextInvoiceApi.list(signal),
@@ -252,11 +258,15 @@ function InvoiceEditor({
         taxGroup: row.taxGroupId,
       });
   }, [customers.data, isNew]);
-  const amount = (value: number) =>
-    new Intl.NumberFormat(currentLanguage.code, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value);
+  const amountFormat = React.useMemo(
+    () =>
+      new Intl.NumberFormat(currentLanguage.code, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+    [currentLanguage.code]
+  );
+  const amount = React.useCallback((value: number) => amountFormat.format(value), [amountFormat]);
   const beginEdit = () => {
     if (allowedEdit && !busy) {
       setError('');
@@ -612,107 +622,116 @@ function InvoiceEditor({
       ],
     },
   ];
-  const lineColumns: ColumnDef<Line>[] = [
-    { field: 'description', headerName: t('fields.description'), width: 250, editable: true },
-    {
-      field: 'ledgerDimension',
-      headerName: t('freeTextInvoices.ledgerAccount'),
-      width: 210,
-      editable: true,
-      renderCell: ({ row }) =>
-        ledgerText(row.ledgerDimension) ||
-        row.ledgerDisplay ||
-        (row.ledgerDimension ? String(row.ledgerDimension) : ''),
-      renderEditCell: ({ row, value, onChange, disabled }) => (
-        <>
-          <DataGridLookupField
-            name="ledgerDimension"
-            label={t('freeTextInvoices.ledgerAccount')}
-            value={Number(value) || null}
-            options={
-              value
-                ? [
-                    {
-                      id: Number(value),
-                      code: ledgerText(Number(value)) || row.ledgerDisplay || String(value),
-                      name: '',
-                    },
-                  ]
-                : []
-            }
-            queryKey={freeTextInvoiceQueryKeys.lookup(company, 'ledger-dimensions')}
-            fetchPage={freeTextInvoiceApi.ledgerDimensions}
-            searchable
-            lazyLoading
-            sideMode="server"
-            disabled={disabled}
-            onChange={(next, option) => {
-              const selected = Array.isArray(option) ? option[0] : option;
-              if (selected)
-                setLedgerLabels((current) => ({
-                  ...current,
-                  [Number(next)]: selected.code || selected.name,
-                }));
-              onChange(Number(next) || 0);
-            }}
-          />
-        </>
-      ),
-    },
-    ...(['taxGroup', 'taxItemGroup'] as const).map((field): ColumnDef<Line> => ({
-      field,
-      headerName:
-        field === 'taxGroup' ? t('fields.salesTaxGroup') : t('freeTextInvoices.itemTaxGroup'),
-      width: 170,
-      editable: true,
-      preview: {
-        entity:
-          field === 'taxGroup'
-            ? FOUNDATION_PREVIEWS.SALES_TAX_GROUP
-            : FOUNDATION_PREVIEWS.ITEM_SALES_TAX_GROUP,
+  const lineColumns = React.useMemo(
+    (): ColumnDef<Line>[] => [
+      { field: 'description', headerName: t('fields.description'), width: 250, editable: true },
+      {
+        field: 'ledgerDimension',
+        headerName: t('freeTextInvoices.ledgerAccount'),
+        width: 210,
+        editable: true,
+        renderCell: ({ row }) =>
+          ledgerText(row.ledgerDimension) ||
+          row.ledgerDisplay ||
+          (row.ledgerDimension ? String(row.ledgerDimension) : ''),
+        renderEditCell: ({ row, value, onChange, disabled }) => (
+          <>
+            <DataGridLookupField
+              name="ledgerDimension"
+              label={t('freeTextInvoices.ledgerAccount')}
+              value={Number(value) || null}
+              options={
+                value
+                  ? [
+                      {
+                        id: Number(value),
+                        code: ledgerText(Number(value)) || row.ledgerDisplay || String(value),
+                        name: '',
+                      },
+                    ]
+                  : []
+              }
+              queryKey={freeTextInvoiceQueryKeys.lookup(company, 'ledger-dimensions')}
+              fetchPage={freeTextInvoiceApi.ledgerDimensions}
+              searchable
+              lazyLoading
+              sideMode="server"
+              disabled={disabled}
+              onChange={(next, option) => {
+                const selected = Array.isArray(option) ? option[0] : option;
+                if (selected)
+                  setLedgerLabels((current) => ({
+                    ...current,
+                    [Number(next)]: selected.code || selected.name,
+                  }));
+                onChange(Number(next) || 0);
+              }}
+            />
+          </>
+        ),
       },
-      renderEditCell: ({ value, onChange, disabled }) => (
-        <>
-          <DataGridLookupField
-            name={field}
-            label={
-              field === 'taxGroup' ? t('fields.salesTaxGroup') : t('freeTextInvoices.itemTaxGroup')
-            }
-            value={String(value ?? '') || null}
-            options={(field === 'taxGroup'
-              ? taxes.data?.salesTaxGroups
-              : taxes.data?.itemSalesTaxGroups
-            )?.map((option) => ({ id: option.id, code: String(option.id), name: option.name }))}
-            searchable
-            lazyLoading={false}
-            disabled={disabled || taxes.isLoading}
-            onChange={(next) => onChange(String(next ?? ''))}
-          />
-        </>
-      ),
-    })),
-    {
-      field: 'quantity',
-      headerName: t('fields.quantity'),
-      width: 110,
-      type: 'number',
-      editable: true,
-    },
-    {
-      field: 'unitPrice',
-      headerName: t('fields.unitPrice'),
-      width: 120,
-      type: 'number',
-      editable: true,
-    },
-    {
-      field: 'netAmount',
-      headerName: t('freeTextInvoices.amount'),
-      width: 135,
-      type: 'number',
-      renderCell: ({ row }) => (editing ? '—' : amount(row.netAmount)),
-    },
-  ];
+      ...(['taxGroup', 'taxItemGroup'] as const).map((field): ColumnDef<Line> => ({
+        field,
+        headerName:
+          field === 'taxGroup' ? t('fields.salesTaxGroup') : t('freeTextInvoices.itemTaxGroup'),
+        width: 170,
+        editable: true,
+        preview: {
+          entity:
+            field === 'taxGroup'
+              ? FOUNDATION_PREVIEWS.SALES_TAX_GROUP
+              : FOUNDATION_PREVIEWS.ITEM_SALES_TAX_GROUP,
+        },
+        renderEditCell: ({ value, onChange, disabled }) => (
+          <>
+            <DataGridLookupField
+              name={field}
+              label={
+                field === 'taxGroup'
+                  ? t('fields.salesTaxGroup')
+                  : t('freeTextInvoices.itemTaxGroup')
+              }
+              value={String(value ?? '') || null}
+              options={(field === 'taxGroup'
+                ? taxes.data?.salesTaxGroups
+                : taxes.data?.itemSalesTaxGroups
+              )?.map((option) => ({ id: option.id, code: String(option.id), name: option.name }))}
+              searchable
+              lazyLoading={false}
+              disabled={disabled || taxes.isLoading}
+              onChange={(next) => onChange(String(next ?? ''))}
+            />
+          </>
+        ),
+      })),
+      {
+        field: 'quantity',
+        headerName: t('fields.quantity'),
+        width: 110,
+        type: 'number',
+        editable: true,
+      },
+      {
+        field: 'unitPrice',
+        headerName: t('fields.unitPrice'),
+        width: 120,
+        type: 'number',
+        editable: true,
+      },
+      {
+        field: 'netAmount',
+        headerName: t('freeTextInvoices.amount'),
+        width: 135,
+        type: 'number',
+        renderCell: ({ row }) => (editing ? '—' : amount(row.netAmount)),
+      },
+    ],
+    [t, editing, amount, ledgerText, company, taxes.data, taxes.isLoading]
+  );
+  const selectedLineIds = React.useMemo(
+    () => (selectedLineId ? [selectedLineId] : []),
+    [selectedLineId]
+  );
   const addLine = async () => {
     // View mode: Add line switches the page to edit mode first (D365).
     if (!editing) beginEdit();
@@ -832,7 +851,7 @@ function InvoiceEditor({
                     storageKey="accounts-receivable.free-invoice-lines"
                     hideFilterRow={!filterVisible}
                     selectionMode="single"
-                    selectedIds={selectedLineId ? [selectedLineId] : []}
+                    selectedIds={selectedLineIds}
                     onRowClick={(line) => setSelectedLineId(line.id)}
                     onSelectionChange={(ids) =>
                       setSelectedLineId(ids[0] ? String(ids[0]) : undefined)

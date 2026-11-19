@@ -535,21 +535,32 @@ it('keeps invalid cell edits focused and moves to Unit after a successful Tab sa
 });
 
 it('preserves an unfinished new line when switching between Lines and Header', async () => {
-  openOrder('1');
+  const { container } = openOrder('1');
   await screen.findByText('SO-LIVE-001 : Live customer');
-  // Wait for each step: under a loaded test run the page lags behind the clicks.
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Edit' })).toBeEnabled());
-  fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Add line' })).toBeEnabled());
-  fireEvent.click(screen.getByRole('button', { name: 'Add line' }));
-  expect(await screen.findByRole('textbox', { name: 'Item number' })).toBeDefined();
-  fireEvent.click(screen.getByRole('tab', { name: 'Header' }));
-  await waitFor(() => expect(screen.queryByRole('textbox', { name: 'Item number' })).toBeNull());
-  fireEvent.click(screen.getByRole('tab', { name: 'Lines' }));
-  expect(await screen.findByRole('textbox', { name: 'Item number' })).toBeDefined();
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Add line' })).toBeDisabled());
+  const edit = container.querySelector<HTMLButtonElement>('button[aria-label="Edit"]')!;
+  await waitFor(() => expect(edit).toBeEnabled());
+  fireEvent.click(edit);
+  const toolbar = () =>
+    within(
+      container.querySelector<HTMLElement>(
+        '[role="toolbar"][aria-label="Sales order line actions"]'
+      )!
+    );
+  const grid = () => within(container.querySelector<HTMLElement>('[role="grid"]')!);
+  await waitFor(() => expect(toolbar().getByRole('button', { name: 'Add line' })).toBeEnabled());
+  fireEvent.click(toolbar().getByRole('button', { name: 'Add line' }));
+  expect(await grid().findByRole('textbox', { name: 'Item number' })).toBeDefined();
+  const tab = (name: string) =>
+    Array.from(container.querySelectorAll<HTMLElement>('[role="tab"]')).find(
+      (element) => element.textContent === name
+    )!;
+  fireEvent.click(tab('Header'));
+  await waitFor(() => expect(container.querySelector('[role="grid"]')).toBeNull());
+  fireEvent.click(tab('Lines'));
+  await waitFor(() => expect(container.querySelector('[role="grid"]')).not.toBeNull());
+  expect(await grid().findByRole('textbox', { name: 'Item number' })).toBeDefined();
+  await waitFor(() => expect(toolbar().getByRole('button', { name: 'Add line' })).toBeDisabled());
 });
-
 it('adds a line from view mode and switches the page to edit mode', async () => {
   openOrder('1');
   await screen.findByText('SO-LIVE-001 : Live customer');
