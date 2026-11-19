@@ -1,32 +1,33 @@
 import { existsSync, mkdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { masterDetailStructure } from './master-detail-structure.mjs';
 
 export function masterDetailFiles(name) {
-  if (!/^[A-Z][A-Za-z0-9]*$/.test(name)) throw new Error('--name must be a PascalCase identifier.');
+  const paths = masterDetailStructure(name);
   const camel = name[0].toLowerCase() + name.slice(1);
   return {
-    [`pages/${name}DetailsPage.tsx`]: `import React from 'react';
+    [paths.page]: `import React from 'react';
 import { ${name}Details, type ${name}DetailsProps } from '../details/${name}Details';
 
 export function ${name}DetailsPage(props: ${name}DetailsProps): React.ReactElement {
   return <${name}Details key={JSON.stringify([props.company, props.documentId])} {...props} />;
 }
 `,
-    [`details/${camel}Model.ts`]: `import type { MasterDetailDocumentRecord } from '@patterns/master-detail';
+    [paths.model]: `import type { MasterDetailDocumentRecord } from '@patterns/master-detail';
 
 // Extend these UI models with the feature's existing API fields and mappings.
 export interface ${name}Line { id: string }
 export interface ${name}Document extends MasterDetailDocumentRecord<${name}Line> {}
 `,
-    [`api/${camel}Api.ts`]: `import type { MasterDetailDocumentSource } from '@patterns/master-detail';
+    [paths.api]: `import type { MasterDetailDocumentSource } from '@patterns/master-detail';
 import type { ${name}Document } from '../details/${camel}Model';
 
 // Implement this adapter using existing endpoints and business validation.
 // No endpoint, permission or posting behavior is inferred by the generator.
 export type ${name}Api = MasterDetailDocumentSource<${name}Document>;
 `,
-    [`details/use${name}Document.ts`]: `import { useMasterDetailDocument } from '@patterns/master-detail';
+    [paths.controller]: `import { useMasterDetailDocument } from '@patterns/master-detail';
 import type { ${name}Api } from '../api/${camel}Api';
 import type { ${name}Document, ${name}Line } from './${camel}Model';
 
@@ -40,7 +41,7 @@ export function use${name}Document(options: ${name}DocumentOptions) {
   return useMasterDetailDocument<${name}Line, ${name}Document>(options);
 }
 `,
-    [`details/${name}HeaderSections.ts`]: `import type { DetailSectionConfig } from '@patterns/list-details/types';
+    [paths.header]: `import type { DetailSectionConfig } from '@patterns/list-details/types';
 
 export function build${name}HeaderSections(t: (key: string, fallback: string) => string): DetailSectionConfig[] {
   return [{
@@ -49,7 +50,7 @@ export function build${name}HeaderSections(t: (key: string, fallback: string) =>
   }];
 }
 `,
-    [`lines/${name}LineColumns.ts`]: `import type { ColumnDef } from '@shared/components/data-grid/types';
+    [paths.columns]: `import type { ColumnDef } from '@shared/components/data-grid/types';
 import type { ${name}Line } from '../details/${camel}Model';
 
 export function build${name}LineColumns(t: (key: string, fallback: string) => string): ColumnDef<${name}Line>[] {
@@ -57,7 +58,7 @@ export function build${name}LineColumns(t: (key: string, fallback: string) => st
   return [{ field: 'id', headerName: t('common.id', 'ID'), editable: false, minWidth: 120 }];
 }
 `,
-    [`details/${name}Details.tsx`]: `import React from 'react';
+    [paths.details]: `import React from 'react';
 import { Alert } from '@mui/material';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { MasterDetailPage, MasterDetailLines, MasterDetailLinesGrid } from '@patterns/master-detail';
@@ -118,7 +119,9 @@ export function ${name}Details(props: ${name}DetailsProps): React.ReactElement {
   />;
 }
 `,
-    'README.md': `# ${name} master-details feature
+    [paths.readme]: `<!-- master-detail-feature: ${name} -->
+
+# ${name} master-details feature
 
 Generated from the standard master-details structure. The page is not registered automatically.
 
