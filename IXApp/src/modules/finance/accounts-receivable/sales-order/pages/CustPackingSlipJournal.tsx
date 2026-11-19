@@ -271,14 +271,12 @@ export function CustPackingSlipJournal(): React.ReactElement {
       // Bound concurrent calls while reusing the existing order-scoped journal endpoint.
       for (let start = 0; start < selectedOrders.length; start += 5) {
         const batch = await Promise.all(
-          selectedOrders
-            .slice(start, start + 5)
-            .map(async (order) =>
-              (await salesOrderPackingSlipApi.list(order.id, signal)).map((journal) => ({
-                ...journal,
-                orderRecId: order.id,
-              }))
-            )
+          selectedOrders.slice(start, start + 5).map(async (order) =>
+            (await salesOrderPackingSlipApi.list(order.id, signal)).map((journal) => ({
+              ...journal,
+              orderRecId: order.id,
+            }))
+          )
         );
         result.push(...batch.flat());
       }

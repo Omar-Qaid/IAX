@@ -140,3 +140,11 @@ Both document drawers now compose the existing enterprise FastTab. Calculation-b
 Added regression tests for selection persistence across collapse, source-change selection reset, exact copy options, disabled busy controls, initial expansion and caller-supplied total values. The copy tests isolate drawer state using a grid test double; they do not claim to exercise grid internals.
 
 Verification for document drawers: six focused unit tests passed; the existing free-text-invoice browser flow passed on desktop and mobile, including opening totals and confirming the displayed amount. Changed-file ESLint, architecture and encoding audits, and Vite production bundling passed. The existing large-chunk warning remains. Copy-state behavior was tested through the drawer contract; a live-backend copy workflow was not exercised.
+
+### Final regression fixes
+
+- Invoice list and totals amounts now use the selected application language instead of the host locale; financial values and API contracts are unchanged.
+- Added an Arabic totals regression and corrected the persisted-grid storage spy to target the actual storage prototype.
+- Corrected the formatting-check paths after feature-folder moves and retained the workspace-wide frontend formatting changes.
+- The two previously failing regressions passed their focused rerun (9 tests). Full verification is recorded below after completion.
+

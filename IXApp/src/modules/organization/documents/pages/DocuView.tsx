@@ -9,6 +9,7 @@ import {
   TextField,
   Tooltip,
   Typography,
+  type Theme,
 } from '@mui/material';
 import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
 import OpenInNewOutlined from '@mui/icons-material/OpenInNewOutlined';
@@ -143,7 +144,7 @@ function AttachmentDetails({
               width: 220,
               minHeight: 28,
               px: 0.5,
-              borderBottom: '1px solid #605e5c',
+              borderBottom: (theme: Theme) => `1px solid ${theme.palette.text.secondary}`,
               fontSize: 12,
             }}
           >
@@ -161,7 +162,7 @@ function AttachmentDetails({
             width: 220,
             minHeight: 28,
             px: 0.5,
-            borderBottom: '1px solid #605e5c',
+            borderBottom: (theme: Theme) => `1px solid ${theme.palette.text.secondary}`,
             fontSize: 12,
           }}
         >
@@ -176,7 +177,7 @@ function AttachmentDetails({
             width: 220,
             minHeight: 28,
             px: 0.5,
-            borderBottom: '1px solid #605e5c',
+            borderBottom: (theme: Theme) => `1px solid ${theme.palette.text.secondary}`,
             fontSize: 12,
           }}
         >
@@ -209,7 +210,7 @@ function AttachmentDetails({
               width: 220,
               minHeight: 28,
               px: 0.5,
-              borderBottom: '1px solid #605e5c',
+              borderBottom: (theme: Theme) => `1px solid ${theme.palette.text.secondary}`,
               fontSize: 12,
               color: record.kind === 'URL' ? 'primary.main' : 'inherit',
             }}
@@ -253,7 +254,11 @@ function LocalFilePreview({ file }: { file: File }): React.ReactElement {
           {formatBytes(file.size)}
         </Typography>
         <Tooltip title={t('documents.docuView.openPreview')}>
-          <IconButton size="small" aria-label={t('documents.previewNamed', { name: file.name })} onClick={open}>
+          <IconButton
+            size="small"
+            aria-label={t('documents.previewNamed', { name: file.name })}
+            onClick={open}
+          >
             <OpenInNewOutlined sx={{ fontSize: 16 }} />
           </IconButton>
         </Tooltip>
@@ -703,9 +708,7 @@ export function DocuView(): React.ReactElement {
   );
 
   if (!validReference)
-    return (
-      <Alert severity="error">{t('documents.docuView.invalidReference')}</Alert>
-    );
+    return <Alert severity="error">{t('documents.docuView.invalidReference')}</Alert>;
   return (
     <>
       <ListDetailsPage

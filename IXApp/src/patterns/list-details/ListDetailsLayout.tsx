@@ -729,7 +729,7 @@ const d365SwitchSx = {
     bgcolor: 'background.paper',
     opacity: 1,
   },
-  '& .Mui-checked + .MuiSwitch-track': { bgcolor: '#605e5c !important', opacity: '1 !important' },
+  '& .Mui-checked + .MuiSwitch-track': { bgcolor: (theme: Theme) => `${theme.palette.text.secondary} !important`, opacity: '1 !important' },
 };
 const legalEntitySwitchSx = {
   width: 36,
@@ -740,6 +740,6 @@ const legalEntitySwitchSx = {
     '&.Mui-checked': { transform: 'translateX(16px)', color: '#fff' },
   },
   '& .MuiSwitch-thumb': { width: 14, height: 14 },
-  '& .MuiSwitch-track': { borderRadius: '10px', bgcolor: '#605e5c', opacity: '1 !important' },
+  '& .MuiSwitch-track': { borderRadius: '10px', bgcolor: (theme: Theme) => theme.palette.text.secondary, opacity: '1 !important' },
   '& .Mui-disabled + .MuiSwitch-track': { opacity: '1 !important' },
 };
