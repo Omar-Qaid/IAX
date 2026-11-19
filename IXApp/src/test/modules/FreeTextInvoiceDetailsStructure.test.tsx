@@ -23,15 +23,29 @@ vi.mock('@modules/finance/accounts-receivable/free-text-invoice/api/freeTextInvo
   },
 }));
 function Wrapper({ children }: { children: React.ReactNode }) {
-  return <AppProviders><MemoryRouter>{children}</MemoryRouter></AppProviders>;
+  return (
+    <AppProviders>
+      <MemoryRouter>{children}</MemoryRouter>
+    </AppProviders>
+  );
 }
-beforeEach(() => { queryClient.clear(); vi.clearAllMocks(); });
+beforeEach(() => {
+  queryClient.clear();
+  vi.clearAllMocks();
+});
 
 it('loads the extracted details editor through the free-text invoice route', async () => {
   const { container } = render(
-    <AppProviders><MemoryRouter initialEntries={['/accounts-receivable/free-text-invoices/new']}><Routes>
-      <Route path="/accounts-receivable/free-text-invoices/:invoiceRecId" element={<CustFreeInvoiceDetailsPage />} />
-    </Routes></MemoryRouter></AppProviders>
+    <AppProviders>
+      <MemoryRouter initialEntries={['/accounts-receivable/free-text-invoices/new']}>
+        <Routes>
+          <Route
+            path="/accounts-receivable/free-text-invoices/:invoiceRecId"
+            element={<CustFreeInvoiceDetailsPage />}
+          />
+        </Routes>
+      </MemoryRouter>
+    </AppProviders>
   );
   expect(await screen.findByRole('button', { name: 'Save' })).toBeInTheDocument();
   expect(container.querySelector('[data-master-detail-viewport]')).toBeTruthy();
@@ -40,17 +54,33 @@ it('loads the extracted details editor through the free-text invoice route', asy
 
 it('retains the invoice draft after invalid Save and accepts a corrected line', async () => {
   const invoice = newInvoice('C-001');
-  const { result } = renderHook(() => useFreeTextInvoiceDocument({
-    company: 'dat', invoice, isNew: true, startEditing: false,
-  }), { wrapper: Wrapper });
-  await act(async () => { await result.current.save(); });
+  const { result } = renderHook(
+    () =>
+      useFreeTextInvoiceDocument({
+        company: 'dat',
+        invoice,
+        isNew: true,
+        startEditing: false,
+      }),
+    { wrapper: Wrapper }
+  );
+  await act(async () => {
+    await result.current.save();
+  });
   expect(result.current.editing).toBe(true);
   expect(result.current.error).not.toBe('');
   expect(freeTextInvoiceApi.save).not.toHaveBeenCalled();
-  const corrected = { ...invoice, lines: [{ ...invoice.lines[0], description: 'Consulting', ledgerDimension: 10, unitPrice: 100 }] };
+  const corrected = {
+    ...invoice,
+    lines: [
+      { ...invoice.lines[0], description: 'Consulting', ledgerDimension: 10, unitPrice: 100 },
+    ],
+  };
   vi.mocked(freeTextInvoiceApi.save).mockResolvedValue({ ...corrected, id: '1', recId: 1 });
   act(() => result.current.changeDraft(corrected));
-  await act(async () => { await result.current.save(); });
+  await act(async () => {
+    await result.current.save();
+  });
   expect(freeTextInvoiceApi.save).toHaveBeenCalledOnce();
   expect(result.current.editing).toBe(false);
 });

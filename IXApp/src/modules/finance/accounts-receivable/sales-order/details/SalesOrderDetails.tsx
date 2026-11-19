@@ -6,10 +6,7 @@ import { ErrorState } from '@shared/components/feedback/ErrorState';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../../routes/accountsReceivableRoutePaths';
 import { SalesOrderDetailsDialogs } from '../components/SalesOrderDetailsDialogs';
-import {
-  SalesOrderLinesProvider,
-  SalesOrderDocumentActions,
-} from '../lines/SalesOrderLineState';
+import { SalesOrderLinesProvider, SalesOrderDocumentActions } from '../lines/SalesOrderLineState';
 import { useSalesOrderDocument } from './useSalesOrderDocument';
 import { buildSalesOrderTotals } from './salesOrderTotals';
 import { buildSalesOrderHeaderPanel } from './SalesOrderHeaderPanel';

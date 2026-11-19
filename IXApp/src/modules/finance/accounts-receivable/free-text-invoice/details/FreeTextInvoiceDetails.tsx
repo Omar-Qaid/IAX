@@ -1,4 +1,7 @@
-import { useFreeTextInvoiceDocument } from './useFreeTextInvoiceDocument';
+import {
+  useFreeTextInvoiceDocument,
+  type FreeTextInvoiceDetailsProps,
+} from './useFreeTextInvoiceDocument';
 import { useFreeTextInvoiceLineColumns } from '../lines/useFreeTextInvoiceLineColumns';
 import React from 'react';
 import { Alert, Box, TextField, Typography } from '@mui/material';
@@ -31,7 +34,7 @@ import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS as paths } from '../../routes/accountsR
 import { ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS as AR_PREVIEWS } from '../../previews/accountsReceivableRecordPreviews';
 import { FOUNDATION_RECORD_PREVIEWS as FOUNDATION_PREVIEWS } from '../../../foundation/previews/foundationRecordPreviews';
 
-import { asInvoice, type Invoice } from './freeTextInvoiceModel';
+import { asInvoice } from './freeTextInvoiceModel';
 import { isValidInvoiceLine, newLine, type Line } from '../lines/freeTextInvoiceLine';
 
 export function FreeTextInvoiceDetails({
@@ -39,12 +42,7 @@ export function FreeTextInvoiceDetails({
   invoice,
   isNew,
   startEditing,
-}: {
-  company: string;
-  invoice: Invoice;
-  isNew: boolean;
-  startEditing: boolean;
-}) {
+}: FreeTextInvoiceDetailsProps) {
   const {
     t,
     isRtl,

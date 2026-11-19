@@ -8,7 +8,14 @@ import { freeTextInvoiceApi } from '../api/freeTextInvoiceApi';
 import type { Line } from './freeTextInvoiceLine';
 
 /** Invoice-specific columns composed from the generic document grid and lookup editors. */
-export function useFreeTextInvoiceLineColumns({ company, editing, amount, ledgerText, setLedgerLabels, taxes }: {
+export function useFreeTextInvoiceLineColumns({
+  company,
+  editing,
+  amount,
+  ledgerText,
+  setLedgerLabels,
+  taxes,
+}: {
   company: string;
   editing: boolean;
   amount: (value: number) => string;
@@ -16,7 +23,8 @@ export function useFreeTextInvoiceLineColumns({ company, editing, amount, ledger
   setLedgerLabels: React.Dispatch<React.SetStateAction<Record<number, string>>>;
   taxes: { data?: Awaited<ReturnType<typeof freeTextInvoiceApi.taxGroups>>; isLoading: boolean };
 }): ColumnDef<Line>[] {
-  const { t } = useAppTranslation();  return React.useMemo(
+  const { t } = useAppTranslation();
+  return React.useMemo(
     (): ColumnDef<Line>[] => [
       { field: 'description', headerName: t('fields.description'), width: 250, editable: true },
       {
