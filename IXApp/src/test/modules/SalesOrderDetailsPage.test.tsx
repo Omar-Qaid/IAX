@@ -1,4 +1,3 @@
-import { SalesOrderDetailsPageV2 } from '@modules/finance/accounts-receivable/salesorderV2/pages/SalesOrderDetailsPageV2';
 import React from 'react';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
@@ -614,14 +613,14 @@ it('edits a line cell from view mode with the cell pencil (D365 edit from view)'
   await waitFor(() => expect(grid.getByRole('spinbutton', { name: 'Quantity' })).toHaveFocus());
 });
 
-it('renders the V2 sales order in the master-details pattern', async () => {
+it('renders sales order in the master-details pattern', async () => {
   const { container } = render(
-    <MemoryRouter initialEntries={['/accounts-receivable/sales-orders/1/master-details']}>
+    <MemoryRouter initialEntries={['/accounts-receivable/sales-orders/1']}>
       <AppProviders>
         <Routes>
           <Route
-            path="/accounts-receivable/sales-orders/:salesOrderId/master-details"
-            element={<SalesOrderDetailsPageV2 />}
+            path="/accounts-receivable/sales-orders/:salesOrderId"
+            element={<SalesOrderDetailsPage />}
           />
         </Routes>
       </AppProviders>

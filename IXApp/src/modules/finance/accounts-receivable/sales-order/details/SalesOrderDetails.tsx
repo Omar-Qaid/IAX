@@ -82,7 +82,7 @@ export function SalesOrderDetails({
         editing={Boolean(activeHeader)}
 
         onRefresh={() => void refetchOrder()}
-        navigationWidthStorageKey="ixapp.sales-order-v2.navigation-width"
+        navigationWidthStorageKey="ixapp.sales-order.navigation-width"
         backAction={
           <ActionPaneBackButton
             label={t('actions.back', 'Back')}
@@ -117,7 +117,7 @@ export function SalesOrderDetails({
             id: 'sales-order',
             label: t('salesOrder.ui.salesOrder', 'Sales order'),
             groups: salesOrderRibbonGroups,
-            persistenceKey: 'ixapp.sales-order-v2.ribbon-pinned',
+            persistenceKey: 'ixapp.sales-order.ribbon-pinned',
           },
           { id: 'sell', label: t('salesOrder.ui.sell', 'Sell'), groups: sellRibbonGroups },
         ]}

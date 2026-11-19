@@ -1,4 +1,9 @@
 export { MasterDetailPage } from './MasterDetailPage';
+export {
+  useMasterDetailDocument,
+  type MasterDetailDocumentRecord,
+  type MasterDetailDocumentSource,
+} from './useMasterDetailDocument';
 export { MasterDetailSection } from './MasterDetailSection';
 export { MasterDetailTabs, type MasterDetailTab } from './MasterDetailTabs';
 export {

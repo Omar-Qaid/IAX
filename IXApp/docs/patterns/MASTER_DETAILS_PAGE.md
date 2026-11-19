@@ -34,7 +34,7 @@ enterprise feature set, composed from the same shared parts as `list-details`
 | Record list hidden at first, resizable, width remembered, custom search                          | `defaultNavigationOpen`, `navigationWidthStorageKey`, `matchesSearch` |
 | Field-config sections (groups, view/edit, master routes, previews)                               | `sections`, `values`, `onFieldChange`, `onFieldEdit`, `canEditField`  |
 
-Sales order itself stays on `list-details` (its look is the shared default there).
+Sales order and free-text invoice both use master-details. Sales-order details has one canonical implementation.
 
 ### Example: free text invoice
 
@@ -86,3 +86,44 @@ What stays in the feature (as in `accounts-receivable/sales-order`): data
 queries with company-scoped keys, load-by-ID, Edit/Save/Cancel and unsaved
 changes, line saving, action-pane ribbon content, dialogs. Follow the
 [document page checklist](DOCUMENT_PAGE.md).
+
+## Standard structure for every new feature
+
+Create a feature with the generator rather than copying a whole sales-order page:
+
+```powershell
+npm run generate:master-detail -- --feature finance/accounts-receivable/example-order --name ExampleOrder --dry-run
+npm run generate:master-detail -- --feature finance/accounts-receivable/example-order --name ExampleOrder
+```
+
+The generator refuses to overwrite existing feature folders. It does not register routes, infer permissions, invent API endpoints, or implement posting.
+
+```text
+example-order/
+  api/exampleOrderApi.ts
+  pages/ExampleOrderDetailsPage.tsx
+  details/ExampleOrderDetails.tsx
+  details/useExampleOrderDocument.ts
+  details/exampleOrderModel.ts
+  details/ExampleOrderHeaderSections.ts
+  lines/ExampleOrderLineColumns.ts
+  README.md
+```
+
+| File                                 | Responsibility                                                         |
+| ------------------------------------ | ---------------------------------------------------------------------- |
+| `pages/<Feature>DetailsPage.tsx`     | Thin route entry; resets state for company/document changes.           |
+| `details/<Feature>Details.tsx`       | Composes shared master-details UI.                                     |
+| `details/use<Feature>Document.ts`    | Feature controller entry, using `useMasterDetailDocument` by default.  |
+| `details/<feature>Model.ts`          | Feature document and line UI types; map existing API contracts here.   |
+| `details/<Feature>HeaderSections.ts` | Header field groups and sections.                                      |
+| `lines/<Feature>LineColumns.ts`      | Line columns, lookups and editors.                                     |
+| `api/<feature>Api.ts`                | Adapter contract for existing company-scoped API calls and validation. |
+
+Implement the generated adapter and extend the existing API fields before registering the page. Pass `company`, `documentId`, `source`, `canEdit`, `listPath`, `onSelect` and `onBack` from the route integration. Use a stable source object with a unique feature `queryKey`. Derive `canEdit` from actual permissions and document status. The scaffold supports editing existing documents; new/delete/posting workflows must be connected explicitly to supported feature operations.
+
+The shared controller commits grid edits before document validation and Save. Rejected rows or API errors retain Edit mode. Cancel clears row editors and document drafts; concurrent Save and Cancel are locked during persistence. The feature supplies validation, data mapping and business rules. Standard fields, grids, tabs, Search, totals and layout remain in the pattern. Add optional `lines/` helpers or feature dialogs only when required by feature behavior; do not create empty component wrappers.
+
+`npm run audit:master-detail` checks actual master-details compositions for the common directory/controller/header-section structure. It runs as part of `audit:static`. Generator tests run with `node --test scripts/generate-master-detail.checks.mjs`.
+
+Existing sales-order and invoice controllers keep their specialized posting and draft behavior; they follow the same folder responsibilities without forcing different business workflows into identical logic.

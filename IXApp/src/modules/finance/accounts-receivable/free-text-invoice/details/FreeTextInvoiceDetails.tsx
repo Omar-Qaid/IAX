@@ -1,3 +1,4 @@
+import { buildFreeTextInvoiceHeaderSections } from './FreeTextInvoiceHeaderSections';
 import {
   useFreeTextInvoiceDocument,
   type FreeTextInvoiceDetailsProps,
@@ -34,7 +35,7 @@ import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS as paths } from '../../routes/accountsR
 import { ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS as AR_PREVIEWS } from '../../previews/accountsReceivableRecordPreviews';
 import { FOUNDATION_RECORD_PREVIEWS as FOUNDATION_PREVIEWS } from '../../../foundation/previews/foundationRecordPreviews';
 
-import { asInvoice } from './freeTextInvoiceModel';
+import { asInvoice, type Invoice } from './freeTextInvoiceModel';
 import { isValidInvoiceLine, newLine, type Line } from '../lines/freeTextInvoiceLine';
 
 export function FreeTextInvoiceDetails({
@@ -225,11 +226,6 @@ export function FreeTextInvoiceDetails({
     ),
     postingProfile: textField('postingProfile', t('freeTextInvoices.postingProfile')),
   };
-  const group = (id: string, title: string, groupFields: DetailFieldConfig[]) => ({
-    id,
-    title: title.toUpperCase(),
-    fields: groupFields,
-  });
   const fastTab = (id: string, title: string, content: React.ReactNode): DetailSectionConfig => ({
     id,
     title,
@@ -237,98 +233,13 @@ export function FreeTextInvoiceDetails({
     content: <Box sx={{ gridColumn: '1 / -1', minWidth: 0 }}>{content}</Box>,
   });
 
-  // Lines tab: compact header FastTab (one row of field groups), like sales order.
-  const compactHeader: DetailSectionConfig = {
-    id: 'invoice-header',
-    title: t('freeTextInvoices.header'),
-    visualVariant: 'legalEntity',
-    columns: 5,
-    groups: [
-      group('customer', t('fields.customer'), [fields.customerAccount, fields.customerName]),
-      group('invoice', t('freeTextInvoices.invoice'), [fields.invoiceDate, fields.dueDate]),
-      group('references', t('fields.description'), [fields.invoiceAccount, fields.description]),
-      group('sales-tax', t('freeTextInvoices.salesTax'), [fields.currencyCode, fields.taxGroup]),
-      group('payment', t('freeTextInvoices.payment'), [fields.paymentTerms, fields.paymentMethod]),
-    ],
-  };
-  // Header tab: the full header as FastTabs with key values in the heading.
-  const headerSections: DetailSectionConfig[] = [
-    {
-      id: 'header-general',
-      title: t('common.general'),
-      visualVariant: 'legalEntity',
-      columns: 4,
-      summaryItems: [
-        {
-          id: 'invoiceId',
-          label: t('freeTextInvoices.invoice'),
-          value: values.invoiceId,
-          accent: true,
-        },
-        {
-          id: 'customerAccount',
-          label: t('fields.customerAccount'),
-          value: display.customerAccount,
-          accent: true,
-        },
-        { id: 'customerName', label: t('fields.customerName'), value: customerName },
-      ],
-      groups: [
-        group('customer', t('fields.customer'), [
-          fields.customerAccount,
-          fields.customerName,
-          fields.invoiceAccount,
-        ]),
-        group('invoice', t('freeTextInvoices.invoice'), [
-          fields.invoiceId,
-          fields.invoiceDate,
-          fields.dueDate,
-        ]),
-        group('description', t('fields.description'), [fields.description]),
-        group('status', t('common.status'), [fields.posted]),
-      ],
-    },
-    {
-      id: 'header-setup',
-      title: t('freeTextInvoices.setup'),
-      visualVariant: 'legalEntity',
-      columns: 4,
-      summaryItems: [
-        {
-          id: 'currencyCode',
-          label: t('fields.currency'),
-          value: display.currencyCode,
-          accent: true,
-        },
-        { id: 'taxGroup', label: t('fields.salesTaxGroup'), value: display.taxGroup, accent: true },
-      ],
-      groups: [
-        group('currency', t('fields.currency'), [fields.currencyCode]),
-        group('sales-tax', t('freeTextInvoices.salesTax'), [fields.taxGroup]),
-        group('posting', t('freeTextInvoices.posting'), [fields.postingProfile]),
-      ],
-    },
-    {
-      id: 'header-payment',
-      title: t('freeTextInvoices.payment'),
-      visualVariant: 'legalEntity',
-      columns: 4,
-      summaryItems: [
-        {
-          id: 'paymentTerms',
-          label: t('freeTextInvoices.paymentTerms'),
-          value: display.paymentTerms,
-          accent: true,
-        },
-      ],
-      groups: [
-        group('payment', t('freeTextInvoices.payment'), [
-          fields.paymentTerms,
-          fields.paymentMethod,
-        ]),
-      ],
-    },
-  ];
+  const { compactHeader, headerSections } = buildFreeTextInvoiceHeaderSections({
+    t,
+    fields,
+    values,
+    display,
+    customerName,
+  });
   const lineColumns = useFreeTextInvoiceLineColumns({
     company,
     editing,

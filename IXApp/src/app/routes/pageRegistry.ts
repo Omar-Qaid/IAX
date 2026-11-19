@@ -1,4 +1,3 @@
-import { SALES_ORDER_V2_ROUTE_PATHS } from '@modules/finance/accounts-receivable/salesorderV2/routes/salesOrderV2RoutePaths';
 import { LEGACY_TAX_ROUTE_PATHS } from '@modules/finance/tax/routes/taxRoutePaths';
 import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
 import { matchPath } from 'react-router-dom';
@@ -217,16 +216,6 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     component: lazyPage(
       () => import('@modules/finance/accounts-receivable/sales-order/pages/SalesOrderDetailsPage'),
       (module) => module.SalesOrderDetailsPage
-    ),
-  },
-  {
-    id: 'sales-order-details-v2',
-    path: SALES_ORDER_V2_ROUTE_PATHS.DETAILS,
-    permission: PERMISSIONS.SALES_ORDER_VIEW,
-    component: lazyPage(
-      () =>
-        import('@modules/finance/accounts-receivable/salesorderV2/pages/SalesOrderDetailsPageV2'),
-      (module) => module.SalesOrderDetailsPageV2
     ),
   },
   {
