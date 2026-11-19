@@ -12,18 +12,30 @@ beforeEach(() => {
 
 it('requests paged current-user archives without supplying another user identity', async () => {
   expect(await notificationInboxApi.list(2, 2)).toEqual({ items: [], totalPages: 3 });
-  expect(calls.get).toHaveBeenCalledWith('/v1/SysNotification', expect.objectContaining({ params: { pageNumber: 2, pageSize: 20, isArchived: true } }));
+  expect(calls.get).toHaveBeenCalledWith(
+    '/v1/SysNotification',
+    expect.objectContaining({ params: { pageNumber: 2, pageSize: 20, isArchived: true } })
+  );
 });
 it('requests the unread tab through the server filter', async () => {
   await notificationInboxApi.list(1, 1);
-  expect(calls.get).toHaveBeenCalledWith('/v1/SysNotification', expect.objectContaining({ params: { pageNumber: 1, pageSize: 20, isArchived: false, isRead: false } }));
+  expect(calls.get).toHaveBeenCalledWith(
+    '/v1/SysNotification',
+    expect.objectContaining({
+      params: { pageNumber: 1, pageSize: 20, isArchived: false, isRead: false },
+    })
+  );
 });
 it('uses the existing read/archive/delete routes and rejects unsuccessful responses', async () => {
   await notificationInboxApi.update('read', '7');
   await notificationInboxApi.update('archive', '7');
   await notificationInboxApi.update('read-all');
   await notificationInboxApi.update('delete', '7');
-  expect(calls.put.mock.calls.map(([path]) => path)).toEqual(['/v1/SysNotification/7/read', '/v1/SysNotification/7/archive', '/v1/SysNotification/read-all']);
+  expect(calls.put.mock.calls.map(([path]) => path)).toEqual([
+    '/v1/SysNotification/7/read',
+    '/v1/SysNotification/7/archive',
+    '/v1/SysNotification/read-all',
+  ]);
   expect(calls.delete).toHaveBeenCalledWith('/v1/SysNotification/7');
   calls.put.mockResolvedValue({ data: { success: false, data: false, message: 'Denied' } });
   await expect(notificationInboxApi.update('read', '7')).rejects.toThrow('Denied');

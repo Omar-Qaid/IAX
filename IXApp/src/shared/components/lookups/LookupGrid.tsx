@@ -396,88 +396,101 @@ export function LookupGrid<T extends object>({
   }, [open, rows.length, recalcPosition]);
 
   // The record preview is keyed by the stored value (a code), not the shown text.
-  const previewKey =
-    typeof value === 'string' || typeof value === 'number' ? value : null;
-  if (viewMode) return <LookupDisplayField label={label ? t(label) : ''} value={resolvedDisplay} masterRoute={masterRoute} previewEntity={previewEntity} previewKey={previewKey} />;
+  const previewKey = typeof value === 'string' || typeof value === 'number' ? value : null;
+  if (viewMode)
+    return (
+      <LookupDisplayField
+        label={label ? t(label) : ''}
+        value={resolvedDisplay}
+        masterRoute={masterRoute}
+        previewEntity={previewEntity}
+        previewKey={previewKey}
+      />
+    );
 
   return (
     <Box sx={{ width: fullWidth ? '100%' : undefined }}>
       <RecordPreview entity={previewEntity} masterRoute={masterRoute} recordKey={previewKey}>
-      <TextField
-        ref={anchorRef}
-        // In a grid cell the column header is the label and the cell draws the
-        // only border, so render a borderless input named by aria-label.
-        variant={gridCell ? 'standard' : 'outlined'}
-        label={
-          // Open-details lives on the view-mode value (LookupDisplayField), not the editor.
-          label && !gridCell ? t(label) : undefined
-        }
-        fullWidth={fullWidth}
-        size={size}
-        disabled={disabled}
-        error={!!error}
-        helperText={error ? t(error) : undefined}
-        value={resolvedDisplay}
-        placeholder={placeholder ? t(placeholder) : 'Select...'}
-        onClick={handleOpen}
-        onKeyDown={handleKeyDown}
-        slotProps={{
-          ...(gridCell && label ? { htmlInput: { 'aria-label': t(label) } } : {}),
-          input: {
-            ...(gridCell ? { disableUnderline: true } : {}),
-            readOnly: true,
-            endAdornment: (
-              <InputAdornment position="end">
-                {showClearButton && !gridCell && value != null && !disabled && (
+        <TextField
+          ref={anchorRef}
+          // In a grid cell the column header is the label and the cell draws the
+          // only border, so render a borderless input named by aria-label.
+          variant={gridCell ? 'standard' : 'outlined'}
+          label={
+            // Open-details lives on the view-mode value (LookupDisplayField), not the editor.
+            label && !gridCell ? t(label) : undefined
+          }
+          fullWidth={fullWidth}
+          size={size}
+          disabled={disabled}
+          error={!!error}
+          helperText={error ? t(error) : undefined}
+          value={resolvedDisplay}
+          placeholder={placeholder ? t(placeholder) : 'Select...'}
+          onClick={handleOpen}
+          onKeyDown={handleKeyDown}
+          slotProps={{
+            ...(gridCell && label ? { htmlInput: { 'aria-label': t(label) } } : {}),
+            input: {
+              ...(gridCell ? { disableUnderline: true } : {}),
+              readOnly: true,
+              endAdornment: (
+                <InputAdornment position="end">
+                  {showClearButton && !gridCell && value != null && !disabled && (
+                    <IconButton
+                      size="small"
+                      onClick={handleClear}
+                      aria-label={
+                        t('common.clear') === 'common.clear' ? 'Clear' : t('common.clear')
+                      }
+                    >
+                      <CloseIcon fontSize="small" />
+                    </IconButton>
+                  )}
                   <IconButton
                     size="small"
-                    onClick={handleClear}
-                    aria-label={t('common.clear') === 'common.clear' ? 'Clear' : t('common.clear')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (open) handleClose();
+                      else handleOpen();
+                    }}
+                    disabled={disabled}
+                    aria-label={t('common.open') === 'common.open' ? 'Open' : t('common.open')}
                   >
-                    <CloseIcon fontSize="small" />
+                    {gridCell ? (
+                      // D365 grid cells use a thin chevron.
+                      <KeyboardArrowDownIcon
+                        sx={{
+                          fontSize: 18,
+                          transition: 'transform 120ms',
+                          transform: open ? 'rotate(180deg)' : 'none',
+                        }}
+                      />
+                    ) : (
+                      <ArrowDropDownIcon
+                        sx={{
+                          transition: 'transform 120ms',
+                          transform: open ? 'rotate(180deg)' : 'none',
+                        }}
+                      />
+                    )}
                   </IconButton>
-                )}
-                <IconButton
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (open) handleClose();
-                    else handleOpen();
-                  }}
-                  disabled={disabled}
-                  aria-label={t('common.open') === 'common.open' ? 'Open' : t('common.open')}
-                >
-                  {gridCell ? (
-                    // D365 grid cells use a thin chevron.
-                    <KeyboardArrowDownIcon
-                      sx={{
-                        fontSize: 18,
-                        transition: 'transform 120ms',
-                        transform: open ? 'rotate(180deg)' : 'none',
-                      }}
-                    />
-                  ) : (
-                    <ArrowDropDownIcon
-                      sx={{
-                        transition: 'transform 120ms',
-                        transform: open ? 'rotate(180deg)' : 'none',
-                      }}
-                    />
-                  )}
-                </IconButton>
-              </InputAdornment>
-            ),
-          },
-        }}
-        sx={{
-          bgcolor: gridCell ? 'transparent' : 'background.paper',
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          ...lookupValueSx(value),
-          ...(gridCell
-            ? { '& .MuiInputBase-root': { height: 28, fontSize: 13 }, '& .MuiInputBase-input': { py: 0 } }
-            : {}),
-        }}
-      />
+                </InputAdornment>
+              ),
+            },
+          }}
+          sx={{
+            bgcolor: gridCell ? 'transparent' : 'background.paper',
+            cursor: disabled ? 'not-allowed' : 'pointer',
+            ...lookupValueSx(value),
+            ...(gridCell
+              ? {
+                  '& .MuiInputBase-root': { height: 28, fontSize: 13 },
+                  '& .MuiInputBase-input': { py: 0 },
+                }
+              : {}),
+          }}
+        />
       </RecordPreview>
 
       {open && (

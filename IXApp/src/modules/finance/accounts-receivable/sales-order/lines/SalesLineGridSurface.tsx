@@ -250,7 +250,7 @@ export function SalesLineGridSurface({
         },
         '& [data-grid-resize-handle]:hover': { bgcolor: 'primary.main' },
         '& [role="row"][aria-selected="true"], & [role="row"][aria-selected="true"]:hover': {
-          bgcolor: (theme) => theme.palette.mode === 'light' ? '#d7e3f8' : 'rgba(49,94,251,.22)',
+          bgcolor: (theme) => (theme.palette.mode === 'light' ? '#d7e3f8' : 'rgba(49,94,251,.22)'),
           boxShadow: 'none',
         },
       }}

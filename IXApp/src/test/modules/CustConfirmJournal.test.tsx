@@ -9,23 +9,81 @@ vi.mock('react-router-dom', () => ({
   useParams: () => ({ salesOrderId: '42' }),
   useNavigate: () => vi.fn(),
   // SimpleListPage reads pathname as the fallback grid filter-row storage key.
-  useLocation: () => ({ pathname: '/accounts-receivable/sales-orders/42/confirmations', search: '', hash: '', state: null, key: 'test' }),
+  useLocation: () => ({
+    pathname: '/accounts-receivable/sales-orders/42/confirmations',
+    search: '',
+    hash: '',
+    state: null,
+    key: 'test',
+  }),
 }));
-vi.mock('@core/permissions/usePermission', () => ({ usePermission: () => ({ hasPermission: true }) }));
-vi.mock('@shared/components/documents', () => ({ RecordAttachmentsButton: () => null, recordTableId: () => 1 }));
-vi.mock('@shared/components/action-pane/EnterpriseCommandUtilities', () => ({ EnterpriseCommandUtilities: () => null }));
-vi.mock('@shared/components/dialogs/AppRecordAuditDrawer', () => ({ AppRecordAuditDrawer: () => null }));
+vi.mock('@core/permissions/usePermission', () => ({
+  usePermission: () => ({ hasPermission: true }),
+}));
+vi.mock('@shared/components/documents', () => ({
+  RecordAttachmentsButton: () => null,
+  recordTableId: () => 1,
+}));
+vi.mock('@shared/components/action-pane/EnterpriseCommandUtilities', () => ({
+  EnterpriseCommandUtilities: () => null,
+}));
+vi.mock('@shared/components/dialogs/AppRecordAuditDrawer', () => ({
+  AppRecordAuditDrawer: () => null,
+}));
 vi.mock('@tanstack/react-query', async (importOriginal) => ({
-  ...await importOriginal<typeof import('@tanstack/react-query')>(),
+  ...(await importOriginal<typeof import('@tanstack/react-query')>()),
   useQuery: ({ queryKey }: { queryKey: unknown[] }) => {
     // salesOrderQueryKeys: ['salesOrders', company, 'list' | 'order', id, 'confirmations', journalId?]
-    if (queryKey[2] === 'list') return { data: [{ id: '42', salesId: 'SO-42', customerName: 'Customer', currencyCode: 'SAR' }] };
-    if (queryKey[4] === 'confirmations' && queryKey.length === 5) return { data: journalState.empty ? [] : [
-      { id: '8', salesId: 'SO-42', confirmId: 'CONF-8', confirmDate: '2026-10-13', currencyCode: 'SAR', confirmAmount: 700 },
-      { id: '10', salesId: 'SO-42', confirmId: 'CONF-10', confirmDate: '2026-10-14', currencyCode: 'SAR', confirmAmount: 900 },
-    ] };
+    if (queryKey[2] === 'list')
+      return {
+        data: [{ id: '42', salesId: 'SO-42', customerName: 'Customer', currencyCode: 'SAR' }],
+      };
+    if (queryKey[4] === 'confirmations' && queryKey.length === 5)
+      return {
+        data: journalState.empty
+          ? []
+          : [
+              {
+                id: '8',
+                salesId: 'SO-42',
+                confirmId: 'CONF-8',
+                confirmDate: '2026-10-13',
+                currencyCode: 'SAR',
+                confirmAmount: 700,
+              },
+              {
+                id: '10',
+                salesId: 'SO-42',
+                confirmId: 'CONF-10',
+                confirmDate: '2026-10-14',
+                currencyCode: 'SAR',
+                confirmAmount: 900,
+              },
+            ],
+      };
     const second = queryKey[5] === '10';
-    return { data: { header: { salesId: 'SO-42' }, lines: [{ id: second ? '11' : '9', itemId: second ? 'ITEM-2' : 'ITEM-1', name: 'Panel', qty: 2, pdsCwQty: 0, salesCategory: 0, inventLocationId: 'WH-1', wmsLocationId: 'BIN-1', salesPrice: 350, discPercent: 0, linePercent: 0, lineDisc: 0, lineAmount: 700 }] } };
+    return {
+      data: {
+        header: { salesId: 'SO-42' },
+        lines: [
+          {
+            id: second ? '11' : '9',
+            itemId: second ? 'ITEM-2' : 'ITEM-1',
+            name: 'Panel',
+            qty: 2,
+            pdsCwQty: 0,
+            salesCategory: 0,
+            inventLocationId: 'WH-1',
+            wmsLocationId: 'BIN-1',
+            salesPrice: 350,
+            discPercent: 0,
+            linePercent: 0,
+            lineDisc: 0,
+            lineAmount: 700,
+          },
+        ],
+      },
+    };
   },
 }));
 

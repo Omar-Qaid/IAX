@@ -6,9 +6,20 @@ export function DataGridLoadingState() {
   const { t } = useTranslation();
 
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1, py: 2, bgcolor: 'background.paper' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 1,
+        py: 2,
+        bgcolor: 'background.paper',
+      }}
+    >
       <CircularProgress size={16} thickness={4} />
-      <Typography variant="caption" color="text.disabled">{t('grid.loading_more')}</Typography>
+      <Typography variant="caption" color="text.disabled">
+        {t('grid.loading_more')}
+      </Typography>
     </Box>
   );
 }

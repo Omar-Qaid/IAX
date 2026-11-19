@@ -55,10 +55,7 @@ export function GlobalSettingsForm({
           {updateSettings.error.message}
         </Alert>
       )}
-      <PageSection
-        title={t('settings.application')}
-        description={t('settings.applicationHelp')}
-      >
+      <PageSection title={t('settings.application')} description={t('settings.applicationHelp')}>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
           <AppTextField
             name="appName"

@@ -67,7 +67,13 @@ export interface PackingSlipPostingLine {
 }
 
 export interface PackingSlipPostingPreview {
-  header: { id: string; salesId: string; customerName: string; currencyCode: string; siteId: string };
+  header: {
+    id: string;
+    salesId: string;
+    customerName: string;
+    currencyCode: string;
+    siteId: string;
+  };
   lines: PackingSlipPostingLine[];
 }
 
@@ -82,27 +88,41 @@ const orderPath = (salesOrderId: string) =>
 
 export const salesOrderPackingSlipApi = {
   async list(salesOrderId: string, signal?: AbortSignal): Promise<PackingSlipJournalSummary[]> {
-    return unwrap((await apiClient.get<ApiResponse<PackingSlipJournalSummary[]>>(
-      orderPath(salesOrderId), { signal }
-    )).data);
+    return unwrap(
+      (
+        await apiClient.get<ApiResponse<PackingSlipJournalSummary[]>>(orderPath(salesOrderId), {
+          signal,
+        })
+      ).data
+    );
   },
   async get(
     salesOrderId: string,
     packingSlipRecId: string,
     signal?: AbortSignal
   ): Promise<PackingSlipJournalDetail> {
-    return unwrap((await apiClient.get<ApiResponse<PackingSlipJournalDetail>>(
-      `${orderPath(salesOrderId)}/${encodeURIComponent(packingSlipRecId)}`, { signal }
-    )).data);
+    return unwrap(
+      (
+        await apiClient.get<ApiResponse<PackingSlipJournalDetail>>(
+          `${orderPath(salesOrderId)}/${encodeURIComponent(packingSlipRecId)}`,
+          { signal }
+        )
+      ).data
+    );
   },
   async postingPreview(
     salesOrderId: string,
     quantityMode: PackingSlipQuantityMode,
     signal?: AbortSignal
   ): Promise<PackingSlipPostingPreview> {
-    return unwrap((await apiClient.get<ApiResponse<PackingSlipPostingPreview>>(
-      `${orderPath(salesOrderId)}/posting-preview`, { params: { quantityMode }, signal }
-    )).data);
+    return unwrap(
+      (
+        await apiClient.get<ApiResponse<PackingSlipPostingPreview>>(
+          `${orderPath(salesOrderId)}/posting-preview`,
+          { params: { quantityMode }, signal }
+        )
+      ).data
+    );
   },
   async post(
     salesOrderId: string,
@@ -114,8 +134,13 @@ export const salesOrderPackingSlipApi = {
       lines: { salesLineId: string; quantity: number }[];
     }
   ): Promise<PackingSlipJournalSummary> {
-    return unwrap((await apiClient.post<ApiResponse<PackingSlipJournalSummary>>(
-      orderPath(salesOrderId), request
-    )).data);
+    return unwrap(
+      (
+        await apiClient.post<ApiResponse<PackingSlipJournalSummary>>(
+          orderPath(salesOrderId),
+          request
+        )
+      ).data
+    );
   },
 };

@@ -4,7 +4,11 @@ export function resolveDateBound(expression: string, now = new Date()): string |
   const fixed = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
   if (fixed) {
     const date = new Date(`${text}T00:00:00.000Z`);
-    return Number(fixed[1]) >= 1 && Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === text ? text : null;
+    return Number(fixed[1]) >= 1 &&
+      Number.isFinite(date.getTime()) &&
+      date.toISOString().slice(0, 10) === text
+      ? text
+      : null;
   }
   const relative = /^today(?:\s*([+-])\s*(\d{1,4})\s*([dmy]))?$/.exec(text);
   if (!relative) return null;
@@ -20,12 +24,22 @@ export function resolveDateBound(expression: string, now = new Date()): string |
     end.setUTCDate(0);
     date.setUTCDate(Math.min(day, end.getUTCDate()));
   }
-  return date.getUTCFullYear() >= 1 && date.getUTCFullYear() <= 9999 ? date.toISOString().slice(0, 10) : null;
+  return date.getUTCFullYear() >= 1 && date.getUTCFullYear() <= 9999
+    ? date.toISOString().slice(0, 10)
+    : null;
 }
 
-export function dateBoundValid(type: string, value: string, expression: string, now = new Date()): boolean {
-  const match = /^(\d{4}-\d{2}-\d{2})(?:T(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d{1,7})?)?)?$/.exec(value);
+export function dateBoundValid(
+  type: string,
+  value: string,
+  expression: string,
+  now = new Date()
+): boolean {
+  const match =
+    /^(\d{4}-\d{2}-\d{2})(?:T(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d{1,7})?)?)?$/.exec(value);
   const actual = match ? resolveDateBound(match[1], now) : null;
   const bound = resolveDateBound(expression, now);
-  return !!actual && !!bound && (type.toLowerCase() === 'mindate' ? actual >= bound : actual <= bound);
+  return (
+    !!actual && !!bound && (type.toLowerCase() === 'mindate' ? actual >= bound : actual <= bound)
+  );
 }

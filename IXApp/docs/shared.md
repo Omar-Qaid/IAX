@@ -4,20 +4,20 @@ The shared layer contains domain-agnostic UI, hooks, services, validation helper
 
 ## Component families
 
-| Family | Guide | Notable exports |
-| --- | --- | --- |
-| Action pane | [action-pane.md](shared/action-pane.md) | `ActionPane`, groups, buttons, menus, enterprise CRUD/utilities |
-| Data grid | [data-grid.md](shared/data-grid.md) | `DataGrid`/`AppDataGrid`, toolbar, mobile body, sidebar, grid hooks |
-| Dialogs | [dialogs.md](shared/dialogs.md) | base, confirmation, delete, form, process, history, lookup dialogs |
-| FastTabs | [fast-tabs.md](shared/fast-tabs.md) | `FastTabs`, `FastTab`, header and summary |
-| Feedback | [feedback.md](shared/feedback.md) | loading, error, empty, no-results, access-denied, alert/notification |
-| Fields | [fields.md](shared/fields.md) | text, number, currency, date/time, select, enum, lookup, generated code |
-| Forms | [forms.md](shared/forms.md) | layout, entity form, validation summaries, local entity-form hook |
-| Logistics | [logistics.md](shared/logistics.md) | postal and electronic-address drawers |
-| Lookups | [lookups.md](shared/lookups.md) | virtualized grid lookup, form wrapper, dialog lookup |
-| Record preview | [record-preview.md](shared/record-preview.md) | `RecordPreview`, `RecordPreviewCard`, entity registry, generic loaders |
-| Page | [page.md](shared/page.md) | page structure, related information, utility rail, unsaved guard |
-| Status | this page | `StatusBadge`, `RecordStatus`, `DocumentStatus` alias |
+| Family         | Guide                                         | Notable exports                                                         |
+| -------------- | --------------------------------------------- | ----------------------------------------------------------------------- |
+| Action pane    | [action-pane.md](shared/action-pane.md)       | `ActionPane`, groups, buttons, menus, enterprise CRUD/utilities         |
+| Data grid      | [data-grid.md](shared/data-grid.md)           | `DataGrid`/`AppDataGrid`, toolbar, mobile body, sidebar, grid hooks     |
+| Dialogs        | [dialogs.md](shared/dialogs.md)               | base, confirmation, delete, form, process, history, lookup dialogs      |
+| FastTabs       | [fast-tabs.md](shared/fast-tabs.md)           | `FastTabs`, `FastTab`, header and summary                               |
+| Feedback       | [feedback.md](shared/feedback.md)             | loading, error, empty, no-results, access-denied, alert/notification    |
+| Fields         | [fields.md](shared/fields.md)                 | text, number, currency, date/time, select, enum, lookup, generated code |
+| Forms          | [forms.md](shared/forms.md)                   | layout, entity form, validation summaries, local entity-form hook       |
+| Logistics      | [logistics.md](shared/logistics.md)           | postal and electronic-address drawers                                   |
+| Lookups        | [lookups.md](shared/lookups.md)               | virtualized grid lookup, form wrapper, dialog lookup                    |
+| Record preview | [record-preview.md](shared/record-preview.md) | `RecordPreview`, `RecordPreviewCard`, entity registry, generic loaders  |
+| Page           | [page.md](shared/page.md)                     | page structure, related information, utility rail, unsaved guard        |
+| Status         | this page                                     | `StatusBadge`, `RecordStatus`, `DocumentStatus` alias                   |
 
 ## Other shared areas
 

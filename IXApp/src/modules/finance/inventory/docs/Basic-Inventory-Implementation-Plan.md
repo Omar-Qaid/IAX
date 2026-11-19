@@ -28,18 +28,18 @@ Transfer orders with transit are an optional extension after the basic release; 
 
 ### Recommended first-release configuration
 
-| Setting | Initial decision | Reason |
-| --- | --- | --- |
-| Costing | FIFO only | One supported periodic model is enough for a basic release; it still requires close and settlement |
-| Inventory dimensions | Site + warehouse | Minimal practical stock segregation |
-| Financial inventory dimensions | Site only; warehouse not financial | Value pooled by site, stock tracked by warehouse |
-| Physical negative inventory | Disabled | Prevent quantities falling below allowed available stock |
-| Financial negative inventory | Disabled initially | Require financially supported issues; invoice receipts before dependent financial issues when necessary |
-| Include physical value in estimated cost | Disabled initially | Simpler estimate basis; received-not-invoiced quantities remain visible physically |
-| Reservation | Manual physical reservation only | No ordered reservation, automatic reservation hierarchy, or soft allocation engine |
-| Currency | Accounting currency in inventory engine | Shared AP/AR services perform currency conversion before financial inventory posting |
-| Returns | Original-document reference required | Avoid unsupported guesses about cost reversal |
-| Posting | All-or-nothing per posting request | No partially committed journal |
+| Setting                                  | Initial decision                        | Reason                                                                                                  |
+| ---------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Costing                                  | FIFO only                               | One supported periodic model is enough for a basic release; it still requires close and settlement      |
+| Inventory dimensions                     | Site + warehouse                        | Minimal practical stock segregation                                                                     |
+| Financial inventory dimensions           | Site only; warehouse not financial      | Value pooled by site, stock tracked by warehouse                                                        |
+| Physical negative inventory              | Disabled                                | Prevent quantities falling below allowed available stock                                                |
+| Financial negative inventory             | Disabled initially                      | Require financially supported issues; invoice receipts before dependent financial issues when necessary |
+| Include physical value in estimated cost | Disabled initially                      | Simpler estimate basis; received-not-invoiced quantities remain visible physically                      |
+| Reservation                              | Manual physical reservation only        | No ordered reservation, automatic reservation hierarchy, or soft allocation engine                      |
+| Currency                                 | Accounting currency in inventory engine | Shared AP/AR services perform currency conversion before financial inventory posting                    |
+| Returns                                  | Original-document reference required    | Avoid unsupported guesses about cost reversal                                                           |
+| Posting                                  | All-or-nothing per posting request      | No partially committed journal                                                                          |
 
 These are scope decisions for this implementation, not universal Microsoft defaults. If an issue lacks a supported cost basis or financial receipt coverage, block it with an actionable validation message. Do not silently enable negative inventory.
 
@@ -49,40 +49,40 @@ Preserve copied AX/D365 scalar columns. Use existing fields and enums; add navig
 
 ### Core table catalog
 
-| Area | Principal tables | Purpose and expected owner |
-| --- | --- | --- |
-| Company/setup | DataArea, CompanyInfo, InventParameters | Existing company context and inventory configuration |
-| Number sequences | NumberSequenceTable, NumberSequenceReference, NumberSequenceScope; applicable sequence state/list tables in target version | Shared numbering service for items, journals, vouchers and inventory transaction IDs |
-| Sites/warehouses | InventSite, InventLocation | Inventory-owned basic storage masters |
-| Dimension values | InventDim | Reusable dimension combinations; validate company and warehouse/site relationship |
-| Dimension setup | EcoResStorageDimensionGroup, EcoResStorageDimensionGroupFldSetup, EcoResStorageDimensionGroupItem; EcoResTrackingDimensionGroup, EcoResTrackingDimensionGroupFldSetup, EcoResTrackingDimensionGroupItem | Active physical/financial dimensions and released-item assignments; verify target-version mappings |
-| Shared products | EcoResProduct, EcoResProductTranslation | Product identity and translated names |
-| Released items | InventTable, InventTableModule | Company-specific item and inventory/purchase/sales unit and module settings |
-| Item groups | InventItemGroup, InventItemGroupItem | Group definition and item assignment |
-| Model groups | InventModelGroup, InventModelGroupItem | Stocked/model/negative-inventory policies and item assignment |
-| Units | UnitOfMeasure, UnitOfMeasureConversion; applicable conversion support tables | Shared unit identity and conversions, including product-specific conversion where supported |
-| Barcode | InventItemBarcode | Simple barcode lookup; not a warehouse scanning workflow |
-| Default ordering | InventItemInventSetup, InventItemPurchSetup, InventItemSalesSetup | Existing default site/warehouse, quantity and stopped-order controls as supported |
-| Posting setup | InventPosting, MainAccount, DimensionAttributeValueCombination and relevant shared dimension tables | Inventory posting account resolution and ledger dimensions |
-| Journal definitions | InventJournalName | Journal type, voucher and account defaults |
-| Journal documents | InventJournalTable, InventJournalTrans | Journal header and lines; counting and transfer use type-specific fields on these tables |
-| Source tracking | InventTransOrigin; applicable origin link tables such as InventTransOriginPurchLine and InventTransOriginSalesLine | Source identity and traceability |
-| Transaction detail | InventTrans | Quantity, receipt/issue state, dimensions, posting dates and inventory cost |
-| Current stock summary | InventSum | Derived current totals by item/dimensions, maintained by the posting/reservation engine |
-| Inventory-to-ledger trace | InventTransPosting | Physical/financial posting references; use target-version relationships |
-| Cost settlement | InventSettlement, InventClosing | Cost adjustments/settlement trace and close/recalculation run information |
-| General ledger | GeneralJournalEntry, GeneralJournalAccountEntry, SubledgerVoucherGeneralJournalEntry | Owned by shared ledger posting service; additional subledger staging tables depend on existing architecture |
+| Area                      | Principal tables                                                                                                                                                                                        | Purpose and expected owner                                                                                  |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Company/setup             | DataArea, CompanyInfo, InventParameters                                                                                                                                                                 | Existing company context and inventory configuration                                                        |
+| Number sequences          | NumberSequenceTable, NumberSequenceReference, NumberSequenceScope; applicable sequence state/list tables in target version                                                                              | Shared numbering service for items, journals, vouchers and inventory transaction IDs                        |
+| Sites/warehouses          | InventSite, InventLocation                                                                                                                                                                              | Inventory-owned basic storage masters                                                                       |
+| Dimension values          | InventDim                                                                                                                                                                                               | Reusable dimension combinations; validate company and warehouse/site relationship                           |
+| Dimension setup           | EcoResStorageDimensionGroup, EcoResStorageDimensionGroupFldSetup, EcoResStorageDimensionGroupItem; EcoResTrackingDimensionGroup, EcoResTrackingDimensionGroupFldSetup, EcoResTrackingDimensionGroupItem | Active physical/financial dimensions and released-item assignments; verify target-version mappings          |
+| Shared products           | EcoResProduct, EcoResProductTranslation                                                                                                                                                                 | Product identity and translated names                                                                       |
+| Released items            | InventTable, InventTableModule                                                                                                                                                                          | Company-specific item and inventory/purchase/sales unit and module settings                                 |
+| Item groups               | InventItemGroup, InventItemGroupItem                                                                                                                                                                    | Group definition and item assignment                                                                        |
+| Model groups              | InventModelGroup, InventModelGroupItem                                                                                                                                                                  | Stocked/model/negative-inventory policies and item assignment                                               |
+| Units                     | UnitOfMeasure, UnitOfMeasureConversion; applicable conversion support tables                                                                                                                            | Shared unit identity and conversions, including product-specific conversion where supported                 |
+| Barcode                   | InventItemBarcode                                                                                                                                                                                       | Simple barcode lookup; not a warehouse scanning workflow                                                    |
+| Default ordering          | InventItemInventSetup, InventItemPurchSetup, InventItemSalesSetup                                                                                                                                       | Existing default site/warehouse, quantity and stopped-order controls as supported                           |
+| Posting setup             | InventPosting, MainAccount, DimensionAttributeValueCombination and relevant shared dimension tables                                                                                                     | Inventory posting account resolution and ledger dimensions                                                  |
+| Journal definitions       | InventJournalName                                                                                                                                                                                       | Journal type, voucher and account defaults                                                                  |
+| Journal documents         | InventJournalTable, InventJournalTrans                                                                                                                                                                  | Journal header and lines; counting and transfer use type-specific fields on these tables                    |
+| Source tracking           | InventTransOrigin; applicable origin link tables such as InventTransOriginPurchLine and InventTransOriginSalesLine                                                                                      | Source identity and traceability                                                                            |
+| Transaction detail        | InventTrans                                                                                                                                                                                             | Quantity, receipt/issue state, dimensions, posting dates and inventory cost                                 |
+| Current stock summary     | InventSum                                                                                                                                                                                               | Derived current totals by item/dimensions, maintained by the posting/reservation engine                     |
+| Inventory-to-ledger trace | InventTransPosting                                                                                                                                                                                      | Physical/financial posting references; use target-version relationships                                     |
+| Cost settlement           | InventSettlement, InventClosing                                                                                                                                                                         | Cost adjustments/settlement trace and close/recalculation run information                                   |
+| General ledger            | GeneralJournalEntry, GeneralJournalAccountEntry, SubledgerVoucherGeneralJournalEntry                                                                                                                    | Owned by shared ledger posting service; additional subledger staging tables depend on existing architecture |
 
 Do not assume each table has DataAreaId. Shared products, unit tables, and cross-company assignment tables have different ownership patterns. Do not apply a blind company filter to every entity. Some assignment tables use ItemDataAreaId or other company columns instead.
 
 ### Purchase and sales integration tables
 
-| Flow | Read/update source documents | Posted evidence owned by source module | Other downstream dependencies |
-| --- | --- | --- | --- |
-| PO receipt | PurchTable, PurchLine | VendPackingSlipJour, VendPackingSlipTrans | Inventory engine and optional receipt accrual ledger |
-| PO invoice | PurchTable, PurchLine; posted receipt matching | VendInvoiceJour, VendInvoiceTrans | VendTrans and relevant tax/subledger tables owned by AP |
-| SO delivery | SalesTable, SalesLine | CustPackingSlipJour, CustPackingSlipTrans | Inventory engine and optional physical COGS ledger |
-| SO invoice | SalesTable, SalesLine; posted delivery matching | CustInvoiceJour, CustInvoiceTrans | CustTrans and relevant tax/subledger tables owned by AR |
+| Flow                   | Read/update source documents                                       | Posted evidence owned by source module        | Other downstream dependencies                                            |
+| ---------------------- | ------------------------------------------------------------------ | --------------------------------------------- | ------------------------------------------------------------------------ |
+| PO receipt             | PurchTable, PurchLine                                              | VendPackingSlipJour, VendPackingSlipTrans     | Inventory engine and optional receipt accrual ledger                     |
+| PO invoice             | PurchTable, PurchLine; posted receipt matching                     | VendInvoiceJour, VendInvoiceTrans             | VendTrans and relevant tax/subledger tables owned by AP                  |
+| SO delivery            | SalesTable, SalesLine                                              | CustPackingSlipJour, CustPackingSlipTrans     | Inventory engine and optional physical COGS ledger                       |
+| SO invoice             | SalesTable, SalesLine; posted delivery matching                    | CustInvoiceJour, CustInvoiceTrans             | CustTrans and relevant tax/subledger tables owned by AR                  |
 | Customer/vendor return | Corresponding Sales/Purch documents and original posted references | Corresponding credit/delivery/receipt records | Existing return-reference/origin relationships and cost-settlement logic |
 
 This inventory project consumes existing purchasing, sales, AP, AR and GL contracts. Build only the inventory integration needed if those modules are incomplete; do not expand into full procurement, sales pricing, tax, payments or collections.
@@ -112,17 +112,17 @@ This inventory project consumes existing purchasing, sales, AP, AR and GL contra
 
 ### Simplified state model for the supported scope
 
-| Event | Receipt state | Issue state | Physical quantity effect |
-| --- | --- | --- | --- |
-| Create PO line | Ordered | None | 0 |
-| Post PO product receipt | Received | None | +received quantity |
-| Invoice received PO quantity | Purchased | None | 0 additional |
-| Create SO line | None | OnOrder | 0 |
-| Reserve physical stock | None | ReservPhysical on reserved split | 0; available quantity decreases |
-| Deliver SO quantity | None | Deducted | -delivered quantity |
-| Invoice delivered SO quantity | None | Sold | 0 additional |
-| Positive posted quantity journal | Purchased | None | +quantity; physical and financial update together |
-| Negative posted quantity journal | None | Sold | -quantity; physical and financial update together |
+| Event                            | Receipt state | Issue state                      | Physical quantity effect                          |
+| -------------------------------- | ------------- | -------------------------------- | ------------------------------------------------- |
+| Create PO line                   | Ordered       | None                             | 0                                                 |
+| Post PO product receipt          | Received      | None                             | +received quantity                                |
+| Invoice received PO quantity     | Purchased     | None                             | 0 additional                                      |
+| Create SO line                   | None          | OnOrder                          | 0                                                 |
+| Reserve physical stock           | None          | ReservPhysical on reserved split | 0; available quantity decreases                   |
+| Deliver SO quantity              | None          | Deducted                         | -delivered quantity                               |
+| Invoice delivered SO quantity    | None          | Sold                             | 0 additional                                      |
+| Positive posted quantity journal | Purchased     | None                             | +quantity; physical and financial update together |
+| Negative posted quantity journal | None          | Sold                             | -quantity; physical and financial update together |
 
 Registered/Arrived/ReservOrdered/Picked and other states must not be exposed as working features unless their processes are implemented. Read enum values from the copied version; do not hard-code guessed integer values. Returns use the opposite receipt/issue direction of the original flow and require their own transitions.
 
@@ -291,19 +291,19 @@ Build and verify the inventory core, FIFO costing, reports, and migration prepar
 
 All amounts SAR, no tax, site JED, cost 10/EA for every movement. Main and Shop warehouses share one site financial pool. All inbound quantities are financially posted before dependent financial issues. Returns are linked; figures are final inventory cost, not revenue.
 
-| Step | Event | Main EA | Shop EA | Company EA | Inventory value | Main physical reservation | Main available |
-| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| 0 | Initial | 0 | 0 | 0 | 0 | 0 | 0 |
-| 1 | Opening +100 Main | 100 | 0 | 100 | 1,000 | 0 | 100 |
-| 2 | Purchase receive and invoice +50 Main | 150 | 0 | 150 | 1,500 | 0 | 150 |
-| 3 | Reserve 40 Main | 150 | 0 | 150 | 1,500 | 40 | 110 |
-| 4 | Deliver/invoice reserved 40 | 110 | 0 | 110 | 1,100 | 0 | 110 |
-| 5 | Transfer 30 Main to Shop | 80 | 30 | 110 | 1,100 | 0 | 80 |
-| 6 | Count Shop at 28; difference -2 | 80 | 28 | 108 | 1,080 | 0 | 80 |
-| 7 | Customer return +5 to Main | 85 | 28 | 113 | 1,130 | 0 | 85 |
-| 8 | Vendor return -10 from Main | 75 | 28 | 103 | 1,030 | 0 | 75 |
-| 9 | Internal consumption -3 Main | 72 | 28 | 100 | 1,000 | 0 | 72 |
-| 10 | Adjustment gain +2 Shop | 72 | 30 | 102 | 1,020 | 0 | 72 |
+| Step | Event                                 | Main EA | Shop EA | Company EA | Inventory value | Main physical reservation | Main available |
+| ---- | ------------------------------------- | ------: | ------: | ---------: | --------------: | ------------------------: | -------------: |
+| 0    | Initial                               |       0 |       0 |          0 |               0 |                         0 |              0 |
+| 1    | Opening +100 Main                     |     100 |       0 |        100 |           1,000 |                         0 |            100 |
+| 2    | Purchase receive and invoice +50 Main |     150 |       0 |        150 |           1,500 |                         0 |            150 |
+| 3    | Reserve 40 Main                       |     150 |       0 |        150 |           1,500 |                        40 |            110 |
+| 4    | Deliver/invoice reserved 40           |     110 |       0 |        110 |           1,100 |                         0 |            110 |
+| 5    | Transfer 30 Main to Shop              |      80 |      30 |        110 |           1,100 |                         0 |             80 |
+| 6    | Count Shop at 28; difference -2       |      80 |      28 |        108 |           1,080 |                         0 |             80 |
+| 7    | Customer return +5 to Main            |      85 |      28 |        113 |           1,130 |                         0 |             85 |
+| 8    | Vendor return -10 from Main           |      75 |      28 |        103 |           1,030 |                         0 |             75 |
+| 9    | Internal consumption -3 Main          |      72 |      28 |        100 |           1,000 |                         0 |             72 |
+| 10   | Adjustment gain +2 Shop               |      72 |      30 |        102 |           1,020 |                         0 |             72 |
 
 Proof: 100 opening +50 purchase -40 sale -2 count +5 customer return -10 vendor return -3 consumption +2 gain = 102 EA. Transfer has zero company-level quantity effect. Value = 102 × 10 = 1,020. FIFO close has no adjustment in this equal-cost example.
 
@@ -311,64 +311,64 @@ Proof: 100 opening +50 purchase -40 sale -2 count +5 customer return -10 vendor 
 
 Each case is independent unless it refers to the full-cycle example. Use real SQL Server for concurrency/transaction behavior, not EF's in-memory provider.
 
-| ID | Case / input | Expected result |
-| --- | --- | --- |
-| B01 | Create item without model group | Validation failure; no operational stock |
-| B02 | Same item ID in different companies | Allowed if independently released; balances isolated |
-| B03 | Warehouse/site mismatch | Reject dimension resolution/posting |
-| B04 | Resolve same active dimension combination twice | Reuse same dimension identity |
-| B05 | Purchase 3 BOX, 10 EA/BOX, amount 300 | Inventory 30 EA; cost 10/EA |
-| B06 | Missing BOX-to-EA conversion | Reject before posting |
-| B07 | Barcode lookup | Resolves correct item/unit; no quantity movement |
-| B08 | Nonstocked service in inventory journal | Reject; no InventSum stock |
-| B09 | Opening +100 at 10 | Physical/financial quantity 100; value 1,000 |
-| B10 | Adjustment -4 from 100 at 10 | Stock 96; loss 40 |
-| B11 | Movement -3 to consumption from 10 at 10 | Stock 7; expense 30 |
-| B12 | Multi-line journal includes invalid line | Entire request rolled back, including ledger |
-| B13 | Same journal posted twice | One stock effect and one logical voucher result |
-| B14 | Edit posted journal quantity | Reject; correction requires supported reversing document |
-| B15 | Two simultaneous 8-unit issues against 10 | One succeeds; other fails/revalidates; final 2 |
-| B16 | Reserve 30 of 100 | Physical 100; reserved 30; available 70 |
-| B17 | Reserve 80 when only 70 available | Reject or explicitly reserve only 70 through partial-reserve command |
-| B18 | Release 10 from reservation 30 | Physical 100; reserved 20; available 80 |
-| B19 | Another order consumes reserved quantity | Reject unavailable portion |
-| B20 | Deliver 20 of own reservation 30 | Physical -20; reserved -20; no double consumption |
-| B21 | Transfer 30 Main to Shop | Paired -30/+30; company quantity/value unchanged |
-| B22 | Transfer same dimensions | Reject no-op |
-| B23 | Transfer exceeds free source stock | Reject, neither side changes |
-| B24 | Fail destination write after source attempt | Roll back source, destination and ledger |
-| B25 | Count expected 50, actual 47 | Post -3 only |
-| B26 | Count expected 50, actual 52 | Post +2 only using supported receipt cost |
-| B27 | Count expected 50, actual 50 | No inventory movement; retain count evidence |
-| B28 | Try movement during active locked count | Reject affected movement; no stale count posting |
-| B29 | PO ordered 100, receipt 60 | Physical +60; outstanding ordered 40 |
-| B30 | Invoice received 60 | No extra physical +60; financial quantity/value updated |
-| B31 | Invoice 61 with only 60 received | Reject under receipt-first initial policy |
-| B32 | Receive above remaining PO quantity | Reject under no-overreceipt policy |
-| B33 | Cancel remaining PO 40 after receipt 60 | Remove only outstanding 40; physical remains 60 |
-| B34 | Sales order before delivery | Demand only; no stock decrement |
-| B35 | Deliver 20 then invoice 20 | One physical -20; final financial cost once |
-| B36 | Invoice quantity above delivered | Reject under delivery-first initial policy |
-| B37 | Customer return 5 of original sold 20 | +5 physical once; credit and cost reversal supported |
-| B38 | Customer return total exceeds original 20 | Reject excess, accounting for prior returns |
-| B39 | Vendor return 10 with sufficient linked stock | -10 once; original-linked value/AP credit |
-| B40 | Vendor return without available physical stock | Reject |
-| B41 | Pure price credit with no goods returned | No stock movement; source financial module handles credit |
-| B42 | Backdate to closed inventory period | Reject even if document was drafted earlier |
-| B43 | Backdate to closed GL period | Reject even if inventory period is open |
-| B44 | Change item's FIFO model after transactions | Block ordinary edit; require separately designed conversion |
-| B45 | FIFO receipts 100@10 and 100@12, issue 150 | After close: COGS 1,600; remaining 50 worth 600 |
-| B46 | Receipt invoice cost increase after issue | Propagate cost to issue and remainder; no quantity change |
-| B47 | Repeat completed close/post request | No duplicate settlements or GL adjustments |
-| B48 | Lookup same voucher text in another company | Never join to wrong company/source |
-| B49 | Historical report before later movement | Excludes later quantity/cost events according to dates; not today's InventSum |
-| B50 | Rebuild/check stock summary from transaction detail | Same current quantities; differences diagnosed before repair |
+| ID  | Case / input                                        | Expected result                                                                   |
+| --- | --------------------------------------------------- | --------------------------------------------------------------------------------- |
+| B01 | Create item without model group                     | Validation failure; no operational stock                                          |
+| B02 | Same item ID in different companies                 | Allowed if independently released; balances isolated                              |
+| B03 | Warehouse/site mismatch                             | Reject dimension resolution/posting                                               |
+| B04 | Resolve same active dimension combination twice     | Reuse same dimension identity                                                     |
+| B05 | Purchase 3 BOX, 10 EA/BOX, amount 300               | Inventory 30 EA; cost 10/EA                                                       |
+| B06 | Missing BOX-to-EA conversion                        | Reject before posting                                                             |
+| B07 | Barcode lookup                                      | Resolves correct item/unit; no quantity movement                                  |
+| B08 | Nonstocked service in inventory journal             | Reject; no InventSum stock                                                        |
+| B09 | Opening +100 at 10                                  | Physical/financial quantity 100; value 1,000                                      |
+| B10 | Adjustment -4 from 100 at 10                        | Stock 96; loss 40                                                                 |
+| B11 | Movement -3 to consumption from 10 at 10            | Stock 7; expense 30                                                               |
+| B12 | Multi-line journal includes invalid line            | Entire request rolled back, including ledger                                      |
+| B13 | Same journal posted twice                           | One stock effect and one logical voucher result                                   |
+| B14 | Edit posted journal quantity                        | Reject; correction requires supported reversing document                          |
+| B15 | Two simultaneous 8-unit issues against 10           | One succeeds; other fails/revalidates; final 2                                    |
+| B16 | Reserve 30 of 100                                   | Physical 100; reserved 30; available 70                                           |
+| B17 | Reserve 80 when only 70 available                   | Reject or explicitly reserve only 70 through partial-reserve command              |
+| B18 | Release 10 from reservation 30                      | Physical 100; reserved 20; available 80                                           |
+| B19 | Another order consumes reserved quantity            | Reject unavailable portion                                                        |
+| B20 | Deliver 20 of own reservation 30                    | Physical -20; reserved -20; no double consumption                                 |
+| B21 | Transfer 30 Main to Shop                            | Paired -30/+30; company quantity/value unchanged                                  |
+| B22 | Transfer same dimensions                            | Reject no-op                                                                      |
+| B23 | Transfer exceeds free source stock                  | Reject, neither side changes                                                      |
+| B24 | Fail destination write after source attempt         | Roll back source, destination and ledger                                          |
+| B25 | Count expected 50, actual 47                        | Post -3 only                                                                      |
+| B26 | Count expected 50, actual 52                        | Post +2 only using supported receipt cost                                         |
+| B27 | Count expected 50, actual 50                        | No inventory movement; retain count evidence                                      |
+| B28 | Try movement during active locked count             | Reject affected movement; no stale count posting                                  |
+| B29 | PO ordered 100, receipt 60                          | Physical +60; outstanding ordered 40                                              |
+| B30 | Invoice received 60                                 | No extra physical +60; financial quantity/value updated                           |
+| B31 | Invoice 61 with only 60 received                    | Reject under receipt-first initial policy                                         |
+| B32 | Receive above remaining PO quantity                 | Reject under no-overreceipt policy                                                |
+| B33 | Cancel remaining PO 40 after receipt 60             | Remove only outstanding 40; physical remains 60                                   |
+| B34 | Sales order before delivery                         | Demand only; no stock decrement                                                   |
+| B35 | Deliver 20 then invoice 20                          | One physical -20; final financial cost once                                       |
+| B36 | Invoice quantity above delivered                    | Reject under delivery-first initial policy                                        |
+| B37 | Customer return 5 of original sold 20               | +5 physical once; credit and cost reversal supported                              |
+| B38 | Customer return total exceeds original 20           | Reject excess, accounting for prior returns                                       |
+| B39 | Vendor return 10 with sufficient linked stock       | -10 once; original-linked value/AP credit                                         |
+| B40 | Vendor return without available physical stock      | Reject                                                                            |
+| B41 | Pure price credit with no goods returned            | No stock movement; source financial module handles credit                         |
+| B42 | Backdate to closed inventory period                 | Reject even if document was drafted earlier                                       |
+| B43 | Backdate to closed GL period                        | Reject even if inventory period is open                                           |
+| B44 | Change item's FIFO model after transactions         | Block ordinary edit; require separately designed conversion                       |
+| B45 | FIFO receipts 100@10 and 100@12, issue 150          | After close: COGS 1,600; remaining 50 worth 600                                   |
+| B46 | Receipt invoice cost increase after issue           | Propagate cost to issue and remainder; no quantity change                         |
+| B47 | Repeat completed close/post request                 | No duplicate settlements or GL adjustments                                        |
+| B48 | Lookup same voucher text in another company         | Never join to wrong company/source                                                |
+| B49 | Historical report before later movement             | Excludes later quantity/cost events according to dates; not today's InventSum     |
+| B50 | Rebuild/check stock summary from transaction detail | Same current quantities; differences diagnosed before repair                      |
 | B51 | Negative quantity journal asks arbitrary issue cost | Reject supplied override or ignore by documented contract; engine calculates cost |
-| B52 | Ledger write fails during inventory posting | Entire posting rolls back |
-| B53 | Return original issue later adjusted by close | Linked return value follows tested settlement policy |
-| B54 | Cross-site transfer | Reject until financial pool/account propagation is implemented and tested |
-| B55 | Inactive dimensions supplied in request | Reject; do not silently create hidden stock partitions |
-| B56 | As-of inventory value vs GL | Reconcile posted inventory accounts plus explicitly listed timing differences |
+| B52 | Ledger write fails during inventory posting         | Entire posting rolls back                                                         |
+| B53 | Return original issue later adjusted by close       | Linked return value follows tested settlement policy                              |
+| B54 | Cross-site transfer                                 | Reject until financial pool/account propagation is implemented and tested         |
+| B55 | Inactive dimensions supplied in request             | Reject; do not silently create hidden stock partitions                            |
+| B56 | As-of inventory value vs GL                         | Reconcile posted inventory accounts plus explicitly listed timing differences     |
 
 This matrix covers the declared basic scope. It is not a claim to cover every AX/D365 feature or configuration combination.
 

@@ -52,7 +52,7 @@ export function HcmShowroomAssignmentsPanel({
         editable: !history,
         valueGetter: ({ row }) =>
           `${row.personnelNumber} — ${localizedName({ name: row.workerName, nameAlias: row.workerNameAlias }, isRtl)}`,
-      renderEditCell: ({ value, onChange, disabled }) => (
+        renderEditCell: ({ value, onChange, disabled }) => (
           <AppLookupField
             name="hcmWorkerId"
             label={t('hcmShowrooms.fields.worker')}
@@ -68,7 +68,7 @@ export function HcmShowroomAssignmentsPanel({
               })
             }
             queryKey={['hcm-showroom-worker-lookup', company, Number(value) || 0]}
-          disabled={disabled}
+            disabled={disabled}
             displayMode="select"
             sideMode="server"
             searchable

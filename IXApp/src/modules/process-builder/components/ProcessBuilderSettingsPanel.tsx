@@ -70,10 +70,51 @@ const requestOptionControlTypes = new Set([
   'radiobuttonlist',
   'table',
 ]);
-const referenceTypes: BuilderReferenceType[] = ['Lookup', 'Employee', 'Showroom', 'Branch', 'Company', 'Department', 'BusinessUnit', 'Area', 'City', 'Country', 'Location', 'Customer', 'Vendor', 'Item', 'ItemGroup', 'Category', 'Warehouse', 'PaymentMethod', 'ViolationType', 'Invoice', 'PurchaseOrder', 'SalesOrder', 'Process', 'User'];
+const referenceTypes: BuilderReferenceType[] = [
+  'Lookup',
+  'Employee',
+  'Showroom',
+  'Branch',
+  'Company',
+  'Department',
+  'BusinessUnit',
+  'Area',
+  'City',
+  'Country',
+  'Location',
+  'Customer',
+  'Vendor',
+  'Item',
+  'ItemGroup',
+  'Category',
+  'Warehouse',
+  'PaymentMethod',
+  'ViolationType',
+  'Invoice',
+  'PurchaseOrder',
+  'SalesOrder',
+  'Process',
+  'User',
+];
 const fieldRoles: BuilderFieldRole[] = ['Dimension', 'Measure', 'Both'];
-const reportingDataTypes: BuilderReportingDataType[] = ['String', 'Integer', 'Decimal', 'Date', 'DateTime', 'Time', 'Boolean'];
-const aggregations: BuilderAggregation[] = ['NONE', 'SUM', 'COUNT', 'COUNT_DISTINCT', 'AVG', 'MIN', 'MAX'];
+const reportingDataTypes: BuilderReportingDataType[] = [
+  'String',
+  'Integer',
+  'Decimal',
+  'Date',
+  'DateTime',
+  'Time',
+  'Boolean',
+];
+const aggregations: BuilderAggregation[] = [
+  'NONE',
+  'SUM',
+  'COUNT',
+  'COUNT_DISTINCT',
+  'AVG',
+  'MIN',
+  'MAX',
+];
 const emptyOptionFeatures = (): BuilderOptionFeatureConfiguration => ({
   requireFileUpload: false,
   sendAlertMessage: false,
@@ -83,7 +124,9 @@ const emptyOptionFeatures = (): BuilderOptionFeatureConfiguration => ({
   visibleControlIds: [],
 });
 
-type ReferenceFilter = NonNullable<import('../types/processBuilderTypes').BuilderControl['referenceFilter']>;
+type ReferenceFilter = NonNullable<
+  import('../types/processBuilderTypes').BuilderControl['referenceFilter']
+>;
 
 function ReferenceFilterEditor({
   referenceType,
@@ -102,72 +145,167 @@ function ReferenceFilterEditor({
   const rules = value?.rules ?? [];
   const base = value ?? { departmentId: null, occupationId: null, managerLevel: null, rules: [] };
   const updateRule = (id: string, patch: Partial<(typeof rules)[number]>) =>
-    onChange({ ...base, rules: rules.map((rule) => rule.id === id ? { ...rule, ...patch } : rule) });
+    onChange({
+      ...base,
+      rules: rules.map((rule) => (rule.id === id ? { ...rule, ...patch } : rule)),
+    });
   return (
     <Stack spacing="8px">
       <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
         <Typography sx={{ fontSize: 12, fontWeight: 800 }}>
           {t('wfProcessBuilder.settings.referenceFilter', { defaultValue: 'Database filter' })}
         </Typography>
-        <Button size="small" onClick={() => onChange({ ...base, rules: [...rules, { id: crypto.randomUUID(), field: '', operator: 'equals', value: '' }] })}>
+        <Button
+          size="small"
+          onClick={() =>
+            onChange({
+              ...base,
+              rules: [
+                ...rules,
+                { id: crypto.randomUUID(), field: '', operator: 'equals', value: '' },
+              ],
+            })
+          }
+        >
           {t('wfProcessBuilder.settings.addFilter', { defaultValue: 'Add filter' })}
         </Button>
       </Stack>
       {rules.map((rule) => {
         const field = fields.data?.find((item) => item.name === rule.field);
         return (
-          <Box key={rule.id} sx={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.6fr) 28px',
-            gap: '10px 8px',
-            alignItems: 'start',
-            p: '12px 10px 10px',
-            border: '1px solid',
-            borderColor: 'divider',
-            borderRadius: 1,
-            bgcolor: 'background.paper',
-            '& .MuiFormControl-root, & .MuiAutocomplete-root': { minWidth: 0 },
-          }}>
-            <TextField select fullWidth size="small" label={t('wfProcessBuilder.settings.fields.field', { defaultValue: 'Field' })}
-              sx={{ gridColumn: '1 / 3', '& .MuiSelect-select': { whiteSpace: 'normal', overflowWrap: 'anywhere' } }}
-              value={rule.field} onChange={(event) => {
+          <Box
+            key={rule.id}
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.6fr) 28px',
+              gap: '10px 8px',
+              alignItems: 'start',
+              p: '12px 10px 10px',
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 1,
+              bgcolor: 'background.paper',
+              '& .MuiFormControl-root, & .MuiAutocomplete-root': { minWidth: 0 },
+            }}
+          >
+            <TextField
+              select
+              fullWidth
+              size="small"
+              label={t('wfProcessBuilder.settings.fields.field', { defaultValue: 'Field' })}
+              sx={{
+                gridColumn: '1 / 3',
+                '& .MuiSelect-select': { whiteSpace: 'normal', overflowWrap: 'anywhere' },
+              }}
+              value={rule.field}
+              onChange={(event) => {
                 const next = fields.data?.find((item) => item.name === event.target.value);
-                updateRule(rule.id, { field: event.target.value, operator: next?.operators[0] ?? 'equals', value: '' });
-              }}>
-              {(fields.data ?? []).map((item) => <MenuItem key={item.name} value={item.name} sx={{ whiteSpace: 'normal', overflowWrap: 'anywhere' }}>{item.name}</MenuItem>)}
+                updateRule(rule.id, {
+                  field: event.target.value,
+                  operator: next?.operators[0] ?? 'equals',
+                  value: '',
+                });
+              }}
+            >
+              {(fields.data ?? []).map((item) => (
+                <MenuItem
+                  key={item.name}
+                  value={item.name}
+                  sx={{ whiteSpace: 'normal', overflowWrap: 'anywhere' }}
+                >
+                  {item.name}
+                </MenuItem>
+              ))}
             </TextField>
-            <TextField select fullWidth size="small" label={t('wfProcessBuilder.settings.fields.operator', { defaultValue: 'Operator' })}
+            <TextField
+              select
+              fullWidth
+              size="small"
+              label={t('wfProcessBuilder.settings.fields.operator', { defaultValue: 'Operator' })}
               sx={{ gridColumn: '1', gridRow: '2' }}
-              value={rule.operator} disabled={!field} onChange={(event) => updateRule(rule.id, { operator: event.target.value })}>
-              {(field?.operators ?? []).map((operator) => <MenuItem key={operator} value={operator}>{operator}</MenuItem>)}
+              value={rule.operator}
+              disabled={!field}
+              onChange={(event) => updateRule(rule.id, { operator: event.target.value })}
+            >
+              {(field?.operators ?? []).map((operator) => (
+                <MenuItem key={operator} value={operator}>
+                  {operator}
+                </MenuItem>
+              ))}
             </TextField>
             <Box sx={{ gridColumn: '2 / 4', gridRow: '2', minWidth: 0 }}>
-            {field?.isForeignKey && !['isEmpty', 'isNotEmpty'].includes(rule.operator) ? (
-              <LookupField name={`referenceFilter_${rule.id}`} label={t('wfProcessBuilder.settings.fields.value', { defaultValue: 'Value' })}
-                value={rule.value || undefined} displayMode="select" searchable sideMode="server" lazyLoading pageSize={25}
-                queryKey={['workflow-reference-filter-values', referenceType, field.name]}
-                onChange={(next) => updateRule(rule.id, { value: next == null ? '' : String(next) })}
-                fetchPage={async (params) => {
-                  const page = await referenceFilterApi.values(referenceType, field.name, params);
-                  return { ...page, data: page.data.map((item) => ({ id: item.value, code: item.value, name: item.label, nameAlias: item.labelAlias })) };
-                }}
-              />
-            ) : !['isEmpty', 'isNotEmpty'].includes(rule.operator) ? (
-              <TextField fullWidth size="small" label={t('wfProcessBuilder.settings.fields.value', { defaultValue: 'Value' })}
-                type={field?.dataType === 'date' ? 'date' : field?.dataType === 'integer' || field?.dataType === 'decimal' ? 'number' : 'text'}
-                value={rule.value} onChange={(event) => updateRule(rule.id, { value: event.target.value })}
-                slotProps={field?.dataType === 'date' ? { inputLabel: { shrink: true } } : undefined} />
-            ) : null}
+              {field?.isForeignKey && !['isEmpty', 'isNotEmpty'].includes(rule.operator) ? (
+                <LookupField
+                  name={`referenceFilter_${rule.id}`}
+                  label={t('wfProcessBuilder.settings.fields.value', { defaultValue: 'Value' })}
+                  value={rule.value || undefined}
+                  displayMode="select"
+                  searchable
+                  sideMode="server"
+                  lazyLoading
+                  pageSize={25}
+                  queryKey={['workflow-reference-filter-values', referenceType, field.name]}
+                  onChange={(next) =>
+                    updateRule(rule.id, { value: next == null ? '' : String(next) })
+                  }
+                  fetchPage={async (params) => {
+                    const page = await referenceFilterApi.values(referenceType, field.name, params);
+                    return {
+                      ...page,
+                      data: page.data.map((item) => ({
+                        id: item.value,
+                        code: item.value,
+                        name: item.label,
+                        nameAlias: item.labelAlias,
+                      })),
+                    };
+                  }}
+                />
+              ) : !['isEmpty', 'isNotEmpty'].includes(rule.operator) ? (
+                <TextField
+                  fullWidth
+                  size="small"
+                  label={t('wfProcessBuilder.settings.fields.value', { defaultValue: 'Value' })}
+                  type={
+                    field?.dataType === 'date'
+                      ? 'date'
+                      : field?.dataType === 'integer' || field?.dataType === 'decimal'
+                        ? 'number'
+                        : 'text'
+                  }
+                  value={rule.value}
+                  onChange={(event) => updateRule(rule.id, { value: event.target.value })}
+                  slotProps={
+                    field?.dataType === 'date' ? { inputLabel: { shrink: true } } : undefined
+                  }
+                />
+              ) : null}
             </Box>
-            <IconButton size="small" aria-label={t('actions.delete')} title={t('actions.delete')}
-              sx={{ gridColumn: '3', gridRow: '1', mt: '3px', color: 'text.secondary', '&:hover': { color: 'error.main', bgcolor: 'action.hover' } }}
-              onClick={() => onChange({ ...base, rules: rules.filter((item) => item.id !== rule.id) })}>
+            <IconButton
+              size="small"
+              aria-label={t('actions.delete')}
+              title={t('actions.delete')}
+              sx={{
+                gridColumn: '3',
+                gridRow: '1',
+                mt: '3px',
+                color: 'text.secondary',
+                '&:hover': { color: 'error.main', bgcolor: 'action.hover' },
+              }}
+              onClick={() =>
+                onChange({ ...base, rules: rules.filter((item) => item.id !== rule.id) })
+              }
+            >
               <Delete fontSize="small" />
             </IconButton>
           </Box>
         );
       })}
-      {fields.isError ? <Typography color="error" sx={{ fontSize: 11 }}>{t('common.loadFailed', { defaultValue: 'Could not load fields.' })}</Typography> : null}
+      {fields.isError ? (
+        <Typography color="error" sx={{ fontSize: 11 }}>
+          {t('common.loadFailed', { defaultValue: 'Could not load fields.' })}
+        </Typography>
+      ) : null}
     </Stack>
   );
 }
@@ -181,7 +319,6 @@ const builderTypeFromLabel = (
   if (normalized.includes('api')) return 'api';
   return 'approval';
 };
-
 
 const fetchCategoryPage = async ({
   pageNumber,
@@ -512,7 +649,11 @@ function ValidationRules({
                       : t('wfProcessBuilder.settings.value')
                   }
                   value={rule.value}
-                  helperText={rule.type === 'minDate' || rule.type === 'maxDate' ? t('wfProcessBuilder.settings.dateBoundHelp') : undefined}
+                  helperText={
+                    rule.type === 'minDate' || rule.type === 'maxDate'
+                      ? t('wfProcessBuilder.settings.dateBoundHelp')
+                      : undefined
+                  }
                   onChange={(event) => update(rule.id, { value: event.target.value })}
                 />
               )}
@@ -691,7 +832,11 @@ function TransitionRules({
                   disabled={transition.operator === 'isEmpty'}
                   onChange={(value) => onUpdate(transition.id, { value })}
                 />
-                <TransitionRuleGroup transition={transition} variables={variables} onChange={(patch) => onUpdate(transition.id, patch)} />
+                <TransitionRuleGroup
+                  transition={transition}
+                  variables={variables}
+                  onChange={(patch) => onUpdate(transition.id, patch)}
+                />
                 <TextField
                   select
                   size="small"
@@ -855,7 +1000,9 @@ export function ProcessBuilderSettingsPanel() {
           disabled
         />
         {text(t('wfProcess.fields.name'), d.name, (name) => s.updateProcess({ name }))}
-        {text(t('workflowSetup.fields.nameAlias'), d.nameAlias ?? '', (nameAlias) => s.updateProcess({ nameAlias }))}
+        {text(t('workflowSetup.fields.nameAlias'), d.nameAlias ?? '', (nameAlias) =>
+          s.updateProcess({ nameAlias })
+        )}
         <TextField
           fullWidth
           multiline
@@ -955,7 +1102,9 @@ export function ProcessBuilderSettingsPanel() {
             value={d.repeatIntervalHours ?? 0}
             disabled={!d.canRepeat}
             slotProps={{ htmlInput: { min: 0, max: 255, step: 1 } }}
-            onChange={(event) => s.updateProcess({ repeatIntervalHours: Number(event.target.value) })}
+            onChange={(event) =>
+              s.updateProcess({ repeatIntervalHours: Number(event.target.value) })
+            }
           />
         </Box>
         <Box sx={{ pt: '12px', borderTop: `1px solid ${tokens.border}` }}>
@@ -1099,7 +1248,9 @@ export function ProcessBuilderSettingsPanel() {
           x.name === 'New variable' ? t('wfProcessBuilder.structure.newVariable') : x.name,
           (name) => s.updateVariable(x.id, { name })
         )}
-        {text(t('workflowSetup.fields.nameAlias'), x.nameAlias ?? '', (nameAlias) => s.updateVariable(x.id, { nameAlias }))}
+        {text(t('workflowSetup.fields.nameAlias'), x.nameAlias ?? '', (nameAlias) =>
+          s.updateVariable(x.id, { nameAlias })
+        )}
         {text(t('wfProcessBuilder.settings.fields.description'), x.description, (description) =>
           s.updateVariable(x.id, { description })
         )}
@@ -1158,7 +1309,9 @@ export function ProcessBuilderSettingsPanel() {
         {text(`${t('wfProcessBuilder.settings.fields.stepName')} *`, x.name, (name) =>
           s.updateStep(x.id, { name })
         )}
-        {text(t('workflowSetup.fields.nameAlias'), x.nameAlias ?? '', (nameAlias) => s.updateStep(x.id, { nameAlias }))}
+        {text(t('workflowSetup.fields.nameAlias'), x.nameAlias ?? '', (nameAlias) =>
+          s.updateStep(x.id, { nameAlias })
+        )}
         <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 1 }}>
           {text(
             t('wfProcessBuilder.settings.fields.order'),
@@ -1250,7 +1403,9 @@ export function ProcessBuilderSettingsPanel() {
           x.name === 'New activity' ? t('wfProcessBuilder.structure.newActivity') : x.name,
           (name) => s.updateActivity(selected.stepId, x.id, { name })
         )}
-        {text(t('workflowSetup.fields.nameAlias'), x.nameAlias ?? '', (nameAlias) => s.updateActivity(selected.stepId, x.id, { nameAlias }))}
+        {text(t('workflowSetup.fields.nameAlias'), x.nameAlias ?? '', (nameAlias) =>
+          s.updateActivity(selected.stepId, x.id, { nameAlias })
+        )}
         <Stack spacing={1}>
           <AppLookupField
             name={`settings-performerId-${x.id}`}
@@ -1369,26 +1524,40 @@ export function ProcessBuilderSettingsPanel() {
             name={`activity-notification-template-${x.id}`}
             label={t('wfActivity.fields.notificationTemplate')}
             value={x.sysNotificationTemplateId ?? undefined}
-            options={(notificationTemplates.data ?? []).filter((item) => item.isActive || item.recId === x.sysNotificationTemplateId).map((item) => ({ id: item.recId, code: item.code, name: item.name }))}
-            onChange={(value) => s.updateActivity(selected.stepId, x.id, { sysNotificationTemplateId: value == null ? null : Number(value) })}
+            options={(notificationTemplates.data ?? [])
+              .filter((item) => item.isActive || item.recId === x.sysNotificationTemplateId)
+              .map((item) => ({ id: item.recId, code: item.code, name: item.name }))}
+            onChange={(value) =>
+              s.updateActivity(selected.stepId, x.id, {
+                sysNotificationTemplateId: value == null ? null : Number(value),
+              })
+            }
             displayMode="select"
           />
-          {notificationTemplates.isError && <Typography color="error" sx={{ fontSize: tokens.fontSize.caption }}>{t('wfProcessBuilder.settings.notificationTemplateLoadError')}</Typography>}
-          {([
-            'isSystemNotificationEnabled',
-            'isEmailNotificationEnabled',
-            'isSmsNotificationEnabled',
-            'isWhatsAppNotificationEnabled',
-            'canViewPreviousSteps',
-            'canViewPreviousDocuments',
-          ] as const).map((field) => (
+          {notificationTemplates.isError && (
+            <Typography color="error" sx={{ fontSize: tokens.fontSize.caption }}>
+              {t('wfProcessBuilder.settings.notificationTemplateLoadError')}
+            </Typography>
+          )}
+          {(
+            [
+              'isSystemNotificationEnabled',
+              'isEmailNotificationEnabled',
+              'isSmsNotificationEnabled',
+              'isWhatsAppNotificationEnabled',
+              'canViewPreviousSteps',
+              'canViewPreviousDocuments',
+            ] as const
+          ).map((field) => (
             <FormControlLabel
               key={field}
               control={
                 <Switch
                   size="small"
                   checked={x[field] ?? false}
-                  onChange={(_, checked) => s.updateActivity(selected.stepId, x.id, { [field]: checked })}
+                  onChange={(_, checked) =>
+                    s.updateActivity(selected.stepId, x.id, { [field]: checked })
+                  }
                 />
               }
               label={t(`wfActivity.fields.${field}`)}
@@ -1499,28 +1668,54 @@ export function ProcessBuilderSettingsPanel() {
           <SettingsTitle title={t('wfProcessBuilder.settings.reportingMetadata')} dirty={s.dirty} />
           <Stack spacing="8px">
             <TextField
-              fullWidth select size="small"
+              fullWidth
+              select
+              size="small"
               label={t('wfProcessBuilder.settings.fields.referenceType')}
               value={control.referenceType ?? ''}
-              onChange={(event) => update({
-                referenceType: (event.target.value || null) as BuilderReferenceType | null,
-                ...(event.target.value ? { fieldRole: 'Dimension', defaultAggregation: 'NONE', canFilter: true, canGroup: true, canSort: true } : {}),
-              })}
+              onChange={(event) =>
+                update({
+                  referenceType: (event.target.value || null) as BuilderReferenceType | null,
+                  ...(event.target.value
+                    ? {
+                        fieldRole: 'Dimension',
+                        defaultAggregation: 'NONE',
+                        canFilter: true,
+                        canGroup: true,
+                        canSort: true,
+                      }
+                    : {}),
+                })
+              }
             >
               <MenuItem value="">{t('common.none')}</MenuItem>
-              {referenceTypes.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}
+              {referenceTypes.map((value) => (
+                <MenuItem key={value} value={value}>
+                  {value}
+                </MenuItem>
+              ))}
             </TextField>
             <Stack direction="row" spacing="8px">
               <TextField
-                fullWidth select size="small"
+                fullWidth
+                select
+                size="small"
                 label={t('wfProcessBuilder.settings.fields.reportingDataType')}
                 value={control.dataType}
-                onChange={(event) => update({ dataType: event.target.value as BuilderReportingDataType })}
+                onChange={(event) =>
+                  update({ dataType: event.target.value as BuilderReportingDataType })
+                }
               >
-                {reportingDataTypes.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}
+                {reportingDataTypes.map((value) => (
+                  <MenuItem key={value} value={value}>
+                    {value}
+                  </MenuItem>
+                ))}
               </TextField>
               <TextField
-                fullWidth select size="small"
+                fullWidth
+                select
+                size="small"
                 label={t('wfProcessBuilder.settings.fields.fieldRole')}
                 value={control.fieldRole}
                 onChange={(event) => {
@@ -1535,22 +1730,40 @@ export function ProcessBuilderSettingsPanel() {
                   });
                 }}
               >
-                {fieldRoles.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}
+                {fieldRoles.map((value) => (
+                  <MenuItem key={value} value={value}>
+                    {value}
+                  </MenuItem>
+                ))}
               </TextField>
               <TextField
-                fullWidth select size="small"
+                fullWidth
+                select
+                size="small"
                 label={t('wfProcessBuilder.settings.fields.defaultAggregation')}
                 value={control.defaultAggregation}
-                onChange={(event) => update({ defaultAggregation: event.target.value as BuilderAggregation })}
+                onChange={(event) =>
+                  update({ defaultAggregation: event.target.value as BuilderAggregation })
+                }
               >
-                {aggregations.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}
+                {aggregations.map((value) => (
+                  <MenuItem key={value} value={value}>
+                    {value}
+                  </MenuItem>
+                ))}
               </TextField>
             </Stack>
             <Box sx={settingsSwitchGridSx}>
               {(['canFilter', 'canGroup', 'canSort'] as const).map((field) => (
                 <FormControlLabel
                   key={field}
-                  control={<Switch size="small" checked={control[field]} onChange={(_, checked) => update({ [field]: checked })} />}
+                  control={
+                    <Switch
+                      size="small"
+                      checked={control[field]}
+                      onChange={(_, checked) => update({ [field]: checked })}
+                    />
+                  }
                   label={t(`wfProcessBuilder.settings.fields.${field}`)}
                 />
               ))}
@@ -1597,7 +1810,10 @@ export function ProcessBuilderSettingsPanel() {
                         }
                       ),
                     ],
-                    optionAliases: [...(control.optionAliases ?? control.options.map(() => '')), ''],
+                    optionAliases: [
+                      ...(control.optionAliases ?? control.options.map(() => '')),
+                      '',
+                    ],
                     optionScores: [...(control.optionScores ?? []), 0],
                     optionFeatureConfigurations: [
                       ...(control.optionFeatureConfigurations ??
@@ -1972,9 +2188,13 @@ export function ProcessBuilderSettingsPanel() {
           onChange={(event) => update({ bindVariableId: event.target.value || undefined })}
         >
           <MenuItem value="">{t('common.none')}</MenuItem>
-          {d.variables.filter((variable) => variable.active).map((variable) => (
-            <MenuItem key={variable.id} value={variable.id}>{localizedName(variable, isRtl)}</MenuItem>
-          ))}
+          {d.variables
+            .filter((variable) => variable.active)
+            .map((variable) => (
+              <MenuItem key={variable.id} value={variable.id}>
+                {localizedName(variable, isRtl)}
+              </MenuItem>
+            ))}
         </TextField>
         <Stack direction="row" spacing="8px">
           <TextField
@@ -2037,7 +2257,9 @@ export function ProcessBuilderSettingsPanel() {
         <Box sx={{ border: `1px solid ${tokens.border}` }}>
           <Button
             fullWidth
-            onClick={() => s.openControlSettings({ kind: 'requestControl', id: control.id }, 'reporting')}
+            onClick={() =>
+              s.openControlSettings({ kind: 'requestControl', id: control.id }, 'reporting')
+            }
             sx={{ justifyContent: 'flex-start', textTransform: 'none', px: 1, py: 0.5 }}
           >
             <Typography sx={{ fontSize: tokens.fontSize.body, fontWeight: 700 }}>
@@ -2321,9 +2543,13 @@ export function ProcessBuilderSettingsPanel() {
           onChange={(event) => update({ bindVariableId: event.target.value || undefined })}
         >
           <MenuItem value="">{t('common.none')}</MenuItem>
-          {d.variables.filter((variable) => variable.active).map((variable) => (
-            <MenuItem key={variable.id} value={variable.id}>{localizedName(variable, isRtl)}</MenuItem>
-          ))}
+          {d.variables
+            .filter((variable) => variable.active)
+            .map((variable) => (
+              <MenuItem key={variable.id} value={variable.id}>
+                {localizedName(variable, isRtl)}
+              </MenuItem>
+            ))}
         </TextField>
         {text(t('wfProcessBuilder.settings.arabicLabel'), control.labelAR, (labelAR) =>
           update({ labelAR })
@@ -2504,7 +2730,10 @@ export function ProcessBuilderSettingsPanel() {
                 operatorId: value == null ? '' : String(value),
                 operator:
                   option && !Array.isArray(option)
-                    ? resolveBuilderOperator({ code: option.code ?? null, name: option.name ?? null })
+                    ? resolveBuilderOperator({
+                        code: option.code ?? null,
+                        name: option.name ?? null,
+                      })
                     : x.operator,
               })
             }
@@ -2519,7 +2748,11 @@ export function ProcessBuilderSettingsPanel() {
           disabled={x.operator === 'isEmpty'}
           onChange={(value) => s.updateTransition(x.id, { value })}
         />
-        <TransitionRuleGroup transition={x} variables={d.variables} onChange={(patch) => s.updateTransition(x.id, patch)} />
+        <TransitionRuleGroup
+          transition={x}
+          variables={d.variables}
+          onChange={(patch) => s.updateTransition(x.id, patch)}
+        />
         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
           <TextField
             select

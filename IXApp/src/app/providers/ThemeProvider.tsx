@@ -21,7 +21,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const emotionCache = direction === 'rtl' ? rtlEmotionCache : ltrEmotionCache;
 
   const theme = useMemo(() => {
-    return createAppTheme(themeMode, direction, { density, contrast, colorPreset, fontFamily: activeFontFamily, fontSize });
+    return createAppTheme(themeMode, direction, {
+      density,
+      contrast,
+      colorPreset,
+      fontFamily: activeFontFamily,
+      fontSize,
+    });
   }, [themeMode, direction, density, contrast, colorPreset, activeFontFamily, fontSize]);
 
   useEffect(() => {
@@ -31,7 +37,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     document.documentElement.dataset.density = density;
     document.documentElement.dataset.contrast = contrast ? 'high' : 'standard';
     document.documentElement.style.zoom = `${zoom}%`;
-    return () => { document.documentElement.style.zoom = ''; };
+    return () => {
+      document.documentElement.style.zoom = '';
+    };
   }, [direction, currentLanguage.code, density, contrast, zoom]);
 
   return (

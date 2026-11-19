@@ -16,24 +16,66 @@ export function TaxPeriodIntervalsPanel({
 }): React.ReactElement {
   const gridRef = React.useRef<DataGridHandle>(null);
   const [selectedIds, setSelectedIds] = React.useState<(string | number)[]>([]);
-  const columns = React.useMemo<ColumnDef<TaxPeriodInterval>[]>(() => [
-    { field: 'fromDate', headerName: 'From date', type: 'date', width: 170, editable: true, valueGetter: ({ row }) => dateOnly(row.fromDate) },
-    { field: 'toDate', headerName: 'To date', type: 'date', width: 170, editable: true, valueGetter: ({ row }) => dateOnly(row.toDate) },
-    { field: 'closed', headerName: 'Blocked for settlement process', type: 'boolean', minWidth: 230, flex: 1, editable: true, valueGetter: ({ row }) => row.closed === 1 },
-  ], []);
+  const columns = React.useMemo<ColumnDef<TaxPeriodInterval>[]>(
+    () => [
+      {
+        field: 'fromDate',
+        headerName: 'From date',
+        type: 'date',
+        width: 170,
+        editable: true,
+        valueGetter: ({ row }) => dateOnly(row.fromDate),
+      },
+      {
+        field: 'toDate',
+        headerName: 'To date',
+        type: 'date',
+        width: 170,
+        editable: true,
+        valueGetter: ({ row }) => dateOnly(row.toDate),
+      },
+      {
+        field: 'closed',
+        headerName: 'Blocked for settlement process',
+        type: 'boolean',
+        minWidth: 230,
+        flex: 1,
+        editable: true,
+        valueGetter: ({ row }) => row.closed === 1,
+      },
+    ],
+    []
+  );
   const newRow = (): Partial<TaxPeriodInterval> => ({
-    id: `new-${crypto.randomUUID()}`, recId: 0, taxPeriod: record.taxPeriod,
-    fromDate: new Date().toISOString().slice(0, 10), toDate: new Date().toISOString().slice(0, 10), closed: 0,
+    id: `new-${crypto.randomUUID()}`,
+    recId: 0,
+    taxPeriod: record.taxPeriod,
+    fromDate: new Date().toISOString().slice(0, 10),
+    toDate: new Date().toISOString().slice(0, 10),
+    closed: 0,
   });
   const saveRow = (partial: Partial<TaxPeriodInterval>, isNew: boolean) => {
     const row = partial as TaxPeriodInterval;
-    const normalized = { ...row, fromDate: dateOnly(row.fromDate), toDate: dateOnly(row.toDate), closed: Number(row.closed) === 1 ? 1 : 0 } as TaxPeriodInterval;
-    onRecordChange({ ...record, intervals: isNew ? [...record.intervals, normalized] : record.intervals.map((item) => item.id === normalized.id ? normalized : item) });
+    const normalized = {
+      ...row,
+      fromDate: dateOnly(row.fromDate),
+      toDate: dateOnly(row.toDate),
+      closed: Number(row.closed) === 1 ? 1 : 0,
+    } as TaxPeriodInterval;
+    onRecordChange({
+      ...record,
+      intervals: isNew
+        ? [...record.intervals, normalized]
+        : record.intervals.map((item) => (item.id === normalized.id ? normalized : item)),
+    });
     setSelectedIds([normalized.id]);
   };
   const remove = () => {
     const selected = new Set(selectedIds.map(String));
-    onRecordChange({ ...record, intervals: record.intervals.filter((row) => !selected.has(String(row.id))) });
+    onRecordChange({
+      ...record,
+      intervals: record.intervals.filter((row) => !selected.has(String(row.id))),
+    });
     setSelectedIds([]);
   };
   return (

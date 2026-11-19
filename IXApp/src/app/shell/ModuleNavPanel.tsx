@@ -387,10 +387,7 @@ const ModuleNavPanel: React.FC<ModuleNavPanelProps> = ({
         {visibleSections.map((section) => {
           const isExpanded = expanded.has(section.id);
           return (
-            <Box
-              key={section.id}
-              sx={{ mb: `${nav.sectionGap}px`, breakInside: 'avoid-column' }}
-            >
+            <Box key={section.id} sx={{ mb: `${nav.sectionGap}px`, breakInside: 'avoid-column' }}>
               <Box sx={sectionBorderSx}>
                 {/* Section header */}
                 <Box
@@ -443,8 +440,7 @@ const ModuleNavPanel: React.FC<ModuleNavPanelProps> = ({
                             className="link-text"
                             sx={{
                               ...getLinkTextSx(!!isMobileView),
-                              fontWeight:
-                                link.path && location.pathname === link.path ? 500 : 400,
+                              fontWeight: link.path && location.pathname === link.path ? 500 : 400,
                             }}
                           >
                             {t(link.label)}

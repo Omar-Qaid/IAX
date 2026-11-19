@@ -38,5 +38,12 @@ export function useSalesOrderOptions() {
     { value: 3, label: t('salesOrder.reservationTypes.sameWarehouse', 'Same warehouse') },
     { value: 4, label: t('salesOrder.reservationTypes.sameSite', 'Same site') },
   ];
-  return { salesDeliveryTypeOptions, sourcingOriginOptions, deliveryDateControlOptions, ctpStatusOptions, carrierServiceOptions, reservationOptions };
+  return {
+    salesDeliveryTypeOptions,
+    sourcingOriginOptions,
+    deliveryDateControlOptions,
+    ctpStatusOptions,
+    carrierServiceOptions,
+    reservationOptions,
+  };
 }

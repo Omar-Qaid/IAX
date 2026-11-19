@@ -15,7 +15,12 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import IconButton from '@mui/material/IconButton';
 import { useTranslation } from 'react-i18next';
-import { useCountryRegions, useStates, useCities, useCounties } from '@shared/hooks/useLogisticsAddress';
+import {
+  useCountryRegions,
+  useStates,
+  useCities,
+  useCounties,
+} from '@shared/hooks/useLogisticsAddress';
 import type { LogisticsPostalAddress } from '@shared/types/logistics';
 import { useLogicalDrawerAnchor } from '@shared/hooks/useLogicalDrawerAnchor';
 
@@ -143,17 +148,46 @@ export function LogisticsPostalAddressDrawer({
         },
       }}
     >
-      {saveError && <Alert severity="error" sx={{m: 2}}>{saveError}</Alert>}
-      <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid', borderColor: 'divider' }}>
+      {saveError && (
+        <Alert severity="error" sx={{ m: 2 }}>
+          {saveError}
+        </Alert>
+      )}
+      <Box
+        sx={{
+          p: 2.5,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
         <Typography variant="h6" sx={{ fontWeight: 600 }}>
-          {initialData ? tText('logistics.editAddress', 'Edit address') : tText('logistics.newAddress', 'New address')}
+          {initialData
+            ? tText('logistics.editAddress', 'Edit address')
+            : tText('logistics.newAddress', 'New address')}
         </Typography>
-        <IconButton size="small" disabled={saving} onClick={onClose} aria-label={t('common.close') || 'Close'}>
+        <IconButton
+          size="small"
+          disabled={saving}
+          onClick={onClose}
+          aria-label={t('common.close') || 'Close'}
+        >
           <CloseIcon fontSize="small" />
         </IconButton>
       </Box>
 
-      <Box sx={{ flex: 1, overflowY: 'auto', p: 2.5, display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Box
+        sx={{
+          flex: 1,
+          overflowY: 'auto',
+          p: 2.5,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
+        }}
+      >
         <TextField
           label={tText('logistics.locationId', 'Location ID')}
           value={formData.locationId || '(Auto-generated on save)'}
@@ -171,7 +205,11 @@ export function LogisticsPostalAddressDrawer({
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           error={errors.description}
-          helperText={errors.description ? tText('common.requiredField', 'Description is required') : undefined}
+          helperText={
+            errors.description
+              ? tText('common.requiredField', 'Description is required')
+              : undefined
+          }
         />
 
         <Stack direction="row" spacing={2}>
@@ -212,7 +250,11 @@ export function LogisticsPostalAddressDrawer({
             })
           }
           error={errors.countryRegionId}
-          helperText={errors.countryRegionId ? tText('common.requiredField', 'Country is required') : undefined}
+          helperText={
+            errors.countryRegionId
+              ? tText('common.requiredField', 'Country is required')
+              : undefined
+          }
         >
           {countries.map((c) => (
             <MenuItem key={c.countryRegionId} value={c.countryRegionId}>
@@ -352,15 +394,34 @@ export function LogisticsPostalAddressDrawer({
               color="primary"
             />
           }
-          label={<Typography variant="body2">{t('logistics.primaryForCountry') || 'Primary for country/region'}</Typography>}
+          label={
+            <Typography variant="body2">
+              {t('logistics.primaryForCountry') || 'Primary for country/region'}
+            </Typography>
+          }
         />
       </Box>
 
-      <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider', display: 'flex', gap: 1, justifyContent: 'flex-end', bgcolor: 'grey.50' }}>
+      <Box
+        sx={{
+          p: 2,
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          display: 'flex',
+          gap: 1,
+          justifyContent: 'flex-end',
+          bgcolor: 'grey.50',
+        }}
+      >
         <Button variant="outlined" size="small" disabled={saving} onClick={onClose}>
           {tText('common.cancel', 'Cancel')}
         </Button>
-        <Button variant="contained" size="small" disabled={saving} onClick={() => void handleSave()}>
+        <Button
+          variant="contained"
+          size="small"
+          disabled={saving}
+          onClick={() => void handleSave()}
+        >
           {tText('common.ok', 'OK')}
         </Button>
       </Box>

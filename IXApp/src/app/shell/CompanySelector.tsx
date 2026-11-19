@@ -46,8 +46,16 @@ export const CompanySelector: React.FC = () => {
             onClick={() => handleSelect(c.code)}
           >
             <ListItemText
-              primary={<Typography variant="body2" sx={{ fontWeight: 600 }}>{c.code}</Typography>}
-              secondary={<Typography variant="caption" color="text.secondary">{c.name}</Typography>}
+              primary={
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  {c.code}
+                </Typography>
+              }
+              secondary={
+                <Typography variant="caption" color="text.secondary">
+                  {c.name}
+                </Typography>
+              }
             />
           </MenuItem>
         ))}

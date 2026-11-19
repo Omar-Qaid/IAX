@@ -23,9 +23,9 @@ export const loadProcessBuilderDraft = (id: string, fallback: ProcessBuilderDocu
       canGroup: control.canGroup ?? true,
       canSort: control.canSort ?? true,
       referenceType: control.referenceType ?? null,
-    fieldRole: control.fieldRole ?? 'Dimension',
-    dataType: control.dataType ?? 'String',
-    defaultAggregation: control.defaultAggregation ?? 'NONE',
+      fieldRole: control.fieldRole ?? 'Dimension',
+      dataType: control.dataType ?? 'String',
+      defaultAggregation: control.defaultAggregation ?? 'NONE',
       defaultValue: control.defaultValue ?? '',
       options: control.options ?? [],
       optionAliases: (control.options ?? []).map(
@@ -53,8 +53,11 @@ export const loadProcessBuilderDraft = (id: string, fallback: ProcessBuilderDocu
       })),
       visibilityCondition: control.visibilityCondition ?? null,
     });
-    const serverActivities = new Map(fallback.steps.flatMap((step) =>
-      step.activities.map((activity) => [activity.id, activity] as const)));
+    const serverActivities = new Map(
+      fallback.steps.flatMap((step) =>
+        step.activities.map((activity) => [activity.id, activity] as const)
+      )
+    );
     return {
       ...fallback,
       ...parsed,
@@ -63,9 +66,11 @@ export const loadProcessBuilderDraft = (id: string, fallback: ProcessBuilderDocu
         ...variable,
         // Old drafts used hard-coded IDs. Recover persisted types from the server;
         // retain new draft variables and all unrelated edits.
-        dataType: parsed.dataTypeCatalogVersion === 1
-          ? variable.dataType
-          : fallback.variables.find((item) => item.id === variable.id)?.dataType ?? variable.dataType,
+        dataType:
+          parsed.dataTypeCatalogVersion === 1
+            ? variable.dataType
+            : (fallback.variables.find((item) => item.id === variable.id)?.dataType ??
+              variable.dataType),
         description: variable.description ?? '',
         sortOrder: variable.sortOrder ?? (index + 1) * 10,
         active: variable.active ?? true,
@@ -90,12 +95,30 @@ export const loadProcessBuilderDraft = (id: string, fallback: ProcessBuilderDocu
           mandatoryDocs: activity.mandatoryDocs ?? false,
           autoPassEnabled: activity.autoPassEnabled ?? false,
           autoPassingHours: activity.autoPassingHours ?? 0,
-          isSystemNotificationEnabled: activity.isSystemNotificationEnabled ?? serverActivities.get(activity.id)?.isSystemNotificationEnabled ?? false,
-          isEmailNotificationEnabled: activity.isEmailNotificationEnabled ?? serverActivities.get(activity.id)?.isEmailNotificationEnabled ?? false,
-          isSmsNotificationEnabled: activity.isSmsNotificationEnabled ?? serverActivities.get(activity.id)?.isSmsNotificationEnabled ?? false,
-          isWhatsAppNotificationEnabled: activity.isWhatsAppNotificationEnabled ?? serverActivities.get(activity.id)?.isWhatsAppNotificationEnabled ?? false,
-          canViewPreviousSteps: activity.canViewPreviousSteps ?? serverActivities.get(activity.id)?.canViewPreviousSteps ?? false,
-          canViewPreviousDocuments: activity.canViewPreviousDocuments ?? serverActivities.get(activity.id)?.canViewPreviousDocuments ?? false,
+          isSystemNotificationEnabled:
+            activity.isSystemNotificationEnabled ??
+            serverActivities.get(activity.id)?.isSystemNotificationEnabled ??
+            false,
+          isEmailNotificationEnabled:
+            activity.isEmailNotificationEnabled ??
+            serverActivities.get(activity.id)?.isEmailNotificationEnabled ??
+            false,
+          isSmsNotificationEnabled:
+            activity.isSmsNotificationEnabled ??
+            serverActivities.get(activity.id)?.isSmsNotificationEnabled ??
+            false,
+          isWhatsAppNotificationEnabled:
+            activity.isWhatsAppNotificationEnabled ??
+            serverActivities.get(activity.id)?.isWhatsAppNotificationEnabled ??
+            false,
+          canViewPreviousSteps:
+            activity.canViewPreviousSteps ??
+            serverActivities.get(activity.id)?.canViewPreviousSteps ??
+            false,
+          canViewPreviousDocuments:
+            activity.canViewPreviousDocuments ??
+            serverActivities.get(activity.id)?.canViewPreviousDocuments ??
+            false,
           actions: activity.actions ?? [],
           validations: activity.validations ?? [],
           config: activity.config ?? { apiMethod: 'GET', apiUrl: '', notifyEmails: '' },

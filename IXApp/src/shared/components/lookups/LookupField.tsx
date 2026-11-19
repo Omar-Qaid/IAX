@@ -1,13 +1,6 @@
 import { localizedName } from '@shared/utilities/localizedName';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Autocomplete,
-  Box,
-  TextField,
-  InputAdornment,
-  IconButton,
-  Popper,
-} from '@mui/material';
+import { Autocomplete, Box, TextField, InputAdornment, IconButton, Popper } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import ClearIcon from '@mui/icons-material/Clear';
@@ -313,7 +306,11 @@ function SelectLookup({
     () =>
       resolvedSelected ??
       (gridCell && typeof scalarValue === 'string' && scalarValue.trim() !== ''
-        ? { id: scalarValue as string | number, code: String(scalarValue), name: String(scalarValue) }
+        ? {
+            id: scalarValue as string | number,
+            code: String(scalarValue),
+            name: String(scalarValue),
+          }
         : null),
     [resolvedSelected, scalarValue, gridCell]
   );
@@ -323,7 +320,9 @@ function SelectLookup({
     ? visibleOptions
     : visibleOptions.slice(0, renderLimit);
   // The selected option feeds the record preview card (no extra request).
-  const selectedRecordOption = selected ? { code: selected.code, name: localizedName(selected, isRtl) } : null;
+  const selectedRecordOption = selected
+    ? { code: selected.code, name: localizedName(selected, isRtl) }
+    : null;
   const highlightedRef = useRef<LookupOption | null>(null);
   const [previewAnchor, setPreviewAnchor] = useState<HTMLElement | null>(null);
   const previewTimerRef = useRef<number | undefined>(undefined);
@@ -337,7 +336,8 @@ function SelectLookup({
     const nearEnd = list.scrollHeight - list.scrollTop - list.clientHeight <= 80;
     if (!nearEnd) return;
     if (!usesServerDataSource) {
-      if (renderLimit < visibleOptions.length) setRenderLimit((limit) => limit + CLIENT_RENDER_CHUNK);
+      if (renderLimit < visibleOptions.length)
+        setRenderLimit((limit) => limit + CLIENT_RENDER_CHUNK);
       return;
     }
     if (!lazyLoading || !lookup.hasNextPage || lookup.isFetchingNextPage) return;
@@ -353,9 +353,29 @@ function SelectLookup({
   };
   // Grid cells show the code, matching the read-only cell (D365 shows the key).
   const optionText = (option: LookupOption | null) =>
-    option ? (gridCell ? option.code || localizedName(option, isRtl) : localizedName(option, isRtl)) : '';
+    option
+      ? gridCell
+        ? option.code || localizedName(option, isRtl)
+        : localizedName(option, isRtl)
+      : '';
 
-  if (viewMode) return <LookupDisplayField label={externalLabel ? '' : label} value={selected ? localizedName(selected, isRtl) : scalarValue == null || scalarValue === 0 ? '' : String(scalarValue)} masterRoute={masterRoute} previewEntity={previewEntity} previewKey={scalarValue} previewOption={selectedRecordOption} />;
+  if (viewMode)
+    return (
+      <LookupDisplayField
+        label={externalLabel ? '' : label}
+        value={
+          selected
+            ? localizedName(selected, isRtl)
+            : scalarValue == null || scalarValue === 0
+              ? ''
+              : String(scalarValue)
+        }
+        masterRoute={masterRoute}
+        previewEntity={previewEntity}
+        previewKey={scalarValue}
+        previewOption={selectedRecordOption}
+      />
+    );
 
   // -- Record preview card (grid cells, D365) ---------------------------------
   const previewOption = gridCell ? resolvedSelected : null;
@@ -363,7 +383,10 @@ function SelectLookup({
     ? (previewFields
         ? previewFields.map((field) => ({
             label: field.label,
-            value: field.field === 'name' ? localizedName(previewOption, isRtl) : previewOption[field.field],
+            value:
+              field.field === 'name'
+                ? localizedName(previewOption, isRtl)
+                : previewOption[field.field],
           }))
         : [
             { label, value: previewOption.code },
@@ -393,148 +416,185 @@ function SelectLookup({
   };
 
   return (
-    <RecordPreview entity={previewEntity} masterRoute={masterRoute} recordKey={scalarValue as string | number | null} option={selectedRecordOption}>
-    <Autocomplete<LookupOption, false, boolean, false>
-      onFocus={(event) => startPreview(event.currentTarget)}
-      sx={{
-        ...standardLookupSx,
-        ...(variant === 'outlined' && !gridCell ? compactOutlinedLookupSx : {}),
-        ...(compact ? compactGridLookupSx : {}),
-        ...(gridCell ? gridCellLookupSx : {}),
-        // Lookup values read as links, in forms and in grid cells alike (D365).
-        ...lookupValueSx(scalarValue),
-      }}
-      // D365 grid cells show a thin chevron and no clear button.
-      {...(gridCell ? { popupIcon: <KeyboardArrowDownIcon sx={{ fontSize: 18 }} /> } : {})}
-      open={open}
-      onOpen={() => {
-        setTyped(false);
-        setOpen(true);
-      }}
-      onClose={() => {
-        if (gridCell && !required && typed && search.trim() === '' && hasLookupValue(scalarValue))
-          choose(null);
-        setOpen(false);
-        setSearch('');
-        setRenderLimit(CLIENT_RENDER_CHUNK);
-        highlightedRef.current = null;
-      }}
-      value={selected}
-      options={renderedOptions}
-      inputValue={searchable && typed ? search : optionText(selected)}
-      // Focus selects the current text, so typing replaces it (D365).
-      selectOnFocus
-      onInputChange={(_, nextInput, reason) => {
-        if (searchable && reason === 'input') {
-          setTyped(true);
-          setSearch(nextInput);
+    <RecordPreview
+      entity={previewEntity}
+      masterRoute={masterRoute}
+      recordKey={scalarValue as string | number | null}
+      option={selectedRecordOption}
+    >
+      <Autocomplete<LookupOption, false, boolean, false>
+        onFocus={(event) => startPreview(event.currentTarget)}
+        sx={{
+          ...standardLookupSx,
+          ...(variant === 'outlined' && !gridCell ? compactOutlinedLookupSx : {}),
+          ...(compact ? compactGridLookupSx : {}),
+          ...(gridCell ? gridCellLookupSx : {}),
+          // Lookup values read as links, in forms and in grid cells alike (D365).
+          ...lookupValueSx(scalarValue),
+        }}
+        // D365 grid cells show a thin chevron and no clear button.
+        {...(gridCell ? { popupIcon: <KeyboardArrowDownIcon sx={{ fontSize: 18 }} /> } : {})}
+        open={open}
+        onOpen={() => {
+          setTyped(false);
+          setOpen(true);
+        }}
+        onClose={() => {
+          if (gridCell && !required && typed && search.trim() === '' && hasLookupValue(scalarValue))
+            choose(null);
+          setOpen(false);
+          setSearch('');
           setRenderLimit(CLIENT_RENDER_CHUNK);
           highlightedRef.current = null;
+        }}
+        value={selected}
+        options={renderedOptions}
+        inputValue={searchable && typed ? search : optionText(selected)}
+        // Focus selects the current text, so typing replaces it (D365).
+        selectOnFocus
+        onInputChange={(_, nextInput, reason) => {
+          if (searchable && reason === 'input') {
+            setTyped(true);
+            setSearch(nextInput);
+            setRenderLimit(CLIENT_RENDER_CHUNK);
+            highlightedRef.current = null;
+          }
+        }}
+        onChange={(_, option) => choose(option)}
+        onBlur={() => {
+          stopPreview();
+          // Leaving the field: an emptied optional grid value is cleared (D365);
+          // any other unfinished text reverts to the current value.
+          if (gridCell && !required && typed && search.trim() === '' && hasLookupValue(scalarValue))
+            choose(null);
+          setTyped(false);
+          setSearch('');
+        }}
+        // Typing then Enter picks the first match without arrowing to it.
+        autoHighlight
+        onHighlightChange={(_, option) => {
+          highlightedRef.current = option;
+        }}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') stopPreview();
+          // D365 type-ahead: typing part of a code and pressing Tab takes the match
+          // and moves on. Only when something was typed, so tabbing through an
+          // untouched field never changes its value.
+          if (event.key !== 'Tab' || !open || !search.trim()) return;
+          // The auto-highlighted first match is not always reported; fall back to it.
+          const match = highlightedRef.current ?? renderedOptions[0];
+          if (match) choose(match);
+        }}
+        getOptionLabel={(option) => optionText(option)}
+        renderOption={
+          gridCell
+            ? (optionProps, option) => {
+                const { key, ...liProps } = optionProps as typeof optionProps & { key: React.Key };
+                const name = localizedName(option, isRtl);
+                return (
+                  <Box component="li" key={key} {...liProps} sx={gridOptionSx}>
+                    <Box component="span" sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
+                      {option.code}
+                    </Box>
+                    <Box
+                      component="span"
+                      sx={{
+                        color: 'text.secondary',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {name !== option.code ? name : ''}
+                    </Box>
+                  </Box>
+                );
+              }
+            : showAllNamesInOptions
+              ? (optionProps, option) => (
+                  <Box
+                    component="li"
+                    {...optionProps}
+                    aria-label={localizedName(option, isRtl)}
+                    sx={{ display: 'grid !important', gap: 0.2 }}
+                  >
+                    <Box component="span" sx={{ fontSize: 12, fontWeight: 800 }}>
+                      {option.code}
+                    </Box>
+                    <Box component="span" sx={{ fontSize: 13 }}>
+                      {option.name}
+                    </Box>
+                    {option.nameAlias?.trim() && option.nameAlias.trim() !== option.name.trim() ? (
+                      <Box
+                        component="span"
+                        dir="rtl"
+                        sx={{ fontSize: 12, color: 'text.secondary', textAlign: 'start' }}
+                      >
+                        {option.nameAlias}
+                      </Box>
+                    ) : null}
+                  </Box>
+                )
+              : undefined
         }
-      }}
-      onChange={(_, option) => choose(option)}
-      onBlur={() => {
-        stopPreview();
-        // Leaving the field: an emptied optional grid value is cleared (D365);
-        // any other unfinished text reverts to the current value.
-        if (gridCell && !required && typed && search.trim() === '' && hasLookupValue(scalarValue))
-          choose(null);
-        setTyped(false);
-        setSearch('');
-      }}
-      // Typing then Enter picks the first match without arrowing to it.
-      autoHighlight
-      onHighlightChange={(_, option) => {
-        highlightedRef.current = option;
-      }}
-      onKeyDown={(event) => {
-        if (event.key === 'Escape') stopPreview();
-        // D365 type-ahead: typing part of a code and pressing Tab takes the match
-        // and moves on. Only when something was typed, so tabbing through an
-        // untouched field never changes its value.
-        if (event.key !== 'Tab' || !open || !search.trim()) return;
-        // The auto-highlighted first match is not always reported; fall back to it.
-        const match = highlightedRef.current ?? renderedOptions[0];
-        if (match) choose(match);
-      }}
-      getOptionLabel={(option) => optionText(option)}
-      renderOption={gridCell ? (optionProps, option) => {
-        const { key, ...liProps } = optionProps as typeof optionProps & { key: React.Key };
-        const name = localizedName(option, isRtl);
-        return (
-          <Box component="li" key={key} {...liProps} sx={gridOptionSx}>
-            <Box component="span" sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{option.code}</Box>
-            <Box component="span" sx={{ color: 'text.secondary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {name !== option.code ? name : ''}
-            </Box>
-          </Box>
-        );
-      } : showAllNamesInOptions ? (optionProps, option) => (
-        <Box component="li" {...optionProps} aria-label={localizedName(option, isRtl)} sx={{ display: 'grid !important', gap: 0.2 }}>
-          <Box component="span" sx={{ fontSize: 12, fontWeight: 800 }}>{option.code}</Box>
-          <Box component="span" sx={{ fontSize: 13 }}>{option.name}</Box>
-          {option.nameAlias?.trim() && option.nameAlias.trim() !== option.name.trim() ? (
-            <Box component="span" dir="rtl" sx={{ fontSize: 12, color: 'text.secondary', textAlign: 'start' }}>
-              {option.nameAlias}
-            </Box>
-          ) : null}
-        </Box>
-      ) : undefined}
-      isOptionEqualToValue={(option, selectedOption) =>
-        String(option.id) === String(selectedOption.id)
-      }
-      filterOptions={(availableOptions) => availableOptions}
-      loading={
-        usesServerDataSource &&
-        (lookup.isLoading || (lookup.isFetching && !lookup.isFetchingNextPage))
-      }
-      disabled={disabled || readOnly}
-      fullWidth={fullWidth}
-      disableClearable={required || gridCell}
-      slotProps={{
-        listbox: { onScroll: handleScroll },
-        // Grid columns are narrow: let the list be wide enough for code and name.
-        ...(gridCell ? { popper: { style: { minWidth: 280 }, placement: 'bottom-start' as const } } : {}),
-      }}
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          // In a grid cell the cell draws the only border: no outline, no underline.
-          variant={gridCell ? 'standard' : variant}
-          label={externalLabel ? undefined : label}
-          required={required}
-          error={error}
-          helperText={helperText}
-          placeholder={placeholder}
-          size="small"
-          autoFocus={autoFocus}
-          slotProps={{
-            ...params.slotProps,
-            ...(gridCell
-              ? { input: { ...params.slotProps.input, disableUnderline: true } }
-              : {}),
-            inputLabel: { ...params.slotProps.inputLabel, shrink: true },
-            htmlInput: { ...params.slotProps.htmlInput, readOnly: !searchable,
-              ...(externalLabel ? { 'aria-label': label } : {}),
-              ...(showPreview ? { 'aria-describedby': previewId } : {}) },
-          }}
-        />
+        isOptionEqualToValue={(option, selectedOption) =>
+          String(option.id) === String(selectedOption.id)
+        }
+        filterOptions={(availableOptions) => availableOptions}
+        loading={
+          usesServerDataSource &&
+          (lookup.isLoading || (lookup.isFetching && !lookup.isFetchingNextPage))
+        }
+        disabled={disabled || readOnly}
+        fullWidth={fullWidth}
+        disableClearable={required || gridCell}
+        slotProps={{
+          listbox: { onScroll: handleScroll },
+          // Grid columns are narrow: let the list be wide enough for code and name.
+          ...(gridCell
+            ? { popper: { style: { minWidth: 280 }, placement: 'bottom-start' as const } }
+            : {}),
+        }}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            // In a grid cell the cell draws the only border: no outline, no underline.
+            variant={gridCell ? 'standard' : variant}
+            label={externalLabel ? undefined : label}
+            required={required}
+            error={error}
+            helperText={helperText}
+            placeholder={placeholder}
+            size="small"
+            autoFocus={autoFocus}
+            slotProps={{
+              ...params.slotProps,
+              ...(gridCell ? { input: { ...params.slotProps.input, disableUnderline: true } } : {}),
+              inputLabel: { ...params.slotProps.inputLabel, shrink: true },
+              htmlInput: {
+                ...params.slotProps.htmlInput,
+                readOnly: !searchable,
+                ...(externalLabel ? { 'aria-label': label } : {}),
+                ...(showPreview ? { 'aria-describedby': previewId } : {}),
+              },
+            }}
+          />
+        )}
+      />
+      {gridCell && (
+        <Popper
+          // MUI's Popper already carries role="tooltip"; the input points to it.
+          id={previewId}
+          open={showPreview}
+          anchorEl={previewAnchor}
+          placement="top-start"
+          sx={{ zIndex: 1500 }}
+          modifiers={[{ name: 'offset', options: { offset: [0, 10] } }]}
+        >
+          {/* Same card as master-data record previews: one D365 design everywhere. */}
+          <RecordPreviewCard rows={previewRows} />
+        </Popper>
       )}
-    />
-    {gridCell && (
-      <Popper
-        // MUI's Popper already carries role="tooltip"; the input points to it.
-        id={previewId}
-        open={showPreview}
-        anchorEl={previewAnchor}
-        placement="top-start"
-        sx={{ zIndex: 1500 }}
-        modifiers={[{ name: 'offset', options: { offset: [0, 10] } }]}
-      >
-        {/* Same card as master-data record previews: one D365 design everywhere. */}
-        <RecordPreviewCard rows={previewRows} />
-      </Popper>
-    )}
     </RecordPreview>
   );
 }
@@ -596,7 +656,16 @@ export function LookupField<TFieldValues extends FieldValues = FieldValues>({
     onChange?.(option.id, option);
   };
 
-  if (viewMode && displayMode !== 'select') return <LookupDisplayField label={externalLabel ? '' : label} value={displayValue || (value == null || value === 0 ? '' : String(value))} masterRoute={masterRoute} previewEntity={previewEntity} previewKey={Array.isArray(value) ? undefined : value} />;
+  if (viewMode && displayMode !== 'select')
+    return (
+      <LookupDisplayField
+        label={externalLabel ? '' : label}
+        value={displayValue || (value == null || value === 0 ? '' : String(value))}
+        masterRoute={masterRoute}
+        previewEntity={previewEntity}
+        previewKey={Array.isArray(value) ? undefined : value}
+      />
+    );
 
   if (displayMode === 'select') {
     return (
@@ -635,48 +704,52 @@ export function LookupField<TFieldValues extends FieldValues = FieldValues>({
 
   return (
     <>
-      <RecordPreview entity={previewEntity} masterRoute={masterRoute} recordKey={Array.isArray(value) ? null : (value as string | number | null)}>
-      <TextField
-        variant={variant}
-        label={externalLabel ? undefined : label}
-        value={displayValue}
-        required={required}
-        disabled={disabled}
-        error={error}
-        helperText={helperText}
-        placeholder={placeholder ?? t('lookups.selectPlaceholder')}
-        fullWidth={fullWidth}
-        size="small"
-        onClick={() => !disabled && !readOnly && setDialogOpen(true)}
-        slotProps={{
-          inputLabel: { shrink: true },
-          input: {
-            readOnly: true,
-            endAdornment: (
-              <InputAdornment position="end">
-                {value && !disabled && !readOnly ? (
-                  <IconButton size="small" aria-label={t('actions.clear')} onClick={handleClear}>
-                    <ClearIcon fontSize="small" />
+      <RecordPreview
+        entity={previewEntity}
+        masterRoute={masterRoute}
+        recordKey={Array.isArray(value) ? null : (value as string | number | null)}
+      >
+        <TextField
+          variant={variant}
+          label={externalLabel ? undefined : label}
+          value={displayValue}
+          required={required}
+          disabled={disabled}
+          error={error}
+          helperText={helperText}
+          placeholder={placeholder ?? t('lookups.selectPlaceholder')}
+          fullWidth={fullWidth}
+          size="small"
+          onClick={() => !disabled && !readOnly && setDialogOpen(true)}
+          slotProps={{
+            inputLabel: { shrink: true },
+            input: {
+              readOnly: true,
+              endAdornment: (
+                <InputAdornment position="end">
+                  {value && !disabled && !readOnly ? (
+                    <IconButton size="small" aria-label={t('actions.clear')} onClick={handleClear}>
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  ) : null}
+                  <IconButton
+                    size="small"
+                    aria-label={t('actions.search')}
+                    disabled={disabled || readOnly}
+                    onClick={() => setDialogOpen(true)}
+                  >
+                    <SearchIcon fontSize="small" />
                   </IconButton>
-                ) : null}
-                <IconButton
-                  size="small"
-                  aria-label={t('actions.search')}
-                  disabled={disabled || readOnly}
-                  onClick={() => setDialogOpen(true)}
-                >
-                  <SearchIcon fontSize="small" />
-                </IconButton>
-              </InputAdornment>
-            ),
-          },
-        }}
-        sx={{
-          ...standardLookupSx,
-          ...lookupValueSx(value),
-          cursor: disabled || readOnly ? 'default' : 'pointer',
-        }}
-      />
+                </InputAdornment>
+              ),
+            },
+          }}
+          sx={{
+            ...standardLookupSx,
+            ...lookupValueSx(value),
+            cursor: disabled || readOnly ? 'default' : 'pointer',
+          }}
+        />
       </RecordPreview>
 
       {usesServerDataSource ? (

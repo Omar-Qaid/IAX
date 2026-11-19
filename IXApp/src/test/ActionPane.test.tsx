@@ -9,8 +9,23 @@ import { ActionPaneRibbonTrigger } from '@shared/components/action-pane/ActionPa
 
 describe('ActionPane Component Suite', () => {
   it('disables already-open ribbon actions when its owning command becomes unavailable', async () => {
-    const groups = [{ id: 'balance', label: 'Balance group', actions: [{ id: 'balance', label: 'Balance', onClick: vi.fn() }] }];
-    const pane = (disabled: boolean) => <ActionPane><ActionPaneRibbonTrigger id="customer" label="Customer" groups={groups} disabled={disabled} /></ActionPane>;
+    const groups = [
+      {
+        id: 'balance',
+        label: 'Balance group',
+        actions: [{ id: 'balance', label: 'Balance', onClick: vi.fn() }],
+      },
+    ];
+    const pane = (disabled: boolean) => (
+      <ActionPane>
+        <ActionPaneRibbonTrigger
+          id="customer"
+          label="Customer"
+          groups={groups}
+          disabled={disabled}
+        />
+      </ActionPane>
+    );
     const view = render(pane(false));
     fireEvent.click(screen.getByRole('button', { name: 'Customer' }));
     expect(screen.getByRole('button', { name: 'Balance' })).toBeEnabled();

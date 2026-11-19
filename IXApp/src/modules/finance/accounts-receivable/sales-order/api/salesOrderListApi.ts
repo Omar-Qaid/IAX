@@ -210,7 +210,10 @@ export const salesOrderListApi = {
         { signal }
       );
       if (!response.data.success || !response.data.data)
-        throw new ApiError(response.data.message || 'The sales-order response did not contain data.', 500);
+        throw new ApiError(
+          response.data.message || 'The sales-order response did not contain data.',
+          500
+        );
       return toRecord(response.data.data);
     } catch (error) {
       if (error instanceof ApiError && error.status === 404) return null;
@@ -221,18 +224,15 @@ export const salesOrderListApi = {
   async updateHeader(id: string, input: SalesOrderHeaderInput): Promise<void> {
     const optionalDate = (value: string | undefined): string | null =>
       value?.trim() ? value : null;
-    const response = await apiClient.put<ApiResponse<unknown>>(
-      `/v1/SalesTable/${id}/header`,
-      {
-        ...input,
-        shippingDateRequested: optionalDate(input.shippingDateRequested),
-        deadline: optionalDate(input.deadline),
-        shippingDateConfirmed: optionalDate(input.shippingDateConfirmed),
-        receiptDateConfirmed: optionalDate(input.receiptDateConfirmed),
-        fixedDueDate: optionalDate(input.fixedDueDate),
-        paymentTermsBaseDate: optionalDate(input.paymentTermsBaseDate),
-      }
-    );
+    const response = await apiClient.put<ApiResponse<unknown>>(`/v1/SalesTable/${id}/header`, {
+      ...input,
+      shippingDateRequested: optionalDate(input.shippingDateRequested),
+      deadline: optionalDate(input.deadline),
+      shippingDateConfirmed: optionalDate(input.shippingDateConfirmed),
+      receiptDateConfirmed: optionalDate(input.receiptDateConfirmed),
+      fixedDueDate: optionalDate(input.fixedDueDate),
+      paymentTermsBaseDate: optionalDate(input.paymentTermsBaseDate),
+    });
     if (!response.data.success)
       throw new ApiError(response.data.message || 'The sales order could not be saved.', 500);
   },

@@ -15,7 +15,11 @@ import type { buildSalesOrderHeaderPanel } from './SalesOrderHeaderPanel';
 import type { buildSalesOrderLineFields } from './SalesOrderLineFields';
 import type { buildSalesOrderLineTabs } from './SalesOrderLineTabs';
 
-type Scope = SalesOrderDocumentView & ReturnType<typeof buildSalesOrderTotals> & ReturnType<typeof buildSalesOrderHeaderPanel> & ReturnType<typeof buildSalesOrderLineFields> & ReturnType<typeof buildSalesOrderLineTabs>;
+type Scope = SalesOrderDocumentView &
+  ReturnType<typeof buildSalesOrderTotals> &
+  ReturnType<typeof buildSalesOrderHeaderPanel> &
+  ReturnType<typeof buildSalesOrderLineFields> &
+  ReturnType<typeof buildSalesOrderLineTabs>;
 
 export function buildSalesOrderHeaderSections(scope: Scope) {
   const {
@@ -66,29 +70,57 @@ export function buildSalesOrderHeaderSections(scope: Scope) {
     visualVariant: 'legalEntity',
   });
   const headerLookupFields = new Set([
-    'customerAccount', 'invoiceAccount', 'customerGroup', 'currencyCode',
-    'inventSiteId', 'inventLocationId', 'taxGroupId', 'salesGroup',
-    'deliveryPostalAddress', 'deliveryMode', 'deliveryTerms', 'salesPool',
-    'paymentTerms', 'paymentMethod', 'paymentSchedule', 'paymentSpecification',
-    'cashDiscountCode', 'priceGroup', 'lineDiscountGroup',
-    'multiLineDiscountGroup', 'totalDiscountGroup', 'chargesGroup',
-    'customerRebateGroup', 'customerTmaGroup', 'reservation',
+    'customerAccount',
+    'invoiceAccount',
+    'customerGroup',
+    'currencyCode',
+    'inventSiteId',
+    'inventLocationId',
+    'taxGroupId',
+    'salesGroup',
+    'deliveryPostalAddress',
+    'deliveryMode',
+    'deliveryTerms',
+    'salesPool',
+    'paymentTerms',
+    'paymentMethod',
+    'paymentSchedule',
+    'paymentSpecification',
+    'cashDiscountCode',
+    'priceGroup',
+    'lineDiscountGroup',
+    'multiLineDiscountGroup',
+    'totalDiscountGroup',
+    'chargesGroup',
+    'customerRebateGroup',
+    'customerTmaGroup',
+    'reservation',
   ]);
   const readOnlyHeaderFields = new Set([
-    'salesId', 'customerName', 'customerAccount', 'customerGroup',
-    'salesStatus', 'documentStatus', 'deliveryAddress',
-    'reportingCurrencyFixedExchangeRate', 'releaseStatus',
+    'salesId',
+    'customerName',
+    'customerAccount',
+    'customerGroup',
+    'salesStatus',
+    'documentStatus',
+    'deliveryAddress',
+    'reportingCurrencyFixedExchangeRate',
+    'releaseStatus',
   ]);
   const headerField = (name: string, label: string, sectionTitle?: string): DetailFieldConfig => ({
     name,
     masterRoute: headerMasterRoutes[name as keyof SalesOrderHeaderInput],
     previewEntity: headerPreviewEntities[name as keyof SalesOrderListRecord],
     label: t(`salesOrder.headerFields.${name}`, label),
-    type: readOnlyHeaderFields.has(name) ? 'display' : headerLookupFields.has(name) ? 'select' : 'text',
+    type: readOnlyHeaderFields.has(name)
+      ? 'display'
+      : headerLookupFields.has(name)
+        ? 'select'
+        : 'text',
     sectionTitle,
-    ...((activeHeader && (name in activeHeader || name === 'deliveryAddress') && name !== 'id')
-      || name === 'deliveryPostalAddress'
-      || name === 'deliveryAddress'
+    ...((activeHeader && (name in activeHeader || name === 'deliveryAddress') && name !== 'id') ||
+    name === 'deliveryPostalAddress' ||
+    name === 'deliveryAddress'
       ? {
           renderOwnLabel: true,
           render: () => {
@@ -96,7 +128,9 @@ export function buildSalesOrderHeaderSections(scope: Scope) {
               return headerDimensionInput(name, t(`salesOrder.headerFields.${name}`, label));
             if (name === 'deliveryAddress') {
               const selectedAddress = deliveryAddressesQuery.data?.find(
-                (address) => address.value === String(activeHeader?.deliveryPostalAddress ?? order.deliveryPostalAddress)
+                (address) =>
+                  address.value ===
+                  String(activeHeader?.deliveryPostalAddress ?? order.deliveryPostalAddress)
               );
               return (
                 <TextField
@@ -113,8 +147,10 @@ export function buildSalesOrderHeaderSections(scope: Scope) {
             }
             if (name === 'deliveryPostalAddress') {
               const addressOptions = deliveryAddressesQuery.data ?? [];
-              const selected = addressOptions.find((address) =>
-                address.value === String(activeHeader?.deliveryPostalAddress ?? order.deliveryPostalAddress)
+              const selected = addressOptions.find(
+                (address) =>
+                  address.value ===
+                  String(activeHeader?.deliveryPostalAddress ?? order.deliveryPostalAddress)
               );
               return (
                 <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
@@ -133,7 +169,11 @@ export function buildSalesOrderHeaderSections(scope: Scope) {
                         searchable
                         lazyLoading={false}
                         disabled={savingHeader || deliveryAddressesQuery.isLoading}
-                        onChange={(value) => setHeaderDraft((draft) => draft ? { ...draft, deliveryPostalAddress: String(value ?? '') } : draft)}
+                        onChange={(value) =>
+                          setHeaderDraft((draft) =>
+                            draft ? { ...draft, deliveryPostalAddress: String(value ?? '') } : draft
+                          )
+                        }
                       />
                     </Box>
                   ) : (
@@ -143,13 +183,20 @@ export function buildSalesOrderHeaderSections(scope: Scope) {
                         recordKey={orderAddressKey(selected)}
                         record={orderAddressPreview(selected)}
                       >
-                        <EditableViewField label={t('salesOrder.ui.deliveryAddress', 'Delivery address')} value={selected?.label ?? order.deliveryName ?? ''} lookup onEdit={canEditHeader ? startHeaderEdit : undefined} />
+                        <EditableViewField
+                          label={t('salesOrder.ui.deliveryAddress', 'Delivery address')}
+                          value={selected?.label ?? order.deliveryName ?? ''}
+                          lookup
+                          onEdit={canEditHeader ? startHeaderEdit : undefined}
+                        />
                       </RecordPreview>
                     </Box>
                   )}
                   <IconButton
                     size="small"
-                    aria-label={selected ? 'Add or update delivery address' : 'Add delivery address'}
+                    aria-label={
+                      selected ? 'Add or update delivery address' : 'Add delivery address'
+                    }
                     disabled={!canEditHeader || savingHeader}
                     onClick={() => openDeliveryAddressDrawer('header')}
                     sx={{ border: 1, borderColor: 'divider', borderRadius: 1, flex: '0 0 auto' }}
@@ -172,7 +219,10 @@ export function buildSalesOrderHeaderSections(scope: Scope) {
             } else if (name === 'paymentMethod') {
               options = lookupsQuery.data?.paymentMethods;
             } else if (name === 'reservation') {
-              options = reservationOptions.map((option) => ({ value: String(option.value), label: option.label }));
+              options = reservationOptions.map((option) => ({
+                value: String(option.value),
+                label: option.label,
+              }));
             } else if (name === 'intercompanyOrigin') {
               options = [
                 { value: '0', label: t('salesOrder.ui.none', 'None') },
@@ -202,7 +252,14 @@ export function buildSalesOrderHeaderSections(scope: Scope) {
                 { value: 'false', label: t('common.no', 'No') },
                 { value: 'true', label: t('common.yes', 'Yes') },
               ];
-            } else if (name === 'blindShipment' || name === 'residentialDestination' || name === 'excludeFromMasterPlanning' || name === 'intercompanyAutoCreateOrders' || name === 'intercompanyDirectDelivery' || name === 'intercompanyAllowIndirectCreation') {
+            } else if (
+              name === 'blindShipment' ||
+              name === 'residentialDestination' ||
+              name === 'excludeFromMasterPlanning' ||
+              name === 'intercompanyAutoCreateOrders' ||
+              name === 'intercompanyDirectDelivery' ||
+              name === 'intercompanyAllowIndirectCreation'
+            ) {
               options = [
                 { value: 'false', label: t('common.no', 'No') },
                 { value: 'true', label: t('common.yes', 'Yes') },
@@ -239,8 +296,8 @@ export function buildSalesOrderHeaderSections(scope: Scope) {
       : {}),
   });
   const headerSections: DetailSectionConfig[] = [
-      {
-        summaryItems: [
+    {
+      summaryItems: [
         { id: 'salesId', label: t('fields.salesOrderNumber'), value: order.salesId, accent: true },
         { id: 'customerName', label: t('fields.customerName'), value: order.customerName },
         {
@@ -411,12 +468,57 @@ export function buildSalesOrderHeaderSections(scope: Scope) {
       columns: 6,
       columnGap: 40,
       groups: [
-        { id: 'delivery-dates', title: 'DELIVERY DATE', fields: [headerField('shippingDateRequested', 'Requested ship date'), headerField('deliveryDate', 'Requested receipt date')] },
-        { id: 'confirmed-dates', title: 'CONFIRMED DATES', fields: [headerField('shippingDateConfirmed', 'Confirmed ship date'), headerField('receiptDateConfirmed', 'Confirmed receipt date'), headerField('deliveryDateControlType', 'Delivery date control')] },
-        { id: 'planning', title: 'PLANNING', fields: [headerField('mpsFullRunCtpStatus', 'Batch CTP status')] },
-        { id: 'delivery-details', title: 'DETAILS', fields: [headerField('blindShipment', 'Blind shipment'), headerField('deliveryReason', 'Delivery reason'), headerField('exportReason', 'Reason for export')] },
-        { id: 'delivery-mode', title: 'MISC. DELIVERY INFO', fields: [headerField('deliveryMode', 'Mode of delivery'), headerField('deliveryTerms', 'Delivery terms')] },
-        { id: 'carrier', title: 'CARRIER INFORMATION', fields: [headerField('residentialDestination', 'Residential destination'), headerField('shippingCarrier', 'Shipping carrier'), headerField('carrierId', 'Carrier ID'), headerField('carrierService', 'Carrier service'), headerField('brokerId', 'Broker ID'), headerField('transportMode', 'Mode')] },
+        {
+          id: 'delivery-dates',
+          title: 'DELIVERY DATE',
+          fields: [
+            headerField('shippingDateRequested', 'Requested ship date'),
+            headerField('deliveryDate', 'Requested receipt date'),
+          ],
+        },
+        {
+          id: 'confirmed-dates',
+          title: 'CONFIRMED DATES',
+          fields: [
+            headerField('shippingDateConfirmed', 'Confirmed ship date'),
+            headerField('receiptDateConfirmed', 'Confirmed receipt date'),
+            headerField('deliveryDateControlType', 'Delivery date control'),
+          ],
+        },
+        {
+          id: 'planning',
+          title: 'PLANNING',
+          fields: [headerField('mpsFullRunCtpStatus', 'Batch CTP status')],
+        },
+        {
+          id: 'delivery-details',
+          title: 'DETAILS',
+          fields: [
+            headerField('blindShipment', 'Blind shipment'),
+            headerField('deliveryReason', 'Delivery reason'),
+            headerField('exportReason', 'Reason for export'),
+          ],
+        },
+        {
+          id: 'delivery-mode',
+          title: 'MISC. DELIVERY INFO',
+          fields: [
+            headerField('deliveryMode', 'Mode of delivery'),
+            headerField('deliveryTerms', 'Delivery terms'),
+          ],
+        },
+        {
+          id: 'carrier',
+          title: 'CARRIER INFORMATION',
+          fields: [
+            headerField('residentialDestination', 'Residential destination'),
+            headerField('shippingCarrier', 'Shipping carrier'),
+            headerField('carrierId', 'Carrier ID'),
+            headerField('carrierService', 'Carrier service'),
+            headerField('brokerId', 'Broker ID'),
+            headerField('transportMode', 'Mode'),
+          ],
+        },
       ],
     },
     {
@@ -426,12 +528,63 @@ export function buildSalesOrderHeaderSections(scope: Scope) {
       columns: 6,
       columnGap: 40,
       groups: [
-        { id: 'header-currency', title: 'CURRENCY', fields: [headerField('currencyCode', 'Currency'), headerField('fixedExchangeRate', 'Fixed exchange rate'), headerField('reportingCurrencyFixedExchangeRate', 'Reporting currency fixed exchange rate')] },
-        { id: 'header-payment', title: 'PAYMENT', fields: [headerField('paymentTerms', 'Payment'), headerField('fixedDueDate', 'Due date'), headerField('paymentMethod', 'Method of payment'), headerField('paymentSpecification', 'Payment specification')] },
-        { id: 'header-payment-details', fields: [headerField('paymentSchedule', 'Payment schedule'), headerField('paymentTermsBaseDate', 'Payment terms base date'), headerField('cashDiscountCode', 'Cash discount'), headerField('discountPercent', 'Discount percentage')] },
-        { id: 'header-discount-charges', title: 'DISCOUNT OR CHARGES', fields: [headerField('priceGroup', 'Price group'), headerField('lineDiscountGroup', 'Line discount group')] },
-        { id: 'header-discount-groups', fields: [headerField('multiLineDiscountGroup', 'Multiline discount group'), headerField('totalDiscountGroup', 'Total discount group'), headerField('chargesGroup', 'Charges group'), headerField('customerRebateGroup', 'Customer rebate group')] },
-        { id: 'header-rebates', title: 'REBATES', fields: [headerField('customerTmaGroup', 'Customer TMA group'), headerField('rebateReference', 'Rebate reference'), headerField('totalDiscountPercent', 'Total discount %')] },
+        {
+          id: 'header-currency',
+          title: 'CURRENCY',
+          fields: [
+            headerField('currencyCode', 'Currency'),
+            headerField('fixedExchangeRate', 'Fixed exchange rate'),
+            headerField(
+              'reportingCurrencyFixedExchangeRate',
+              'Reporting currency fixed exchange rate'
+            ),
+          ],
+        },
+        {
+          id: 'header-payment',
+          title: 'PAYMENT',
+          fields: [
+            headerField('paymentTerms', 'Payment'),
+            headerField('fixedDueDate', 'Due date'),
+            headerField('paymentMethod', 'Method of payment'),
+            headerField('paymentSpecification', 'Payment specification'),
+          ],
+        },
+        {
+          id: 'header-payment-details',
+          fields: [
+            headerField('paymentSchedule', 'Payment schedule'),
+            headerField('paymentTermsBaseDate', 'Payment terms base date'),
+            headerField('cashDiscountCode', 'Cash discount'),
+            headerField('discountPercent', 'Discount percentage'),
+          ],
+        },
+        {
+          id: 'header-discount-charges',
+          title: 'DISCOUNT OR CHARGES',
+          fields: [
+            headerField('priceGroup', 'Price group'),
+            headerField('lineDiscountGroup', 'Line discount group'),
+          ],
+        },
+        {
+          id: 'header-discount-groups',
+          fields: [
+            headerField('multiLineDiscountGroup', 'Multiline discount group'),
+            headerField('totalDiscountGroup', 'Total discount group'),
+            headerField('chargesGroup', 'Charges group'),
+            headerField('customerRebateGroup', 'Customer rebate group'),
+          ],
+        },
+        {
+          id: 'header-rebates',
+          title: 'REBATES',
+          fields: [
+            headerField('customerTmaGroup', 'Customer TMA group'),
+            headerField('rebateReference', 'Rebate reference'),
+            headerField('totalDiscountPercent', 'Total discount %'),
+          ],
+        },
       ],
     },
     {
@@ -439,27 +592,55 @@ export function buildSalesOrderHeaderSections(scope: Scope) {
       title: 'Intercompany settings',
       visualVariant: 'legalEntity',
       columns: 4,
-      groups: [{ id: 'intercompany', fields: [headerField('intercompanyAutoCreateOrders', 'Autocreate intercompany orders'), headerField('intercompanyDirectDelivery', 'Direct delivery'), headerField('intercompanyOrigin', 'Origin (intercompany orders)'), headerField('intercompanyAllowIndirectCreation', 'Allow indirect creation')] }],
+      groups: [
+        {
+          id: 'intercompany',
+          fields: [
+            headerField('intercompanyAutoCreateOrders', 'Autocreate intercompany orders'),
+            headerField('intercompanyDirectDelivery', 'Direct delivery'),
+            headerField('intercompanyOrigin', 'Origin (intercompany orders)'),
+            headerField('intercompanyAllowIndirectCreation', 'Allow indirect creation'),
+          ],
+        },
+      ],
     },
     {
       id: 'header-warehouse',
       title: 'Warehouse',
       visualVariant: 'legalEntity',
       columns: 4,
-      groups: [{ id: 'warehouse-status', title: 'STATUS', fields: [headerField('releaseStatus', 'Release status')] }],
+      groups: [
+        {
+          id: 'warehouse-status',
+          title: 'STATUS',
+          fields: [headerField('releaseStatus', 'Release status')],
+        },
+      ],
     },
     {
       id: 'header-transportation',
       title: 'Transportation',
       visualVariant: 'legalEntity',
       columns: 4,
-      groups: [{ id: 'transport-routes', title: 'ROUTES', fields: [headerField('carrierCustomerAccount', 'Carrier customer account number'), headerField('freightZone', 'Freight zone')] }],
+      groups: [
+        {
+          id: 'transport-routes',
+          title: 'ROUTES',
+          fields: [
+            headerField('carrierCustomerAccount', 'Carrier customer account number'),
+            headerField('freightZone', 'Freight zone'),
+          ],
+        },
+      ],
     },
   ];
   const sections = [
     ...(tab === 'header'
-      // The page owns header edit state (Edit/Save/Cancel in its action pane).
-      ? headerSections.map((headerSection) => ({ ...headerSection, editing: Boolean(activeHeader) }))
+      ? // The page owns header edit state (Edit/Save/Cancel in its action pane).
+        headerSections.map((headerSection) => ({
+          ...headerSection,
+          editing: Boolean(activeHeader),
+        }))
       : [section(t('salesOrder.header', 'Sales order header'), header, true)]),
     tab === 'lines' &&
       section(

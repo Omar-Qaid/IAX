@@ -11,14 +11,14 @@ Each feature folder keeps everything it needs together: `api/` (typed clients),
 `pages/` (routed pages), `components/` (feature UI, dialogs, ribbons) and, where
 needed, more specific folders.
 
-| Folder | Feature |
-| --- | --- |
-| `customer/` | Customers (`CustTable`): list, details, open transactions, `CustTrans` inquiry, quick create, customer ribbons. |
-| `customer-group/` | Customer groups (`CustGroup`). |
-| `free-text-invoice/` | Free text invoices (`CustInvoiceTable`): list and details. |
-| `setup/` | Accounts receivable parameters, terms of payment, methods of payment, customer posting profiles. |
-| `price-discount/` | Price/discount groups and trade agreement journals (names and lines). |
-| `sales-order/` | Sales orders: list, document page, lines grid, journals, dialogs. The reference implementation for document pages, see [sales-order/README.md](sales-order/README.md). |
+| Folder               | Feature                                                                                                                                                                |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `customer/`          | Customers (`CustTable`): list, details, open transactions, `CustTrans` inquiry, quick create, customer ribbons.                                                        |
+| `customer-group/`    | Customer groups (`CustGroup`).                                                                                                                                         |
+| `free-text-invoice/` | Free text invoices (`CustInvoiceTable`): list and details.                                                                                                             |
+| `setup/`             | Accounts receivable parameters, terms of payment, methods of payment, customer posting profiles.                                                                       |
+| `price-discount/`    | Price/discount groups and trade agreement journals (names and lines).                                                                                                  |
+| `sales-order/`       | Sales orders: list, document page, lines grid, journals, dialogs. The reference implementation for document pages, see [sales-order/README.md](sales-order/README.md). |
 
 Shared by the whole module:
 

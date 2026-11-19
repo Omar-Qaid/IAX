@@ -32,7 +32,7 @@ describe.each(['contact', 'address'] as const)('%s save workflow', (kind) => {
         />
       ) : (
         <LogisticsPostalAddressDrawer open onClose={close} onSave={save} initialData={address} />
-      ),
+      )
     );
     fireEvent.click(screen.getByRole('button', { name: 'OK' }));
     await screen.findByText('Save refused by server');
@@ -49,7 +49,7 @@ describe.each(['contact', 'address'] as const)('%s save workflow', (kind) => {
       () =>
         new Promise<void>((resolve) => {
           finish = resolve;
-        }),
+        })
     );
     render(
       kind === 'contact' ? (
@@ -61,7 +61,7 @@ describe.each(['contact', 'address'] as const)('%s save workflow', (kind) => {
         />
       ) : (
         <LogisticsPostalAddressDrawer open onClose={close} onSave={save} initialData={address} />
-      ),
+      )
     );
     const ok = screen.getByRole('button', { name: 'OK' });
     fireEvent.click(ok);

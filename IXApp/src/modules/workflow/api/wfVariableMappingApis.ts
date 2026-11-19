@@ -24,7 +24,10 @@ export const wfRequestMappingVariableApi = createWorkflowEntityApi({
   endpoint: '/v1/WfRequestMappingVariable',
   resourceName: 'RequestVariableMapping',
   processField: 'VariableId',
-  toRecord: (dto: Omit<WfRequestMappingVariableRecord, 'id'>) => ({ ...dto, id: String(dto.recId) }),
+  toRecord: (dto: Omit<WfRequestMappingVariableRecord, 'id'>) => ({
+    ...dto,
+    id: String(dto.recId),
+  }),
   toDto: ({ id: _id, ...record }: WfRequestMappingVariableRecord) => record,
 });
 
@@ -32,6 +35,9 @@ export const wfActivityMappingVariableApi = createWorkflowEntityApi({
   endpoint: '/v1/WfActivityMappingVariable',
   resourceName: 'ActivityVariableMapping',
   processField: 'VariableId',
-  toRecord: (dto: Omit<WfActivityMappingVariableRecord, 'id'>) => ({ ...dto, id: String(dto.recId) }),
+  toRecord: (dto: Omit<WfActivityMappingVariableRecord, 'id'>) => ({
+    ...dto,
+    id: String(dto.recId),
+  }),
   toDto: ({ id: _id, ...record }: WfActivityMappingVariableRecord) => record,
 });

@@ -81,7 +81,10 @@ describe('AppDataGrid', () => {
     const gridRef = React.createRef<DataGridHandle>();
     let completeSave: (() => void) | undefined;
     const onRowSave = vi.fn(
-      () => new Promise<void>((resolve) => { completeSave = resolve; })
+      () =>
+        new Promise<void>((resolve) => {
+          completeSave = resolve;
+        })
     );
 
     render(

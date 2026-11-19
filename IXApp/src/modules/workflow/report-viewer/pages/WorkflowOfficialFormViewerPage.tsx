@@ -89,7 +89,14 @@ export function WorkflowOfficialFormViewer({
   const runtimeData = React.useMemo(
     () =>
       request && details.data
-        ? createruntimeReportData(request, details.data, company, user, printedAt, localizedLanguage)
+        ? createruntimeReportData(
+            request,
+            details.data,
+            company,
+            user,
+            printedAt,
+            localizedLanguage
+          )
         : null,
     [company, details.data, localizedLanguage, printedAt, request, user]
   );
@@ -121,20 +128,13 @@ export function WorkflowOfficialFormViewer({
   const report =
     publishedTemplate.data && reportDocument && runtimeData ? (
       <div ref={reportContainerRef}>
-        <PrintTemplateViewer
-          template={reportDocument}
-          data={runtimeData}
-          company={company}
-        />
+        <PrintTemplateViewer template={reportDocument} data={runtimeData} company={company} />
       </div>
     ) : undefined;
 
   // Company branding has a local fallback and must not hold the printable document hostage.
   const loading = publishedTemplate.isLoading || details.isLoading;
-  const error =
-    publishedTemplate.isError || details.isError
-      ? t('mail.print.loadError')
-      : null;
+  const error = publishedTemplate.isError || details.isError ? t('mail.print.loadError') : null;
 
   return (
     <ReportViewer

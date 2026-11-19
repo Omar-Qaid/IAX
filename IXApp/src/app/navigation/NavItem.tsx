@@ -45,10 +45,26 @@ export const NavItem = React.memo<NavItemProps>(
     const useDarkNavigation = isDark || apparent;
 
     // Color definitions
-    const itemColor = active ? (useDarkNavigation ? '#ffffff' : nav.text) : useDarkNavigation ? '#f3f2f1' : nav.text;
-    const iconColor = active ? (useDarkNavigation ? '#ffffff' : nav.icon) : useDarkNavigation ? '#c8c6c4' : nav.icon;
+    const itemColor = active
+      ? useDarkNavigation
+        ? '#ffffff'
+        : nav.text
+      : useDarkNavigation
+        ? '#f3f2f1'
+        : nav.text;
+    const iconColor = active
+      ? useDarkNavigation
+        ? '#ffffff'
+        : nav.icon
+      : useDarkNavigation
+        ? '#c8c6c4'
+        : nav.icon;
     const hoverBgColor = useDarkNavigation ? 'rgba(255,255,255,0.08)' : nav.hover;
-    const activeBgColor = active ? (useDarkNavigation ? 'rgba(255,255,255,0.12)' : nav.selected) : 'transparent';
+    const activeBgColor = active
+      ? useDarkNavigation
+        ? 'rgba(255,255,255,0.12)'
+        : nav.selected
+      : 'transparent';
 
     return (
       <ListItemButton
@@ -119,7 +135,9 @@ export const NavItem = React.memo<NavItemProps>(
                 },
               }}
             />
-            {badge && !icon && <Badge badgeContent={badge} color="error" sx={{ marginInlineEnd: 2 }} />}
+            {badge && !icon && (
+              <Badge badgeContent={badge} color="error" sx={{ marginInlineEnd: 2 }} />
+            )}
             {showFavorite && onToggleFavorite && (
               <Box
                 className="fav-btn"
@@ -129,9 +147,7 @@ export const NavItem = React.memo<NavItemProps>(
                   transition: 'opacity 0.2s',
                   flexShrink: 0,
                   marginInlineStart: `${nav.iconTextGap}px`,
-                  color: isFavorite
-                    ? 'warning.main'
-                    : 'text.disabled',
+                  color: isFavorite ? 'warning.main' : 'text.disabled',
                   '&:hover': { color: 'warning.dark' },
                 }}
               >

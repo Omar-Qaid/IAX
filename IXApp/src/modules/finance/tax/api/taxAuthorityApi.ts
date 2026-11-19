@@ -26,7 +26,9 @@ export interface TaxAuthorityDto {
   printBlankPage: number;
 }
 
-export interface TaxAuthorityRecord extends TaxAuthorityDto { id: string }
+export interface TaxAuthorityRecord extends TaxAuthorityDto {
+  id: string;
+}
 
 const endpoint = '/v1/TaxAuthorityAddress';
 const requireData = <T>(response: ApiResponse<T>): T => {
@@ -53,7 +55,10 @@ export const taxAuthorityApi = {
     return toRecord(requireData(response.data));
   },
   async update(record: TaxAuthorityRecord): Promise<TaxAuthorityRecord> {
-    const response = await apiClient.put<ApiResponse<TaxAuthorityDto>>(`${endpoint}/${record.recId}`, toDto(record));
+    const response = await apiClient.put<ApiResponse<TaxAuthorityDto>>(
+      `${endpoint}/${record.recId}`,
+      toDto(record)
+    );
     return toRecord(requireData(response.data));
   },
   async delete(record: TaxAuthorityRecord): Promise<void> {

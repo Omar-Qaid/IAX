@@ -5,7 +5,8 @@ import { RecordValueDisplay } from '@shared/components/dialogs/RecordValueDispla
 
 describe('RecordValueDisplay', () => {
   it('renders workflow request XML as readable label and value rows', () => {
-    const xml = '<Details><Control><ControlLabel>Total sales</ControlLabel><ControlLabelAR>إجمالي المبيعات</ControlLabelAR><ControlValue>5239</ControlValue></Control><Control><ControlLabel>cash</ControlLabel><ControlValue>2206</ControlValue></Control></Details>';
+    const xml =
+      '<Details><Control><ControlLabel>Total sales</ControlLabel><ControlLabelAR>إجمالي المبيعات</ControlLabelAR><ControlValue>5239</ControlValue></Control><Control><ControlLabel>cash</ControlLabel><ControlValue>2206</ControlValue></Control></Details>';
 
     render(<RecordValueDisplay value={xml} />);
 
@@ -17,7 +18,8 @@ describe('RecordValueDisplay', () => {
   });
 
   it('extracts readable fields from incomplete legacy workflow XML', () => {
-    const xml = '<Details><Control><ControlLabel>Total sales</ControlLabel><ControlValue>5239</ControlValue></Control><Control><ControlLabel>cash</ControlLabel>';
+    const xml =
+      '<Details><Control><ControlLabel>Total sales</ControlLabel><ControlValue>5239</ControlValue></Control><Control><ControlLabel>cash</ControlLabel>';
 
     render(<RecordValueDisplay value={xml} />);
 

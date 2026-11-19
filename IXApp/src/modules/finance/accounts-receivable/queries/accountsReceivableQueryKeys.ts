@@ -64,7 +64,9 @@ export const freeTextInvoiceQueryKeys = {
   list: (company: string) => [...freeTextInvoiceQueryKeys.company(company), 'list'] as const,
   invoice: (company: string, id: string | undefined) =>
     [...freeTextInvoiceQueryKeys.company(company), 'invoice', id ?? ''] as const,
-  customers: (company: string) => [...freeTextInvoiceQueryKeys.company(company), 'customers'] as const,
+  customers: (company: string) =>
+    [...freeTextInvoiceQueryKeys.company(company), 'customers'] as const,
   lookups: (company: string) => [...freeTextInvoiceQueryKeys.company(company), 'lookups'] as const,
-  lookup: (company: string, name: string) => [...freeTextInvoiceQueryKeys.lookups(company), name] as const,
+  lookup: (company: string, name: string) =>
+    [...freeTextInvoiceQueryKeys.lookups(company), name] as const,
 };

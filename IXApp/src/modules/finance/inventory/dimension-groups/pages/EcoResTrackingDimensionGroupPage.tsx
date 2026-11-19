@@ -95,13 +95,7 @@ export function EcoResTrackingDimensionGroupPage(): React.ReactElement {
             width: 130,
             align: 'center',
             headerAlign: 'center',
-            renderCell: ({ row }) => (
-              <Switch
-                size="small"
-                checked={row.active}
-                disabled
-              />
-            ),
+            renderCell: ({ row }) => <Switch size="small" checked={row.active} disabled />,
           },
         ];
         return [

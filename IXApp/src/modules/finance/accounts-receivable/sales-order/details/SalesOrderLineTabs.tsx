@@ -5,7 +5,10 @@ import type { buildSalesOrderTotals } from './salesOrderTotals';
 import type { buildSalesOrderHeaderPanel } from './SalesOrderHeaderPanel';
 import type { buildSalesOrderLineFields } from './SalesOrderLineFields';
 
-type Scope = SalesOrderDocumentView & ReturnType<typeof buildSalesOrderTotals> & ReturnType<typeof buildSalesOrderHeaderPanel> & ReturnType<typeof buildSalesOrderLineFields>;
+type Scope = SalesOrderDocumentView &
+  ReturnType<typeof buildSalesOrderTotals> &
+  ReturnType<typeof buildSalesOrderHeaderPanel> &
+  ReturnType<typeof buildSalesOrderLineFields>;
 
 export function buildSalesOrderLineTabs(scope: Scope) {
   const {
@@ -72,7 +75,11 @@ export function buildSalesOrderLineTabs(scope: Scope) {
               <Box sx={{ display: 'grid', gap: 1.5 }}>
                 {lineDetailField('customerReference', t('salesOrder.external', 'External'))}
                 <Box sx={{ maxWidth: 72 }}>
-                  {lineDetailField('customerLineNumber', t('salesOrder.customerLineNumber', 'Line number'), 'number')}
+                  {lineDetailField(
+                    'customerLineNumber',
+                    t('salesOrder.customerLineNumber', 'Line number'),
+                    'number'
+                  )}
                 </Box>
               </Box>
             </Box>
@@ -80,11 +87,15 @@ export function buildSalesOrderLineTabs(scope: Scope) {
               <Typography variant="overline" sx={{ fontWeight: 700 }}>
                 {t('salesOrder.generalGroups.intercompany', 'Intercompany')}
               </Typography>
-              {lineEnumField('intercompanyOrigin', t('salesOrder.intercompanyOrigin', 'Origin (intercompany orders)'), [
-                { value: 0, label: t('common.none', 'None') },
-                { value: 1, label: t('salesOrder.intercompanyOutbound', 'Outbound') },
-                { value: 2, label: t('salesOrder.intercompanyInbound', 'Inbound') },
-              ])}
+              {lineEnumField(
+                'intercompanyOrigin',
+                t('salesOrder.intercompanyOrigin', 'Origin (intercompany orders)'),
+                [
+                  { value: 0, label: t('common.none', 'None') },
+                  { value: 1, label: t('salesOrder.intercompanyOutbound', 'Outbound') },
+                  { value: 2, label: t('salesOrder.intercompanyInbound', 'Inbound') },
+                ]
+              )}
               <Typography variant="overline" sx={{ fontWeight: 700, mt: 1.5 }}>
                 {t('salesOrder.generalGroups.status', 'Status')}
               </Typography>
@@ -104,7 +115,10 @@ export function buildSalesOrderLineTabs(scope: Scope) {
                 {t('salesOrder.generalGroups.fulfillment', 'Fulfillment')}
               </Typography>
               <Box sx={{ display: 'grid', gap: 1.5 }}>
-                {field(t('salesOrder.fulfillmentStatus', 'حالة التنفيذ'), t('salesOrder.unknown', 'غير معروف'))}
+                {field(
+                  t('salesOrder.fulfillmentStatus', 'حالة التنفيذ'),
+                  t('salesOrder.unknown', 'غير معروف')
+                )}
               </Box>
             </Box>
           </Box>
@@ -165,7 +179,10 @@ export function buildSalesOrderLineTabs(scope: Scope) {
                 {t('salesOrder.setupGroups.salesTax', 'Sales tax')}
               </Typography>
               <Box sx={{ display: 'grid', gap: 1.5 }}>
-                {taxGroupField('taxItemGroup', t('salesOrder.itemSalesTaxGroup', 'Item sales tax group'))}
+                {taxGroupField(
+                  'taxItemGroup',
+                  t('salesOrder.itemSalesTaxGroup', 'Item sales tax group')
+                )}
                 {taxGroupField('taxGroup', t('salesOrder.salesTaxGroup', 'Sales tax group'))}
               </Box>
             </Box>
@@ -190,9 +207,18 @@ export function buildSalesOrderLineTabs(scope: Scope) {
         );
       case 'Address':
         return (
-          <Box sx={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 220px))', gap: 3 }}>
+          <Box
+            sx={{
+              gridColumn: '1 / -1',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 220px))',
+              gap: 3,
+            }}
+          >
             <Box>
-              <Typography variant="overline" sx={{ fontWeight: 700 }}>DELIVERY ADDRESS</Typography>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>
+                DELIVERY ADDRESS
+              </Typography>
               <Box sx={{ display: 'grid', gap: 1.5, mt: 1 }}>
                 {lineMultilineField('deliveryName', 'Name')}
                 {deliveryAddressField()}
@@ -221,7 +247,10 @@ export function buildSalesOrderLineTabs(scope: Scope) {
                 {lineDetailField('inventStyleId', 'Style')}
                 {lineDetailField('inventVersionId', 'Version')}
                 {inventoryTrackingField('batchNumber', t('salesOrder.batchNumber', 'رقم الدفعة'))}
-                {inventoryTrackingField('serialNumber', t('salesOrder.serialNumber', 'الرقم التسلسلي'))}
+                {inventoryTrackingField(
+                  'serialNumber',
+                  t('salesOrder.serialNumber', 'الرقم التسلسلي')
+                )}
               </Box>
             </Box>
             <Box>
@@ -245,17 +274,27 @@ export function buildSalesOrderLineTabs(scope: Scope) {
                 {t('salesOrder.sourcingGroups.itemReference', 'مرجع الصنف')}
               </Typography>
               <Box sx={{ display: 'grid', gap: 1.5 }}>
-                {lineEnumField('itemReferenceType', t('salesOrder.referenceType', 'Reference type'), [
-                  { value: 0, label: t('common.none', 'None') },
-                  { value: 1, label: t('salesOrder.ui.purchaseOrder', 'Purchase order') },
-                  { value: 2, label: t('common.salesOrder', 'Sales order') },
-                  { value: 3, label: t('salesOrder.ui.inventoryJournal', 'Inventory journal') },
-                  { value: 4, label: t('salesOrder.ui.transferOrder', 'Transfer order') },
-                  { value: 5, label: t('salesOrder.ui.productionOrder', 'Production order') },
-                  { value: 6, label: t('salesOrder.ui.inventoryAdjustment', 'Inventory adjustment') },
-                  { value: 7, label: t('salesOrder.ui.physicalInventoryCount', 'Physical inventory count') },
-                  { value: 8, label: t('salesOrder.ui.returnOrder', 'Return order') },
-                ])}
+                {lineEnumField(
+                  'itemReferenceType',
+                  t('salesOrder.referenceType', 'Reference type'),
+                  [
+                    { value: 0, label: t('common.none', 'None') },
+                    { value: 1, label: t('salesOrder.ui.purchaseOrder', 'Purchase order') },
+                    { value: 2, label: t('common.salesOrder', 'Sales order') },
+                    { value: 3, label: t('salesOrder.ui.inventoryJournal', 'Inventory journal') },
+                    { value: 4, label: t('salesOrder.ui.transferOrder', 'Transfer order') },
+                    { value: 5, label: t('salesOrder.ui.productionOrder', 'Production order') },
+                    {
+                      value: 6,
+                      label: t('salesOrder.ui.inventoryAdjustment', 'Inventory adjustment'),
+                    },
+                    {
+                      value: 7,
+                      label: t('salesOrder.ui.physicalInventoryCount', 'Physical inventory count'),
+                    },
+                    { value: 8, label: t('salesOrder.ui.returnOrder', 'Return order') },
+                  ]
+                )}
                 {lineValue('itemReferenceNumber', t('salesOrder.referenceNumber', 'رقم المرجع'))}
                 {lineValue('itemReferenceLot', t('salesOrder.referenceLot', 'تشغيلة المرجع'))}
               </Box>
@@ -290,53 +329,86 @@ export function buildSalesOrderLineTabs(scope: Scope) {
       case 'Delivery':
         return (
           <>
-            <Box sx={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 3 }}>
+            <Box
+              sx={{
+                gridColumn: '1 / -1',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                gap: 3,
+              }}
+            >
               <Box>
-                <Typography variant="overline" sx={{ fontWeight: 700 }}>DELIVERY DATE</Typography>
+                <Typography variant="overline" sx={{ fontWeight: 700 }}>
+                  DELIVERY DATE
+                </Typography>
                 <Box sx={{ display: 'grid', gap: 1.5 }}>
                   {lineDetailField('shippingDateRequested', 'Requested ship date', 'date')}
                   {lineDetailField('deliveryDate', 'Requested receipt date', 'date')}
                 </Box>
               </Box>
               <Box>
-                <Typography variant="overline" sx={{ fontWeight: 700 }}>CONFIRMED DATES</Typography>
+                <Typography variant="overline" sx={{ fontWeight: 700 }}>
+                  CONFIRMED DATES
+                </Typography>
                 <Box sx={{ display: 'grid', gap: 1.5 }}>
                   {lineDetailField('shippingDateConfirmed', 'Confirmed ship date', 'date')}
                   {lineDetailField('receiptDateConfirmed', 'Confirmed receipt date', 'date')}
-                  {lineEnumField('deliveryDateControlType', 'Delivery date control', deliveryDateControlOptions)}
+                  {lineEnumField(
+                    'deliveryDateControlType',
+                    'Delivery date control',
+                    deliveryDateControlOptions
+                  )}
                 </Box>
               </Box>
               <Box>
-                <Typography variant="overline" sx={{ fontWeight: 700 }}>PLANNING</Typography>
+                <Typography variant="overline" sx={{ fontWeight: 700 }}>
+                  PLANNING
+                </Typography>
                 <Box sx={{ display: 'grid', gap: 1.5 }}>
                   {lineEnumField('mpsFullRunCtpStatus', 'Batch CTP status', ctpStatusOptions)}
                   {lineDetailField('planningPriority', 'Planning priority', 'number')}
-                  {lineLookupField('deliveryTerms', t('customerQuickCreate.fields.deliveryTerms'), lookupsQuery.data?.deliveryTerms)}
+                  {lineLookupField(
+                    'deliveryTerms',
+                    t('customerQuickCreate.fields.deliveryTerms'),
+                    lookupsQuery.data?.deliveryTerms
+                  )}
                 </Box>
               </Box>
               <Box>
-                <Typography variant="overline" sx={{ fontWeight: 700 }}>DELIVERY</Typography>
+                <Typography variant="overline" sx={{ fontWeight: 700 }}>
+                  DELIVERY
+                </Typography>
                 <Box sx={{ display: 'grid', gap: 1.5 }}>
                   {lineDetailField('overDeliveryPercent', 'Overdelivery', 'number')}
                   {lineDetailField('underDeliveryPercent', 'Underdelivery', 'number')}
-                  {lineLookupField('deliveryMode', t('fields.deliveryMode'), lookupsQuery.data?.deliveryModes)}
+                  {lineLookupField(
+                    'deliveryMode',
+                    t('fields.deliveryMode'),
+                    lookupsQuery.data?.deliveryModes
+                  )}
                   {lineEnumField('deliveryType', 'Delivery type', salesDeliveryTypeOptions)}
                 </Box>
               </Box>
               <Box>
-                <Typography variant="overline" sx={{ fontWeight: 700 }}>DIRECT DELIVERY</Typography>
+                <Typography variant="overline" sx={{ fontWeight: 700 }}>
+                  DIRECT DELIVERY
+                </Typography>
                 <Box sx={{ display: 'grid', gap: 1.5 }}>
                   {lineBooleanField('directDelivery', 'Direct delivery')}
                 </Box>
               </Box>
               <Box>
-                <Typography variant="overline" sx={{ fontWeight: 700 }}>CARRIER INFORMATION</Typography>
+                <Typography variant="overline" sx={{ fontWeight: 700 }}>
+                  CARRIER INFORMATION
+                </Typography>
                 <Box sx={{ display: 'grid', gap: 1.5 }}>
                   {lineEnumField('shipCarrierDlvType', 'Carrier service', carrierServiceOptions)}
                 </Box>
               </Box>
               <Box>
-                <Typography variant="overline" sx={{ fontWeight: 700 }}>STORAGE LOCATION</Typography>
+                <Typography variant="overline" sx={{ fontWeight: 700 }}>
+                  STORAGE LOCATION
+                </Typography>
                 <Box sx={{ display: 'grid', gap: 1.5 }}>
                   {dimensionField('site', t('salesOrderQuickCreate.site', 'Site'))}
                   {dimensionField('warehouse', t('salesOrderQuickCreate.warehouse', 'Warehouse'))}
@@ -347,7 +419,14 @@ export function buildSalesOrderLineTabs(scope: Scope) {
         );
       case 'Sourcing':
         return (
-          <Box sx={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 3 }}>
+          <Box
+            sx={{
+              gridColumn: '1 / -1',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: 3,
+            }}
+          >
             <Box sx={{ display: 'grid', gap: 1.5 }}>
               {lineEnumField('deliveryType', 'Delivery type', [
                 { value: 0, label: t('salesOrder.ui.stock', 'Stock') },
@@ -363,15 +442,27 @@ export function buildSalesOrderLineTabs(scope: Scope) {
             <Box sx={{ display: 'grid', gap: 1.5 }}>{dimensionField('site', 'Sourcing site')}</Box>
             <Box sx={{ display: 'grid', gap: 1.5 }}>
               {dimensionField('warehouse', 'Sourcing warehouse')}
-              <Typography variant="overline" sx={{ fontWeight: 700 }}>MASTER PLANNING</Typography>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>
+                MASTER PLANNING
+              </Typography>
               {lineBooleanField('excludeFromMasterPlanning', 'Exclude from master planning')}
             </Box>
           </Box>
-        );      case 'Price and discount':
+        );
+      case 'Price and discount':
         return (
-          <Box sx={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 3 }}>
+          <Box
+            sx={{
+              gridColumn: '1 / -1',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: 3,
+            }}
+          >
             <Box>
-              <Typography variant="overline" sx={{ fontWeight: 700 }}>DISCOUNT</Typography>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>
+                DISCOUNT
+              </Typography>
               <Box sx={{ display: 'grid', gap: 1.5 }}>
                 {lineDetailField('lineDiscount', 'Discount', 'number')}
                 {lineDetailField('lineDiscountPercent', 'Discount percent', 'number')}
@@ -380,25 +471,34 @@ export function buildSalesOrderLineTabs(scope: Scope) {
             <Box>
               <Box sx={{ display: 'grid', gap: 1.5, pt: 2.5 }}>
                 {lineDetailField('multiLineDiscount', 'Multiline discount', 'number')}
-                {lineDetailField('multiLineDiscountPercent', 'Multiline discount percentage', 'number')}
+                {lineDetailField(
+                  'multiLineDiscountPercent',
+                  'Multiline discount percentage',
+                  'number'
+                )}
               </Box>
             </Box>
             <Box>
-              <Typography variant="overline" sx={{ fontWeight: 700 }}>PRICES</Typography>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>
+                PRICES
+              </Typography>
               <Box sx={{ display: 'grid', gap: 1.5 }}>
                 {lineDetailField('priceUnit', 'Price unit', 'number')}
                 {lineDetailField('salesMarkup', 'Sales charges', 'number')}
               </Box>
             </Box>
             <Box>
-              <Typography variant="overline" sx={{ fontWeight: 700 }}>REBATES</Typography>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>
+                REBATES
+              </Typography>
               <Box sx={{ display: 'grid', gap: 1.5 }}>
                 {lineBooleanField('excludeFromRebate', 'Exclude from rebate')}
                 {lineBooleanField('excludeFromRebateManagement', 'Exclude from rebate management')}
               </Box>
             </Box>
           </Box>
-        );      case 'Foreign trade':
+        );
+      case 'Foreign trade':
         return <>{lineValue('intrastatCommodity', 'Intrastat commodity')}</>;
       case 'Financial dimensions':
         return (

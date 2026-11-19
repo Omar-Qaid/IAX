@@ -16,10 +16,16 @@ export interface WMSLocationRecord {
 
 const endpoint = '/v1/WMSLocation';
 const data = <T>(response: ApiResponse<T>): T => {
-  if (!response.success || response.data == null) throw new ApiError(response.message || 'Inventory location request failed.', 500);
+  if (!response.success || response.data == null)
+    throw new ApiError(response.message || 'Inventory location request failed.', 500);
   return response.data;
 };
-const body = ({ id: _id, recId: _recId, warehouseName: _warehouseName, ...value }: WMSLocationRecord) => value;
+const body = ({
+  id: _id,
+  recId: _recId,
+  warehouseName: _warehouseName,
+  ...value
+}: WMSLocationRecord) => value;
 
 export const wmsLocationApi = {
   async list(signal?: AbortSignal): Promise<WMSLocationRecord[]> {
@@ -29,7 +35,14 @@ export const wmsLocationApi = {
     return data((await apiClient.post<ApiResponse<WMSLocationRecord>>(endpoint, body(value))).data);
   },
   async update(value: WMSLocationRecord): Promise<WMSLocationRecord> {
-    return data((await apiClient.put<ApiResponse<WMSLocationRecord>>(`${endpoint}/${value.recId}`, body(value))).data);
+    return data(
+      (
+        await apiClient.put<ApiResponse<WMSLocationRecord>>(
+          `${endpoint}/${value.recId}`,
+          body(value)
+        )
+      ).data
+    );
   },
   async delete(value: WMSLocationRecord): Promise<void> {
     data((await apiClient.delete<ApiResponse<boolean>>(`${endpoint}/${value.recId}`)).data);

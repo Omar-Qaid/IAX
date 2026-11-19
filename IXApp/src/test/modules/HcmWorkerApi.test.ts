@@ -114,10 +114,7 @@ describe('hcmWorkerApi identity mapping', () => {
       '/v1/HcmWorker/11/organization-assignments-v1/21',
       organization
     );
-    expect(apiClient.post).toHaveBeenCalledWith(
-      '/v1/HcmWorker/11/showroom-assignments',
-      showroom
-    );
+    expect(apiClient.post).toHaveBeenCalledWith('/v1/HcmWorker/11/showroom-assignments', showroom);
     expect(apiClient.put).toHaveBeenCalledWith(
       '/v1/HcmWorker/11/showroom-assignments/31',
       showroom

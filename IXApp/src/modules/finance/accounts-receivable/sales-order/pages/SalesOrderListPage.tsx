@@ -17,7 +17,7 @@ import { salesOrderQueryKeys } from '../../queries/accountsReceivableQueryKeys';
 export function SalesOrderListPage(): React.ReactElement {
   const { t } = useAppTranslation();
   const navigate = useNavigate();
-  const company = useCompanyStore(state => state.currentCompany);
+  const company = useCompanyStore((state) => state.currentCompany);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const orderQuery = useQuery({
     queryKey: salesOrderQueryKeys.list(company),
@@ -25,16 +25,43 @@ export function SalesOrderListPage(): React.ReactElement {
   });
   const [searchParams] = useSearchParams();
   const customerAccount = searchParams.get('customerAccount');
-  const orders = (orderQuery.data ?? []).filter(order => !customerAccount || order.customerAccount === customerAccount);
+  const orders = (orderQuery.data ?? []).filter(
+    (order) => !customerAccount || order.customerAccount === customerAccount
+  );
   const columns = useMemo<ColumnDef<SalesOrderListRecord>[]>(
     () => [
-      { field: 'salesId', headerName: 'fields.salesOrderNumber', width: 145, pinned: 'left',
-        getDetailHref: (row) => ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrder(row.id) },
-      { field: 'customerAccount', headerName: 'fields.customerAccount', width: 150, preview: { entity: ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.CUSTOMER } },
+      {
+        field: 'salesId',
+        headerName: 'fields.salesOrderNumber',
+        width: 145,
+        pinned: 'left',
+        getDetailHref: (row) => ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrder(row.id),
+      },
+      {
+        field: 'customerAccount',
+        headerName: 'fields.customerAccount',
+        width: 150,
+        preview: { entity: ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.CUSTOMER },
+      },
       { field: 'customerName', headerName: 'fields.customerName', minWidth: 220, flex: 1 },
-      { field: 'invoiceAccount', headerName: 'fields.invoiceAccount', width: 150, preview: { entity: ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.CUSTOMER } },
-      { field: 'customerGroup', headerName: 'fields.customerGroup', width: 145, preview: { entity: ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.CUSTOMER_GROUP } },
-      { field: 'currencyCode', headerName: 'fields.currency', width: 95, preview: { entity: FOUNDATION_RECORD_PREVIEWS.CURRENCY } },
+      {
+        field: 'invoiceAccount',
+        headerName: 'fields.invoiceAccount',
+        width: 150,
+        preview: { entity: ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.CUSTOMER },
+      },
+      {
+        field: 'customerGroup',
+        headerName: 'fields.customerGroup',
+        width: 145,
+        preview: { entity: ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.CUSTOMER_GROUP },
+      },
+      {
+        field: 'currencyCode',
+        headerName: 'fields.currency',
+        width: 95,
+        preview: { entity: FOUNDATION_RECORD_PREVIEWS.CURRENCY },
+      },
       { field: 'deliveryDate', headerName: 'fields.requestedDelivery', width: 135, type: 'date' },
       {
         field: 'orderTotal',
@@ -60,7 +87,9 @@ export function SalesOrderListPage(): React.ReactElement {
     showSearchCommand: true,
     recordTableName: 'SalesTable',
     getAuditRecordId: (order) => order.recId,
-    contextLabel: customerAccount ? `${t('pages.salesOrders.title')} | ${customerAccount}` : undefined,
+    contextLabel: customerAccount
+      ? `${t('pages.salesOrders.title')} | ${customerAccount}`
+      : undefined,
     searchFields: [
       { field: 'salesId', label: t('fields.salesOrderNumber') },
       { field: 'customerAccount', label: t('fields.customerAccount') },

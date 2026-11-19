@@ -40,7 +40,17 @@ export function AppRecordInfoDrawer({
       anchor={drawerAnchor}
       open={open}
       onClose={onClose}
-      slotProps={{ paper: { sx: { width: { xs: '100vw', sm: 420 }, maxWidth: '100vw', borderInlineStart: 1, borderInlineStartColor: 'divider', borderInlineEnd: 0 } } }}
+      slotProps={{
+        paper: {
+          sx: {
+            width: { xs: '100vw', sm: 420 },
+            maxWidth: '100vw',
+            borderInlineStart: 1,
+            borderInlineStartColor: 'divider',
+            borderInlineEnd: 0,
+          },
+        },
+      }}
       sx={{ zIndex: (theme) => theme.zIndex.drawer + 2 }}
     >
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>

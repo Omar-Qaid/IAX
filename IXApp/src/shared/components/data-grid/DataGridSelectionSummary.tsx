@@ -9,17 +9,28 @@ interface DataGridSelectionSummaryProps {
   filteredRows: number;
 }
 
-export function DataGridSelectionSummary({ serverSide, loadedRows, totalRowCount, filteredRows }: DataGridSelectionSummaryProps) {
+export function DataGridSelectionSummary({
+  serverSide,
+  loadedRows,
+  totalRowCount,
+  filteredRows,
+}: DataGridSelectionSummaryProps) {
   const { t } = useTranslation();
 
   const rowLabel = (() => {
     if (serverSide) {
       return loadedRows < totalRowCount
-        ? t('grid.rows_loaded', { loaded: loadedRows.toLocaleString(), total: totalRowCount.toLocaleString() })
+        ? t('grid.rows_loaded', {
+            loaded: loadedRows.toLocaleString(),
+            total: totalRowCount.toLocaleString(),
+          })
         : t('grid.rows_count', { count: loadedRows });
     }
     return filteredRows < totalRowCount
-      ? t('grid.rows_filtered', { filtered: filteredRows.toLocaleString(), total: totalRowCount.toLocaleString() })
+      ? t('grid.rows_filtered', {
+          filtered: filteredRows.toLocaleString(),
+          total: totalRowCount.toLocaleString(),
+        })
       : t('grid.rows_count', { count: totalRowCount });
   })();
 
@@ -34,9 +45,14 @@ export function DataGridSelectionSummary({ serverSide, loadedRows, totalRowCount
           px: 1.25,
           py: 0.5,
           borderRadius: '20px',
-          bgcolor: (theme) => isFiltered ? alpha(theme.palette.primary.main, 0.1) : theme.palette.mode === 'light' ? '#f1f5f9' : 'rgba(255,255,255,0.05)',
+          bgcolor: (theme) =>
+            isFiltered
+              ? alpha(theme.palette.primary.main, 0.1)
+              : theme.palette.mode === 'light'
+                ? '#f1f5f9'
+                : 'rgba(255,255,255,0.05)',
           border: '1px solid',
-          borderColor: (theme) => isFiltered ? alpha(theme.palette.primary.main, 0.2) : 'divider',
+          borderColor: (theme) => (isFiltered ? alpha(theme.palette.primary.main, 0.2) : 'divider'),
           transition: 'all 0.2s',
         }}
       >

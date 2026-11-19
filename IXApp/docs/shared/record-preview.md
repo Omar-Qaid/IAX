@@ -20,7 +20,12 @@ registerRecordPreview<CustomerGroupRecord>(ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.C
   masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_GROUPS,
   load: pagedRecordLoader('/v1/CustGroup', 'CustGroupId'),
   fields: [
-    { labelKey: 'fields.customerGroup', defaultLabel: 'Customer group', value: 'custGroupId', lookup: true },
+    {
+      labelKey: 'fields.customerGroup',
+      defaultLabel: 'Customer group',
+      value: 'custGroupId',
+      lookup: true,
+    },
     { labelKey: 'fields.description', defaultLabel: 'Description', value: 'name' },
   ],
 });
@@ -32,32 +37,32 @@ registerRecordPreview<CustomerGroupRecord>(ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.C
 
 Like D365, a card shows only the fields that identify the record, not the whole record.
 
-| Entity | Card | Defined in |
-| --- | --- | --- |
-| Customer | Name | `accounts-receivable/previews` |
-| Customer group | Customer group, Description | `accounts-receivable/previews` |
-| Terms of payment | Terms of payment, Description | `accounts-receivable/previews` |
-| Method of payment | Method of payment, Description | `accounts-receivable/previews` |
-| Site | Site, Name | `inventory/previews` |
-| Warehouse | Warehouse, Name | `inventory/previews` |
-| Currency | Currency, Name | `foundation/previews` |
-| Sales tax group | Sales tax group, Description | `foundation/previews` |
-| Item sales tax group | Item sales tax group, Description | `foundation/previews` |
-| Tax authority | Tax authority, Name | `foundation/previews` |
-| Mode of delivery | Mode of delivery, Description | `foundation/previews` (no master form: use `previewEntity`) |
-| Delivery terms | Delivery terms, Description | `foundation/previews` (no master form: use `previewEntity`) |
-| Postal address | Location, Effective, Address (record passed by the page) | `shared/components/logistics` |
+| Entity               | Card                                                     | Defined in                                                  |
+| -------------------- | -------------------------------------------------------- | ----------------------------------------------------------- |
+| Customer             | Name                                                     | `accounts-receivable/previews`                              |
+| Customer group       | Customer group, Description                              | `accounts-receivable/previews`                              |
+| Terms of payment     | Terms of payment, Description                            | `accounts-receivable/previews`                              |
+| Method of payment    | Method of payment, Description                           | `accounts-receivable/previews`                              |
+| Site                 | Site, Name                                               | `inventory/previews`                                        |
+| Warehouse            | Warehouse, Name                                          | `inventory/previews`                                        |
+| Currency             | Currency, Name                                           | `foundation/previews`                                       |
+| Sales tax group      | Sales tax group, Description                             | `foundation/previews`                                       |
+| Item sales tax group | Item sales tax group, Description                        | `foundation/previews`                                       |
+| Tax authority        | Tax authority, Name                                      | `foundation/previews`                                       |
+| Mode of delivery     | Mode of delivery, Description                            | `foundation/previews` (no master form: use `previewEntity`) |
+| Delivery terms       | Delivery terms, Description                              | `foundation/previews` (no master form: use `previewEntity`) |
+| Postal address       | Location, Effective, Address (record passed by the page) | `shared/components/logistics`                               |
 
 An entity without `load` (postal address) is previewed only where the page passes the `record` it already holds; elsewhere its value renders unchanged.
 
 ## Where it applies
 
-| Place | How it is enabled |
-| --- | --- |
-| Form fields of the list-details pattern | Automatically, when the field's `masterRoute` belongs to a registered entity, or explicitly with `previewEntity`. |
-| `LookupField`, `LookupGridField`, `DataGridLookupField`, `LookupDisplayField` | Automatically by `masterRoute`, or explicitly with `previewEntity`. |
-| Grid columns | `preview: { entity }` on the `ColumnDef`; the key is the cell value unless `getKey` is given. |
-| Any other value | `<RecordPreview entity="customer" recordKey={account}>…</RecordPreview>` |
+| Place                                                                         | How it is enabled                                                                                                 |
+| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Form fields of the list-details pattern                                       | Automatically, when the field's `masterRoute` belongs to a registered entity, or explicitly with `previewEntity`. |
+| `LookupField`, `LookupGridField`, `DataGridLookupField`, `LookupDisplayField` | Automatically by `masterRoute`, or explicitly with `previewEntity`.                                               |
+| Grid columns                                                                  | `preview: { entity }` on the `ColumnDef`; the key is the cell value unless `getKey` is given.                     |
+| Any other value                                                               | `<RecordPreview entity="customer" recordKey={account}>…</RecordPreview>`                                          |
 
 ## Behaviour
 

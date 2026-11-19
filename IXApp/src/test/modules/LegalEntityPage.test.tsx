@@ -18,14 +18,20 @@ describe('LegalEntityPage', () => {
     const update = vi.spyOn(legalEntityMockRepository, 'update');
     render(<LegalEntityPage />);
 
-    expect((await screen.findAllByText('AlHayat Building Materials Company')).length).toBeGreaterThan(0);
+    expect(
+      (await screen.findAllByText('AlHayat Building Materials Company')).length
+    ).toBeGreaterThan(0);
     expect(screen.getByText('Dashboard image')).toBeInTheDocument();
     expect(screen.getByText('Report company logo image')).toBeInTheDocument();
     expect(screen.getByText('Dashboard company image type')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'View in hierarchy' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Registration IDs' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Registration ID search' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Electronic document properties' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Registration ID search' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Electronic document properties' })
+    ).not.toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'Options' })).toHaveLength(1);
     await user.click(screen.getByRole('button', { name: 'Edit' }));
     const name = screen.getByDisplayValue('AlHayat Building Materials Company');
@@ -46,8 +52,15 @@ describe('LegalEntityPage', () => {
     await user.click(screen.getByRole('button', { name: 'Edit' }));
     const inputs = container.querySelectorAll<HTMLInputElement>('input[type="file"]');
     expect(inputs).toHaveLength(2);
-    fireEvent.change(inputs[1]!, { target: { files: [new File(['image'], 'report.png', { type: 'image/png' })] } });
-    await waitFor(() => expect(screen.getByAltText('Report company logo')).toHaveAttribute('src', 'data:image/png;base64,aW1hZ2U='));
+    fireEvent.change(inputs[1]!, {
+      target: { files: [new File(['image'], 'report.png', { type: 'image/png' })] },
+    });
+    await waitFor(() =>
+      expect(screen.getByAltText('Report company logo')).toHaveAttribute(
+        'src',
+        'data:image/png;base64,aW1hZ2U='
+      )
+    );
     await user.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(update).toHaveBeenCalledTimes(1));
     expect(update.mock.calls[0]?.[0].reportLogoFile).toMatchObject({

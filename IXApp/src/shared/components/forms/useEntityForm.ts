@@ -9,21 +9,28 @@ export interface UseEntityFormOptions<T extends object> {
   onSubmit?: (values: T) => void | Promise<void>;
 }
 
-export function useEntityForm<T extends object>({ initialValues, validate, onSubmit }: UseEntityFormOptions<T>) {
+export function useEntityForm<T extends object>({
+  initialValues,
+  validate,
+  onSubmit,
+}: UseEntityFormOptions<T>) {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState<EntityFormErrors<T>>({});
   const [submitting, setSubmitting] = useState(false);
   const dirty = useMemo(() => !deepEqual(values, initialValues), [initialValues, values]);
 
   const setFieldValue = useCallback(<K extends keyof T>(field: K, value: T[K]) => {
-    setValues(current => ({ ...current, [field]: value }));
-    setErrors(current => ({ ...current, [field]: undefined }));
+    setValues((current) => ({ ...current, [field]: value }));
+    setErrors((current) => ({ ...current, [field]: undefined }));
   }, []);
 
-  const reset = useCallback((nextValues: T = initialValues) => {
-    setValues(nextValues);
-    setErrors({});
-  }, [initialValues]);
+  const reset = useCallback(
+    (nextValues: T = initialValues) => {
+      setValues(nextValues);
+      setErrors({});
+    },
+    [initialValues]
+  );
 
   const submit = useCallback(async () => {
     const nextErrors = validate?.(values) ?? {};

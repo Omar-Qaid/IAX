@@ -42,24 +42,27 @@ const renderEditable = (props: Partial<React.ComponentProps<typeof DataGrid<Line
   const onRowSave = vi.fn(async () => undefined);
   const utils = render(
     <AppProviders>
-    <DataGrid<Line>
-      ref={ref}
-      rows={lines}
-      columns={editableColumns}
-      masterForm
-      onRowSave={onRowSave}
-      height={300}
-      hideToolbar
-      hideFilterRow
-      {...props}
-    />
+      <DataGrid<Line>
+        ref={ref}
+        rows={lines}
+        columns={editableColumns}
+        masterForm
+        onRowSave={onRowSave}
+        height={300}
+        hideToolbar
+        hideFilterRow
+        {...props}
+      />
     </AppProviders>
   );
   return { ref, onRowSave, ...utils };
 };
 
 const editingRowId = () =>
-  document.querySelector('[data-row-id] input')?.closest('[data-row-id]')?.getAttribute('data-row-id');
+  document
+    .querySelector('[data-row-id] input')
+    ?.closest('[data-row-id]')
+    ?.getAttribute('data-row-id');
 
 describe('grid filters', () => {
   it('applies blank checks without a value', () => {
@@ -79,9 +82,9 @@ describe('grid filters', () => {
   it('matches numbers exactly from the filter row and offers type-specific operators', () => {
     expect(defaultFilterOperator('number')).toBe('equals');
     expect(defaultFilterOperator('text')).toBe('contains');
-    expect(process([{ field: 'qty', operator: defaultFilterOperator('number'), value: '10' }])).toEqual([
-      'a',
-    ]);
+    expect(
+      process([{ field: 'qty', operator: defaultFilterOperator('number'), value: '10' }])
+    ).toEqual(['a']);
     const numberOps = filterOperatorsFor('number').map((op) => op.value);
     expect(numberOps).toContain('gt');
     expect(numberOps).not.toContain('contains');
@@ -91,14 +94,11 @@ describe('grid filters', () => {
 
 describe('CSV export', () => {
   it('writes a UTF-8 BOM, CRLF rows and neutralises formulas', () => {
-    const csv = generateCSV(
-      [{ id: '1', code: '=HYPERLINK("x")', qty: -5, note: 'عميل' }],
-      [
-        { field: 'code', headerName: 'Code' },
-        { field: 'qty', headerName: 'Qty' },
-        { field: 'note', headerName: 'Note' },
-      ] as ColumnDef<Line>[]
-    );
+    const csv = generateCSV([{ id: '1', code: '=HYPERLINK("x")', qty: -5, note: 'عميل' }], [
+      { field: 'code', headerName: 'Code' },
+      { field: 'qty', headerName: 'Qty' },
+      { field: 'note', headerName: 'Note' },
+    ] as ColumnDef<Line>[]);
     expect(csv.startsWith('﻿')).toBe(true);
     expect(csv).toContain('\r\n');
     expect(csv).toContain(`"'=HYPERLINK(""x"")"`);
@@ -121,7 +121,13 @@ describe('keyboard', () => {
   it('handles F5 when the grid has a refresh action', () => {
     const onRefresh = vi.fn();
     render(
-      <DataGrid<Line> rows={lines} columns={editableColumns} height={300} hideToolbar onRefresh={onRefresh} />
+      <DataGrid<Line>
+        rows={lines}
+        columns={editableColumns}
+        height={300}
+        hideToolbar
+        onRefresh={onRefresh}
+      />
     );
     document.querySelector<HTMLElement>('[data-row-index="0"][data-col-index="0"]')!.focus();
     const event = new KeyboardEvent('keydown', { key: 'F5', bubbles: true, cancelable: true });
@@ -147,7 +153,10 @@ describe('keyboard', () => {
     expect((document.activeElement as HTMLInputElement).type).toBe('checkbox');
     fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
     await waitFor(() =>
-      expect(document.activeElement?.closest('[data-row-index]')).toHaveAttribute('data-row-index', '1')
+      expect(document.activeElement?.closest('[data-row-index]')).toHaveAttribute(
+        'data-row-index',
+        '1'
+      )
     );
   });
 });
@@ -169,19 +178,26 @@ describe('D365 line editing', () => {
   it('writes a changed line once', async () => {
     const { ref, onRowSave } = renderEditable();
     act(() => ref.current!.startEditRow('a'));
-    const input = document.querySelector<HTMLInputElement>('[data-row-id="a"] [data-field="code"] input')!;
+    const input = document.querySelector<HTMLInputElement>(
+      '[data-row-id="a"] [data-field="code"] input'
+    )!;
     fireEvent.change(input, { target: { value: 'A-9' } });
     await act(async () => {
       await ref.current!.saveEdit();
     });
     expect(onRowSave).toHaveBeenCalledTimes(1);
-    expect(onRowSave).toHaveBeenCalledWith(expect.objectContaining({ id: 'a', code: 'A-9' }), false);
+    expect(onRowSave).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'a', code: 'A-9' }),
+      false
+    );
   });
 
   it('saves the line and keeps editing the next one on ArrowDown', async () => {
     const { ref, onRowSave } = renderEditable();
     act(() => ref.current!.startEditRow('a'));
-    const input = document.querySelector<HTMLInputElement>('[data-row-id="a"] [data-field="code"] input')!;
+    const input = document.querySelector<HTMLInputElement>(
+      '[data-row-id="a"] [data-field="code"] input'
+    )!;
     fireEvent.change(input, { target: { value: 'A-9' } });
     input.focus();
     fireEvent.keyDown(input, { key: 'ArrowDown' });
@@ -198,7 +214,9 @@ describe('D365 line editing', () => {
     });
     const { ref } = renderEditable({ onRowSave });
     act(() => ref.current!.startEditRow('a'));
-    const input = document.querySelector<HTMLInputElement>('[data-row-id="a"] [data-field="code"] input')!;
+    const input = document.querySelector<HTMLInputElement>(
+      '[data-row-id="a"] [data-field="code"] input'
+    )!;
     fireEvent.change(input, { target: { value: 'A-9' } });
     input.focus();
     fireEvent.keyDown(input, { key: 'ArrowDown' });
@@ -209,7 +227,9 @@ describe('D365 line editing', () => {
   it('moves to the next line with Tab from the last field', async () => {
     const { ref } = renderEditable();
     act(() => ref.current!.startEditRow('a'));
-    const qty = document.querySelector<HTMLInputElement>('[data-row-id="a"] [data-field="qty"] input')!;
+    const qty = document.querySelector<HTMLInputElement>(
+      '[data-row-id="a"] [data-field="qty"] input'
+    )!;
     qty.focus();
     fireEvent.keyDown(qty, { key: 'Tab' });
     await waitFor(() => expect(editingRowId()).toBe('b'));

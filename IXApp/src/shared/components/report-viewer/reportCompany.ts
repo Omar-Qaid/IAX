@@ -51,16 +51,47 @@ const asImageSource = (value?: string | null): string | null => {
 const primaryFirst = <T extends { primary: boolean }>(items: T[]): T[] =>
   [...items].sort((left, right) => Number(right.primary) - Number(left.primary));
 
-export const toReportCompany = (entity: ReportCompanyInfo | undefined, companyCode: string, reportLogoSource?: string | null): reportCompany => {
+export const toReportCompany = (
+  entity: ReportCompanyInfo | undefined,
+  companyCode: string,
+  reportLogoSource?: string | null
+): reportCompany => {
   if (!entity) return { name: companyCode || 'Company', companyCode };
   const address = primaryFirst(entity.addresses)[0];
   const contacts = primaryFirst(entity.contacts).slice(0, 3);
-  const addressLines = [address?.address, [address?.street, address?.city, address?.state, address?.zipCode].filter(Boolean).join(', '), address?.countryRegionId].filter((line): line is string => Boolean(line?.trim()));
-  const contactLines = contacts.map((contact) => [contact.type, contact.number, contact.extension ? `Ext. ${contact.extension}` : ''].filter(Boolean).join(': '));
-  const registrationLines = [entity.taxLicenseNum ? `Tax: ${entity.taxLicenseNum}` : '', entity.federalTaxId ? `Federal ID: ${entity.federalTaxId}` : ''].filter(Boolean);
-  const phone = contacts.find((contact) => contact.type.toLowerCase().includes('phone'))?.number ?? contacts[0]?.number ?? null;
-  const email = contacts.find((contact) => contact.type.toLowerCase().includes('mail'))?.number ?? null;
-  return { name: entity.name || companyCode || 'Company', secondaryName: entity.arabicName, companyCode: entity.dataArea || companyCode, logoSource: reportLogoSource || asImageSource(entity.reportLogo || entity.logo), addressLines, contactLines, registrationLines, vatNumber: entity.taxLicenseNum, commercialRegistration: entity.federalTaxId, phone, email };
+  const addressLines = [
+    address?.address,
+    [address?.street, address?.city, address?.state, address?.zipCode].filter(Boolean).join(', '),
+    address?.countryRegionId,
+  ].filter((line): line is string => Boolean(line?.trim()));
+  const contactLines = contacts.map((contact) =>
+    [contact.type, contact.number, contact.extension ? `Ext. ${contact.extension}` : '']
+      .filter(Boolean)
+      .join(': ')
+  );
+  const registrationLines = [
+    entity.taxLicenseNum ? `Tax: ${entity.taxLicenseNum}` : '',
+    entity.federalTaxId ? `Federal ID: ${entity.federalTaxId}` : '',
+  ].filter(Boolean);
+  const phone =
+    contacts.find((contact) => contact.type.toLowerCase().includes('phone'))?.number ??
+    contacts[0]?.number ??
+    null;
+  const email =
+    contacts.find((contact) => contact.type.toLowerCase().includes('mail'))?.number ?? null;
+  return {
+    name: entity.name || companyCode || 'Company',
+    secondaryName: entity.arabicName,
+    companyCode: entity.dataArea || companyCode,
+    logoSource: reportLogoSource || asImageSource(entity.reportLogo || entity.logo),
+    addressLines,
+    contactLines,
+    registrationLines,
+    vatNumber: entity.taxLicenseNum,
+    commercialRegistration: entity.federalTaxId,
+    phone,
+    email,
+  };
 };
 
 const blobAsDataUrl = (blob: Blob, signal?: AbortSignal): Promise<string> =>
@@ -69,21 +100,32 @@ const blobAsDataUrl = (blob: Blob, signal?: AbortSignal): Promise<string> =>
     const abort = () => reader.abort();
     reader.onload = () => resolve(String(reader.result));
     reader.onerror = () => reject(reader.error ?? new Error('Unable to read the report logo.'));
-    reader.onabort = () => reject(new DOMException('The report-logo request was aborted.', 'AbortError'));
+    reader.onabort = () =>
+      reject(new DOMException('The report-logo request was aborted.', 'AbortError'));
     signal?.addEventListener('abort', abort, { once: true });
     reader.onloadend = () => signal?.removeEventListener('abort', abort);
     reader.readAsDataURL(blob);
   });
 
-export async function fetchreportCompany(companyCode: string, signal?: AbortSignal): Promise<reportCompany> {
-  const response = await apiClient.get<ApiResponse<ReportCompanyInfo[]>>('/v1/CompanyInfo', { signal });
-  if (!response.data.success || !response.data.data) throw new ApiError(response.data.message || 'Unable to load report company information.', 500);
-  const entity = response.data.data.find((item) => item.dataArea.localeCompare(companyCode, undefined, { sensitivity: 'accent' }) === 0);
+export async function fetchreportCompany(
+  companyCode: string,
+  signal?: AbortSignal
+): Promise<reportCompany> {
+  const response = await apiClient.get<ApiResponse<ReportCompanyInfo[]>>('/v1/CompanyInfo', {
+    signal,
+  });
+  if (!response.data.success || !response.data.data)
+    throw new ApiError(response.data.message || 'Unable to load report company information.', 500);
+  const entity = response.data.data.find(
+    (item) => item.dataArea.localeCompare(companyCode, undefined, { sensitivity: 'accent' }) === 0
+  );
   if (!entity) return toReportCompany(undefined, companyCode);
 
   try {
     const documents = await documentApi.list(REPORT_COMPANY_TABLE_ID, entity.recId, signal);
-    const attachment = documents.items.find((document) => document.name === REPORT_COMPANY_LOGO_ATTACHMENT);
+    const attachment = documents.items.find(
+      (document) => document.name === REPORT_COMPANY_LOGO_ATTACHMENT
+    );
     if (!attachment) return toReportCompany(entity, companyCode);
     const logo = await documentApi.previewBlob(attachment.id, signal);
     return toReportCompany(entity, companyCode, await blobAsDataUrl(logo, signal));

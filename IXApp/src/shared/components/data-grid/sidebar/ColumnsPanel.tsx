@@ -44,7 +44,10 @@ export function ColumnsPanel<T>({
           onChange={(v) => setPivotMode(v)}
           sx={{ '& .MuiSwitch-root': { marginInlineEnd: 1 } }}
         />
-        <Typography variant="body2" sx={{ marginInlineStart: 1, fontSize: '0.8rem', color: 'text.secondary' }}>
+        <Typography
+          variant="body2"
+          sx={{ marginInlineStart: 1, fontSize: '0.8rem', color: 'text.secondary' }}
+        >
           {t('grid.pivot_mode')}
         </Typography>
       </Box>
@@ -89,7 +92,10 @@ export function ColumnsPanel<T>({
 
       <Box sx={{ p: 1, borderTop: '1px solid #e0e0e0', bgcolor: '#fafafa' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <TableRowsIcon fontSize="small" sx={{ fontSize: 16, marginInlineEnd: 1, color: 'text.secondary' }} />
+          <TableRowsIcon
+            fontSize="small"
+            sx={{ fontSize: 16, marginInlineEnd: 1, color: 'text.secondary' }}
+          />
           <Typography variant="caption" sx={{ fontWeight: 600 }}>
             {t('grid.row_groups')}
           </Typography>
@@ -110,7 +116,10 @@ export function ColumnsPanel<T>({
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <FunctionsIcon fontSize="small" sx={{ fontSize: 16, marginInlineEnd: 1, color: 'text.secondary' }} />
+          <FunctionsIcon
+            fontSize="small"
+            sx={{ fontSize: 16, marginInlineEnd: 1, color: 'text.secondary' }}
+          />
           <Typography variant="caption" sx={{ fontWeight: 600 }}>
             {t('grid.values')}
           </Typography>

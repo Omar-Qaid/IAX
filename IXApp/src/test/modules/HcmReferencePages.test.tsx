@@ -6,7 +6,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HcmNationalityPage } from '@modules/organization/pages/HcmNationalityPage';
 import { HcmOccupationPage } from '@modules/organization/pages/HcmOccupationPage';
 import { HcmDepartmentPage } from '@modules/organization/pages/HcmDepartmentPage';
-import { hcmNationalityApi, hcmOccupationApi, hcmDepartmentApi } from '@modules/organization/api/hcmReferenceApi';
+import {
+  hcmNationalityApi,
+  hcmOccupationApi,
+  hcmDepartmentApi,
+} from '@modules/organization/api/hcmReferenceApi';
 
 vi.mock('@core/localization/useAppTranslation', () => ({
   useAppTranslation: () => ({

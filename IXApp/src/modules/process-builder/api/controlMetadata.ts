@@ -1,4 +1,7 @@
-export function readControlMetadataForSave(value: string | null | undefined, field: string): Record<string, unknown> {
+export function readControlMetadataForSave(
+  value: string | null | undefined,
+  field: string
+): Record<string, unknown> {
   if (!value?.trim()) return {};
   const storedValue = value.trim();
   try {
@@ -11,12 +14,17 @@ export function readControlMetadataForSave(value: string | null | undefined, fie
     if (storedValue.startsWith('<') && storedValue.endsWith('>')) {
       try {
         const document = new DOMParser().parseFromString(storedValue, 'application/xml');
-        if (!document.querySelector('parsererror') && document.documentElement.nodeName !== 'parsererror')
+        if (
+          !document.querySelector('parsererror') &&
+          document.documentElement.nodeName !== 'parsererror'
+        )
           return { legacyXml: storedValue };
       } catch {
         // Fall through to the actionable validation error below.
       }
     }
   }
-  throw new Error(`${field} contains invalid or non-object JSON. Correct the stored metadata before saving this control.`);
+  throw new Error(
+    `${field} contains invalid or non-object JSON. Correct the stored metadata before saving this control.`
+  );
 }

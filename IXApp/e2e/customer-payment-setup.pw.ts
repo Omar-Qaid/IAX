@@ -54,7 +54,7 @@ for (const kind of ['terms', 'methods'] as const)
     await page.reload();
     await page.getByRole('button', { name: 'Edit', exact: true }).click();
     await expect(page.getByRole('textbox', { name: 'Description', exact: true })).toHaveValue(
-      'Audit setup',
+      'Audit setup'
     );
     await page
       .getByRole('spinbutton', { name: term ? 'Days' : 'Grace period', exact: true })

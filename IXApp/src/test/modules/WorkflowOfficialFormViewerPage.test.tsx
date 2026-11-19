@@ -10,64 +10,62 @@ import { reportDesignerApi } from '@modules/workflow/report-designer/api/reportD
 const getPublishedForRequest = vi
   .spyOn(reportDesignerApi, 'getPublishedForRequest')
   .mockResolvedValue({
-  templateId: 17,
-  processId: 7,
-  code: 'OFFICIAL',
-  name: 'Official request form',
-  document: {
-    schemaVersion: 1,
-    language: 'en',
-    direction: 'ltr',
-    page: {
-      size: 'A4',
-      orientation: 'portrait',
-      margins: { top: 15, right: 15, bottom: 15, left: 15 },
-    },
-    header: [{ id: 'title', type: 'text', value: 'Approved official layout' }],
-    sections: [
-      {
-        id: 'amount',
-        type: 'field',
-        label: 'Total sales',
-        binding: { sourceType: 'requestControl', requestControlId: 2101 },
+    templateId: 17,
+    processId: 7,
+    code: 'OFFICIAL',
+    name: 'Official request form',
+    document: {
+      schemaVersion: 1,
+      language: 'en',
+      direction: 'ltr',
+      page: {
+        size: 'A4',
+        orientation: 'portrait',
+        margins: { top: 15, right: 15, bottom: 15, left: 15 },
       },
-    ],
-    footer: [],
-    missingFieldBehavior: 'empty',
-  },
+      header: [{ id: 'title', type: 'text', value: 'Approved official layout' }],
+      sections: [
+        {
+          id: 'amount',
+          type: 'field',
+          label: 'Total sales',
+          binding: { sourceType: 'requestControl', requestControlId: 2101 },
+        },
+      ],
+      footer: [],
+      missingFieldBehavior: 'empty',
+    },
   } as any);
 
 vi.mock('@modules/workflow/api/wfRequestApi', () => ({
   wfRequestApi: {
-    mailDetails: vi
-      .fn()
-      .mockResolvedValue({
-        requestId: 42,
-        processName: 'Daily closing',
-        status: 'Completed',
-        requestDate: '2026-08-25T08:00:00Z',
-        employeeName: 'Employee',
-        employeeNumber: 'D141',
-        transactionType: 'Completed',
-        transactionTime: '2026-08-25T08:00:00Z',
-        transactionEndTime: '2026-08-25T09:00:00Z',
-        responsibleEmployee: null,
-        history: [],
-        fields: [
-          {
-            detailId: 1,
-            controlId: 100,
-            controlDataId: 2101,
-            label: 'Total sales',
-            labelAr: '',
-            value: '5239',
-            valueAr: '',
-            valueEn: '5239',
-            controlType: 'number',
-            controlOrder: 1,
-          },
-        ],
-      }),
+    mailDetails: vi.fn().mockResolvedValue({
+      requestId: 42,
+      processName: 'Daily closing',
+      status: 'Completed',
+      requestDate: '2026-08-25T08:00:00Z',
+      employeeName: 'Employee',
+      employeeNumber: 'D141',
+      transactionType: 'Completed',
+      transactionTime: '2026-08-25T08:00:00Z',
+      transactionEndTime: '2026-08-25T09:00:00Z',
+      responsibleEmployee: null,
+      history: [],
+      fields: [
+        {
+          detailId: 1,
+          controlId: 100,
+          controlDataId: 2101,
+          label: 'Total sales',
+          labelAr: '',
+          value: '5239',
+          valueAr: '',
+          valueEn: '5239',
+          controlType: 'number',
+          controlOrder: 1,
+        },
+      ],
+    }),
   },
 }));
 

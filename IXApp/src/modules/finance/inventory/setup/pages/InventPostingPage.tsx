@@ -179,12 +179,8 @@ export function InventPostingPage(): React.ReactElement {
                     key === 'itemCode' || key === 'custVendCode'
                       ? Number(event.target.value)
                       : event.target.value,
-                  ...(key === 'itemCode'
-                    ? { itemRelation: '' }
-                    : {}),
-                  ...(key === 'custVendCode'
-                    ? { custVendRelation: '' }
-                    : {}),
+                  ...(key === 'itemCode' ? { itemRelation: '' } : {}),
+                  ...(key === 'custVendCode' ? { custVendRelation: '' } : {}),
                 }
               : current
           )
@@ -244,8 +240,8 @@ export function InventPostingPage(): React.ReactElement {
               { id: '0', label: '' },
               ...(lookups.data?.categories ?? []),
             ])
-          : lookups.data?.categories.find((category) => category.id === row.categoryRelation)
-              ?.label ?? '',
+          : (lookups.data?.categories.find((category) => category.id === row.categoryRelation)
+              ?.label ?? ''),
     },
     {
       field: 'custVendCode',
@@ -325,7 +321,11 @@ export function InventPostingPage(): React.ReactElement {
       rows={shownRows}
       columns={columns}
       loading={rules.isLoading}
-      error={error || (rules.isError ? rules.error.message : '') || (lookups.isError ? lookups.error.message : '')}
+      error={
+        error ||
+        (rules.isError ? rules.error.message : '') ||
+        (lookups.isError ? lookups.error.message : '')
+      }
       editing={Boolean(draft)}
       saving={saving}
       canCreate={canCreate}

@@ -5,15 +5,17 @@ import {
 } from '@modules/process-builder/api/processBuilderDataTypes';
 
 describe('Process Builder workflow metadata', () => {
-  it.each([[1, 'STR', 'text'], [2, 'NUM', 'number'], [3, 'BOOL', 'boolean'], [4, 'DATE', 'date']] as const)(
-    'round-trips API-seeded type %s (%s)',
-    (recId, code, type) => {
-      const seededCatalog = [{ recId, code, isActive: true }];
-      expect(resolveBuilderDataType(recId, seededCatalog)).toBe(type);
-      expect(resolveVariableDataTypeId(type, seededCatalog)).toBe(recId);
-      expect(resolveVariableDataTypeId(type, seededCatalog, recId)).toBe(recId);
-    }
-  );
+  it.each([
+    [1, 'STR', 'text'],
+    [2, 'NUM', 'number'],
+    [3, 'BOOL', 'boolean'],
+    [4, 'DATE', 'date'],
+  ] as const)('round-trips API-seeded type %s (%s)', (recId, code, type) => {
+    const seededCatalog = [{ recId, code, isActive: true }];
+    expect(resolveBuilderDataType(recId, seededCatalog)).toBe(type);
+    expect(resolveVariableDataTypeId(type, seededCatalog)).toBe(recId);
+    expect(resolveVariableDataTypeId(type, seededCatalog, recId)).toBe(recId);
+  });
 
   const catalog = [
     { recId: 41, code: 'INT', isActive: true },
@@ -22,13 +24,15 @@ describe('Process Builder workflow metadata', () => {
     { recId: 24, code: 'BOOL', isActive: true },
   ];
 
-  it.each([[41, 'number'], [12, 'text'], [83, 'date'], [24, 'boolean']] as const)(
-    'round-trips catalog ID %s by semantic code',
-    (id, type) => {
-      expect(resolveBuilderDataType(id, catalog)).toBe(type);
-      expect(resolveVariableDataTypeId(type, catalog)).toBe(id);
-    }
-  );
+  it.each([
+    [41, 'number'],
+    [12, 'text'],
+    [83, 'date'],
+    [24, 'boolean'],
+  ] as const)('round-trips catalog ID %s by semantic code', (id, type) => {
+    expect(resolveBuilderDataType(id, catalog)).toBe(type);
+    expect(resolveVariableDataTypeId(type, catalog)).toBe(id);
+  });
 
   it('preserves an existing inactive type without assigning it to new variables', () => {
     const types = [{ recId: 90, code: 'STR', isActive: false }, ...catalog];

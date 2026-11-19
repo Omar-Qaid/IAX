@@ -14,7 +14,9 @@ const LoginPage = lazy(() =>
   import('@modules/identity/pages/LoginPage').then((module) => ({ default: module.LoginPage }))
 );
 const DocuView = lazy(() =>
-  import('@modules/organization/documents/pages/DocuView').then((module) => ({ default: module.DocuView }))
+  import('@modules/organization/documents/pages/DocuView').then((module) => ({
+    default: module.DocuView,
+  }))
 );
 
 const LoginRoutePage = () => {

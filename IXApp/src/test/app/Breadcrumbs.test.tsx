@@ -9,8 +9,10 @@ describe('localized route breadcrumbs', () => {
   it('uses route metadata for dynamic sales-order paths', () => {
     render(
       <MemoryRouter initialEntries={['/accounts-receivable/sales-orders/so-101']}>
-        <AppProviders><PageBreadcrumbs /></AppProviders>
-      </MemoryRouter>,
+        <AppProviders>
+          <PageBreadcrumbs />
+        </AppProviders>
+      </MemoryRouter>
     );
     expect(screen.getByText('Accounts Receivable')).toBeDefined();
     expect(screen.getByText('Sales orders')).toBeDefined();

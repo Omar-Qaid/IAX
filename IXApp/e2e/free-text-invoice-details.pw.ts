@@ -186,7 +186,9 @@ test('free text invoice details edits and saves the active line, cancels changes
   await page.getByRole('tab', { name: 'Lines', exact: true }).click();
   await page.locator('[data-row-id]').getByText('New consulting', { exact: true }).dblclick();
   await page.getByRole('combobox', { name: 'Ledger account', exact: true }).click();
-  await expect(page.getByRole('option').filter({ hasText: 'Consulting revenue' }).first()).toBeVisible();
+  await expect(
+    page.getByRole('option').filter({ hasText: 'Consulting revenue' }).first()
+  ).toBeVisible();
   await page.screenshot({ path: info.outputPath('free-text-invoice-line-edit.png') });
   await page.getByRole('option').filter({ hasText: 'Consulting revenue' }).first().click();
   await page.getByRole('button', { name: 'Save', exact: true }).click();

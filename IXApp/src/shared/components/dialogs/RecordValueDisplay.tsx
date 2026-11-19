@@ -29,7 +29,9 @@ const elementText = (element: Element, tagName: string): string | null =>
 const decodeXmlText = (value: string): string =>
   value
     .replace(/^<!\[CDATA\[([\s\S]*)\]\]>$/, '$1')
-    .replace(/&#x([0-9a-f]+);/gi, (_, code: string) => String.fromCodePoint(Number.parseInt(code, 16)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, code: string) =>
+      String.fromCodePoint(Number.parseInt(code, 16))
+    )
     .replace(/&#(\d+);/g, (_, code: string) => String.fromCodePoint(Number(code)))
     .replaceAll('&lt;', '<')
     .replaceAll('&gt;', '>')
@@ -39,7 +41,9 @@ const decodeXmlText = (value: string): string =>
     .trim();
 
 const tagText = (value: string, tagName: string): string | null => {
-  const match = value.match(new RegExp(`<${tagName}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${tagName}>`, 'i'));
+  const match = value.match(
+    new RegExp(`<${tagName}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${tagName}>`, 'i')
+  );
   return match ? decodeXmlText(match[1].replace(/<[^>]+>/g, '')) : null;
 };
 
@@ -135,7 +139,8 @@ export function RecordValueDisplay({
   strikeThrough = false,
 }: RecordValueDisplayProps): React.ReactElement {
   const parsed = parseValue(value);
-  const toneColor = tone === 'old' ? 'error.main' : tone === 'new' ? 'success.main' : 'text.primary';
+  const toneColor =
+    tone === 'old' ? 'error.main' : tone === 'new' ? 'success.main' : 'text.primary';
 
   if (parsed.kind === 'xml-fields') {
     return (
@@ -147,11 +152,12 @@ export function RecordValueDisplay({
           border: '1px solid',
           borderColor: 'divider',
           borderRadius: 1,
-          bgcolor: tone === 'old'
-            ? (theme) => alpha(theme.palette.error.main, 0.05)
-            : tone === 'new'
-              ? (theme) => alpha(theme.palette.success.main, 0.05)
-              : 'background.paper',
+          bgcolor:
+            tone === 'old'
+              ? (theme) => alpha(theme.palette.error.main, 0.05)
+              : tone === 'new'
+                ? (theme) => alpha(theme.palette.success.main, 0.05)
+                : 'background.paper',
         }}
       >
         {parsed.fields?.map((field, index) => (
@@ -164,10 +170,21 @@ export function RecordValueDisplay({
               borderColor: 'divider',
             }}
           >
-            <Typography sx={{ p: 0.75, fontSize: 11.5, fontWeight: 600, bgcolor: 'action.hover', overflowWrap: 'anywhere' }}>
+            <Typography
+              sx={{
+                p: 0.75,
+                fontSize: 11.5,
+                fontWeight: 600,
+                bgcolor: 'action.hover',
+                overflowWrap: 'anywhere',
+              }}
+            >
               {field.label}
             </Typography>
-            <Typography dir="auto" sx={{ p: 0.75, fontSize: 11.5, color: toneColor, overflowWrap: 'anywhere' }}>
+            <Typography
+              dir="auto"
+              sx={{ p: 0.75, fontSize: 11.5, color: toneColor, overflowWrap: 'anywhere' }}
+            >
               {field.value}
             </Typography>
           </Box>

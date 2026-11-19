@@ -350,7 +350,11 @@ function ElementProperties({
               onChange={(event) =>
                 update((current) =>
                   current.type === 'text'
-                    ? { ...current, valueAlias: event.target.value || null, textAlias: event.target.value || null }
+                    ? {
+                        ...current,
+                        valueAlias: event.target.value || null,
+                        textAlias: event.target.value || null,
+                      }
                     : current
                 )
               }

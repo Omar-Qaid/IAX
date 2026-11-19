@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 
-test('opens the authenticated development workspace and customers list', async ({ page }, testInfo) => {
+test('opens the authenticated development workspace and customers list', async ({
+  page,
+}, testInfo) => {
   await page.goto('/dashboard');
   await expect(page.getByText('Business overview')).toBeVisible();
 
@@ -10,7 +12,9 @@ test('opens the authenticated development workspace and customers list', async (
   if (testInfo.project.name === 'mobile-chromium') return;
 
   await page.goto('/accounts-receivable/customers');
-  await expect(page.getByRole('heading', { name: 'Standard view' })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole('heading', { name: 'Standard view' })).toBeVisible({
+    timeout: 30_000,
+  });
   await expect(page.getByText('Contoso Retail Americas').first()).toBeVisible({ timeout: 30_000 });
 });
 

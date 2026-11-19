@@ -35,7 +35,8 @@ export function EcoResProductListPage(): React.ReactElement {
         field: 'name',
         headerName: 'releasedProduct.fields.productName',
         width: 185,
-        valueGetter: ({ row }) => localizedName({ name: row.name, nameAlias: row.nameAliasLocalized }, isRtl),
+        valueGetter: ({ row }) =>
+          localizedName({ name: row.name, nameAlias: row.nameAliasLocalized }, isRtl),
       },
       {
         field: 'nameAliasLocalized',
@@ -53,9 +54,11 @@ export function EcoResProductListPage(): React.ReactElement {
         type: 'number',
         align: 'right',
         headerAlign: 'right',
-        renderCell: ({ row }) => row.salesPrice.toLocaleString(currentLanguage.code, {
-          minimumFractionDigits: 2, maximumFractionDigits: 2,
-        }),
+        renderCell: ({ row }) =>
+          row.salesPrice.toLocaleString(currentLanguage.code, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }),
       },
       {
         field: 'purchasePrice',
@@ -64,9 +67,11 @@ export function EcoResProductListPage(): React.ReactElement {
         type: 'number',
         align: 'right',
         headerAlign: 'right',
-        renderCell: ({ row }) => row.purchasePrice.toLocaleString(currentLanguage.code, {
-          minimumFractionDigits: 2, maximumFractionDigits: 2,
-        }),
+        renderCell: ({ row }) =>
+          row.purchasePrice.toLocaleString(currentLanguage.code, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }),
       },
       {
         field: 'costPrice',
@@ -75,9 +80,11 @@ export function EcoResProductListPage(): React.ReactElement {
         type: 'number',
         align: 'right',
         headerAlign: 'right',
-        renderCell: ({ row }) => row.costPrice.toLocaleString(currentLanguage.code, {
-          minimumFractionDigits: 2, maximumFractionDigits: 2,
-        }),
+        renderCell: ({ row }) =>
+          row.costPrice.toLocaleString(currentLanguage.code, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }),
       },
     ],
     [currentLanguage.code, isRtl]
@@ -86,10 +93,23 @@ export function EcoResProductListPage(): React.ReactElement {
   const config: EnterpriseListConfig<ReleasedProductRecord> = {
     contextLabel: t('releasedProduct.title', 'Released products'),
     searchMode: 'quick',
-    searchFields: [{ field: 'itemNumber', label: t('releasedProduct.fields.itemNumber') }, { field: 'name', label: t('releasedProduct.fields.productName') }, { field: 'nameAliasLocalized', label: t('releasedProduct.fields.arabicName') }],
+    searchFields: [
+      { field: 'itemNumber', label: t('releasedProduct.fields.itemNumber') },
+      { field: 'name', label: t('releasedProduct.fields.productName') },
+      { field: 'nameAliasLocalized', label: t('releasedProduct.fields.arabicName') },
+    ],
     recordTableName: 'InventTable',
-    crud: { editPermission: PERMISSIONS.INVENTORY_TRANSACTION_EDIT, newPermission: PERMISSIONS.INVENTORY_TRANSACTION_CREATE, onEdit: (row) => navigate(INVENTORY_ROUTE_PATHS.releasedProductDetails(row.id)), onNew: () => setCreating(true) },
-    utilities: { personalizeLabel: t('common.personalize'), guideLabel: t('common.guide'), openWindowLabel: t('common.openWindow') },
+    crud: {
+      editPermission: PERMISSIONS.INVENTORY_TRANSACTION_EDIT,
+      newPermission: PERMISSIONS.INVENTORY_TRANSACTION_CREATE,
+      onEdit: (row) => navigate(INVENTORY_ROUTE_PATHS.releasedProductDetails(row.id)),
+      onNew: () => setCreating(true),
+    },
+    utilities: {
+      personalizeLabel: t('common.personalize'),
+      guideLabel: t('common.guide'),
+      openWindowLabel: t('common.openWindow'),
+    },
   };
 
   return (
@@ -103,7 +123,18 @@ export function EcoResProductListPage(): React.ReactElement {
       error={query.error instanceof Error ? query.error.message : null}
       onRetry={() => query.refetch()}
       dataGridProps={{ storageKey: 'inventory.released-products.standard-view' }}
-      dialogs={<ReleasedProductCreateDrawer open={creating} onClose={() => setCreating(false)} onCreated={async () => { setCreating(false); await queryClient.invalidateQueries({ queryKey: ['inventory', 'released-products', currentCompany] }); }} />}
+      dialogs={
+        <ReleasedProductCreateDrawer
+          open={creating}
+          onClose={() => setCreating(false)}
+          onCreated={async () => {
+            setCreating(false);
+            await queryClient.invalidateQueries({
+              queryKey: ['inventory', 'released-products', currentCompany],
+            });
+          }}
+        />
+      }
     />
   );
 }

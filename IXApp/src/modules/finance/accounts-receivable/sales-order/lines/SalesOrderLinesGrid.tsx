@@ -39,10 +39,7 @@ import type { SalesOrderListRecord } from '../api/salesOrderListApi';
 import { INVENTORY_RECORD_PREVIEWS } from '../../../inventory/previews/inventoryRecordPreviews';
 import { INVENTORY_ROUTE_PATHS } from '../../../inventory/routes/inventoryRoutePaths';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../../routes/accountsReceivableRoutePaths';
-import {
-  salesLineNetAmount,
-  synchronizeSalesLineDiscount,
-} from './salesLineDiscount';
+import { salesLineNetAmount, synchronizeSalesLineDiscount } from './salesLineDiscount';
 import { salesOrderQueryKeys } from '../../queries/accountsReceivableQueryKeys';
 import { useCompanyStore } from '@core/company/useCompanyStore';
 import { enterpriseSurfaces } from '@shared/constants/enterpriseSurfaces';
@@ -142,7 +139,9 @@ export function SalesOrderLinesGrid({
   const newRowFocusFrame = useRef<number | null>(null);
   const lineEditEnabled = editing || draftLine?.orderId === order.id;
   // Cell whose pencil was clicked in view mode; edited once edit mode is on.
-  const [pendingCell, setPendingCell] = React.useState<{ rowId: string; field: string } | null>(null);
+  const [pendingCell, setPendingCell] = React.useState<{ rowId: string; field: string } | null>(
+    null
+  );
   useEffect(() => {
     if (!pendingCell || !lineEditEnabled) return;
     const selector = `[data-row-id="${CSS.escape(pendingCell.rowId)}"] [data-field="${CSS.escape(pendingCell.field)}"] [data-grid-cell-focus]`;
@@ -156,7 +155,15 @@ export function SalesOrderLinesGrid({
     setLineBaseline(null);
     setActiveField('');
     setLineError('');
-  }, [editing, draftLine?.orderId, order.id, setActiveField, setDraftLine, setLineBaseline, setLineError]);
+  }, [
+    editing,
+    draftLine?.orderId,
+    order.id,
+    setActiveField,
+    setDraftLine,
+    setLineBaseline,
+    setLineError,
+  ]);
   useEffect(
     () => () => {
       if (newRowFocusFrame.current != null) cancelAnimationFrame(newRowFocusFrame.current);
@@ -314,8 +321,7 @@ export function SalesOrderLinesGrid({
   const handleRowClick = useCallback(
     (line: DetailLine) => {
       if (line.id === activeDraftId) return;
-      if (savingLine || (activeDraftId === 'new-sales-line' && line.id !== activeDraftId))
-        return;
+      if (savingLine || (activeDraftId === 'new-sales-line' && line.id !== activeDraftId)) return;
       setSelectedLineId(line.id);
       if (lineEditEnabled && canEditLines && order.salesStatus.toLowerCase() === 'backorder') {
         setLineBaseline(line);
@@ -345,8 +351,18 @@ export function SalesOrderLinesGrid({
       );
       const field = cell?.dataset.field ?? '';
       const editableFields = new Set([
-        'lineType', 'itemNumber', 'description', 'quantity', 'unit', 'unitPrice',
-        'lineDiscount', 'lineDiscountPercent', 'deliveryDate', 'deliveryType', 'site', 'warehouse',
+        'lineType',
+        'itemNumber',
+        'description',
+        'quantity',
+        'unit',
+        'unitPrice',
+        'lineDiscount',
+        'lineDiscountPercent',
+        'deliveryDate',
+        'deliveryType',
+        'site',
+        'warehouse',
       ]);
       if (
         !cell ||
@@ -354,7 +370,8 @@ export function SalesOrderLinesGrid({
         savingLine ||
         !canEditLines ||
         order.salesStatus.toLowerCase() !== 'backorder'
-      ) return;
+      )
+        return;
       setSelectedLineId(line.id);
       setLineBaseline(line);
       setDraftLine({
@@ -364,7 +381,16 @@ export function SalesOrderLinesGrid({
       });
       setActiveField(field);
     },
-    [canEditLines, order.id, order.salesStatus, savingLine, setActiveField, setDraftLine, setLineBaseline, setSelectedLineId]
+    [
+      canEditLines,
+      order.id,
+      order.salesStatus,
+      savingLine,
+      setActiveField,
+      setDraftLine,
+      setLineBaseline,
+      setSelectedLineId,
+    ]
   );
   const newRow = useMemo<DetailLine>(
     () => ({
@@ -480,9 +506,7 @@ export function SalesOrderLinesGrid({
       ? column.valueGetter({ row })
       : row[column.field as keyof DetailLine];
     if (column.field === 'netAmount')
-      return (
-        <>{salesLineNetAmount(row).toLocaleString(currentLanguage.code)}</>
-      );
+      return <>{salesLineNetAmount(row).toLocaleString(currentLanguage.code)}</>;
     const editable =
       editableFields.has(String(column.field)) ||
       (column.field === 'itemNumber' && !row.itemNumber);
@@ -615,7 +639,7 @@ export function SalesOrderLinesGrid({
     if (column.field === 'site' || column.field === 'warehouse') {
       const isSite = column.field === 'site';
       const options = isSite
-        ? dimensionsQuery.data?.sites ?? []
+        ? (dimensionsQuery.data?.sites ?? [])
         : (dimensionsQuery.data?.warehouses ?? []).filter(
             (warehouse) => !row.site || warehouse.siteId === row.site
           );
@@ -650,8 +674,7 @@ export function SalesOrderLinesGrid({
       );
     }
     if (column.field === 'lineType' || column.field === 'deliveryType') {
-      const options =
-        column.field === 'lineType' ? LINE_TYPE_OPTIONS : DELIVERY_TYPE_OPTIONS;
+      const options = column.field === 'lineType' ? LINE_TYPE_OPTIONS : DELIVERY_TYPE_OPTIONS;
       return (
         <TextField
           select
@@ -801,8 +824,7 @@ export function SalesOrderLinesGrid({
               quantity: line.quantity,
               unit: line.unit,
               unitPrice: line.unitPrice,
-              usePriceAgreement:
-                line.id === 'new-sales-line' && line.usePriceAgreement !== false,
+              usePriceAgreement: line.id === 'new-sales-line' && line.usePriceAgreement !== false,
               lineDiscount: line.lineDiscount ?? 0,
               lineDiscountPercent: line.lineDiscountPercent ?? 0,
               deliveryDate: line.deliveryDate || undefined,
@@ -828,10 +850,12 @@ export function SalesOrderLinesGrid({
       setSelectedLineId(saved.id);
       await queryClient.cancelQueries({ queryKey: salesOrderQueryKeys.lines(company, order.id) });
       const confirmed = { ...line, ...saved, usePriceAgreement: false };
-      queryClient.setQueryData<DetailLine[]>(salesOrderQueryKeys.lines(company, order.id), (current = []) =>
-        current.some((row) => row.id === confirmed.id)
-          ? current.map((row) => (row.id === confirmed.id ? confirmed : row))
-          : [...current, confirmed]
+      queryClient.setQueryData<DetailLine[]>(
+        salesOrderQueryKeys.lines(company, order.id),
+        (current = []) =>
+          current.some((row) => row.id === confirmed.id)
+            ? current.map((row) => (row.id === confirmed.id ? confirmed : row))
+            : [...current, confirmed]
       );
       scheduleTotalsRefresh();
       return true;
@@ -861,8 +885,9 @@ export function SalesOrderLinesGrid({
       if (activeDraft?.id === lineId) setDraftLine(null);
       setSelectedLineId(undefined);
       await queryClient.cancelQueries({ queryKey: salesOrderQueryKeys.lines(company, order.id) });
-      queryClient.setQueryData<DetailLine[]>(salesOrderQueryKeys.lines(company, order.id), (current = []) =>
-        current.filter((row) => row.id !== lineId)
+      queryClient.setQueryData<DetailLine[]>(
+        salesOrderQueryKeys.lines(company, order.id),
+        (current = []) => current.filter((row) => row.id !== lineId)
       );
       scheduleTotalsRefresh();
     } catch (error) {
@@ -948,7 +973,9 @@ export function SalesOrderLinesGrid({
         >
           {t('actions.remove', 'Remove')}
         </Button>
-        <Button disabled endIcon={<ExpandMoreIcon />}>Sales order line</Button>
+        <Button disabled endIcon={<ExpandMoreIcon />}>
+          Sales order line
+        </Button>
         <Button
           disabled={!selectedLine}
           endIcon={<ExpandMoreIcon />}
@@ -965,7 +992,9 @@ export function SalesOrderLinesGrid({
             onClick={() => {
               if (!selectedLine) return;
               setFinancialsMenuAnchor(null);
-              navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrderLineCharges(order.id, selectedLine.id));
+              navigate(
+                ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrderLineCharges(order.id, selectedLine.id)
+              );
             }}
           >
             Maintain charges
@@ -1001,17 +1030,13 @@ export function SalesOrderLinesGrid({
           </MenuItem>
           <MenuItem disabled>{t('salesOrder.dimensions', 'Dimensions')}</MenuItem>
         </Menu>
-        {[
-          'Product and supply',
-          'Update line',
-          'Warehouse',
-          'Retail',
-          'Engineering change',
-        ].map((label) => (
-          <Button key={label} disabled endIcon={<ExpandMoreIcon />}>
-            {label}
-          </Button>
-        ))}
+        {['Product and supply', 'Update line', 'Warehouse', 'Retail', 'Engineering change'].map(
+          (label) => (
+            <Button key={label} disabled endIcon={<ExpandMoreIcon />}>
+              {label}
+            </Button>
+          )
+        )}
       </Stack>
       {lineError && (
         <Alert id="sales-line-error" severity="error">

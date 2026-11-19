@@ -176,49 +176,49 @@ export function FilterPopover<T>({
 
         {/* Value input (blank checks take none) */}
         {!valueless && (
-        <AppTextField
-          fullWidth
-          placeholder={
-            localFilter.operator === 'in'
-              ? t('grid.press_enter_to_add')
-              : t('grid.filter_placeholder')
-          }
-          type={
-            localFilter.operator === 'in'
-              ? 'text'
-              : column.type === 'number'
-                ? 'number'
-                : column.type === 'date'
-                  ? 'date'
-                  : 'text'
-          }
-          value={
-            localFilter.operator === 'in'
-              ? tempValue
-              : Array.isArray(localFilter.value)
-                ? ''
-                : String(localFilter.value ?? '')
-          }
-          onChange={(val) => {
-            const nextValue = String(val ?? '');
-            if (localFilter.operator === 'in') setTempValue(nextValue);
-            else setLocalFilter((f) => ({ ...f, value: nextValue }));
-          }}
-          slotProps={{
-            htmlInput: {
-              onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
-                if (e.key === 'Enter' && localFilter.operator === 'in' && tempValue) {
-                  const current = Array.isArray(localFilter.value) ? localFilter.value : [];
-                  if (!current.includes(tempValue)) {
-                    setLocalFilter((f) => ({ ...f, value: [...current, tempValue] }));
+          <AppTextField
+            fullWidth
+            placeholder={
+              localFilter.operator === 'in'
+                ? t('grid.press_enter_to_add')
+                : t('grid.filter_placeholder')
+            }
+            type={
+              localFilter.operator === 'in'
+                ? 'text'
+                : column.type === 'number'
+                  ? 'number'
+                  : column.type === 'date'
+                    ? 'date'
+                    : 'text'
+            }
+            value={
+              localFilter.operator === 'in'
+                ? tempValue
+                : Array.isArray(localFilter.value)
+                  ? ''
+                  : String(localFilter.value ?? '')
+            }
+            onChange={(val) => {
+              const nextValue = String(val ?? '');
+              if (localFilter.operator === 'in') setTempValue(nextValue);
+              else setLocalFilter((f) => ({ ...f, value: nextValue }));
+            }}
+            slotProps={{
+              htmlInput: {
+                onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
+                  if (e.key === 'Enter' && localFilter.operator === 'in' && tempValue) {
+                    const current = Array.isArray(localFilter.value) ? localFilter.value : [];
+                    if (!current.includes(tempValue)) {
+                      setLocalFilter((f) => ({ ...f, value: [...current, tempValue] }));
+                    }
+                    setTempValue('');
                   }
-                  setTempValue('');
-                }
+                },
               },
-            },
-          }}
-          sx={{ mb: 1.5, '& input': { fontSize: '0.85rem' } }}
-        />
+            }}
+            sx={{ mb: 1.5, '& input': { fontSize: '0.85rem' } }}
+          />
         )}
 
         {/* "is one of" tag list */}

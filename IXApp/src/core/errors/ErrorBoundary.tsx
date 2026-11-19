@@ -25,7 +25,10 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    errorReporter.report(error, { source: 'ErrorBoundary', componentStack: errorInfo.componentStack });
+    errorReporter.report(error, {
+      source: 'ErrorBoundary',
+      componentStack: errorInfo.componentStack,
+    });
   }
 
   private handleReset = (): void => {

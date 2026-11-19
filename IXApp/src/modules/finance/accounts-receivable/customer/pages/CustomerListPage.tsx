@@ -19,7 +19,7 @@ import { FOUNDATION_RECORD_PREVIEWS } from '../../../foundation/previews/foundat
 import { ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS } from '../../previews/accountsReceivableRecordPreviews';
 
 export function CustomerListPage(): React.ReactElement {
-  const company = useCompanyStore(state => state.currentCompany);
+  const company = useCompanyStore((state) => state.currentCompany);
   const { t, currentLanguage, isRtl } = useAppTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -45,7 +45,12 @@ export function CustomerListPage(): React.ReactElement {
         pinned: 'left',
         getDetailHref: (row) => ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customer(row.id),
       },
-      { field: 'name', valueGetter: ({ row }) => localizedName({ name: row.name, nameAlias: row.nameAr }, isRtl), headerName: 'fields.customerName', width: 205 },
+      {
+        field: 'name',
+        valueGetter: ({ row }) => localizedName({ name: row.name, nameAlias: row.nameAr }, isRtl),
+        headerName: 'fields.customerName',
+        width: 205,
+      },
       {
         field: 'nameAr',
         headerName: 'fields.arabicName',
@@ -53,12 +58,37 @@ export function CustomerListPage(): React.ReactElement {
         align: 'right',
         headerAlign: 'right',
       },
-      { field: 'invoiceAccount', headerName: 'fields.invoiceAccount', width: 150, preview: { entity: ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.CUSTOMER } },
-      { field: 'customerGroupId', headerName: 'fields.customerGroup', width: 150, preview: { entity: ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.CUSTOMER_GROUP } },
-      { field: 'currencyCode', headerName: 'fields.currency', width: 95, preview: { entity: FOUNDATION_RECORD_PREVIEWS.CURRENCY } },
+      {
+        field: 'invoiceAccount',
+        headerName: 'fields.invoiceAccount',
+        width: 150,
+        preview: { entity: ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.CUSTOMER },
+      },
+      {
+        field: 'customerGroupId',
+        headerName: 'fields.customerGroup',
+        width: 150,
+        preview: { entity: ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.CUSTOMER_GROUP },
+      },
+      {
+        field: 'currencyCode',
+        headerName: 'fields.currency',
+        width: 95,
+        preview: { entity: FOUNDATION_RECORD_PREVIEWS.CURRENCY },
+      },
       { field: 'phone', headerName: 'fields.phone', width: 165 },
-      { field: 'taxGroupId', headerName: 'fields.salesTaxGroup', width: 140, preview: { entity: FOUNDATION_RECORD_PREVIEWS.SALES_TAX_GROUP } },
-      { field: 'paymTermId', headerName: 'fields.termsOfPayment', width: 145, preview: { entity: ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.PAYMENT_TERMS } },
+      {
+        field: 'taxGroupId',
+        headerName: 'fields.salesTaxGroup',
+        width: 140,
+        preview: { entity: FOUNDATION_RECORD_PREVIEWS.SALES_TAX_GROUP },
+      },
+      {
+        field: 'paymTermId',
+        headerName: 'fields.termsOfPayment',
+        width: 145,
+        preview: { entity: ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.PAYMENT_TERMS },
+      },
       {
         field: 'status',
         headerName: 'common.status',
@@ -85,7 +115,9 @@ export function CustomerListPage(): React.ReactElement {
     ],
     defaultSearchField: 'phone',
     crud: {
-      editPermission: PERMISSIONS.CUSTOMER_UPDATE, newPermission: PERMISSIONS.CUSTOMER_CREATE, deletePermission: PERMISSIONS.CUSTOMER_DELETE,
+      editPermission: PERMISSIONS.CUSTOMER_UPDATE,
+      newPermission: PERMISSIONS.CUSTOMER_CREATE,
+      deletePermission: PERMISSIONS.CUSTOMER_DELETE,
       onEdit: (customer) => navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customer(customer.id)),
       onNew: () => setQuickCreateOpen(true),
       onDelete: async (selectedCustomers) => {
@@ -100,13 +132,56 @@ export function CustomerListPage(): React.ReactElement {
         }
       },
     },
-    getCommands: customer => [
-      {id: 'customer', label: t('customerCommands.customer'), disabled: !customer, onClick: () => customer && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customer(customer.id))},
-      {id: 'view-contacts', label: t('contactPerson.view', 'View contacts'), permission: PERMISSIONS.CONTACT_VIEW, disabled: !customer, onClick: () => customer && navigate(accountContacts('customer', customer.accountNumber))},
-      {id: 'transactions', label: t('customerRibbon.groups.transactions', 'Transactions'), permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW, disabled: !customer, onClick: () => customer && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.custTrans(customer.accountNumber))},
-      {id: 'open-transactions', label: t('partyBalance.openTransactions'), permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW, disabled: !customer, onClick: () => customer && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customerOpenTransactions(customer.accountNumber))},
-      {id: 'balance', label: t('partyBalance.balance'), permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW, disabled: !customer, onClick: () => customer && navigate(PARTY_BALANCE_ROUTE_PATHS.customerBalance(customer.accountNumber))},
-      {id: 'sales-orders', label: t('pages.salesOrders.title'), permission: PERMISSIONS.SALES_ORDER_VIEW, disabled: !customer, onClick: () => customer && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customerSalesOrders(customer.accountNumber))},
+    getCommands: (customer) => [
+      {
+        id: 'customer',
+        label: t('customerCommands.customer'),
+        disabled: !customer,
+        onClick: () => customer && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customer(customer.id)),
+      },
+      {
+        id: 'view-contacts',
+        label: t('contactPerson.view', 'View contacts'),
+        permission: PERMISSIONS.CONTACT_VIEW,
+        disabled: !customer,
+        onClick: () => customer && navigate(accountContacts('customer', customer.accountNumber)),
+      },
+      {
+        id: 'transactions',
+        label: t('customerRibbon.groups.transactions', 'Transactions'),
+        permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW,
+        disabled: !customer,
+        onClick: () =>
+          customer && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.custTrans(customer.accountNumber)),
+      },
+      {
+        id: 'open-transactions',
+        label: t('partyBalance.openTransactions'),
+        permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW,
+        disabled: !customer,
+        onClick: () =>
+          customer &&
+          navigate(
+            ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customerOpenTransactions(customer.accountNumber)
+          ),
+      },
+      {
+        id: 'balance',
+        label: t('partyBalance.balance'),
+        permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW,
+        disabled: !customer,
+        onClick: () =>
+          customer && navigate(PARTY_BALANCE_ROUTE_PATHS.customerBalance(customer.accountNumber)),
+      },
+      {
+        id: 'sales-orders',
+        label: t('pages.salesOrders.title'),
+        permission: PERMISSIONS.SALES_ORDER_VIEW,
+        disabled: !customer,
+        onClick: () =>
+          customer &&
+          navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customerSalesOrders(customer.accountNumber)),
+      },
     ],
     advancedFilter: {
       fieldLabel: t('filters.customerAccount'),
@@ -127,7 +202,21 @@ export function CustomerListPage(): React.ReactElement {
     },
     relatedInformation: {
       title: t('relatedInformation.title'),
-      sections: customer => [{id: 'statistics', label: t('relatedInformation.statistics'), content: <Typography sx={{fontSize: '0.75rem'}}>{customer ? [customer.accountNumber, customer.customerGroupId, customer.currencyCode].filter(Boolean).join(' · ') : t('relatedInformation.selectCustomer')}</Typography>}],
+      sections: (customer) => [
+        {
+          id: 'statistics',
+          label: t('relatedInformation.statistics'),
+          content: (
+            <Typography sx={{ fontSize: '0.75rem' }}>
+              {customer
+                ? [customer.accountNumber, customer.customerGroupId, customer.currencyCode]
+                    .filter(Boolean)
+                    .join(' · ')
+                : t('relatedInformation.selectCustomer')}
+            </Typography>
+          ),
+        },
+      ],
     },
   };
 
@@ -135,24 +224,32 @@ export function CustomerListPage(): React.ReactElement {
     <SimpleListPage
       title={t('pages.customers.title')}
       enterpriseConfig={config}
-      dataSource={{ type: 'controlled', rows: customers, refresh: () => void customerQuery.refetch() }}
+      dataSource={{
+        type: 'controlled',
+        rows: customers,
+        refresh: () => void customerQuery.refetch(),
+      }}
       columns={columns}
       loading={customerQuery.isLoading}
       error={customerQuery.error instanceof Error ? customerQuery.error.message : null}
       onRetry={() => customerQuery.refetch()}
       dataGridProps={{ storageKey: 'accounts-receivable.customers.reference-view' }}
-      dialogs={quickCreateOpen && (
-        <CustomerQuickCreate
-          open={quickCreateOpen}
-          nextAccount="—"
-          onClose={() => setQuickCreateOpen(false)}
-          onSave={async (customer, openAfterSave) => {
-            await queryClient.invalidateQueries({ queryKey: ['accounts-receivable', 'customers'] });
-            setQuickCreateOpen(false);
-            if (openAfterSave) setCustomerToOpen(customer.id);
-          }}
-        />
-      )}
+      dialogs={
+        quickCreateOpen && (
+          <CustomerQuickCreate
+            open={quickCreateOpen}
+            nextAccount="—"
+            onClose={() => setQuickCreateOpen(false)}
+            onSave={async (customer, openAfterSave) => {
+              await queryClient.invalidateQueries({
+                queryKey: ['accounts-receivable', 'customers'],
+              });
+              setQuickCreateOpen(false);
+              if (openAfterSave) setCustomerToOpen(customer.id);
+            }}
+          />
+        )
+      }
     />
   );
 }

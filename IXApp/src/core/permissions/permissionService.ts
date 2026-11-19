@@ -26,11 +26,13 @@ export const permissionService = new PermissionService();
 
 export const userHasPermission = (
   user: UserProfile | null,
-  permission?: PermissionCode | string,
+  permission?: PermissionCode | string
 ): boolean => {
   if (!permission) return true;
   if (!user) return false;
-  return user.roles.includes('SystemAdmin')
-    || user.permissions.includes('*')
-    || user.permissions.includes(permission);
+  return (
+    user.roles.includes('SystemAdmin') ||
+    user.permissions.includes('*') ||
+    user.permissions.includes(permission)
+  );
 };

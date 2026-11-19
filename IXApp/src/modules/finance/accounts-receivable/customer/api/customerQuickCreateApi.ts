@@ -25,7 +25,6 @@ export interface CustomerContact {
   primary: boolean;
 }
 
-
 export interface CustomerQuickCreateLookups {
   customerGroups: CustomerGroupOption[];
   salesTaxGroups: CustomerLookupOption[];
@@ -123,23 +122,31 @@ interface CustomerListDto {
 
 const data = (response: ApiResponse<LookupRow[]>, name: string): LookupRow[] => {
   if (!response.success || !Array.isArray(response.data))
-    throw new ApiError(response.message || `The ${name} lookup response did not contain data.`, 500);
+    throw new ApiError(
+      response.message || `The ${name} lookup response did not contain data.`,
+      500
+    );
   return response.data;
 };
 
 const text = (row: LookupRow, key: string): string => String(row[key] ?? '').trim();
 const options = (rows: LookupRow[], valueKey: string, labelKey: string): CustomerLookupOption[] =>
-  rows.map((row) => {
-    const value = text(row, valueKey);
-    return { value, label: text(row, labelKey) || value };
-  }).filter((option) => option.value);
+  rows
+    .map((row) => {
+      const value = text(row, valueKey);
+      return { value, label: text(row, labelKey) || value };
+    })
+    .filter((option) => option.value);
 
 const load = async (endpoint: string, name: string, signal?: AbortSignal): Promise<LookupRow[]> => {
   const response = await apiClient.get<ApiResponse<LookupRow[]>>(endpoint, { signal });
   return data(response.data, name);
 };
 
-const requireCustomerData = (response: ApiResponse<CustomerListDto[]>, name: string): CustomerListDto[] => {
+const requireCustomerData = (
+  response: ApiResponse<CustomerListDto[]>,
+  name: string
+): CustomerListDto[] => {
   if (!response.success || !Array.isArray(response.data))
     throw new ApiError(response.message || `The ${name} response did not contain data.`, 500);
   return response.data;
@@ -192,22 +199,34 @@ export const customerQuickCreateApi = {
     };
   },
 
-  async salesOrderDefaults(accountNumber: string, signal?: AbortSignal): Promise<CustomerSalesOrderDefaults> {
+  async salesOrderDefaults(
+    accountNumber: string,
+    signal?: AbortSignal
+  ): Promise<CustomerSalesOrderDefaults> {
     const response = await apiClient.get<ApiResponse<CustomerSalesOrderDefaults>>(
-      `/v1/CustTable/${encodeURIComponent(accountNumber)}/sales-order-defaults`, { signal }
+      `/v1/CustTable/${encodeURIComponent(accountNumber)}/sales-order-defaults`,
+      { signal }
     );
     if (!response.data.success || !response.data.data)
-      throw new ApiError(response.data.message || 'Customer sales order defaults could not be loaded.', 500);
+      throw new ApiError(
+        response.data.message || 'Customer sales order defaults could not be loaded.',
+        500
+      );
     return response.data.data;
   },
 
   async list(signal?: AbortSignal): Promise<CustomerRecord[]> {
-    const response = await apiClient.get<ApiResponse<CustomerListDto[]>>('/v1/CustTable/list', { signal });
+    const response = await apiClient.get<ApiResponse<CustomerListDto[]>>('/v1/CustTable/list', {
+      signal,
+    });
     return requireCustomerData(response.data, 'customer list').map(toCustomer);
   },
 
   async create(input: CustomerQuickCreateInput): Promise<CustomerRecord> {
-    const response = await apiClient.post<ApiResponse<CustomerListDto>>('/v1/CustTable/quick-create', input);
+    const response = await apiClient.post<ApiResponse<CustomerListDto>>(
+      '/v1/CustTable/quick-create',
+      input
+    );
     if (!response.data.success || !response.data.data)
       throw new ApiError(response.data.message || 'The customer could not be created.', 500);
     return toCustomer(response.data.data);
@@ -238,7 +257,10 @@ export const customerQuickCreateApi = {
       prepaymentValue: record.prepaymentValue,
       prePayType: record.prePayType,
     };
-    const response = await apiClient.put<ApiResponse<CustomerListDto>>(`/v1/CustTable/quick-update/${record.recId}`, input);
+    const response = await apiClient.put<ApiResponse<CustomerListDto>>(
+      `/v1/CustTable/quick-update/${record.recId}`,
+      input
+    );
     if (!response.data.success || !response.data.data)
       throw new ApiError(response.data.message || 'The customer could not be updated.', 500);
     return toCustomer(response.data.data);
@@ -246,11 +268,23 @@ export const customerQuickCreateApi = {
 
   async remove(record: CustomerRecord): Promise<void> {
     const response = await apiClient.delete<ApiResponse<boolean>>(`/v1/CustTable/${record.recId}`);
-    if (!response.data.success) throw new ApiError(response.data.message || 'The customer could not be deleted.', 500);
+    if (!response.data.success)
+      throw new ApiError(response.data.message || 'The customer could not be deleted.', 500);
   },
 
   async lookups(signal?: AbortSignal): Promise<CustomerQuickCreateLookups> {
-    const [groups, taxGroups, currencies, countries, terms, methods, deliveryTerms, deliveryModes, salesPools, paymentSchedules] = await Promise.all([
+    const [
+      groups,
+      taxGroups,
+      currencies,
+      countries,
+      terms,
+      methods,
+      deliveryTerms,
+      deliveryModes,
+      salesPools,
+      paymentSchedules,
+    ] = await Promise.all([
       load('/v1/CustGroup', 'customer groups', signal),
       load('/v1/TaxGroup', 'sales tax groups', signal),
       load('/v1/Currency', 'currencies', signal),
@@ -263,18 +297,24 @@ export const customerQuickCreateApi = {
       load('/v1/PaymSched', 'payment schedules', signal),
     ]);
     return {
-      customerGroups: groups.map((group) => ({
-        value: text(group, 'custGroupId'),
-        label: text(group, 'name') || text(group, 'custGroupId'),
-        paymTermId: text(group, 'paymTermId'),
-        taxGroupId: text(group, 'taxGroupId'),
-      })).filter((group) => group.value),
+      customerGroups: groups
+        .map((group) => ({
+          value: text(group, 'custGroupId'),
+          label: text(group, 'name') || text(group, 'custGroupId'),
+          paymTermId: text(group, 'paymTermId'),
+          taxGroupId: text(group, 'taxGroupId'),
+        }))
+        .filter((group) => group.value),
       salesTaxGroups: options(taxGroups, 'taxGroup', 'taxGroupName'),
       currencies: options(currencies, 'currencyCode', 'txt'),
-      countryRegions: countries.map((country) => ({
-        value: text(country, 'countryRegionId'),
-        label: [text(country, 'countryRegionId'), text(country, 'isoCode')].filter(Boolean).join(' - '),
-      })).filter((country) => country.value),
+      countryRegions: countries
+        .map((country) => ({
+          value: text(country, 'countryRegionId'),
+          label: [text(country, 'countryRegionId'), text(country, 'isoCode')]
+            .filter(Boolean)
+            .join(' - '),
+        }))
+        .filter((country) => country.value),
       paymentTerms: options(terms, 'paymTermId', 'description'),
       paymentMethods: options(methods, 'paymMode', 'name'),
       deliveryTerms: options(deliveryTerms, 'code', 'txt'),

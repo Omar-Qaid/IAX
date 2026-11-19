@@ -24,7 +24,8 @@ export interface EcoResProductInput {
 
 const endpoint = '/v1/EcoResProduct';
 const data = <T>(response: ApiResponse<T>, fallback: string): T => {
-  if (!response.success || response.data == null) throw new ApiError(response.message || fallback, 400);
+  if (!response.success || response.data == null)
+    throw new ApiError(response.message || fallback, 400);
   return response.data;
 };
 
@@ -38,11 +39,16 @@ export const ecoResProductApi = {
     return data(response.data, 'The product could not be created.');
   },
   async update(id: string, input: EcoResProductInput): Promise<EcoResProductRecord> {
-    const response = await apiClient.put<ApiResponse<EcoResProductRecord>>(`${endpoint}/${encodeURIComponent(id)}`, input);
+    const response = await apiClient.put<ApiResponse<EcoResProductRecord>>(
+      `${endpoint}/${encodeURIComponent(id)}`,
+      input
+    );
     return data(response.data, 'The product could not be updated.');
   },
   async delete(id: string): Promise<void> {
-    const response = await apiClient.delete<ApiResponse<boolean>>(`${endpoint}/${encodeURIComponent(id)}`);
+    const response = await apiClient.delete<ApiResponse<boolean>>(
+      `${endpoint}/${encodeURIComponent(id)}`
+    );
     data(response.data, 'The product could not be deleted.');
   },
 };

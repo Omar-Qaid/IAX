@@ -20,6 +20,7 @@ Process Builder is owned by Workflow and retains its established `src/modules/pr
 State flows from the selected process/step/activity into the Zustand draft, editor panels, and save APIs. UI tab, step, and activity selections are persisted so reload can restore context.
 
 [Process Builder integration](../../../docs/process-builder.md) · [Workflow](../workflow/README.md) · [Architecture boundaries](../../../docs/ARCHITECTURE-BOUNDARIES.md)
+
 ## Batch scheduling
 
 The legacy Process Scheduled editor and `/v1/WFProcessScheduled/{processId}` API have been retired. Use Batch Administration at `/system-administration/batch-jobs` to configure registered services, schedules, recurrence and parameters, and inspect execution history.

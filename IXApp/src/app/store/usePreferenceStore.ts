@@ -21,7 +21,7 @@ interface PreferenceState {
   arabicFontFamily: string;
   fontSize: number;
   zoom: number;
-  
+
   setThemeMode: (mode: ThemeMode) => void;
   toggleThemeMode: () => void;
   setDensity: (density: AppDensity) => void;
@@ -61,36 +61,63 @@ const initialState = {
   themeMode: getInitialThemeMode(),
 };
 
-export const usePreferenceStore = create<PreferenceState>()(persist((set) => ({
-  ...initialState,
-  setThemeMode: (mode: ThemeMode) => {
-    localStorage.setItem(STORAGE_KEYS.THEME_MODE, mode);
-    set({ themeMode: mode });
-  },
-  toggleThemeMode: () => {
-    set((state) => {
-      const nextMode: ThemeMode = state.themeMode === 'light' ? 'dark' : 'light';
-      localStorage.setItem(STORAGE_KEYS.THEME_MODE, nextMode);
-      return { themeMode: nextMode };
-    });
-  },
-  setDensity: (density) => set({ density }),
-  setContrast: (contrast) => set({ contrast }),
-  setRtl: (rtl) => set({ rtl }),
-  setNavLayout: (navLayout) => set({ navLayout }),
-  setNavColor: (navColor) => set({ navColor }),
-  setColorPreset: (colorPreset) => set({ colorPreset }),
-  setFontFamily: (fontFamily) => set({ fontFamily }),
-  setArabicFontFamily: (arabicFontFamily) => set({ arabicFontFamily }),
-  setFontSize: (fontSize) => set({ fontSize }),
-  setZoom: (zoom) => set({ zoom }),
-  resetSettings: () => {
-    localStorage.setItem(STORAGE_KEYS.THEME_MODE, defaultPreferences.themeMode);
-    set(defaultPreferences);
-  },
-}), {
-  name: STORAGE_KEYS.PREFERENCES,
-  partialize: ({ themeMode, density, contrast, rtl, navLayout, navColor, colorPreset, fontFamily, arabicFontFamily, fontSize, zoom }) => ({
-    themeMode, density, contrast, rtl, navLayout, navColor, colorPreset, fontFamily, arabicFontFamily, fontSize, zoom,
-  }),
-}));
+export const usePreferenceStore = create<PreferenceState>()(
+  persist(
+    (set) => ({
+      ...initialState,
+      setThemeMode: (mode: ThemeMode) => {
+        localStorage.setItem(STORAGE_KEYS.THEME_MODE, mode);
+        set({ themeMode: mode });
+      },
+      toggleThemeMode: () => {
+        set((state) => {
+          const nextMode: ThemeMode = state.themeMode === 'light' ? 'dark' : 'light';
+          localStorage.setItem(STORAGE_KEYS.THEME_MODE, nextMode);
+          return { themeMode: nextMode };
+        });
+      },
+      setDensity: (density) => set({ density }),
+      setContrast: (contrast) => set({ contrast }),
+      setRtl: (rtl) => set({ rtl }),
+      setNavLayout: (navLayout) => set({ navLayout }),
+      setNavColor: (navColor) => set({ navColor }),
+      setColorPreset: (colorPreset) => set({ colorPreset }),
+      setFontFamily: (fontFamily) => set({ fontFamily }),
+      setArabicFontFamily: (arabicFontFamily) => set({ arabicFontFamily }),
+      setFontSize: (fontSize) => set({ fontSize }),
+      setZoom: (zoom) => set({ zoom }),
+      resetSettings: () => {
+        localStorage.setItem(STORAGE_KEYS.THEME_MODE, defaultPreferences.themeMode);
+        set(defaultPreferences);
+      },
+    }),
+    {
+      name: STORAGE_KEYS.PREFERENCES,
+      partialize: ({
+        themeMode,
+        density,
+        contrast,
+        rtl,
+        navLayout,
+        navColor,
+        colorPreset,
+        fontFamily,
+        arabicFontFamily,
+        fontSize,
+        zoom,
+      }) => ({
+        themeMode,
+        density,
+        contrast,
+        rtl,
+        navLayout,
+        navColor,
+        colorPreset,
+        fontFamily,
+        arabicFontFamily,
+        fontSize,
+        zoom,
+      }),
+    }
+  )
+);

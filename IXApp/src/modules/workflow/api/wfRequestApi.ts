@@ -89,7 +89,10 @@ const endpoint = '/v1/WfRequest';
 
 const requireData = <T>(response: ApiResponse<T>): T => {
   if (!response.success || response.data == null) {
-    throw new ApiError(response.message || 'The workflow-request response did not contain data.', 500);
+    throw new ApiError(
+      response.message || 'The workflow-request response did not contain data.',
+      500
+    );
   }
   return response.data;
 };

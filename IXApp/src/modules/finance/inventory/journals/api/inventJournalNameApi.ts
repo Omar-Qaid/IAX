@@ -37,19 +37,39 @@ const payload = (x: InventJournalNameRecord) => ({
 
 export const inventJournalNameApi = {
   async list(signal?: AbortSignal): Promise<InventJournalNameRecord[]> {
-    return requireData((await apiClient.get<ApiResponse<InventJournalNameRecord[]>>(endpoint, { signal })).data);
+    return requireData(
+      (await apiClient.get<ApiResponse<InventJournalNameRecord[]>>(endpoint, { signal })).data
+    );
   },
   async lookups(signal?: AbortSignal): Promise<InventJournalNameLookups> {
-    return requireData((await apiClient.get<ApiResponse<InventJournalNameLookups>>(`${endpoint}/lookups`, { signal })).data);
+    return requireData(
+      (
+        await apiClient.get<ApiResponse<InventJournalNameLookups>>(`${endpoint}/lookups`, {
+          signal,
+        })
+      ).data
+    );
   },
   async create(x: InventJournalNameRecord): Promise<InventJournalNameRecord> {
-    return requireData((await apiClient.post<ApiResponse<InventJournalNameRecord>>(endpoint, payload(x))).data);
+    return requireData(
+      (await apiClient.post<ApiResponse<InventJournalNameRecord>>(endpoint, payload(x))).data
+    );
   },
   async update(x: InventJournalNameRecord): Promise<InventJournalNameRecord> {
-    return requireData((await apiClient.put<ApiResponse<InventJournalNameRecord>>(`${endpoint}/${x.recId}`, payload(x))).data);
+    return requireData(
+      (
+        await apiClient.put<ApiResponse<InventJournalNameRecord>>(
+          `${endpoint}/${x.recId}`,
+          payload(x)
+        )
+      ).data
+    );
   },
   async delete(x: InventJournalNameRecord): Promise<void> {
-    if (requireData((await apiClient.delete<ApiResponse<boolean>>(`${endpoint}/${x.recId}`)).data) !== true)
+    if (
+      requireData((await apiClient.delete<ApiResponse<boolean>>(`${endpoint}/${x.recId}`)).data) !==
+      true
+    )
       throw new ApiError('The journal name could not be deleted.', 400);
   },
 };

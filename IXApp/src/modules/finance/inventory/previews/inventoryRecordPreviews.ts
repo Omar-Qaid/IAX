@@ -32,7 +32,12 @@ registerRecordPreview<WarehousePreview>(INVENTORY_RECORD_PREVIEWS.WAREHOUSE, {
   load: pagedRecordLoader('/v1/InventLocation', 'InventLocationId'),
   fromOption: (option) => ({ inventLocationId: option.code, name: option.name ?? '' }),
   fields: [
-    { labelKey: 'fields.warehouse', defaultLabel: 'Warehouse', value: 'inventLocationId', lookup: true },
+    {
+      labelKey: 'fields.warehouse',
+      defaultLabel: 'Warehouse',
+      value: 'inventLocationId',
+      lookup: true,
+    },
     { labelKey: 'fields.name', defaultLabel: 'Name', value: 'name' },
   ],
 });

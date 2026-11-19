@@ -15,13 +15,13 @@ export function useListPage<T>({
   initialMode = 'view',
   loadData,
   saveData,
-  deleteData
+  deleteData,
 }: UseListPageOptions<T>) {
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isDirty, setIsDirty] = useState(false);
-  
+
   const { notifySuccess, notifyError } = useNotifications();
   const pageMode = usePageMode(initialMode);
 
@@ -62,7 +62,7 @@ export function useListPage<T>({
   const handleDelete = useCallback(async () => {
     if (!deleteData || selectedIds.length === 0) return;
     try {
-      await deleteData(selectedIds[0]!); 
+      await deleteData(selectedIds[0]!);
       notifySuccess('Record deleted');
       setSelectedIds([]);
       await fetchData();
@@ -70,7 +70,7 @@ export function useListPage<T>({
       notifyError('Failed to delete record');
     }
   }, [selectedIds, deleteData, fetchData, notifySuccess, notifyError]);
-  
+
   const markDirty = useCallback(() => setIsDirty(true), []);
   const clearDirty = useCallback(() => setIsDirty(false), []);
 
@@ -91,6 +91,6 @@ export function useListPage<T>({
     handleSave,
     handleDelete,
     notifySuccess,
-    notifyError
+    notifyError,
   };
 }

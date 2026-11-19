@@ -230,7 +230,10 @@ export function PartyPostalAddressPanel({
         }}
         onRemove={() =>
           selected &&
-          validPartyId !== null && void run(() => partyLogisticsApi.deleteAddress(validPartyId, selected.location)).catch(() => undefined)
+          validPartyId !== null &&
+          void run(() => partyLogisticsApi.deleteAddress(validPartyId, selected.location)).catch(
+            () => undefined
+          )
         }
         actions={[
           {
@@ -263,13 +266,15 @@ export function PartyPostalAddressPanel({
         open={drawerOpen && validPartyId !== null}
         onClose={() => setDrawerOpen(false)}
         onSave={(draft) =>
-          validPartyId !== null ? run(() =>
-            partyLogisticsApi.saveAddress(
-              validPartyId,
-              selected ? { ...draft, id: selected.id, location: selected.location } : draft,
-              Boolean(selected)
-            )
-          ) : undefined
+          validPartyId !== null
+            ? run(() =>
+                partyLogisticsApi.saveAddress(
+                  validPartyId,
+                  selected ? { ...draft, id: selected.id, location: selected.location } : draft,
+                  Boolean(selected)
+                )
+              )
+            : undefined
         }
         initialData={selected}
       />
@@ -349,7 +354,10 @@ export function PartyElectronicAddressPanel({
         }}
         onRemove={() =>
           selected &&
-          validPartyId !== null && void run(() => partyLogisticsApi.deleteContact(validPartyId, selected.location)).catch(() => undefined)
+          validPartyId !== null &&
+          void run(() => partyLogisticsApi.deleteContact(validPartyId, selected.location)).catch(
+            () => undefined
+          )
         }
         actions={[
           {
@@ -368,13 +376,15 @@ export function PartyElectronicAddressPanel({
         open={drawerOpen && validPartyId !== null}
         onClose={() => setDrawerOpen(false)}
         onSave={(draft) =>
-          validPartyId !== null ? run(() =>
-            partyLogisticsApi.saveContact(
-              validPartyId,
-              selected ? { ...draft, id: selected.id, location: selected.location } : draft,
-              Boolean(selected)
-            )
-          ) : undefined
+          validPartyId !== null
+            ? run(() =>
+                partyLogisticsApi.saveContact(
+                  validPartyId,
+                  selected ? { ...draft, id: selected.id, location: selected.location } : draft,
+                  Boolean(selected)
+                )
+              )
+            : undefined
         }
         initialData={selected}
       />

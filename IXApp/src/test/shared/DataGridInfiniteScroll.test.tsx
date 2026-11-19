@@ -7,7 +7,11 @@ import { DataGridMobileBody } from '@shared/components/data-grid/DataGridMobileB
 import { ScrollToTopButton } from '@shared/components/data-grid/ScrollToTopButton';
 import { useLoadMore } from '@shared/components/data-grid/hooks/useLoadMore';
 import { useGridDataSource } from '@shared/components/data-grid/hooks/useGridDataSource';
-import type { ColumnDef, DataGridHandle, FetchRowsParams } from '@shared/components/data-grid/types';
+import type {
+  ColumnDef,
+  DataGridHandle,
+  FetchRowsParams,
+} from '@shared/components/data-grid/types';
 
 type Item = { id: number; name: string; active: boolean };
 const columns: ColumnDef<Item>[] = [
@@ -15,7 +19,11 @@ const columns: ColumnDef<Item>[] = [
   { field: 'active', headerName: 'Active', type: 'boolean' },
 ];
 const items = (count: number, from = 0): Item[] =>
-  Array.from({ length: count }, (_, i) => ({ id: from + i, name: `Item ${from + i}`, active: true }));
+  Array.from({ length: count }, (_, i) => ({
+    id: from + i,
+    name: `Item ${from + i}`,
+    active: true,
+  }));
 
 /** A scroll container sitting at the bottom of its content. */
 const bottomedContainer = () => {
@@ -36,7 +44,14 @@ describe('useLoadMore', () => {
     const ref = bottomedContainer();
     const hook = renderHook(
       ({ rowCount, loading, hasMore = true }: Props) =>
-        useLoadMore({ rowCount, hasMore, loading, rowHeight: 32, loadNextPage, scrollContainerRef: ref }),
+        useLoadMore({
+          rowCount,
+          hasMore,
+          loading,
+          rowHeight: 32,
+          loadNextPage,
+          scrollContainerRef: ref,
+        }),
       { initialProps: initial }
     );
     return hook;
@@ -107,7 +122,9 @@ describe('useGridDataSource paging', () => {
 });
 
 describe('mobile cards', () => {
-  const renderCards = (props: Partial<React.ComponentProps<typeof DataGridMobileBody<Item>>> = {}) => {
+  const renderCards = (
+    props: Partial<React.ComponentProps<typeof DataGridMobileBody<Item>>> = {}
+  ) => {
     const scrollContainerRef = { current: document.createElement('div') };
     return render(
       <AppProviders>
@@ -136,7 +153,12 @@ describe('mobile cards', () => {
 
   it('toggles a numeric row off when it was selected as a string', () => {
     const onSelectionChange = vi.fn();
-    renderCards({ columns: [columns[0]], selectionMode: 'multiple', selectedIds: ['1'], onSelectionChange });
+    renderCards({
+      columns: [columns[0]],
+      selectionMode: 'multiple',
+      selectedIds: ['1'],
+      onSelectionChange,
+    });
     fireEvent.click(screen.getAllByRole('checkbox')[1]);
     expect(onSelectionChange).toHaveBeenCalledWith([]);
   });

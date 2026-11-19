@@ -79,11 +79,24 @@ export function OrganizationHierarchyPage(): React.ReactElement {
               });
               const term = search.trim().toLocaleLowerCase();
               const filtered = units.filter((unit) =>
-                `${unit.code} ${unit.name} ${unit.nameAlias ?? ''}`.toLocaleLowerCase().includes(term)
+                `${unit.code} ${unit.name} ${unit.nameAlias ?? ''}`
+                  .toLocaleLowerCase()
+                  .includes(term)
               );
               const start = (pageNumber - 1) * pageSize;
-              return { data: filtered.slice(start, start + pageSize).map((unit) => ({ id: unit.id, code: unit.code, name: unit.name, nameAlias: unit.nameAlias })), pageNumber,
-                totalPages: Math.max(1, Math.ceil(filtered.length / pageSize)), totalRecords: filtered.length };
+              return {
+                data: filtered
+                  .slice(start, start + pageSize)
+                  .map((unit) => ({
+                    id: unit.id,
+                    code: unit.code,
+                    name: unit.name,
+                    nameAlias: unit.nameAlias,
+                  })),
+                pageNumber,
+                totalPages: Math.max(1, Math.ceil(filtered.length / pageSize)),
+                totalRecords: filtered.length,
+              };
             }}
           />
         ),

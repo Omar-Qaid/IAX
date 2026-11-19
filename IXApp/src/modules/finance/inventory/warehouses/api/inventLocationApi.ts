@@ -96,7 +96,10 @@ export const inventLocationApi = {
     );
   },
   async delete(record: InventLocationRecord) {
-    if (data((await apiClient.delete<ApiResponse<boolean>>(`${endpoint}/${record.recId}`)).data) !== true)
+    if (
+      data((await apiClient.delete<ApiResponse<boolean>>(`${endpoint}/${record.recId}`)).data) !==
+      true
+    )
       throw new ApiError('The warehouse could not be deleted.', 400);
   },
 };

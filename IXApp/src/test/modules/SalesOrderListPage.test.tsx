@@ -42,7 +42,10 @@ const openList = (url = '/accounts-receivable/sales-orders') =>
       <MemoryRouter initialEntries={[url]}>
         <Routes>
           <Route path="/accounts-receivable/sales-orders" element={<SalesOrderListPage />} />
-          <Route path="/accounts-receivable/sales-orders/:id" element={<div>Order details page</div>} />
+          <Route
+            path="/accounts-receivable/sales-orders/:id"
+            element={<div>Order details page</div>}
+          />
         </Routes>
       </MemoryRouter>
     </AppProviders>

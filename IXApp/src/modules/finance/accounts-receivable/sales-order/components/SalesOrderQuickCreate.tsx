@@ -7,7 +7,10 @@ import type { FastTabSection, FastTabValue } from '@patterns/dialog-fast-tabs/Fa
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { useCities, useCountryRegions, useStates } from '@shared/hooks/useLogisticsAddress';
 import { useCompanyStore } from '@core/company/useCompanyStore';
-import { customerQuickCreateApi, type CustomerRecord } from '../../customer/api/customerQuickCreateApi';
+import {
+  customerQuickCreateApi,
+  type CustomerRecord,
+} from '../../customer/api/customerQuickCreateApi';
 import { salesOrderListApi, type SalesOrderListRecord } from '../api/salesOrderListApi';
 import { salesOrderLinesApi } from '../api/salesOrderLinesApi';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../../routes/accountsReceivableRoutePaths';

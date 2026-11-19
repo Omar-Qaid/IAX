@@ -296,7 +296,12 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>(
           // A stored value missing from the list (options still loading, or a
           // retired option) is shown, read-only, instead of rendering blank.
           if (selectedKey !== '' && !options.some((option) => option.key === selectedKey)) {
-            options.push({ key: selectedKey, value: currentValue, label: selectedKey, disabled: true });
+            options.push({
+              key: selectedKey,
+              value: currentValue,
+              label: selectedKey,
+              disabled: true,
+            });
           }
           return (
             <Box onClick={(e) => e.stopPropagation()} sx={{ width: '100%', minWidth: 0 }}>
@@ -450,7 +455,10 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>(
       // D365: an editable cell in view shows a pencil on hover that starts editing it.
       const content =
         onCellEditRequest && col.editable && editingRowId == null ? (
-          <CellEditHost label={`${t('actions.edit')} ${t(col.headerName)}`} onEdit={() => onCellEditRequest(row, String(col.field))}>
+          <CellEditHost
+            label={`${t('actions.edit')} ${t(col.headerName)}`}
+            onEdit={() => onCellEditRequest(row, String(col.field))}
+          >
             {rendered}
           </CellEditHost>
         ) : (

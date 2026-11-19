@@ -20,7 +20,11 @@ interface PinnedHeaderCellProps<T> {
   onFilterChange: (field: string, value: string) => void;
   onFilterIconClick: (event: React.MouseEvent<HTMLElement>, column: ColumnDef<T>) => void;
   onMenuOpen: (event: React.MouseEvent<HTMLElement>, column: ColumnDef<T>) => void;
-  onResizeStart: (event: React.MouseEvent, field: string, edge?: 'inline-start' | 'inline-end') => void;
+  onResizeStart: (
+    event: React.MouseEvent,
+    field: string,
+    edge?: 'inline-start' | 'inline-end'
+  ) => void;
   headerHeight: number;
   showColumnBorders?: boolean;
   hideFilterRow?: boolean;
@@ -61,8 +65,16 @@ export function PinnedHeaderCell<T>({
         flexShrink: 0,
         flexGrow: 0,
         ...(side === 'left'
-          ? { insetInlineStart: offset, borderInlineEnd: (theme) => showColumnBorders ? `1px solid ${theme.palette.divider}` : 'none' }
-          : { insetInlineEnd: offset, borderInlineStart: (theme) => showColumnBorders ? `1px solid ${theme.palette.divider}` : 'none' }),
+          ? {
+              insetInlineStart: offset,
+              borderInlineEnd: (theme) =>
+                showColumnBorders ? `1px solid ${theme.palette.divider}` : 'none',
+            }
+          : {
+              insetInlineEnd: offset,
+              borderInlineStart: (theme) =>
+                showColumnBorders ? `1px solid ${theme.palette.divider}` : 'none',
+            }),
       }}
     >
       {/* Name row */}
@@ -70,10 +82,17 @@ export function PinnedHeaderCell<T>({
         role="columnheader"
         aria-sort={sort === 'asc' ? 'ascending' : sort === 'desc' ? 'descending' : 'none'}
         tabIndex={column.sortable !== false && onSort ? 0 : -1}
-        onClick={() => { if (column.sortable !== false) onSort?.(String(column.field)); }}
+        onClick={() => {
+          if (column.sortable !== false) onSort?.(String(column.field));
+        }}
         onKeyDown={(event) => {
-          if (event.target === event.currentTarget && ['Enter', ' '].includes(event.key) && column.sortable !== false) {
-            event.preventDefault(); onSort?.(String(column.field));
+          if (
+            event.target === event.currentTarget &&
+            ['Enter', ' '].includes(event.key) &&
+            column.sortable !== false
+          ) {
+            event.preventDefault();
+            onSort?.(String(column.field));
           }
         }}
         sx={{
@@ -116,8 +135,17 @@ export function PinnedHeaderCell<T>({
             size="small"
             aria-label={t('grid.column_menu', { column: t(column.headerName || '') })}
             className="column-menu-trigger"
-            sx={{ p: 0.25, marginInlineStart: 0.25, opacity: 0, flexShrink: 0, color: 'text.primary' }}
-            onClick={(e) => { e.stopPropagation(); onMenuOpen(e, column); }}
+            sx={{
+              p: 0.25,
+              marginInlineStart: 0.25,
+              opacity: 0,
+              flexShrink: 0,
+              color: 'text.primary',
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onMenuOpen(e, column);
+            }}
           >
             <KeyboardArrowDown sx={{ fontSize: 16 }} />
           </IconButton>
@@ -152,7 +180,9 @@ export function PinnedHeaderCell<T>({
       {/* Resize handle */}
       <Box
         data-grid-resize-handle={String(column.field)}
-        onMouseDown={(e) => onResizeStart(e, column.field as string, side === 'left' ? 'inline-end' : 'inline-start')}
+        onMouseDown={(e) =>
+          onResizeStart(e, column.field as string, side === 'left' ? 'inline-end' : 'inline-start')
+        }
         sx={{
           position: 'absolute',
           top: 0,

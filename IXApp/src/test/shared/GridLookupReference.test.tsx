@@ -75,17 +75,29 @@ function ControlledLookupWithinForm({
 }
 
 describe('Grid Lookup Reference Integration', () => {
-  afterEach(async () => { await i18n.changeLanguage('en'); });
+  afterEach(async () => {
+    await i18n.changeLanguage('en');
+  });
 
   it('uses nameAlias by default in RTL and changes the selected display when language changes', async () => {
     await i18n.changeLanguage('ar');
     const row = { id: '1', name: 'Manager', nameAlias: 'المدير' };
-    render(<QueryClientProvider client={createTestQueryClient()}><AuthProvider>
-      <LookupGridField name="role" label="Role" value="1" onChange={vi.fn()}
-        columns={[{ field: 'name', header: 'Name' }]} queryKey={['localized-role']}
-        fetchById={async () => row}
-        fetchPage={async () => ({ data: [row], pageNumber: 1, totalPages: 1, totalRecords: 1 })} />
-    </AuthProvider></QueryClientProvider>);
+    render(
+      <QueryClientProvider client={createTestQueryClient()}>
+        <AuthProvider>
+          <LookupGridField
+            name="role"
+            label="Role"
+            value="1"
+            onChange={vi.fn()}
+            columns={[{ field: 'name', header: 'Name' }]}
+            queryKey={['localized-role']}
+            fetchById={async () => row}
+            fetchPage={async () => ({ data: [row], pageNumber: 1, totalPages: 1, totalRecords: 1 })}
+          />
+        </AuthProvider>
+      </QueryClientProvider>
+    );
     await waitFor(() => expect(screen.getByLabelText('Role')).toHaveValue('المدير'));
     await i18n.changeLanguage('en');
     await waitFor(() => expect(screen.getByLabelText('Role')).toHaveValue('Manager'));
@@ -140,15 +152,29 @@ describe('Grid Lookup Reference Integration', () => {
 
   it('does not display the previous row while a changed value loads', async () => {
     let resolveSecond: (row: TestItem) => void = () => {};
-    const fetchById = vi.fn((id: string) => id === '1'
-      ? Promise.resolve(mockData[0])
-      : new Promise<TestItem>((resolve) => { resolveSecond = resolve; }));
+    const fetchById = vi.fn((id: string) =>
+      id === '1'
+        ? Promise.resolve(mockData[0])
+        : new Promise<TestItem>((resolve) => {
+            resolveSecond = resolve;
+          })
+    );
     const renderField = (value: string) => (
-      <AuthProvider><QueryClientProvider client={queryClient}>
-        <LookupGridField<TestItem> name="customerId" label="Customer" value={value} onChange={vi.fn()}
-          columns={mockColumns} fetchPage={mockFetchPage} fetchById={fetchById}
-          queryKey={['changed-grid-lookup']} valueField="id" />
-      </QueryClientProvider></AuthProvider>
+      <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <LookupGridField<TestItem>
+            name="customerId"
+            label="Customer"
+            value={value}
+            onChange={vi.fn()}
+            columns={mockColumns}
+            fetchPage={mockFetchPage}
+            fetchById={fetchById}
+            queryKey={['changed-grid-lookup']}
+            valueField="id"
+          />
+        </QueryClientProvider>
+      </AuthProvider>
     );
     const queryClient = createTestQueryClient();
     const { rerender } = render(renderField('1'));

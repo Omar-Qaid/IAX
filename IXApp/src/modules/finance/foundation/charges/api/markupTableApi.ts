@@ -26,7 +26,9 @@ export interface MarkupTableDto {
   mcrBrokerContractFee: number;
 }
 
-export interface MarkupTableRecord extends MarkupTableDto { id: string }
+export interface MarkupTableRecord extends MarkupTableDto {
+  id: string;
+}
 
 const endpoint = '/v1/MarkupTable';
 const requireData = <T>(response: ApiResponse<T>): T => {
@@ -52,7 +54,10 @@ export const markupTableApi = {
     return toRecord(requireData(response.data));
   },
   async update(record: MarkupTableRecord): Promise<MarkupTableRecord> {
-    const response = await apiClient.put<ApiResponse<MarkupTableDto>>(`${endpoint}/${record.recId}`, toDto(record));
+    const response = await apiClient.put<ApiResponse<MarkupTableDto>>(
+      `${endpoint}/${record.recId}`,
+      toDto(record)
+    );
     return toRecord(requireData(response.data));
   },
   async delete(record: MarkupTableRecord): Promise<void> {

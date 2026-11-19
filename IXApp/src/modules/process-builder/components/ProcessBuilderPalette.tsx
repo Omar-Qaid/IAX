@@ -29,15 +29,27 @@ export const activityPalette: ReadonlyArray<{
   { type: 'notification', label: 'Notification', icon: null },
 ];
 
-export const controlPalette: ReadonlyArray<{ type: BuilderControlType; label: string; icon: React.ReactNode }> = [
+export const controlPalette: ReadonlyArray<{
+  type: BuilderControlType;
+  label: string;
+  icon: React.ReactNode;
+}> = [
   { type: 'digits', label: 'Digits', icon: <TextFields fontSize="small" /> },
   { type: 'text', label: 'Text', icon: <TextFields fontSize="small" /> },
   { type: 'longtext', label: 'Long text', icon: <TextFields fontSize="small" /> },
   { type: 'date', label: 'Date', icon: <CalendarMonth fontSize="small" /> },
   { type: 'time', label: 'Time', icon: <CalendarMonth fontSize="small" /> },
   { type: 'url', label: 'Url', icon: <Search fontSize="small" /> },
-  { type: 'dropdown-db', label: 'Drop Down List (Fill From DataBase)', icon: <ArrowDropDownCircle fontSize="small" /> },
-  { type: 'dropdown-manual', label: 'Drop Down List (Fill Manually)', icon: <ArrowDropDownCircle fontSize="small" /> },
+  {
+    type: 'dropdown-db',
+    label: 'Drop Down List (Fill From DataBase)',
+    icon: <ArrowDropDownCircle fontSize="small" />,
+  },
+  {
+    type: 'dropdown-manual',
+    label: 'Drop Down List (Fill Manually)',
+    icon: <ArrowDropDownCircle fontSize="small" />,
+  },
   { type: 'checkbox', label: 'Check box', icon: <CheckBox fontSize="small" /> },
   { type: 'checkboxlist', label: 'Check Box List', icon: <CheckBox fontSize="small" /> },
   { type: 'radiobuttonlist', label: 'Radio Button List', icon: <CheckBox fontSize="small" /> },
@@ -52,23 +64,42 @@ export const controlPalette: ReadonlyArray<{ type: BuilderControlType; label: st
 ];
 
 const controlTypeTranslationKeys: Record<BuilderControlType, string> = {
-  digits: 'wfProcessBuilder.controlTypes.digits', text: 'wfProcessBuilder.controlTypes.text', longtext: 'wfProcessBuilder.controlTypes.longtext',
-  date: 'wfProcessBuilder.controlTypes.date', time: 'wfProcessBuilder.controlTypes.time', url: 'wfProcessBuilder.controlTypes.url',
-  'dropdown-db': 'wfProcessBuilder.controlTypes.dropdownDb', 'dropdown-manual': 'wfProcessBuilder.controlTypes.dropdownManual',
-  checkbox: 'wfProcessBuilder.controlTypes.checkbox', checkboxlist: 'wfProcessBuilder.controlTypes.checkboxlist', radiobuttonlist: 'wfProcessBuilder.controlTypes.radiobuttonlist',
-  table: 'wfProcessBuilder.controlTypes.table', label: 'wfProcessBuilder.controlTypes.label', employeesearch: 'wfProcessBuilder.controlTypes.employeesearch',
-  employeeid: 'wfProcessBuilder.controlTypes.employeeid', file: 'wfProcessBuilder.controlTypes.file', showroom: 'wfProcessBuilder.controlTypes.showroom',
-  signature: 'wfProcessBuilder.controlTypes.signature', location: 'wfProcessBuilder.controlTypes.location', advertiser: 'wfProcessBuilder.controlTypes.advertiser',
+  digits: 'wfProcessBuilder.controlTypes.digits',
+  text: 'wfProcessBuilder.controlTypes.text',
+  longtext: 'wfProcessBuilder.controlTypes.longtext',
+  date: 'wfProcessBuilder.controlTypes.date',
+  time: 'wfProcessBuilder.controlTypes.time',
+  url: 'wfProcessBuilder.controlTypes.url',
+  'dropdown-db': 'wfProcessBuilder.controlTypes.dropdownDb',
+  'dropdown-manual': 'wfProcessBuilder.controlTypes.dropdownManual',
+  checkbox: 'wfProcessBuilder.controlTypes.checkbox',
+  checkboxlist: 'wfProcessBuilder.controlTypes.checkboxlist',
+  radiobuttonlist: 'wfProcessBuilder.controlTypes.radiobuttonlist',
+  table: 'wfProcessBuilder.controlTypes.table',
+  label: 'wfProcessBuilder.controlTypes.label',
+  employeesearch: 'wfProcessBuilder.controlTypes.employeesearch',
+  employeeid: 'wfProcessBuilder.controlTypes.employeeid',
+  file: 'wfProcessBuilder.controlTypes.file',
+  showroom: 'wfProcessBuilder.controlTypes.showroom',
+  signature: 'wfProcessBuilder.controlTypes.signature',
+  location: 'wfProcessBuilder.controlTypes.location',
+  advertiser: 'wfProcessBuilder.controlTypes.advertiser',
 };
 
-export const getControlTypeLabel = (t: TFunction, type: BuilderControlType): string => t(controlTypeTranslationKeys[type]);
+export const getControlTypeLabel = (t: TFunction, type: BuilderControlType): string =>
+  t(controlTypeTranslationKeys[type]);
 
 export function ProcessBuilderPalette() {
   const { t } = useAppTranslation();
   const store = useProcessBuilderStore();
   const selectedActivity = store.selected.kind === 'activity' ? store.selected : null;
   const activityControlMode = store.centerTab === 5 && selectedActivity;
-  const titleSx = { fontSize: tokens.fontSize.secondary, lineHeight: 1.2, fontWeight: 700, color: tokens.text };
+  const titleSx = {
+    fontSize: tokens.fontSize.secondary,
+    lineHeight: 1.2,
+    fontWeight: 700,
+    color: tokens.text,
+  };
   const paletteButtonSx = {
     minHeight: '44px !important',
     px: '12px',
@@ -82,28 +113,58 @@ export function ProcessBuilderPalette() {
     '&:focus-visible': { boxShadow: tokens.focusRing },
   };
   const addLabel = (
-    <Typography component="span" sx={{ marginInlineStart: 'auto', paddingInlineStart: 1, fontSize: tokens.fontSize.caption, color: tokens.accent }}>
+    <Typography
+      component="span"
+      sx={{
+        marginInlineStart: 'auto',
+        paddingInlineStart: 1,
+        fontSize: tokens.fontSize.caption,
+        color: tokens.accent,
+      }}
+    >
       {t('wfProcessBuilder.actions.add')}
     </Typography>
   );
   return (
     <Stack spacing="8px" sx={{ p: '8px', pb: '20px' }}>
       <Stack direction="row" sx={{ alignItems: 'center', minHeight: 24 }}>
-        <Typography sx={{ ...titleSx, flex: 1 }}>{t('wfProcessBuilder.palette.controls')}</Typography>
+        <Typography sx={{ ...titleSx, flex: 1 }}>
+          {t('wfProcessBuilder.palette.controls')}
+        </Typography>
         <Chip
           variant="outlined"
           size="small"
-          label={activityControlMode ? t('wfProcessBuilder.palette.activityForm') : t('wfProcessBuilder.palette.requestForm')}
+          label={
+            activityControlMode
+              ? t('wfProcessBuilder.palette.activityForm')
+              : t('wfProcessBuilder.palette.requestForm')
+          }
           sx={{ height: 24, maxWidth: 190, fontSize: tokens.fontSize.caption, bgcolor: '#fff' }}
         />
       </Stack>
-      <Box role="status" sx={{ color: tokens.textMuted, fontSize: tokens.fontSize.caption, lineHeight: 1.55, pb: '2px' }}>
+      <Box
+        role="status"
+        sx={{
+          color: tokens.textMuted,
+          fontSize: tokens.fontSize.caption,
+          lineHeight: 1.55,
+          pb: '2px',
+        }}
+      >
         {activityControlMode
           ? t('wfProcessBuilder.palette.activityHelp')
           : t('wfProcessBuilder.palette.requestHelp')}
       </Box>
       {store.centerTab === 5 && !selectedActivity && (
-        <Box sx={{ p: '8px', color: '#9a6700', bgcolor: '#fff7db', border: '1px solid #f4d06f', fontSize: tokens.fontSize.caption }}>
+        <Box
+          sx={{
+            p: '8px',
+            color: '#9a6700',
+            bgcolor: '#fff7db',
+            border: '1px solid #f4d06f',
+            fontSize: tokens.fontSize.caption,
+          }}
+        >
           {t('wfProcessBuilder.palette.selectActivity')}
         </Box>
       )}

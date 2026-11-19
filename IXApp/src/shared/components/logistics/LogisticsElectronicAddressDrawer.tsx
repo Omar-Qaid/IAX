@@ -124,7 +124,11 @@ export function LogisticsElectronicAddressDrawer({
         },
       }}
     >
-      {saveError && <Alert severity="error" sx={{m: 2}}>{saveError}</Alert>}
+      {saveError && (
+        <Alert severity="error" sx={{ m: 2 }}>
+          {saveError}
+        </Alert>
+      )}
       <Box
         sx={{
           p: 2.5,
@@ -138,12 +142,26 @@ export function LogisticsElectronicAddressDrawer({
         <Typography variant="h6" sx={{ fontWeight: 600 }}>
           {tText('logistics.contactInformation', 'Contact information')}
         </Typography>
-        <IconButton size="small" disabled={saving} onClick={onClose} aria-label={tText('common.close', 'Close')}>
+        <IconButton
+          size="small"
+          disabled={saving}
+          onClick={onClose}
+          aria-label={tText('common.close', 'Close')}
+        >
           <CloseIcon fontSize="small" />
         </IconButton>
       </Box>
 
-      <Box sx={{ flex: 1, overflowY: 'auto', p: 2.5, display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Box
+        sx={{
+          flex: 1,
+          overflowY: 'auto',
+          p: 2.5,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
+        }}
+      >
         <TextField
           label={tText('logistics.locationId', 'Location ID')}
           value={formData.locationId || '(Auto-generated on save)'}
@@ -161,7 +179,11 @@ export function LogisticsElectronicAddressDrawer({
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           error={errors.description}
-          helperText={errors.description ? tText('common.requiredField', 'Description is required') : undefined}
+          helperText={
+            errors.description
+              ? tText('common.requiredField', 'Description is required')
+              : undefined
+          }
         />
 
         <TextField
@@ -171,7 +193,9 @@ export function LogisticsElectronicAddressDrawer({
           size="small"
           fullWidth
           value={formData.type}
-          onChange={(e) => setFormData({ ...formData, type: e.target.value as ElectronicAddressType })}
+          onChange={(e) =>
+            setFormData({ ...formData, type: e.target.value as ElectronicAddressType })
+          }
         >
           {addressTypes.map((type) => (
             <MenuItem key={type} value={type}>
@@ -188,7 +212,11 @@ export function LogisticsElectronicAddressDrawer({
           value={formData.number}
           onChange={(e) => setFormData({ ...formData, number: e.target.value })}
           error={errors.number}
-          helperText={errors.number ? tText('common.requiredField', 'Contact number/address is required') : undefined}
+          helperText={
+            errors.number
+              ? tText('common.requiredField', 'Contact number/address is required')
+              : undefined
+          }
         />
 
         <TextField
@@ -228,7 +256,12 @@ export function LogisticsElectronicAddressDrawer({
         <Button variant="outlined" size="small" disabled={saving} onClick={onClose}>
           {tText('common.cancel', 'Cancel')}
         </Button>
-        <Button variant="contained" size="small" disabled={saving} onClick={() => void handleSave()}>
+        <Button
+          variant="contained"
+          size="small"
+          disabled={saving}
+          onClick={() => void handleSave()}
+        >
           {tText('common.ok', 'OK')}
         </Button>
       </Box>

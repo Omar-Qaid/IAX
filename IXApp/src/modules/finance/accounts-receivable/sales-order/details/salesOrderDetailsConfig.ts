@@ -5,7 +5,10 @@ import { FOUNDATION_ROUTE_PATHS } from '../../../foundation/routes/foundationRou
 import { FOUNDATION_RECORD_PREVIEWS } from '../../../foundation/previews/foundationRecordPreviews';
 import { INVENTORY_ROUTE_PATHS } from '../../../inventory/routes/inventoryRoutePaths';
 import type { SalesOrderListRecord } from '../api/salesOrderListApi';
-import type { SalesOrderDeliveryAddressOption, SalesOrderLineRecord } from '../api/salesOrderLinesApi';
+import type {
+  SalesOrderDeliveryAddressOption,
+  SalesOrderLineRecord,
+} from '../api/salesOrderLinesApi';
 
 /*
  * Static field configuration of the sales order document: which fields are
@@ -16,7 +19,11 @@ export const toAddressPreview = (
   option: SalesOrderDeliveryAddressOption | undefined
 ): PostalAddressPreview | undefined =>
   option
-    ? { location: option.label, validFrom: option.postalAddress?.validFrom, address: option.address }
+    ? {
+        location: option.label,
+        validFrom: option.postalAddress?.validFrom,
+        address: option.address,
+      }
     : undefined;
 
 export type DetailLine = SalesOrderLineRecord;
@@ -39,7 +46,9 @@ export const headerPreviewEntities: Partial<Record<keyof SalesOrderListRecord, s
   deliveryTerms: FOUNDATION_RECORD_PREVIEWS.DELIVERY_TERMS,
 };
 // Line master fields: master form route (open details) and preview entity.
-export const lineMasters: Partial<Record<keyof DetailLine, { masterRoute?: string; entity?: string }>> = {
+export const lineMasters: Partial<
+  Record<keyof DetailLine, { masterRoute?: string; entity?: string }>
+> = {
   site: { masterRoute: INVENTORY_ROUTE_PATHS.SITES },
   warehouse: { masterRoute: INVENTORY_ROUTE_PATHS.WAREHOUSES },
   unit: { masterRoute: INVENTORY_ROUTE_PATHS.UNITS_OF_MEASURE },

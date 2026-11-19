@@ -10,7 +10,11 @@ export const GRID_FILTER_OPERATORS: ReadonlyArray<{
   types?: readonly ColumnKind[];
 }> = [
   { value: 'contains', labelKey: 'grid.operators.contains', types: ['text', 'singleSelect'] },
-  { value: 'doesNotContain', labelKey: 'grid.operators.does_not_contain', types: ['text', 'singleSelect'] },
+  {
+    value: 'doesNotContain',
+    labelKey: 'grid.operators.does_not_contain',
+    types: ['text', 'singleSelect'],
+  },
   { value: 'equals', labelKey: 'grid.operators.equals' },
   { value: 'notEquals', labelKey: 'grid.operators.not_equals' },
   { value: 'startsWith', labelKey: 'grid.operators.starts_with', types: ['text', 'singleSelect'] },
@@ -31,7 +35,9 @@ export function filterOperatorsFor(type: ColumnKind | undefined) {
 }
 
 /** The operator a quick filter-row entry uses: numbers, booleans and dates match exactly. */
-export function defaultFilterOperator(type: ColumnKind | undefined): 'contains' | 'equals' | 'startsWith' {
+export function defaultFilterOperator(
+  type: ColumnKind | undefined
+): 'contains' | 'equals' | 'startsWith' {
   if (type === 'number' || type === 'boolean') return 'equals';
   if (type === 'date') return 'startsWith';
   return 'contains';

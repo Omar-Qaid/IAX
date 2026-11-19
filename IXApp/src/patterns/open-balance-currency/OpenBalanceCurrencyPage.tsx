@@ -271,28 +271,47 @@ export function OpenBalanceCurrencyPage({
         canDelete={false}
       />
     ),
-    commands: onOpenTransactions || onViewContacts
-      ? [
-          {
-            id: kind,
-            label: partyLabel,
-            groups: [
-              ...(onViewContacts ? [{ id: 'accounts', label: t('customerRibbon.groups.accounts', 'Accounts'), actions: [{ id: 'view-contacts', label: t('contactPerson.view', 'View contacts'), onClick: onViewContacts }] }] : []),
-              ...(onOpenTransactions ? [{
-                id: 'transactions',
-                label: t('customerRibbon.groups.transactions', 'Transactions'),
-                actions: [
-                  {
-                    id: 'open-transactions',
-                    label: tr('openTransactions'),
-                    onClick: onOpenTransactions,
-                  },
-                ],
-              }] : []),
-            ],
-          },
-        ]
-      : [],
+    commands:
+      onOpenTransactions || onViewContacts
+        ? [
+            {
+              id: kind,
+              label: partyLabel,
+              groups: [
+                ...(onViewContacts
+                  ? [
+                      {
+                        id: 'accounts',
+                        label: t('customerRibbon.groups.accounts', 'Accounts'),
+                        actions: [
+                          {
+                            id: 'view-contacts',
+                            label: t('contactPerson.view', 'View contacts'),
+                            onClick: onViewContacts,
+                          },
+                        ],
+                      },
+                    ]
+                  : []),
+                ...(onOpenTransactions
+                  ? [
+                      {
+                        id: 'transactions',
+                        label: t('customerRibbon.groups.transactions', 'Transactions'),
+                        actions: [
+                          {
+                            id: 'open-transactions',
+                            label: tr('openTransactions'),
+                            onClick: onOpenTransactions,
+                          },
+                        ],
+                      },
+                    ]
+                  : []),
+              ],
+            },
+          ]
+        : [],
     backCommand: { onClick: onBack },
     onSearch: () => {
       setFilterVisible((visible) => !visible);

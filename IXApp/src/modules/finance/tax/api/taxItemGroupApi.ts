@@ -11,7 +11,9 @@ export interface TaxItemGroupLineDto {
   taxValue: number | null;
 }
 
-export interface TaxItemGroupLine extends TaxItemGroupLineDto { id: string }
+export interface TaxItemGroupLine extends TaxItemGroupLineDto {
+  id: string;
+}
 
 export interface TaxItemGroupDto {
   recId: number;
@@ -30,7 +32,10 @@ export interface TaxItemGroupRecord extends Omit<TaxItemGroupDto, 'lines'> {
 const endpoint = '/v1/TaxItemGroup';
 const requireData = <T>(response: ApiResponse<T>): T => {
   if (!response.success || response.data == null) {
-    throw new ApiError(response.message || 'The item sales tax group response did not contain data.', 500);
+    throw new ApiError(
+      response.message || 'The item sales tax group response did not contain data.',
+      500
+    );
   }
   return response.data;
 };
@@ -65,7 +70,10 @@ export const taxItemGroupApi = {
     return toRecord(requireData(response.data));
   },
   async update(record: TaxItemGroupRecord): Promise<TaxItemGroupRecord> {
-    const response = await apiClient.put<ApiResponse<TaxItemGroupDto>>(`${endpoint}/${record.recId}`, toDto(record));
+    const response = await apiClient.put<ApiResponse<TaxItemGroupDto>>(
+      `${endpoint}/${record.recId}`,
+      toDto(record)
+    );
     return toRecord(requireData(response.data));
   },
   async delete(record: TaxItemGroupRecord): Promise<void> {

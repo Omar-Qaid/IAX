@@ -8,12 +8,30 @@ interface OperatorMetadata {
 }
 
 const operators: Record<string, BuilderOperator> = {
-  '=': '=', eq: '=', '!=': '!=', '<>': '!=', neq: '!=',
-  '>': '>', gt: '>', '<': '<', lt: '<',
-  '>=': '>=', gte: '>=', '<=': '<=', lte: '<=',
-  contains: 'contains', isempty: 'isEmpty', between: 'between',
+  '=': '=',
+  eq: '=',
+  '!=': '!=',
+  '<>': '!=',
+  neq: '!=',
+  '>': '>',
+  gt: '>',
+  '<': '<',
+  lt: '<',
+  '>=': '>=',
+  gte: '>=',
+  '<=': '<=',
+  lte: '<=',
+  contains: 'contains',
+  isempty: 'isEmpty',
+  between: 'between',
   // Legacy workflow imports generated OP{id} from the original operator catalog.
-  op1: '>', op2: '<', op3: '>=', op4: '<=', op5: '=', op6: '!=', op7: 'between',
+  op1: '>',
+  op2: '<',
+  op3: '>=',
+  op4: '<=',
+  op5: '=',
+  op6: '!=',
+  op7: 'between',
 };
 
 export function parseBuilderOperator(value: string): BuilderOperator {
@@ -22,14 +40,22 @@ export function parseBuilderOperator(value: string): BuilderOperator {
   return operator;
 }
 
-export function resolveBuilderOperator<T extends Pick<OperatorMetadata, 'code' | 'name'>>(metadata: T): BuilderOperator {
+export function resolveBuilderOperator<T extends Pick<OperatorMetadata, 'code' | 'name'>>(
+  metadata: T
+): BuilderOperator {
   // Codes carry semantics; names are only a compatibility source when no code exists.
   return parseBuilderOperator(metadata.code?.trim() || metadata.name || '');
 }
 
-export function isSupportedBuilderOperator(metadata: Pick<OperatorMetadata, 'code' | 'name'>): boolean {
-  try { resolveBuilderOperator(metadata); return true; }
-  catch { return false; }
+export function isSupportedBuilderOperator(
+  metadata: Pick<OperatorMetadata, 'code' | 'name'>
+): boolean {
+  try {
+    resolveBuilderOperator(metadata);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function resolveOperatorId(
@@ -38,13 +64,18 @@ export function resolveOperatorId(
   currentId?: number
 ): number {
   const matches = catalog.filter((item) => {
-    try { return resolveBuilderOperator(item) === operator; }
-    catch { return false; }
+    try {
+      return resolveBuilderOperator(item) === operator;
+    } catch {
+      return false;
+    }
   });
   const current = matches.find((item) => item.recId === currentId);
   if (current) return current.recId;
   const active = matches.filter((item) => item.isActive !== false);
   if (active.length !== 1)
-    throw new Error(`Workflow operator '${operator}' requires exactly one supported active catalog entry.`);
+    throw new Error(
+      `Workflow operator '${operator}' requires exactly one supported active catalog entry.`
+    );
   return active[0].recId;
 }

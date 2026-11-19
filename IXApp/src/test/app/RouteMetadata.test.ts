@@ -19,9 +19,7 @@ describe('route metadata', () => {
   });
 
   it('adds Workflow steps to step-scoped Activities breadcrumbs', () => {
-    expect(
-      getRouteBreadcrumbs(ROUTE_PATHS.WORKFLOW.ACTIVITIES, '?stepId=10').slice(1)
-    ).toEqual([
+    expect(getRouteBreadcrumbs(ROUTE_PATHS.WORKFLOW.ACTIVITIES, '?stepId=10').slice(1)).toEqual([
       { labelKey: 'nav.workflow', path: ROUTE_PATHS.WORKFLOW.PROCESSES },
       { labelKey: 'nav.wfSteps', path: ROUTE_PATHS.WORKFLOW.STEPS },
       { labelKey: 'nav.wfActivities' },

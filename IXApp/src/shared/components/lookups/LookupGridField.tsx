@@ -8,11 +8,7 @@ import LockIcon from '@mui/icons-material/LockOutlined';
 import { LookupGrid } from './LookupGrid';
 import { filterLocalizedColumns } from '@shared/utilities/localizeColumns';
 import { usePermissions } from '@core/auth/usePermissions';
-import type {
-  LookupGridFieldProps,
-  LookupGridFieldBaseProps,
-  LookupValue,
-} from './types';
+import type { LookupGridFieldProps, LookupGridFieldBaseProps, LookupValue } from './types';
 
 function LookupGridFieldInner<T extends object>({
   value,
@@ -78,7 +74,8 @@ function LookupGridFieldInner<T extends object>({
   }, [value, valueField]);
 
   const hasValue = value != null && value !== 0 && value !== '';
-  const currentRow = selectedRow && String(selectedRow[valueField]) === String(value) ? selectedRow : null;
+  const currentRow =
+    selectedRow && String(selectedRow[valueField]) === String(value) ? selectedRow : null;
   const displayText = currentRow
     ? String(currentRow[displayField] ?? '').trim() || String(currentRow[labelField] ?? '')
     : hasValue

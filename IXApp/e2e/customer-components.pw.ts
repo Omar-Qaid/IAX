@@ -104,7 +104,7 @@ test('customer components persist edits, recover failures, maintain logistics an
         const input = request.postDataJSON();
         data = { ...input, address: input.street };
         addresses = addresses.map((row) =>
-          row.id === input.id ? (data as Record<string, unknown>) : row,
+          row.id === input.id ? (data as Record<string, unknown>) : row
         );
       } else if (method === 'DELETE') {
         addresses = addresses.filter((row) => row.location !== Number(p.split('/').at(-1)));
@@ -139,7 +139,7 @@ test('customer components persist edits, recover failures, maintain logistics an
   await page.getByRole('option', { name: 'S2 - Site Two', exact: true }).click();
   await page.getByRole('combobox', { name: 'Warehouse', exact: true }).click();
   await expect(page.getByRole('option', { name: 'W1 - Warehouse One', exact: true })).toHaveCount(
-    0,
+    0
   );
   await page.getByRole('option', { name: 'W2 - Warehouse Two', exact: true }).click();
   await page.getByRole('button', { name: 'Save', exact: true }).first().click();

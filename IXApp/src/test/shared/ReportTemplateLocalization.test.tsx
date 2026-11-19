@@ -41,7 +41,13 @@ describe('ReportTemplateRenderer localization', () => {
     const template = documentFor('rtl');
     template.sections = [
       { id: 'legacy', type: 'text', value: 'Primary', textAlias: 'Text alias' },
-      { id: 'both', type: 'text', value: 'Primary', textAlias: 'Unused alias', valueAlias: 'Value alias' },
+      {
+        id: 'both',
+        type: 'text',
+        value: 'Primary',
+        textAlias: 'Unused alias',
+        valueAlias: 'Value alias',
+      },
     ];
     render(<ReportTemplateRenderer template={template} data={data} company={{ name: '' }} />);
     expect(screen.getByText('Text alias')).toBeInTheDocument();

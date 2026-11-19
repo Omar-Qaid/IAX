@@ -15,15 +15,33 @@ const str = (value: DetailValue | undefined): string => String(value ?? '');
 const option = (value: number, label: string) => ({ value: String(value), label });
 
 const isBasicFifo = (x: InventModelGroupRecord): boolean =>
-  x.inventModel === 0 && x.stockedProduct && x.postOnHandFinancial &&
-  !x.negativePhysical && !x.negativeFinancial && !x.inclPhysicalValueInCost &&
-  !x.standardCost && !x.mandatoryWmsOrder && !x.quarantineControl && !x.pdsCheck &&
-  !x.mandatoryRegister && !x.mandatoryReceive && !x.mandatoryPick && !x.mandatoryDeduct &&
-  !x.includePhysicalValueForAverage && !x.itemProdReservationActive &&
-  x.itemProdReservation === 0 && !x.reserveByDate && !x.reserveReversed &&
-  !x.mcrReservation && !x.pdsDispositionCode.trim() && !x.pdsConsReq &&
-  !x.pdsReqVendBatchDetail && !x.pdsSameLot && !x.pdsVendorCheckItem &&
-  x.pdsPickCriteria === 0 && x.pickingListBatchExpirationDateValidationRule === 0;
+  x.inventModel === 0 &&
+  x.stockedProduct &&
+  x.postOnHandFinancial &&
+  !x.negativePhysical &&
+  !x.negativeFinancial &&
+  !x.inclPhysicalValueInCost &&
+  !x.standardCost &&
+  !x.mandatoryWmsOrder &&
+  !x.quarantineControl &&
+  !x.pdsCheck &&
+  !x.mandatoryRegister &&
+  !x.mandatoryReceive &&
+  !x.mandatoryPick &&
+  !x.mandatoryDeduct &&
+  !x.includePhysicalValueForAverage &&
+  !x.itemProdReservationActive &&
+  x.itemProdReservation === 0 &&
+  !x.reserveByDate &&
+  !x.reserveReversed &&
+  !x.mcrReservation &&
+  !x.pdsDispositionCode.trim() &&
+  !x.pdsConsReq &&
+  !x.pdsReqVendBatchDetail &&
+  !x.pdsSameLot &&
+  !x.pdsVendorCheckItem &&
+  x.pdsPickCriteria === 0 &&
+  x.pickingListBatchExpirationDateValidationRule === 0;
 
 const emptyGroup = (): InventModelGroupRecord => ({
   id: `new-${crypto.randomUUID()}`,
@@ -384,7 +402,10 @@ export function InventModelGroupPage(): React.ReactElement {
           ? { name: t('validation.required', { field: t('inventModelGroup.fields.name', 'Name') }) }
           : {}),
         ...(!isBasicFifo(record)
-          ? { inventModel: 'Basic inventory requires stocked FIFO, financial posting, and no advanced or negative inventory controls.' }
+          ? {
+              inventModel:
+                'Basic inventory requires stocked FIFO, financial posting, and no advanced or negative inventory controls.',
+            }
           : {}),
       }),
       presentation: { mode: 'list', listWidth: 275, listResizable: true },

@@ -4,9 +4,12 @@ import type { CountryRegion, State, City, County } from '@shared/types/logistics
 import type { ApiResponse } from '@core/api/apiResponse';
 import { ApiError } from '@core/api/apiError';
 
-const unwrap = <T,>(response: ApiResponse<T[]>, lookup: string): T[] => {
+const unwrap = <T>(response: ApiResponse<T[]>, lookup: string): T[] => {
   if (!response.success || !Array.isArray(response.data))
-    throw new ApiError(response.message || `The ${lookup} lookup response did not contain data.`, 500);
+    throw new ApiError(
+      response.message || `The ${lookup} lookup response did not contain data.`,
+      500
+    );
   return response.data;
 };
 

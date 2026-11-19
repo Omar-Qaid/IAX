@@ -7,13 +7,25 @@ import type { InventOnHandRecord } from '@modules/finance/inventory/inquiries/ap
 
 let renderedProps: SimpleListPageProps<InventOnHandRecord>;
 vi.mock('@patterns/simple-list/SimpleListPage', () => ({
-  SimpleListPage: (props: typeof renderedProps) => { renderedProps = props; return null; },
+  SimpleListPage: (props: typeof renderedProps) => {
+    renderedProps = props;
+    return null;
+  },
 }));
 vi.mock('@tanstack/react-query', () => ({
-  useQuery: () => ({ data: { rows: [], totalCount: 0 }, isLoading: false, isFetching: false, error: null, refetch: vi.fn() }),
+  useQuery: () => ({
+    data: { rows: [], totalCount: 0 },
+    isLoading: false,
+    isFetching: false,
+    error: null,
+    refetch: vi.fn(),
+  }),
 }));
 vi.mock('@core/localization/useAppTranslation', () => ({
-  useAppTranslation: () => ({ t: (key: string, fallback?: string) => fallback ?? key, currentLanguage: { code: 'en' } }),
+  useAppTranslation: () => ({
+    t: (key: string, fallback?: string) => fallback ?? key,
+    currentLanguage: { code: 'en' },
+  }),
 }));
 afterEach(() => cleanup());
 

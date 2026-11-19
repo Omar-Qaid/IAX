@@ -85,7 +85,11 @@ export function WFProcessPage(): React.ReactElement {
     queryFn: ({ signal }) => wfCategoryApi.list(signal),
   });
   const categoryOptions = useMemo(
-    () => (categoriesQuery.data ?? []).map((category) => ({ id: category.recId, name: localizedName(category, isRtl) })),
+    () =>
+      (categoriesQuery.data ?? []).map((category) => ({
+        id: category.recId,
+        name: localizedName(category, isRtl),
+      })),
     [categoriesQuery.data, isRtl]
   );
   const prioritiesQuery = useQuery({
@@ -131,7 +135,8 @@ export function WFProcessPage(): React.ReactElement {
                 label: t('wfProcess.fields.category'),
                 masterRoute: WORKFLOW_ROUTE_PATHS.CATEGORIES,
                 type: 'select',
-                formatValue: (value) => categoryOptions.find((option) => String(option.id) === String(value))?.name ?? '',
+                formatValue: (value) =>
+                  categoryOptions.find((option) => String(option.id) === String(value))?.name ?? '',
                 renderOwnLabel: true,
                 render: ({ value, disabled, onChange }) => (
                   <AppLookupGridField<WfCategoryRecord>
@@ -159,7 +164,8 @@ export function WFProcessPage(): React.ReactElement {
                 label: t('wfProcess.fields.priority'),
                 masterRoute: WORKFLOW_ROUTE_PATHS.PRIORITIES,
                 type: 'select',
-                formatValue: (value) => priorityOptions.find((option) => String(option.id) === String(value))?.name ?? '',
+                formatValue: (value) =>
+                  priorityOptions.find((option) => String(option.id) === String(value))?.name ?? '',
                 renderOwnLabel: true,
                 render: ({ value, disabled, onChange }) => (
                   <AppLookupField
@@ -178,7 +184,9 @@ export function WFProcessPage(): React.ReactElement {
                 name: 'processTypeId',
                 label: t('wfProcess.fields.processType'),
                 type: 'select',
-                formatValue: (value) => processTypeOptions.find((option) => String(option.id) === String(value))?.name ?? '',
+                formatValue: (value) =>
+                  processTypeOptions.find((option) => String(option.id) === String(value))?.name ??
+                  '',
                 renderOwnLabel: true,
                 render: ({ value, disabled, onChange }) => (
                   <AppLookupField
@@ -223,7 +231,14 @@ export function WFProcessPage(): React.ReactElement {
         ],
       },
     ],
-    [categoryOptions, prioritiesQuery.isLoading, priorityOptions, processTypeOptions, processTypesQuery.isLoading, t]
+    [
+      categoryOptions,
+      prioritiesQuery.isLoading,
+      priorityOptions,
+      processTypeOptions,
+      processTypesQuery.isLoading,
+      t,
+    ]
   );
 
   const config: EnterpriseListDetailsConfig<WfProcessRecord> = {
@@ -280,7 +295,8 @@ export function WFProcessPage(): React.ReactElement {
         id: 'name',
         label: t('wfProcess.fields.name'),
         width: 'minmax(320px, 520px)',
-        getValue: (record) => textValue(record.name), getDisplayValue: (record) => localizedName(record, isRtl),
+        getValue: (record) => textValue(record.name),
+        getDisplayValue: (record) => localizedName(record, isRtl),
         setValue: (record, value) => ({ ...record, name: String(value) }),
       },
       {

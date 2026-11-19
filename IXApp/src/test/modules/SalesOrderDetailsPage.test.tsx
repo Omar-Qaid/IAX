@@ -24,29 +24,39 @@ vi.mock('@modules/finance/accounts-receivable/sales-order/api/salesOrderListApi'
 
 async function mockOrders() {
   return [
-      {
-        id: '1',
-        recId: 1,
-        salesId: 'SO-LIVE-001',
-        customerAccount: 'C-001',
-        customerName: 'Live customer',
-        invoiceAccount: 'C-002',
-        currencyCode: 'SAR',
-        salesStatus: 'Backorder',
-        orderDate: '2026-09-08',
-        deliveryDate: '2026-09-09',
-        paymentTerms: 'Net 30',
-        deliveryMode: 'Road',
-        customerReference: 'PO-001',
-        orderTotal: 250,
-      },
-    ];
+    {
+      id: '1',
+      recId: 1,
+      salesId: 'SO-LIVE-001',
+      customerAccount: 'C-001',
+      customerName: 'Live customer',
+      invoiceAccount: 'C-002',
+      currencyCode: 'SAR',
+      salesStatus: 'Backorder',
+      orderDate: '2026-09-08',
+      deliveryDate: '2026-09-09',
+      paymentTerms: 'Net 30',
+      deliveryMode: 'Road',
+      customerReference: 'PO-001',
+      orderTotal: 250,
+    },
+  ];
 }
 
 vi.mock('@modules/finance/accounts-receivable/sales-order/api/salesOrderLinesApi', () => ({
   salesOrderLinesApi: {
     list: vi.fn().mockResolvedValue([]),
-    totals: vi.fn().mockResolvedValue({ subtotal: 250, totalDiscount: 0, salesTax: 0, totalCharges: 0, invoiceAmount: 250, quantity: 0, costValue: 0 }),
+    totals: vi
+      .fn()
+      .mockResolvedValue({
+        subtotal: 250,
+        totalDiscount: 0,
+        salesTax: 0,
+        totalCharges: 0,
+        invoiceAmount: 250,
+        quantity: 0,
+        costValue: 0,
+      }),
     items: vi.fn().mockResolvedValue({
       data: [{ itemNumber: 'ITEM-1', name: 'Test item' }],
       pageNumber: 1,
@@ -69,8 +79,19 @@ vi.mock('@modules/finance/accounts-receivable/sales-order/api/salesOrderConfirma
   salesOrderConfirmationApi: {
     preview: vi.fn().mockResolvedValue({
       header: { currencyCode: 'SAR', qty: 1, salesBalance: 100, sumTax: 15, confirmAmount: 115 },
-      lines: [{ id: '1', lineNum: 1, itemId: 'ITEM-1', name: 'Test item', qty: 1,
-        inventLocationId: 'MAIN', wmsLocationId: '', salesPrice: 100, lineAmount: 100 }],
+      lines: [
+        {
+          id: '1',
+          lineNum: 1,
+          itemId: 'ITEM-1',
+          name: 'Test item',
+          qty: 1,
+          inventLocationId: 'MAIN',
+          wmsLocationId: '',
+          salesPrice: 100,
+          lineAmount: 100,
+        },
+      ],
     }),
     post: vi.fn().mockResolvedValue({ id: '10' }),
   },
@@ -79,8 +100,23 @@ vi.mock('@modules/finance/accounts-receivable/sales-order/api/salesOrderConfirma
 vi.mock('@modules/finance/accounts-receivable/sales-order/api/salesOrderPackingSlipApi', () => ({
   salesOrderPackingSlipApi: {
     postingPreview: vi.fn().mockImplementation(async () => ({
-      header: { id: '1', salesId: 'SO-LIVE-001', customerName: 'Live customer', currencyCode: 'SAR', siteId: 'MAIN' },
-      lines: [{ id: '10', lineNumber: 1, itemId: 'ITEM-1', name: 'Test item', quantity: 6, netAmount: 60 }],
+      header: {
+        id: '1',
+        salesId: 'SO-LIVE-001',
+        customerName: 'Live customer',
+        currencyCode: 'SAR',
+        siteId: 'MAIN',
+      },
+      lines: [
+        {
+          id: '10',
+          lineNumber: 1,
+          itemId: 'ITEM-1',
+          name: 'Test item',
+          quantity: 6,
+          netAmount: 60,
+        },
+      ],
     })),
     post: vi.fn().mockResolvedValue({ id: '100' }),
   },
@@ -116,7 +152,9 @@ it('loads a numeric route ID directly from the API', async () => {
   openOrder('1');
   expect(await screen.findByText('SO-LIVE-001 : Live customer')).toBeDefined();
   expect(screen.queryByText('No sales orders are available.')).toBeNull();
-  await waitFor(() => expect(salesOrderLinesApi.totals).toHaveBeenCalledWith('1', expect.anything()));
+  await waitFor(() =>
+    expect(salesOrderLinesApi.totals).toHaveBeenCalledWith('1', expect.anything())
+  );
 });
 
 it('opens CustConfirmJour from Sell > Sales order confirmations', async () => {
@@ -131,7 +169,10 @@ it('guards order cancellation while header edits are unsaved or cancellation is 
   const confirmation = vi.spyOn(window, 'confirm').mockReturnValue(true);
   let rejectCancellation!: (reason: Error) => void;
   vi.mocked(salesOrderListApi.cancel).mockImplementationOnce(
-    () => new Promise((_, reject) => { rejectCancellation = reject; })
+    () =>
+      new Promise((_, reject) => {
+        rejectCancellation = reject;
+      })
   );
   try {
     openOrder('1');
@@ -167,30 +208,44 @@ it('previews pro forma without posting', async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Sell' }));
   fireEvent.click(screen.getByRole('button', { name: 'Pro forma confirmation' }));
   expect(await screen.findByRole('dialog', { name: /Pro forma confirmation/ })).toBeInTheDocument();
-  expect((await within(screen.getByRole('dialog')).findAllByRole('grid')).length).toBeGreaterThan(0);
+  expect((await within(screen.getByRole('dialog')).findAllByRole('grid')).length).toBeGreaterThan(
+    0
+  );
   expect(salesOrderConfirmationApi.post).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Close preview' }));
 });
 
 it('keeps the entered packing slip quantity when the preview refetches', async () => {
-  const message = 'Available physical stock excluding other reservations is insufficient for item ITEM-001.';
+  const message =
+    'Available physical stock excluding other reservations is insufficient for item ITEM-001.';
   vi.mocked(salesOrderPackingSlipApi.post).mockRejectedValueOnce(new Error(message));
   openOrder('1');
   await screen.findByText('SO-LIVE-001 : Live customer');
   fireEvent.click(screen.getByRole('button', { name: 'Sell' }));
   fireEvent.click(screen.getByRole('button', { name: 'Packing slip' }));
   const dialog = await screen.findByRole('dialog', { name: 'Packing slip posting' });
-  const quantity = await within(dialog).findByRole('spinbutton', { name: 'Update quantity for ITEM-1' });
+  const quantity = await within(dialog).findByRole('spinbutton', {
+    name: 'Update quantity for ITEM-1',
+  });
   expect(quantity).toHaveValue(6);
   fireEvent.change(quantity, { target: { value: '2' } });
   await act(async () => {
-    await queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.packingSlipPreview(useCompanyStore.getState().currentCompany, '1') });
+    await queryClient.invalidateQueries({
+      queryKey: salesOrderQueryKeys.packingSlipPreview(
+        useCompanyStore.getState().currentCompany,
+        '1'
+      ),
+    });
   });
   expect(salesOrderPackingSlipApi.postingPreview).toHaveBeenCalledTimes(2);
   expect(quantity).toHaveValue(2);
   fireEvent.click(within(dialog).getByRole('button', { name: 'OK' }));
-  await waitFor(() => expect(salesOrderPackingSlipApi.post).toHaveBeenCalledWith('1',
-    expect.objectContaining({ lines: [{ salesLineId: '10', quantity: 2 }] })));
+  await waitFor(() =>
+    expect(salesOrderPackingSlipApi.post).toHaveBeenCalledWith(
+      '1',
+      expect.objectContaining({ lines: [{ salesLineId: '10', quantity: 2 }] })
+    )
+  );
   expect((await within(dialog).findByText(message)).closest('[role="alert"]')).toBeInTheDocument();
   expect(quantity).toHaveValue(2);
   expect(within(dialog).getByRole('button', { name: 'OK' })).toBeEnabled();
@@ -201,9 +256,13 @@ it('confirms immediately without opening a dialog', async () => {
   await screen.findByText('SO-LIVE-001 : Live customer');
   fireEvent.click(screen.getByRole('button', { name: 'Sell' }));
   fireEvent.click(screen.getByRole('button', { name: 'Confirm now' }));
-  await waitFor(() => expect(salesOrderConfirmationApi.post).toHaveBeenCalledWith(
-    '1', expect.any(String), expect.any(String)
-  ));
+  await waitFor(() =>
+    expect(salesOrderConfirmationApi.post).toHaveBeenCalledWith(
+      '1',
+      expect.any(String),
+      expect.any(String)
+    )
+  );
   expect(screen.queryByRole('dialog')).toBeNull();
 });
 
@@ -212,7 +271,9 @@ it('reviews the confirmation and only posts when Posting is enabled', async () =
   await screen.findByText('SO-LIVE-001 : Live customer');
   fireEvent.click(screen.getByRole('button', { name: 'Sell' }));
   fireEvent.click(screen.getByRole('button', { name: 'Confirmation' }));
-  expect((await within(screen.getByRole('dialog')).findAllByRole('grid')).length).toBeGreaterThan(0);
+  expect((await within(screen.getByRole('dialog')).findAllByRole('grid')).length).toBeGreaterThan(
+    0
+  );
   fireEvent.click(screen.getByRole('button', { name: 'Lines' }));
   expect(await within(screen.getByRole('dialog')).findByText('ITEM-1')).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Parameters' }));
@@ -226,9 +287,13 @@ it('reviews the confirmation and only posts when Posting is enabled', async () =
   const submit = await screen.findByRole('button', { name: 'OK' });
   await waitFor(() => expect(submit).toBeEnabled());
   fireEvent.click(submit);
-  await waitFor(() => expect(salesOrderConfirmationApi.post).toHaveBeenCalledWith(
-    '1', expect.any(String), expect.any(String)
-  ));
+  await waitFor(() =>
+    expect(salesOrderConfirmationApi.post).toHaveBeenCalledWith(
+      '1',
+      expect.any(String),
+      expect.any(String)
+    )
+  );
 });
 
 it('does not substitute another order for an unknown ID', async () => {
@@ -247,7 +312,9 @@ it('toggles the record sidebar and opens the header tab', async () => {
   expect(globalThis.localStorage.getItem('ixapp.sales-order.list-visible')).toBe('true');
   view.unmount();
   openOrder('1');
-  expect(screen.getByRole('button', { name: /Toggle record list/i }).getAttribute('aria-pressed')).toBe('true');
+  expect(
+    screen.getByRole('button', { name: /Toggle record list/i }).getAttribute('aria-pressed')
+  ).toBe('true');
   const restoredToggle = screen.getByRole('button', { name: /Toggle record list/i });
   fireEvent.click(restoredToggle);
   expect(restoredToggle.getAttribute('aria-pressed')).toBe('false');
@@ -261,7 +328,9 @@ it('opens advanced filters and applies and resets a sales order condition', asyn
   await screen.findByText('SO-LIVE-001 : Live customer');
   fireEvent.click(screen.getByRole('button', { name: 'Filter' }));
   expect(screen.getByRole('heading', { name: 'Filters' })).toBeDefined();
-  const input = within(screen.getByRole('heading', { name: 'Filters' }).parentElement!.parentElement!).getByRole('textbox');
+  const input = within(
+    screen.getByRole('heading', { name: 'Filters' }).parentElement!.parentElement!
+  ).getByRole('textbox');
   fireEvent.change(input, { target: { value: 'no-match' } });
   fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
   expect(screen.queryByText('SO-LIVE-001')).toBeNull();
@@ -451,7 +520,9 @@ it('keeps header tab dropdowns editable in edit mode', async () => {
   expect(combos.length).toBeGreaterThan(0);
   // Enabled once the header lookup lists have loaded.
   await waitFor(() =>
-    expect(screen.getAllByRole('combobox').some((c) => !(c as HTMLInputElement).disabled)).toBe(true)
+    expect(screen.getAllByRole('combobox').some((c) => !(c as HTMLInputElement).disabled)).toBe(
+      true
+    )
   );
   // No view-mode pencils left on header fields while editing.
   expect(screen.queryByRole('button', { name: 'Edit Site' })).toBeNull();

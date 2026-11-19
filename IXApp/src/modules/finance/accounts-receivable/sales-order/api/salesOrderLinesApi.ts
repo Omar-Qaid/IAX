@@ -73,7 +73,7 @@ export interface SalesOrderLineRecord {
   shippingDateRequested?: string;
   shippingDateConfirmed?: string;
   receiptDateConfirmed?: string;
-      customerReference?: string;
+  customerReference?: string;
   deliveryName?: string;
   deliveryPostalAddress?: string;
   returnLotId?: string;
@@ -140,18 +140,32 @@ function unwrap<T>(response: ApiResponse<T>): T {
   return response.data;
 }
 export const salesOrderLinesApi = {
-  async createDeliveryAddress(orderId: string, lineId: string | undefined, address: LogisticsPostalAddress) {
+  async createDeliveryAddress(
+    orderId: string,
+    lineId: string | undefined,
+    address: LogisticsPostalAddress
+  ) {
     const response = await apiClient.post<ApiResponse<CreatedDeliveryAddress>>(
       `/v1/SalesTable/${encodeURIComponent(orderId)}/delivery-addresses`,
       {
         lineId: lineId ?? null,
         address: {
-          id: '', location: 0, locationId: address.locationId ?? '',
-          description: address.description.trim(), address: '', primary: false,
-          street: address.street ?? '', city: address.city ?? '', state: address.state ?? '',
-          zipCode: address.zipCode ?? '', county: address.county ?? '',
-          countryRegionId: address.countryRegionId, districtName: address.district ?? '',
-          validFrom: address.validFrom || null, validTo: address.validTo || null, roles: [],
+          id: '',
+          location: 0,
+          locationId: address.locationId ?? '',
+          description: address.description.trim(),
+          address: '',
+          primary: false,
+          street: address.street ?? '',
+          city: address.city ?? '',
+          state: address.state ?? '',
+          zipCode: address.zipCode ?? '',
+          county: address.county ?? '',
+          countryRegionId: address.countryRegionId,
+          districtName: address.district ?? '',
+          validFrom: address.validFrom || null,
+          validTo: address.validTo || null,
+          roles: [],
         },
       }
     );
@@ -228,15 +242,14 @@ export const salesOrderLinesApi = {
   }) {
     return unwrap(
       (
-        await apiClient.get<ApiResponse<{
-          data: InventoryDimensionOption[];
-          pageNumber: number;
-          totalPages: number;
-          totalRecords: number;
-        }>>(
-          '/v1/SalesTable/ledger-dimensions',
-          { params: { pageNumber, pageSize, search }, signal }
-        )
+        await apiClient.get<
+          ApiResponse<{
+            data: InventoryDimensionOption[];
+            pageNumber: number;
+            totalPages: number;
+            totalRecords: number;
+          }>
+        >('/v1/SalesTable/ledger-dimensions', { params: { pageNumber, pageSize, search }, signal })
       ).data
     );
   },
@@ -255,31 +268,77 @@ export const salesOrderLinesApi = {
   }) {
     return unwrap(
       (
-        await apiClient.get<ApiResponse<{
-          data: InventoryDimensionOption[];
-          pageNumber: number;
-          totalPages: number;
-          totalRecords: number;
-        }>>(
-          '/v1/SalesTable/return-lots',
-          { params: { itemNumber, pageNumber, pageSize, search }, signal }
-        )
+        await apiClient.get<
+          ApiResponse<{
+            data: InventoryDimensionOption[];
+            pageNumber: number;
+            totalPages: number;
+            totalRecords: number;
+          }>
+        >('/v1/SalesTable/return-lots', {
+          params: { itemNumber, pageNumber, pageSize, search },
+          signal,
+        })
       ).data
     );
   },
   async batchNumbers({
-    itemNumber, pageNumber, pageSize, search, signal,
-  }: { itemNumber: string; pageNumber: number; pageSize: number; search: string; signal?: AbortSignal }) {
-    return unwrap((await apiClient.get<ApiResponse<{
-      data: InventoryDimensionOption[]; pageNumber: number; totalPages: number; totalRecords: number;
-    }>>('/v1/SalesTable/batch-numbers', { params: { itemNumber, pageNumber, pageSize, search }, signal })).data);
+    itemNumber,
+    pageNumber,
+    pageSize,
+    search,
+    signal,
+  }: {
+    itemNumber: string;
+    pageNumber: number;
+    pageSize: number;
+    search: string;
+    signal?: AbortSignal;
+  }) {
+    return unwrap(
+      (
+        await apiClient.get<
+          ApiResponse<{
+            data: InventoryDimensionOption[];
+            pageNumber: number;
+            totalPages: number;
+            totalRecords: number;
+          }>
+        >('/v1/SalesTable/batch-numbers', {
+          params: { itemNumber, pageNumber, pageSize, search },
+          signal,
+        })
+      ).data
+    );
   },
   async serialNumbers({
-    itemNumber, pageNumber, pageSize, search, signal,
-  }: { itemNumber: string; pageNumber: number; pageSize: number; search: string; signal?: AbortSignal }) {
-    return unwrap((await apiClient.get<ApiResponse<{
-      data: InventoryDimensionOption[]; pageNumber: number; totalPages: number; totalRecords: number;
-    }>>('/v1/SalesTable/serial-numbers', { params: { itemNumber, pageNumber, pageSize, search }, signal })).data);
+    itemNumber,
+    pageNumber,
+    pageSize,
+    search,
+    signal,
+  }: {
+    itemNumber: string;
+    pageNumber: number;
+    pageSize: number;
+    search: string;
+    signal?: AbortSignal;
+  }) {
+    return unwrap(
+      (
+        await apiClient.get<
+          ApiResponse<{
+            data: InventoryDimensionOption[];
+            pageNumber: number;
+            totalPages: number;
+            totalRecords: number;
+          }>
+        >('/v1/SalesTable/serial-numbers', {
+          params: { itemNumber, pageNumber, pageSize, search },
+          signal,
+        })
+      ).data
+    );
   },
   async list(id: string, signal?: AbortSignal) {
     return unwrap(

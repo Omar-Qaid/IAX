@@ -10,20 +10,47 @@ import { PERMISSIONS } from '@core/permissions/permissions';
 import { usePermission } from '@core/permissions/usePermission';
 import { useQueryClient } from '@tanstack/react-query';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../../routes/accountsReceivableRoutePaths';
-import { salesOrderListApi, type SalesOrderHeaderInput, type SalesOrderListRecord } from '../api/salesOrderListApi';
+import {
+  salesOrderListApi,
+  type SalesOrderHeaderInput,
+  type SalesOrderListRecord,
+} from '../api/salesOrderListApi';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { LookupField } from '@shared/components/lookups/LookupField';
 import { type SalesOrderCopyMode } from '../api/salesOrderCopyApi';
 import { salesOrderConfirmationApi } from '../api/salesOrderConfirmationApi';
 import { salesOrderQueryKeys } from '../../queries/accountsReceivableQueryKeys';
 import { useCompanyStore } from '@core/company/useCompanyStore';
-import { headerMasterRoutes, headerPreviewEntities, type DetailLine } from './salesOrderDetailsConfig';
+import {
+  headerMasterRoutes,
+  headerPreviewEntities,
+  type DetailLine,
+} from './salesOrderDetailsConfig';
 import { useSalesOrderOptions } from './useSalesOrderOptions';
 import { useSalesOrderDocumentData } from './useSalesOrderDocumentData';
 
 /** Header fields sent as booleans / numbers (everything else is text). */
-const BOOLEAN_HEADER_FIELDS = new Set<string>(['oneTimeCustomer', 'pricesIncludeSalesTax', 'blindShipment', 'residentialDestination', 'excludeFromMasterPlanning', 'intercompanyAutoCreateOrders', 'intercompanyDirectDelivery', 'intercompanyAllowIndirectCreation']);
-const NUMERIC_HEADER_FIELDS = new Set<string>(['salesType', 'deliveryDateControlType', 'mpsFullRunCtpStatus', 'carrierService', 'reservation', 'intercompanyOrigin', 'discountPercent', 'totalDiscountPercent', 'fixedExchangeRate']);
+const BOOLEAN_HEADER_FIELDS = new Set<string>([
+  'oneTimeCustomer',
+  'pricesIncludeSalesTax',
+  'blindShipment',
+  'residentialDestination',
+  'excludeFromMasterPlanning',
+  'intercompanyAutoCreateOrders',
+  'intercompanyDirectDelivery',
+  'intercompanyAllowIndirectCreation',
+]);
+const NUMERIC_HEADER_FIELDS = new Set<string>([
+  'salesType',
+  'deliveryDateControlType',
+  'mpsFullRunCtpStatus',
+  'carrierService',
+  'reservation',
+  'intercompanyOrigin',
+  'discountPercent',
+  'totalDiscountPercent',
+  'fixedExchangeRate',
+]);
 
 /**
  * State, server data and actions of the sales order document page: header and
@@ -33,7 +60,14 @@ const NUMERIC_HEADER_FIELDS = new Set<string>(['salesType', 'deliveryDateControl
 export function useSalesOrderDocument() {
   const company = useCompanyStore((state) => state.currentCompany);
   const { t, currentLanguage } = useAppTranslation();
-  const { salesDeliveryTypeOptions, sourcingOriginOptions, deliveryDateControlOptions, ctpStatusOptions, carrierServiceOptions, reservationOptions } = useSalesOrderOptions();
+  const {
+    salesDeliveryTypeOptions,
+    sourcingOriginOptions,
+    deliveryDateControlOptions,
+    ctpStatusOptions,
+    carrierServiceOptions,
+    reservationOptions,
+  } = useSalesOrderOptions();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { salesOrderId } = useParams<{ salesOrderId: string }>();
@@ -46,20 +80,27 @@ export function useSalesOrderDocument() {
   const [cancelingOrder, setCancelingOrder] = useState(false);
   const [headerError, setHeaderError] = useState('');
   useUnsavedChanges(Boolean(headerDraft));
-  const [lineFilterVisible, setLineFilterVisible] = useGridFilterRow('accounts-receivable.sales-order-lines');
+  const [lineFilterVisible, setLineFilterVisible] = useGridFilterRow(
+    'accounts-receivable.sales-order-lines'
+  );
   const { hasPermission: canEditLines } = usePermission(PERMISSIONS.SALES_ORDER_UPDATE);
   const [lineTab, setLineTab] = useState('General');
   const [tab, setTab] = useState('lines');
   const [selectedLineId, setSelectedLineId] = useState<string>();
   const [lineDetailDraft, setLineDetailDraft] = useState<DetailLine | null>(null);
   const [deliveryAddressDrawerOpen, setDeliveryAddressDrawerOpen] = useState(false);
-  const [deliveryAddressDrawerTarget, setDeliveryAddressDrawerTarget] = useState<'header' | 'line'>('header');
-  const [deliveryAddressInitialData, setDeliveryAddressInitialData] = useState<LogisticsPostalAddress | null>(null);
+  const [deliveryAddressDrawerTarget, setDeliveryAddressDrawerTarget] = useState<'header' | 'line'>(
+    'header'
+  );
+  const [deliveryAddressInitialData, setDeliveryAddressInitialData] =
+    useState<LogisticsPostalAddress | null>(null);
   const [savingLineDetail, setSavingLineDetail] = useState(false);
   const [totalsOpen, setTotalsOpen] = useState(false);
   const [confirmationsOpen, setConfirmationsOpen] = useState(false);
   const [packingSlipPostingOpen, setPackingSlipPostingOpen] = useState(false);
-  const [confirmationMode, setConfirmationMode] = useState<'confirmation' | 'proForma'>('confirmation');
+  const [confirmationMode, setConfirmationMode] = useState<'confirmation' | 'proForma'>(
+    'confirmation'
+  );
   const [confirmNowBusy, setConfirmNowBusy] = useState(false);
   const [confirmNowError, setConfirmNowError] = useState('');
   const [copyMode, setCopyMode] = useState<SalesOrderCopyMode>();
@@ -84,17 +125,19 @@ export function useSalesOrderDocument() {
     dimensionsQuery,
     taxGroupsQuery,
     invalidateOrder,
-  } = useSalesOrderDocumentData({ salesOrderId, editingOrderId: headerDraft?.id, copyMode, copySourceId });
+  } = useSalesOrderDocumentData({
+    salesOrderId,
+    editingOrderId: headerDraft?.id,
+    copyMode,
+    copySourceId,
+  });
   const activeHeader = headerDraft?.id === order?.id ? headerDraft : null;
   const canEditHeader = canEditLines && order?.salesStatus.toLowerCase() === 'backorder';
   const recalculateSalesOrderDiscounts = async () => {
     if (!order || !canEditHeader) return;
     try {
       await salesOrderLinesApi.recalculateDiscounts(order.id);
-      await Promise.all([
-        invalidateOrder(order.id),
-        refetchOrder(),
-      ]);
+      await Promise.all([invalidateOrder(order.id), refetchOrder()]);
     } catch (error) {
       setHeaderError(error instanceof Error ? error.message : t('errors.generic'));
     }
@@ -105,36 +148,44 @@ export function useSalesOrderDocument() {
       id: 'new',
       label: t('salesOrder.ui.new', 'New'),
       actions: [
-        { id: 'purchase-order', label: t('salesOrder.ui.purchaseOrder', 'Purchase order'), disabled: true },
-        { id: 'direct-delivery', label: t('salesOrder.ui.directDelivery', 'Direct delivery'), disabled: true },
+        {
+          id: 'purchase-order',
+          label: t('salesOrder.ui.purchaseOrder', 'Purchase order'),
+          disabled: true,
+        },
+        {
+          id: 'direct-delivery',
+          label: t('salesOrder.ui.directDelivery', 'Direct delivery'),
+          disabled: true,
+        },
       ],
     },
     {
       id: 'maintain',
       label: t('salesOrder.ui.maintain', 'Maintain'),
-      actions: [{
-        id: 'cancel',
-        label: t('salesOrder.ui.cancel', 'Cancel'),
-        disabled: !canEditHeader || Boolean(activeHeader) || cancelingOrder,
-        onClick: async () => {
-          if (!order || !canEditHeader || activeHeader || cancelOrderLock.current) return;
-          if (!window.confirm(`Cancel the remaining quantity for ${order.salesId}?`)) return;
-          cancelOrderLock.current = true;
-          setCancelingOrder(true);
-          setHeaderError('');
-          try {
-            await salesOrderListApi.cancel(order.id);
-            await Promise.all([
-              invalidateOrder(order.id),
-            ]);
-          } catch (error) {
-            setHeaderError(error instanceof Error ? error.message : t('errors.generic'));
-          } finally {
-            cancelOrderLock.current = false;
-            setCancelingOrder(false);
-          }
+      actions: [
+        {
+          id: 'cancel',
+          label: t('salesOrder.ui.cancel', 'Cancel'),
+          disabled: !canEditHeader || Boolean(activeHeader) || cancelingOrder,
+          onClick: async () => {
+            if (!order || !canEditHeader || activeHeader || cancelOrderLock.current) return;
+            if (!window.confirm(`Cancel the remaining quantity for ${order.salesId}?`)) return;
+            cancelOrderLock.current = true;
+            setCancelingOrder(true);
+            setHeaderError('');
+            try {
+              await salesOrderListApi.cancel(order.id);
+              await Promise.all([invalidateOrder(order.id)]);
+            } catch (error) {
+              setHeaderError(error instanceof Error ? error.message : t('errors.generic'));
+            } finally {
+              cancelOrderLock.current = false;
+              setCancelingOrder(false);
+            }
+          },
         },
-      }],
+      ],
     },
     {
       id: 'payments',
@@ -145,16 +196,42 @@ export function useSalesOrderDocument() {
       id: 'copy',
       label: t('salesOrder.ui.copy', 'Copy'),
       actions: [
-        { id: 'from-all', label: t('salesOrder.ui.fromAll', 'From all'), disabled: !canEditHeader, onClick: () => { setCopyError(''); setCopySourceId(undefined); setCopyMode('fromAll'); } },
-        { id: 'from-journal', label: t('salesOrder.ui.fromJournal', 'From journal'), disabled: !canEditHeader, onClick: () => { setCopyError(''); setCopySourceId(undefined); setCopyMode('fromJournal'); } },
+        {
+          id: 'from-all',
+          label: t('salesOrder.ui.fromAll', 'From all'),
+          disabled: !canEditHeader,
+          onClick: () => {
+            setCopyError('');
+            setCopySourceId(undefined);
+            setCopyMode('fromAll');
+          },
+        },
+        {
+          id: 'from-journal',
+          label: t('salesOrder.ui.fromJournal', 'From journal'),
+          disabled: !canEditHeader,
+          onClick: () => {
+            setCopyError('');
+            setCopySourceId(undefined);
+            setCopyMode('fromJournal');
+          },
+        },
       ],
     },
     {
       id: 'view',
       label: t('salesOrder.ui.view', 'View'),
       actions: [
-        { id: 'totals', label: t('salesOrder.ui.totals', 'Totals'), onClick: () => setTotalsOpen(true) },
-        { id: 'order-events', label: t('salesOrder.ui.orderEvents', 'Order events'), disabled: true },
+        {
+          id: 'totals',
+          label: t('salesOrder.ui.totals', 'Totals'),
+          onClick: () => setTotalsOpen(true),
+        },
+        {
+          id: 'order-events',
+          label: t('salesOrder.ui.orderEvents', 'Order events'),
+          disabled: true,
+        },
       ],
     },
     {
@@ -165,14 +242,20 @@ export function useSalesOrderDocument() {
         { id: 'order-holds', label: t('salesOrder.ui.orderHolds', 'Order holds'), disabled: true },
       ],
     },
-    { id: 'attachments', label: t('salesOrder.ui.attachments', 'Attachments'), actions: [{ id: 'notes', label: t('salesOrder.ui.notes', 'Notes'), disabled: true }] },
+    {
+      id: 'attachments',
+      label: t('salesOrder.ui.attachments', 'Attachments'),
+      actions: [{ id: 'notes', label: t('salesOrder.ui.notes', 'Notes'), disabled: true }],
+    },
   ];
 
   const sellRibbonGroups: ActionPaneRibbonGroup[] = [
     {
       id: 'credit-note',
       label: t('salesOrder.ui.creditNote', 'Credit note'),
-      actions: [{ id: 'credit-note', label: t('salesOrder.ui.creditNote', 'Credit note'), disabled: true }],
+      actions: [
+        { id: 'credit-note', label: t('salesOrder.ui.creditNote', 'Credit note'), disabled: true },
+      ],
     },
     {
       id: 'charges',
@@ -181,21 +264,32 @@ export function useSalesOrderDocument() {
         {
           id: 'maintain-charges',
           label: t('salesOrder.ui.maintainCharges', 'Maintain charges'),
-          onClick: () => order && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrderCharges(order.id)),
+          onClick: () =>
+            order && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrderCharges(order.id)),
         },
-        { id: 'allocate-charges', label: t('salesOrder.ui.allocateCharges', 'Allocate charges'), disabled: true },
+        {
+          id: 'allocate-charges',
+          label: t('salesOrder.ui.allocateCharges', 'Allocate charges'),
+          disabled: true,
+        },
       ],
     },
     {
       id: 'tax',
       label: t('salesOrder.ui.tax', 'Tax'),
-      actions: [{ id: 'sales-tax', label: t('salesOrder.ui.salesTax', 'Sales tax'), disabled: true }],
+      actions: [
+        { id: 'sales-tax', label: t('salesOrder.ui.salesTax', 'Sales tax'), disabled: true },
+      ],
     },
     {
       id: 'calculate-delivery',
       label: t('salesOrder.ui.calculate', 'Calculate'),
       actions: [
-        { id: 'confirmed-delivery-dates', label: t('salesOrder.ui.confirmedDeliveryDates', 'Confirmed delivery dates'), disabled: true },
+        {
+          id: 'confirmed-delivery-dates',
+          label: t('salesOrder.ui.confirmedDeliveryDates', 'Confirmed delivery dates'),
+          disabled: true,
+        },
         {
           id: 'total-discount',
           label: t('salesOrder.ui.recalculateDiscounts', 'Recalculate discounts'),
@@ -208,17 +302,43 @@ export function useSalesOrderDocument() {
       id: 'calculate-price',
       label: '',
       actions: [
-        { id: 'supplementary-items', label: t('salesOrder.ui.supplementaryItems', 'Supplementary items'), disabled: true },
-        { id: 'tiered-charges', label: t('salesOrder.ui.tieredCharges', 'Tiered charges'), disabled: true },
-        { id: 'push-price-and-totals', label: t('salesOrder.ui.pushPriceAndTotals', 'Push price and totals'), disabled: true },
+        {
+          id: 'supplementary-items',
+          label: t('salesOrder.ui.supplementaryItems', 'Supplementary items'),
+          disabled: true,
+        },
+        {
+          id: 'tiered-charges',
+          label: t('salesOrder.ui.tieredCharges', 'Tiered charges'),
+          disabled: true,
+        },
+        {
+          id: 'push-price-and-totals',
+          label: t('salesOrder.ui.pushPriceAndTotals', 'Push price and totals'),
+          disabled: true,
+        },
       ],
     },
     {
       id: 'generate',
       label: t('salesOrder.ui.generate', 'Generate'),
       actions: [
-        { id: 'confirmation', label: t('salesOrder.ui.confirmation', 'Confirmation'), onClick: () => { setConfirmationMode('confirmation'); setConfirmationsOpen(true); } },
-        { id: 'pro-forma-confirmation', label: t('salesOrder.ui.proFormaConfirmation', 'Pro forma confirmation'), onClick: () => { setConfirmationMode('proForma'); setConfirmationsOpen(true); } },
+        {
+          id: 'confirmation',
+          label: t('salesOrder.ui.confirmation', 'Confirmation'),
+          onClick: () => {
+            setConfirmationMode('confirmation');
+            setConfirmationsOpen(true);
+          },
+        },
+        {
+          id: 'pro-forma-confirmation',
+          label: t('salesOrder.ui.proFormaConfirmation', 'Pro forma confirmation'),
+          onClick: () => {
+            setConfirmationMode('proForma');
+            setConfirmationsOpen(true);
+          },
+        },
       ],
     },
     {
@@ -236,43 +356,75 @@ export function useSalesOrderDocument() {
     {
       id: 'actions',
       label: t('salesOrder.ui.actions', 'Actions'),
-      actions: [{ id: 'confirm-now', label: t('salesOrder.ui.confirmNow', 'Confirm now'), disabled: !canEditHeader || Boolean(activeHeader) || confirmNowBusy, onClick: async () => {
-        if (!order || !canEditHeader || activeHeader || confirmNowBusy) return;
-        setConfirmNowBusy(true);
-        setConfirmNowError('');
-        try {
-          await salesOrderConfirmationApi.post(order.id, new Date().toISOString().slice(0, 10), crypto.randomUUID());
-          await Promise.all([
-            invalidateOrder(order.id),
-          ]);
-        } catch (cause) {
-          setConfirmNowError(cause instanceof Error ? cause.message : 'The sales order could not be confirmed.');
-        } finally {
-          setConfirmNowBusy(false);
-        }
-      } }],
+      actions: [
+        {
+          id: 'confirm-now',
+          label: t('salesOrder.ui.confirmNow', 'Confirm now'),
+          disabled: !canEditHeader || Boolean(activeHeader) || confirmNowBusy,
+          onClick: async () => {
+            if (!order || !canEditHeader || activeHeader || confirmNowBusy) return;
+            setConfirmNowBusy(true);
+            setConfirmNowError('');
+            try {
+              await salesOrderConfirmationApi.post(
+                order.id,
+                new Date().toISOString().slice(0, 10),
+                crypto.randomUUID()
+              );
+              await Promise.all([invalidateOrder(order.id)]);
+            } catch (cause) {
+              setConfirmNowError(
+                cause instanceof Error ? cause.message : 'The sales order could not be confirmed.'
+              );
+            } finally {
+              setConfirmNowBusy(false);
+            }
+          },
+        },
+      ],
     },
     {
       id: 'apply',
       label: t('salesOrder.ui.apply', 'Apply'),
-      actions: [{ id: 'service-agreement', label: t('salesOrder.ui.serviceAgreement', 'Service agreement'), disabled: true }],
+      actions: [
+        {
+          id: 'service-agreement',
+          label: t('salesOrder.ui.serviceAgreement', 'Service agreement'),
+          disabled: true,
+        },
+      ],
     },
     {
       id: 'journals',
       label: t('salesOrder.ui.journals', 'Journals'),
       actions: [
-        { id: 'sales-order-confirmations', label: t('salesOrder.ui.salesOrderConfirmations', 'Sales order confirmations'), onClick: () => order && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.custConfirmJournal(order.id)) },
-        { id: 'sales-order-packing-slips', label: t('salesOrder.ui.packingSlipJournal', 'Packing slip journal'), onClick: () => order && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.custPackingSlipJournal(order.id)) },
-        { id: 'quotation-confirmation-journal', label: t('salesOrder.ui.quotationConfirmationJournal', 'Quotation confirmation journal'), disabled: true },
+        {
+          id: 'sales-order-confirmations',
+          label: t('salesOrder.ui.salesOrderConfirmations', 'Sales order confirmations'),
+          onClick: () =>
+            order && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.custConfirmJournal(order.id)),
+        },
+        {
+          id: 'sales-order-packing-slips',
+          label: t('salesOrder.ui.packingSlipJournal', 'Packing slip journal'),
+          onClick: () =>
+            order && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.custPackingSlipJournal(order.id)),
+        },
+        {
+          id: 'quotation-confirmation-journal',
+          label: t('salesOrder.ui.quotationConfirmationJournal', 'Quotation confirmation journal'),
+          disabled: true,
+        },
       ],
     },
     {
       id: 'prepayment',
       label: t('salesOrder.ui.prepayment', 'Prepayment'),
-      actions: [{ id: 'prepayment', label: t('salesOrder.ui.prepayment', 'Prepayment'), disabled: true }],
+      actions: [
+        { id: 'prepayment', label: t('salesOrder.ui.prepayment', 'Prepayment'), disabled: true },
+      ],
     },
   ];
-
 
   const startHeaderEdit = () => {
     if (!order || !canEditHeader) return;
@@ -411,9 +563,17 @@ export function useSalesOrderDocument() {
         variant="outlined"
         label={label}
         type={
-          name === 'deliveryDate' || name === 'orderDate' || name === 'deadline' || name === 'shippingDateConfirmed' || name === 'receiptDateConfirmed' || name === 'fixedDueDate' || name === 'paymentTermsBaseDate'
+          name === 'deliveryDate' ||
+          name === 'orderDate' ||
+          name === 'deadline' ||
+          name === 'shippingDateConfirmed' ||
+          name === 'receiptDateConfirmed' ||
+          name === 'fixedDueDate' ||
+          name === 'paymentTermsBaseDate'
             ? 'date'
-            : name === 'discountPercent' || name === 'totalDiscountPercent' || name === 'fixedExchangeRate'
+            : name === 'discountPercent' ||
+                name === 'totalDiscountPercent' ||
+                name === 'fixedExchangeRate'
               ? 'number'
               : 'text'
         }
@@ -486,8 +646,9 @@ export function useSalesOrderDocument() {
         ...saved,
         ledgerDimensionDisplay: draft.ledgerDimensionDisplay ?? saved.ledgerDimensionDisplay,
       };
-      queryClient.setQueryData<DetailLine[]>(salesOrderQueryKeys.lines(company, order!.id), (current = []) =>
-        current.map((line) => (line.id === savedLine.id ? savedLine : line))
+      queryClient.setQueryData<DetailLine[]>(
+        salesOrderQueryKeys.lines(company, order!.id),
+        (current = []) => current.map((line) => (line.id === savedLine.id ? savedLine : line))
       );
       setLineDetailDraft({ ...savedLine, deliveryDate: savedLine.deliveryDate?.slice(0, 10) });
       await queryClient.invalidateQueries({
@@ -504,10 +665,14 @@ export function useSalesOrderDocument() {
   const openDeliveryAddressDrawer = (target: 'header' | 'line') => {
     if (target === 'header' && !activeHeader) startHeaderEdit();
     if (target === 'line' && !lineDetailDraft && selectedLine)
-      setLineDetailDraft({ ...selectedLine, deliveryDate: selectedLine.deliveryDate?.slice(0, 10) });
-    const selectedId = target === 'header'
-      ? activeHeader?.deliveryPostalAddress ?? order?.deliveryPostalAddress
-      : lineDetailDraft?.deliveryPostalAddress ?? selectedLine?.deliveryPostalAddress;
+      setLineDetailDraft({
+        ...selectedLine,
+        deliveryDate: selectedLine.deliveryDate?.slice(0, 10),
+      });
+    const selectedId =
+      target === 'header'
+        ? (activeHeader?.deliveryPostalAddress ?? order?.deliveryPostalAddress)
+        : (lineDetailDraft?.deliveryPostalAddress ?? selectedLine?.deliveryPostalAddress);
     const selectedAddress = deliveryAddressesQuery.data?.find(
       (address) => address.value === String(selectedId ?? '')
     );
@@ -522,16 +687,26 @@ export function useSalesOrderDocument() {
       if (deliveryAddressDrawerTarget === 'line' && !lineId)
         throw new Error('Select a sales order line before adding a delivery address.');
       const created = await salesOrderLinesApi.createDeliveryAddress(order.id, lineId, address);
-      await queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.deliveryAddresses(company, order.id) });
+      await queryClient.invalidateQueries({
+        queryKey: salesOrderQueryKeys.deliveryAddresses(company, order.id),
+      });
       await Promise.all([deliveryAddressesQuery.refetch(), linesQuery.refetch(), refetchOrder()]);
       if (deliveryAddressDrawerTarget === 'header') {
-        setHeaderDraft((draft) => draft ? { ...draft, deliveryPostalAddress: created.id } : draft);
+        setHeaderDraft((draft) =>
+          draft ? { ...draft, deliveryPostalAddress: created.id } : draft
+        );
       } else {
-        setLineDetailDraft((draft) => draft
-          ? { ...draft, deliveryPostalAddress: created.id }
-          : selectedLine
-            ? { ...selectedLine, deliveryDate: selectedLine.deliveryDate?.slice(0, 10), deliveryPostalAddress: created.id }
-            : draft);
+        setLineDetailDraft((draft) =>
+          draft
+            ? { ...draft, deliveryPostalAddress: created.id }
+            : selectedLine
+              ? {
+                  ...selectedLine,
+                  deliveryDate: selectedLine.deliveryDate?.slice(0, 10),
+                  deliveryPostalAddress: created.id,
+                }
+              : draft
+        );
       }
     } catch (error) {
       setHeaderError(error instanceof Error ? error.message : t('errors.generic'));

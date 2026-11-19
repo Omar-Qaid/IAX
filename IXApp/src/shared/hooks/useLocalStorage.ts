@@ -10,11 +10,11 @@ export interface LocalStorageOptions<T> {
 export const useLocalStorage = <T>(
   key: string,
   initialValue: T | (() => T),
-  options: LocalStorageOptions<T> = {},
+  options: LocalStorageOptions<T> = {}
 ) => {
   const resolveInitialValue = useCallback(
     () => (initialValue instanceof Function ? initialValue() : initialValue),
-    [initialValue],
+    [initialValue]
   );
   const serialize = options.serialize ?? JSON.stringify;
   const deserialize = options.deserialize ?? JSON.parse;
@@ -32,16 +32,27 @@ export const useLocalStorage = <T>(
   const [value, setValue] = useState<T>(readValue);
   const previousKey = useRef(key);
 
-  const updateValue = useCallback((next: StoredValue<T>) => {
-    setValue((current) => {
-      const resolved = next instanceof Function ? next(current) : next;
-      try { window.localStorage.setItem(key, serialize(resolved)); } catch { /* restricted storage */ }
-      return resolved;
-    });
-  }, [key, serialize]);
+  const updateValue = useCallback(
+    (next: StoredValue<T>) => {
+      setValue((current) => {
+        const resolved = next instanceof Function ? next(current) : next;
+        try {
+          window.localStorage.setItem(key, serialize(resolved));
+        } catch {
+          /* restricted storage */
+        }
+        return resolved;
+      });
+    },
+    [key, serialize]
+  );
 
   const removeValue = useCallback(() => {
-    try { window.localStorage.removeItem(key); } catch { /* restricted storage */ }
+    try {
+      window.localStorage.removeItem(key);
+    } catch {
+      /* restricted storage */
+    }
     setValue(resolveInitialValue());
   }, [key, resolveInitialValue]);
 
@@ -59,4 +70,3 @@ export const useLocalStorage = <T>(
 
   return [value, updateValue, removeValue] as const;
 };
-

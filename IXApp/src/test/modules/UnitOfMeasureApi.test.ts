@@ -6,8 +6,17 @@ vi.mock('@core/api/apiClient', () => ({ apiClient: { delete: vi.fn() } }));
 
 it('rejects a delete response when the server reports no unit was deleted', async () => {
   vi.mocked(apiClient.delete).mockResolvedValue({ data: { success: true, data: false } });
-  await expect(unitOfMeasureApi.delete({ id: '1', recId: 1, symbol: 'EA', unitOfMeasureClass: 0,
-    systemOfUnits: 0, decimalPrecision: 0, conversions: [] })).rejects.toThrow('could not be deleted');
+  await expect(
+    unitOfMeasureApi.delete({
+      id: '1',
+      recId: 1,
+      symbol: 'EA',
+      unitOfMeasureClass: 0,
+      systemOfUnits: 0,
+      decimalPrecision: 0,
+      conversions: [],
+    })
+  ).rejects.toThrow('could not be deleted');
 });
 
 it('rejects a delete response when the conversion remains', async () => {

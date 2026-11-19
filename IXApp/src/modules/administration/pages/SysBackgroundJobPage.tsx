@@ -127,7 +127,9 @@ export function SysBackgroundJobPage(): React.ReactElement {
   const [commandError, setCommandError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [taskLocked, setTaskLocked] = React.useState(false);
-  const [taskFilterVisible, setTaskFilterVisible] = useGridFilterRow('administration.background-job.tasks');
+  const [taskFilterVisible, setTaskFilterVisible] = useGridFilterRow(
+    'administration.background-job.tasks'
+  );
   const canRun = usePermission('System.BackgroundJobs.Run').hasPermission;
   const execute = async (action: () => Promise<void>) => {
     setBusy(true);
@@ -532,34 +534,35 @@ export function SysBackgroundJobPage(): React.ReactElement {
       edit: 'System.BackgroundJobs.Edit',
       delete: 'System.BackgroundJobs.Delete',
     },
-    validate: (job) => ({
-      ...(!job.caption.trim() ? { caption: 'Batch job caption is required.' } : {}),
-      ...(!job.jobKey.trim() ? { jobKey: 'A registered handler is required.' } : {}),
-      ...(job.scheduleType >= 2 && !job.recurrenceData?.trim()
-        ? { recurrenceData: 'Recurrence data is required.' }
-        : {}),
-      ...(job.scheduleType < 2 && !job.startDateTime
-        ? { scheduledStartDateTime: 'A scheduled start date/time is required.' }
-        : {}),
-      ...(job.maxRetryCount < 0 || job.maxRetryCount > 10
-        ? { maxRetryCount: 'Maximum retries must be between 0 and 10.' }
-        : {}),
-      ...(job.retryDelaySeconds < 1 || job.retryDelaySeconds > 3600
-        ? { retryDelaySeconds: 'Retry delay must be between 1 and 3600 seconds.' }
-        : {}),
-      ...(job.timeoutSeconds < 1 || job.timeoutSeconds > 86400
-        ? { timeoutSeconds: 'Timeout must be between 1 and 86400 seconds.' }
-        : {}),
-      ...(() => {
-        if (!job.payloadJson?.trim()) return {};
-        try {
-          JSON.parse(job.payloadJson);
-          return {};
-        } catch {
-          return { payloadJson: 'Parameters must contain valid JSON.' };
-        }
-      })(),
-    }) as Record<string, string>,
+    validate: (job) =>
+      ({
+        ...(!job.caption.trim() ? { caption: 'Batch job caption is required.' } : {}),
+        ...(!job.jobKey.trim() ? { jobKey: 'A registered handler is required.' } : {}),
+        ...(job.scheduleType >= 2 && !job.recurrenceData?.trim()
+          ? { recurrenceData: 'Recurrence data is required.' }
+          : {}),
+        ...(job.scheduleType < 2 && !job.startDateTime
+          ? { scheduledStartDateTime: 'A scheduled start date/time is required.' }
+          : {}),
+        ...(job.maxRetryCount < 0 || job.maxRetryCount > 10
+          ? { maxRetryCount: 'Maximum retries must be between 0 and 10.' }
+          : {}),
+        ...(job.retryDelaySeconds < 1 || job.retryDelaySeconds > 3600
+          ? { retryDelaySeconds: 'Retry delay must be between 1 and 3600 seconds.' }
+          : {}),
+        ...(job.timeoutSeconds < 1 || job.timeoutSeconds > 86400
+          ? { timeoutSeconds: 'Timeout must be between 1 and 86400 seconds.' }
+          : {}),
+        ...(() => {
+          if (!job.payloadJson?.trim()) return {};
+          try {
+            JSON.parse(job.payloadJson);
+            return {};
+          } catch {
+            return { payloadJson: 'Parameters must contain valid JSON.' };
+          }
+        })(),
+      }) as Record<string, string>,
     presentation: { mode: 'list', listWidth: 300, headerMaxWidth: 760 },
   };
   return (

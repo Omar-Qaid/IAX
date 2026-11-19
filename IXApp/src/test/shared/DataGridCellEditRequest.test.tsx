@@ -71,7 +71,9 @@ describe('DataGrid edit from view in always-editable grids', () => {
         <AppDataGrid<Line> columns={columns} rows={rows} height={200} hideToolbar masterForm />
       </AppProviders>
     );
-    const cell = container.querySelector<HTMLElement>('[data-row-id="1"] [data-field="description"]')!;
+    const cell = container.querySelector<HTMLElement>(
+      '[data-row-id="1"] [data-field="description"]'
+    )!;
     fireEvent.click(within(cell).getByRole('button', { name: 'Edit Description' }));
     await waitFor(() =>
       expect(document.activeElement).toBe(

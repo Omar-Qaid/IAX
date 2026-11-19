@@ -270,7 +270,9 @@ describe('representative enterprise pages', () => {
   it('renders document and setup representatives', async () => {
     const { unmount } = render(<SalesOrderDetailsPage />);
     expect(await screen.findByText('SO-00101 : Contoso Retail Americas')).toBeDefined();
-    expect((await screen.findAllByText('Enterprise Server Rack Cabinet 42U')).length).toBeGreaterThan(0);
+    expect(
+      (await screen.findAllByText('Enterprise Server Rack Cabinet 42U')).length
+    ).toBeGreaterThan(0);
     unmount();
 
     render(<ApplicationSettingsPage />);
@@ -284,7 +286,10 @@ describe('representative enterprise pages', () => {
     expect(await screen.findByText('Line details')).toBeDefined();
     const switchLine = await screen.findByText('High Performance Switch 48-Port');
     act(() => fireEvent.click(switchLine));
-    expect(screen.getByText('ITEM-B20').closest('[role="row"]')).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByText('ITEM-B20').closest('[role="row"]')).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
     // The record list remembers whether it is open; open it only when it is closed.
     const toggle = screen.getByRole('button', { name: 'Toggle record list' });
     if (toggle.getAttribute('aria-pressed') !== 'true') act(() => fireEvent.click(toggle));

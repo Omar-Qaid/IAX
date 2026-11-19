@@ -24,14 +24,14 @@ Keyboard handling includes grid navigation plus shortcuts for search/filter, sel
 
 With `masterForm`, a line opens for editing with Enter, F2, double-click, Alt/Ctrl+E or `startEditRow`, and new lines open first with Alt/Ctrl+N or Insert.
 
-| Action | Result |
-| --- | --- |
+| Action                                          | Result                                                                                                                  |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | Up/Down arrow, or Tab past the first/last field | Saves the line, then opens the next line for editing in the same column. A failed save keeps focus on the current line. |
-| Click outside the line | Saves the line. |
-| Alt/Ctrl+S, Enter | Saves and ends editing. |
-| Esc | Discards the changes. |
-| Alt/Ctrl+N while editing | Saves the current line, then opens a new one. |
-| Alt+F9, Delete, Ctrl+D | Deletes the selected record(s) through `onDeleteSelected` / `onDelete`. |
+| Click outside the line                          | Saves the line.                                                                                                         |
+| Alt/Ctrl+S, Enter                               | Saves and ends editing.                                                                                                 |
+| Esc                                             | Discards the changes.                                                                                                   |
+| Alt/Ctrl+N while editing                        | Saves the current line, then opens a new one.                                                                           |
+| Alt+F9, Delete, Ctrl+D                          | Deletes the selected record(s) through `onDeleteSelected` / `onDelete`.                                                 |
 
 A line that was opened but not changed is never sent to `onRowSave` (D365 only writes modified records); new lines are always sent. Keys a control already handled (an open lookup or select list, Alt+Down) are left to that control, and Left/Right follow the visual direction in RTL. F5, F7 and F9 are taken from the browser only when `onRefresh`, `onValidate` or `onExecute` is supplied.
 

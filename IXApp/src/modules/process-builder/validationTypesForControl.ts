@@ -4,14 +4,38 @@ import type { BuilderControlType, BuilderValidationType } from './types/processB
 // each behavior in the Process Builder menu.
 const conditional: BuilderValidationType[] = ['compare', 'crossField', 'expression'];
 const text: BuilderValidationType[] = [
-  'required', 'minLength', 'maxLength', 'exactLength', 'pattern',
-  'startsWith', 'endsWith', 'contains', 'email', 'url', 'phone', 'saudiMobile',
-  'saudiNationalId', 'saudiIban', 'taxNumber', 'passport', 'inputMask', ...conditional,
+  'required',
+  'minLength',
+  'maxLength',
+  'exactLength',
+  'pattern',
+  'startsWith',
+  'endsWith',
+  'contains',
+  'email',
+  'url',
+  'phone',
+  'saudiMobile',
+  'saudiNationalId',
+  'saudiIban',
+  'taxNumber',
+  'passport',
+  'inputMask',
+  ...conditional,
 ];
 const scalar: BuilderValidationType[] = ['required', ...conditional];
 const types: Record<BuilderControlType, readonly BuilderValidationType[]> = {
-  text, longtext: text,
-  digits: ['required', 'minValue', 'maxValue', 'range', 'uniquePerApplicant', 'uniqueGlobal', ...conditional],
+  text,
+  longtext: text,
+  digits: [
+    'required',
+    'minValue',
+    'maxValue',
+    'range',
+    'uniquePerApplicant',
+    'uniqueGlobal',
+    ...conditional,
+  ],
   employeeid: ['required', ...conditional],
   date: ['required', 'minDate', 'maxDate', ...conditional],
   time: scalar,
@@ -31,6 +55,8 @@ const types: Record<BuilderControlType, readonly BuilderValidationType[]> = {
   advertiser: scalar,
 };
 
-export function validationTypesForControl(type?: BuilderControlType): readonly BuilderValidationType[] {
+export function validationTypesForControl(
+  type?: BuilderControlType
+): readonly BuilderValidationType[] {
   return type ? types[type] : [];
 }

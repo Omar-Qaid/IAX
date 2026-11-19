@@ -22,12 +22,16 @@ import { freeTextInvoiceQueryKeys } from '../../queries/accountsReceivableQueryK
 
 type InvoiceRow = FreeTextInvoiceRecord & { customerName: string };
 
-const amount = (value: number) =>
-  new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
-
 /** Free text invoice list on SimpleList (reference: `SalesOrderListPage`); only page-specific config. */
 export function CustFreeInvoiceListPage(): React.ReactElement {
-  const { t, isRtl } = useAppTranslation();
+  const { t, isRtl, currentLanguage } = useAppTranslation();
+  const amount = useMemo(() => {
+    const formatter = new Intl.NumberFormat(currentLanguage.code, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    return (value: number) => formatter.format(value);
+  }, [currentLanguage.code]);
   const navigate = useNavigate();
   const cache = useQueryClient();
   const { hasPermission } = useAuth();
@@ -49,7 +53,8 @@ export function CustFreeInvoiceListPage(): React.ReactElement {
   const postedLabel = t('freeTextInvoices.posted', 'Posted');
   const draftLabel = t('freeTextInvoices.notPosted', 'Not posted');
 
-  const refreshList = () => cache.invalidateQueries({ queryKey: freeTextInvoiceQueryKeys.list(company) });
+  const refreshList = () =>
+    cache.invalidateQueries({ queryKey: freeTextInvoiceQueryKeys.list(company) });
   const post = useMutation({
     mutationFn: (row: InvoiceRow) => freeTextInvoiceApi.post(row.recId),
     onSuccess: async () => {
@@ -73,10 +78,14 @@ export function CustFreeInvoiceListPage(): React.ReactElement {
       (invoiceQuery.data ?? [])
         .filter((invoice) => !customerAccount || invoice.customerAccount === customerAccount)
         .map((invoice) => {
-          const customer = customerQuery.data?.find((row) => row.accountNumber === invoice.customerAccount);
+          const customer = customerQuery.data?.find(
+            (row) => row.accountNumber === invoice.customerAccount
+          );
           return {
             ...invoice,
-            customerName: customer ? localizedName({ name: customer.name, nameAlias: customer.nameAr }, isRtl) : '',
+            customerName: customer
+              ? localizedName({ name: customer.name, nameAlias: customer.nameAr }, isRtl)
+              : '',
           };
         }),
     [invoiceQuery.data, customerQuery.data, customerAccount, isRtl]
@@ -92,10 +101,25 @@ export function CustFreeInvoiceListPage(): React.ReactElement {
         valueGetter: ({ row }) => row.invoiceId || draftLabel,
         getDetailHref: (row) => ACCOUNTS_RECEIVABLE_ROUTE_PATHS.freeTextInvoice(row.recId),
       },
-      { field: 'customerAccount', headerName: 'fields.customerAccount', width: 150, preview: { entity: ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.CUSTOMER } },
+      {
+        field: 'customerAccount',
+        headerName: 'fields.customerAccount',
+        width: 150,
+        preview: { entity: ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.CUSTOMER },
+      },
       { field: 'customerName', headerName: 'fields.customerName', minWidth: 220, flex: 1 },
-      { field: 'invoiceAccount', headerName: 'fields.invoiceAccount', width: 150, preview: { entity: ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.CUSTOMER } },
-      { field: 'currencyCode', headerName: 'fields.currency', width: 95, preview: { entity: FOUNDATION_RECORD_PREVIEWS.CURRENCY } },
+      {
+        field: 'invoiceAccount',
+        headerName: 'fields.invoiceAccount',
+        width: 150,
+        preview: { entity: ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.CUSTOMER },
+      },
+      {
+        field: 'currencyCode',
+        headerName: 'fields.currency',
+        width: 95,
+        preview: { entity: FOUNDATION_RECORD_PREVIEWS.CURRENCY },
+      },
       {
         field: 'invoiceDate',
         headerName: 'freeTextInvoices.invoiceDate',
@@ -115,14 +139,16 @@ export function CustFreeInvoiceListPage(): React.ReactElement {
       },
       { field: 'posted', headerName: 'freeTextInvoices.posted', width: 95, type: 'boolean' },
     ],
-    [draftLabel]
+    [draftLabel, amount]
   );
 
   const config: EnterpriseListConfig<InvoiceRow> = {
     showSearchCommand: true,
     recordTableName: 'CustInvoiceTable',
     getAuditRecordId: (invoice) => invoice.recId,
-    contextLabel: customerAccount ? `${t('freeTextInvoices.title')} | ${customerAccount}` : undefined,
+    contextLabel: customerAccount
+      ? `${t('freeTextInvoices.title')} | ${customerAccount}`
+      : undefined,
     searchFields: [
       { field: 'invoiceId', label: t('freeTextInvoices.invoice') },
       { field: 'customerAccount', label: t('fields.customerAccount') },
@@ -132,8 +158,10 @@ export function CustFreeInvoiceListPage(): React.ReactElement {
       editPermission: PERMISSIONS.FREE_TEXT_INVOICE_EDIT,
       newPermission: PERMISSIONS.FREE_TEXT_INVOICE_CREATE,
       deletePermission: PERMISSIONS.FREE_TEXT_INVOICE_DELETE,
-      onEdit: (invoice) => navigate(`${ACCOUNTS_RECEIVABLE_ROUTE_PATHS.freeTextInvoice(invoice.recId)}?edit=true`),
-      onNew: () => navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.newFreeTextInvoice(customerAccount ?? undefined)),
+      onEdit: (invoice) =>
+        navigate(`${ACCOUNTS_RECEIVABLE_ROUTE_PATHS.freeTextInvoice(invoice.recId)}?edit=true`),
+      onNew: () =>
+        navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.newFreeTextInvoice(customerAccount ?? undefined)),
       // Posted invoices are read-only; delete works on one draft at a time.
       canEdit: (invoice) => !invoice.posted,
       canDelete: (selected) => !busy && selected.length === 1 && !selected[0].posted,
@@ -244,7 +272,8 @@ export function CustFreeInvoiceListPage(): React.ReactElement {
             {totals && (
               <Stack spacing={1}>
                 <Typography>
-                  {totals.invoiceId || draftLabel} | {totals.customerAccount} | {totals.currencyCode}
+                  {totals.invoiceId || draftLabel} | {totals.customerAccount} |{' '}
+                  {totals.currencyCode}
                 </Typography>
                 <Typography>
                   {t('freeTextInvoices.netAmount', 'Net amount')}: {amount(totals.netAmount)}
@@ -253,7 +282,8 @@ export function CustFreeInvoiceListPage(): React.ReactElement {
                   {t('freeTextInvoices.taxAmount', 'Sales tax')}: {amount(totals.taxAmount)}
                 </Typography>
                 <Typography>
-                  {t('freeTextInvoices.invoiceAmount', 'Invoice amount')}: {amount(totals.invoiceAmount)}
+                  {t('freeTextInvoices.invoiceAmount', 'Invoice amount')}:{' '}
+                  {amount(totals.invoiceAmount)}
                 </Typography>
               </Stack>
             )}

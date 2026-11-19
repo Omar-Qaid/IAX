@@ -7,8 +7,10 @@ import {
   type FastTabValue,
 } from '@patterns/dialog-fast-tabs/FastTabsDialog';
 
-export type FastTabsDrawerProps<TValues extends Record<string, FastTabValue>> =
-  Omit<FastTabsDialogProps<TValues>, 'placement'>;
+export type FastTabsDrawerProps<TValues extends Record<string, FastTabValue>> = Omit<
+  FastTabsDialogProps<TValues>,
+  'placement'
+>;
 
 /**
  * Direction-aware quick-create surface. The existing fast-tab form remains the

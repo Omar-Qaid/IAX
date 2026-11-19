@@ -26,8 +26,11 @@ describe('standalone ProcessBuilderPage', () => {
       render(<ProcessBuilderPage />);
       await user.click(screen.getByRole('button', { name: 'Add Step' }));
       act(() => useProcessBuilderStore.getState().updateProcess({ name: 'Edited process' }));
-      const exportCalls = () => stringify.mock.calls.filter(([value, , space]) =>
-        space === 2 && value && typeof value === 'object' && 'steps' in value);
+      const exportCalls = () =>
+        stringify.mock.calls.filter(
+          ([value, , space]) =>
+            space === 2 && value && typeof value === 'object' && 'steps' in value
+        );
       expect(exportCalls()).toHaveLength(0);
       await user.click(screen.getByRole('button', { name: 'Export' }));
       expect(exportCalls().length).toBeGreaterThan(0);
@@ -682,14 +685,23 @@ describe('standalone ProcessBuilderPage', () => {
     expect(autoPassingHours).toBeDisabled();
     await user.click(screen.getByRole('switch', { name: 'Auto pass enabled' }));
     expect(autoPassingHours).not.toBeDisabled();
-    for (const label of ['System notification', 'Email notification', 'SMS notification', 'WhatsApp notification',
-      'Can view previous steps', 'Can view previous documents']) {
+    for (const label of [
+      'System notification',
+      'Email notification',
+      'SMS notification',
+      'WhatsApp notification',
+      'Can view previous steps',
+      'Can view previous documents',
+    ]) {
       await user.click(screen.getByRole('switch', { name: label }));
     }
     expect(useProcessBuilderStore.getState().document.steps[0].activities[0]).toMatchObject({
-      isSystemNotificationEnabled: true, isEmailNotificationEnabled: true,
-      isSmsNotificationEnabled: true, isWhatsAppNotificationEnabled: true,
-      canViewPreviousSteps: true, canViewPreviousDocuments: true,
+      isSystemNotificationEnabled: true,
+      isEmailNotificationEnabled: true,
+      isSmsNotificationEnabled: true,
+      isWhatsAppNotificationEnabled: true,
+      canViewPreviousSteps: true,
+      canViewPreviousDocuments: true,
     });
   });
 

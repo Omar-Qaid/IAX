@@ -77,7 +77,8 @@ export function LegalEntityPage(): React.ReactElement {
         delete: (record) => legalEntityService.delete(record),
       },
       createRecord: emptyEntity,
-      getPrimaryText: (record) => localizedName({ name: record.name, nameAlias: record.arabicName }, isRtl),
+      getPrimaryText: (record) =>
+        localizedName({ name: record.name, nameAlias: record.arabicName }, isRtl),
       getSecondaryText: (record) => record.dataArea,
       matchesSearch: (record, query) =>
         `${record.name} ${record.arabicName ?? ''} ${record.dataArea}`
@@ -121,7 +122,8 @@ export function LegalEntityPage(): React.ReactElement {
           id: 'name',
           label: t('legalEntities.fields.name'),
           getValue: (record) => record.name,
-          getDisplayValue: (record) => localizedName({ name: record.name, nameAlias: record.arabicName }, isRtl),
+          getDisplayValue: (record) =>
+            localizedName({ name: record.name, nameAlias: record.arabicName }, isRtl),
           setValue: (record, next) => ({ ...record, name: String(next) }),
         },
         {
@@ -152,11 +154,15 @@ export function LegalEntityPage(): React.ReactElement {
               id: 'arabic',
               width: 220,
               fields: [
-              { name: 'arabicName', label: t('legalEntities.fields.arabicName') },
-              { name: 'inHierarchy', label: t('legalEntities.fields.hierarchy'), type: 'boolean' },
+                { name: 'arabicName', label: t('legalEntities.fields.arabicName') },
+                {
+                  name: 'inHierarchy',
+                  label: t('legalEntities.fields.hierarchy'),
+                  type: 'boolean',
+                },
                 {
                   name: 'useForFinancialConsolidation',
-                label: t('legalEntities.fields.consolidation'),
+                  label: t('legalEntities.fields.consolidation'),
                   type: 'boolean',
                 },
               ],
@@ -167,10 +173,10 @@ export function LegalEntityPage(): React.ReactElement {
               fields: [
                 {
                   name: 'useForFinancialElimination',
-                label: t('legalEntities.fields.elimination'),
+                  label: t('legalEntities.fields.elimination'),
                   type: 'boolean',
                 },
-              { name: 'fullName', label: t('legalEntities.fields.fullName'), disabled: true },
+                { name: 'fullName', label: t('legalEntities.fields.fullName'), disabled: true },
                 { name: 'localizedRegion', label: t('legalEntities.fields.localizedRegion') },
               ],
             },
@@ -178,31 +184,34 @@ export function LegalEntityPage(): React.ReactElement {
               id: 'registrations',
               width: 164,
               fields: [
-              { name: 'taxLicenseNum', label: t('legalEntities.fields.taxRegistration') },
-              { name: 'federalTaxId', label: t('legalEntities.fields.crNumber') },
+                { name: 'taxLicenseNum', label: t('legalEntities.fields.taxRegistration') },
+                { name: 'federalTaxId', label: t('legalEntities.fields.crNumber') },
               ],
             },
             {
               id: 'locale',
               width: 220,
-            title: t('legalEntities.groups.language'),
+              title: t('legalEntities.groups.language'),
               fields: [
                 {
                   name: 'languageId',
-                label: t('legalEntities.fields.language'),
+                  label: t('legalEntities.fields.language'),
                   type: 'select',
                   options: [
-                  { value: 'en-US', label: t('legalEntities.languages.english') },
-                  { value: 'ar-SA', label: t('legalEntities.languages.arabic') },
+                    { value: 'en-US', label: t('legalEntities.languages.english') },
+                    { value: 'ar-SA', label: t('legalEntities.languages.arabic') },
                   ],
                 },
                 {
                   name: 'timeZone',
-                label: t('legalEntities.fields.timeZone'),
+                  label: t('legalEntities.fields.timeZone'),
                   type: 'select',
                   options: [
-                  { value: '(GMT+03:00) Kuwait, Riyadh', label: t('legalEntities.timeZones.riyadh') },
-                  { value: 'Arab Standard Time', label: t('legalEntities.timeZones.riyadh') },
+                    {
+                      value: '(GMT+03:00) Kuwait, Riyadh',
+                      label: t('legalEntities.timeZones.riyadh'),
+                    },
+                    { value: 'Arab Standard Time', label: t('legalEntities.timeZones.riyadh') },
                   ],
                 },
               ],
@@ -211,7 +220,7 @@ export function LegalEntityPage(): React.ReactElement {
         },
         {
           id: 'addresses',
-        title: t('legalEntities.sections.addresses'),
+          title: t('legalEntities.sections.addresses'),
           visualVariant: 'legalEntity',
           defaultExpanded: false,
           detailsPadding: '2px 10px 10px 12px',
@@ -226,7 +235,7 @@ export function LegalEntityPage(): React.ReactElement {
         },
         {
           id: 'contacts',
-        title: t('legalEntities.sections.contacts'),
+          title: t('legalEntities.sections.contacts'),
           visualVariant: 'legalEntity',
           defaultExpanded: false,
           content: (
@@ -247,19 +256,28 @@ export function LegalEntityPage(): React.ReactElement {
           groups: [
             {
               id: 'currency',
-            title: t('legalEntities.sections.general'),
-            fields: [{ name: 'currencyCode', label: t('legalEntities.fields.currency') }],
+              title: t('legalEntities.sections.general'),
+              fields: [{ name: 'currencyCode', label: t('legalEntities.fields.currency') }],
             },
-          { id: 'bankAccount', fields: [{ name: 'bankAccount', label: t('legalEntities.fields.bankAccount') }] },
+            {
+              id: 'bankAccount',
+              fields: [{ name: 'bankAccount', label: t('legalEntities.fields.bankAccount') }],
+            },
             {
               id: 'calendar',
-            fields: [{ name: 'calendar', label: t('legalEntities.fields.fiscalCalendar'), type: 'number' }],
+              fields: [
+                {
+                  name: 'calendar',
+                  label: t('legalEntities.fields.fiscalCalendar'),
+                  type: 'number',
+                },
+              ],
             },
           ],
         },
         {
           id: 'dashboard-image',
-        title: t('legalEntities.images.dashboardTitle'),
+          title: t('legalEntities.images.dashboardTitle'),
           visualVariant: 'legalEntity',
           defaultExpanded: true,
           content: (
@@ -278,7 +296,7 @@ export function LegalEntityPage(): React.ReactElement {
         },
         {
           id: 'report-logo',
-        title: t('legalEntities.images.reportTitle'),
+          title: t('legalEntities.images.reportTitle'),
           visualVariant: 'legalEntity',
           defaultExpanded: true,
           content: (
@@ -311,8 +329,12 @@ export function LegalEntityPage(): React.ReactElement {
         delete: PERMISSIONS.LEGAL_ENTITY_MANAGE,
       },
       validate: (record) => ({
-      ...(!record.name.trim() ? { name: t('validation.required', { field: t('legalEntities.fields.name') }) } : {}),
-      ...(!record.dataArea.trim() ? { dataArea: t('validation.required', { field: t('legalEntities.fields.company') }) } : {}),
+        ...(!record.name.trim()
+          ? { name: t('validation.required', { field: t('legalEntities.fields.name') }) }
+          : {}),
+        ...(!record.dataArea.trim()
+          ? { dataArea: t('validation.required', { field: t('legalEntities.fields.company') }) }
+          : {}),
       }),
       advancedFilter: {
         fieldLabel: t('legalEntities.fields.name'),

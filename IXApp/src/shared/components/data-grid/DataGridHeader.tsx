@@ -1,16 +1,31 @@
 import React, { useState, useEffect, useMemo, memo } from 'react';
 import {
-  Box, Typography,
-  Dialog, DialogTitle, DialogContent, DialogActions,
-  FormGroup, FormControlLabel, Button, Checkbox, useTheme
+  Box,
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  FormGroup,
+  FormControlLabel,
+  Button,
+  Checkbox,
+  useTheme,
 } from '@mui/material';
 import {
-  DndContext, closestCenter, KeyboardSensor, PointerSensor,
-  useSensor, useSensors, type DragEndEvent,
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
 } from '@dnd-kit/core';
 import {
-  arrayMove, SortableContext,
-  sortableKeyboardCoordinates, horizontalListSortingStrategy,
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  horizontalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { useTranslation } from 'react-i18next';
 import type { ColumnDef, SortModel, FilterModel } from './types';
@@ -48,11 +63,23 @@ interface GridHeaderProps<T> {
 }
 
 export function DataGridHeaderInternal<T>({
-  columns, setColumns, initialColumns, sortModel, onSort,
-  filters, setFilters, onResetColumns, headerHeight,
-  selectionMode = 'single', onSelectAll, allSelected,
-  showColumnBorders = false, hideFilterRow = false, hideColumnMenu = false,
-  onAutosizeColumn, onAutosizeAll,
+  columns,
+  setColumns,
+  initialColumns,
+  sortModel,
+  onSort,
+  filters,
+  setFilters,
+  onResetColumns,
+  headerHeight,
+  selectionMode = 'single',
+  onSelectAll,
+  allSelected,
+  showColumnBorders = false,
+  hideFilterRow = false,
+  hideColumnMenu = false,
+  onAutosizeColumn,
+  onAutosizeAll,
 }: GridHeaderProps<T>) {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -62,7 +89,7 @@ export function DataGridHeaderInternal<T>({
   const [activeColumn, setActiveColumn] = useState<ColumnDef<T> | null>(null);
   const [filterPopoverAnchor, setFilterPopoverAnchor] = useState<HTMLElement | null>(null);
   const [filterColumn, setFilterColumn] = useState<ColumnDef<T> | null>(null);
-  
+
   // --- Functional State ---
   const [resizing, setResizing] = useState<{
     field: string;
@@ -75,23 +102,26 @@ export function DataGridHeaderInternal<T>({
   // --- DND Sensors ---
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   // --- Resize Logic ---
   useEffect(() => {
     if (!resizing) return;
     const onMouseMove = (e: MouseEvent) => {
-      setColumns(prev => {
-        const col = prev.find(c => c.field === resizing.field);
+      setColumns((prev) => {
+        const col = prev.find((c) => c.field === resizing.field);
         if (!col) return prev;
 
         const pointerDelta = e.clientX - resizing.startX;
         const directionDelta = theme.direction === 'rtl' ? -pointerDelta : pointerDelta;
         const delta = resizing.edge === 'inline-end' ? directionDelta : -directionDelta;
 
-        const newWidth = Math.min(col.maxWidth ?? Infinity, Math.max(col.minWidth ?? 50, resizing.startWidth + delta));
-        return prev.map(c =>
+        const newWidth = Math.min(
+          col.maxWidth ?? Infinity,
+          Math.max(col.minWidth ?? 50, resizing.startWidth + delta)
+        );
+        return prev.map((c) =>
           c.field === resizing.field ? { ...c, width: newWidth, flex: undefined } : c
         );
       });
@@ -114,27 +144,29 @@ export function DataGridHeaderInternal<T>({
   const handleResizeStart = (
     e: React.MouseEvent,
     field: string,
-    edge: 'inline-start' | 'inline-end' = 'inline-end',
+    edge: 'inline-start' | 'inline-end' = 'inline-end'
   ) => {
     e.preventDefault();
     e.stopPropagation();
-    const col = columns.find(c => c.field === field);
+    const col = columns.find((c) => c.field === field);
     if (col) setResizing({ field, startX: e.clientX, startWidth: col.width || 150, edge });
   };
 
   const handleFilterChange = (field: string, value: string) => {
-    setFilters(prev => {
-      const existing = prev.find(f => f.field === field);
-      const column = columns.find(c => String(c.field) === field);
+    setFilters((prev) => {
+      const existing = prev.find((f) => f.field === field);
+      const column = columns.find((c) => String(c.field) === field);
       if (existing) {
-        if (!value) return prev.filter(f => f.field !== field);
+        if (!value) return prev.filter((f) => f.field !== field);
         // Typing over a blank check replaces it with a normal value filter.
         const operator = VALUELESS_FILTER_OPERATORS.has(existing.operator)
           ? defaultFilterOperator(column?.type)
           : existing.operator;
-        return prev.map(f => f.field === field ? { ...f, operator, value } : f);
+        return prev.map((f) => (f.field === field ? { ...f, operator, value } : f));
       }
-      return value ? [...prev, { field, operator: defaultFilterOperator(column?.type), value }] : prev;
+      return value
+        ? [...prev, { field, operator: defaultFilterOperator(column?.type), value }]
+        : prev;
     });
   };
 
@@ -147,30 +179,40 @@ export function DataGridHeaderInternal<T>({
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
-      setColumns(items => {
-        const oldIndex = items.findIndex(i => i.field === active.id);
-        const newIndex = items.findIndex(i => i.field === over.id);
+      setColumns((items) => {
+        const oldIndex = items.findIndex((i) => i.field === active.id);
+        const newIndex = items.findIndex((i) => i.field === over.id);
         return arrayMove(items, oldIndex, newIndex);
       });
     }
   };
 
   // --- Derived Layout Values ---
-  const { pinnedLeftCols, unpinnedCols, pinnedRightCols, pinnedLeftOffsets, pinnedRightOffsets, unpinnedColIds } = useMemo(() => {
-    const visible = columns.filter(c => !c.hidden);
-    const left = visible.filter(c => c.pinned === 'left');
-    const center = visible.filter(c => !c.pinned);
-    const right = visible.filter(c => c.pinned === 'right');
+  const {
+    pinnedLeftCols,
+    unpinnedCols,
+    pinnedRightCols,
+    pinnedLeftOffsets,
+    pinnedRightOffsets,
+    unpinnedColIds,
+  } = useMemo(() => {
+    const visible = columns.filter((c) => !c.hidden);
+    const left = visible.filter((c) => c.pinned === 'left');
+    const center = visible.filter((c) => !c.pinned);
+    const right = visible.filter((c) => c.pinned === 'right');
 
     const leftOffsets = left.reduce((acc, _col, i) => {
       acc.push(i === 0 ? 0 : acc[i - 1] + (left[i - 1].width || 150));
       return acc;
     }, [] as number[]);
 
-    const rightOffsets = [...right].reverse().reduce((acc, _col, i) => {
-      acc.push(i === 0 ? 0 : acc[i - 1] + (right[right.length - i].width || 150));
-      return acc;
-    }, [] as number[]).reverse();
+    const rightOffsets = [...right]
+      .reverse()
+      .reduce((acc, _col, i) => {
+        acc.push(i === 0 ? 0 : acc[i - 1] + (right[right.length - i].width || 150));
+        return acc;
+      }, [] as number[])
+      .reverse();
 
     return {
       pinnedLeftCols: left,
@@ -178,42 +220,63 @@ export function DataGridHeaderInternal<T>({
       pinnedRightCols: right,
       pinnedLeftOffsets: leftOffsets,
       pinnedRightOffsets: rightOffsets,
-      unpinnedColIds: center.map(c => c.field as string)
+      unpinnedColIds: center.map((c) => c.field as string),
     };
   }, [columns]);
 
   return (
-    <Box data-testid="data-grid-header" sx={{
-      display: 'flex', 
-      height: headerHeight * (hideFilterRow ? 1 : 2),
-      bgcolor: '#ffffff',
-      width: 'max-content',
-      minWidth: '100%',
-      position: 'relative'
-    }}>
-      
+    <Box
+      data-testid="data-grid-header"
+      sx={{
+        display: 'flex',
+        height: headerHeight * (hideFilterRow ? 1 : 2),
+        bgcolor: '#ffffff',
+        width: 'max-content',
+        minWidth: '100%',
+        position: 'relative',
+      }}
+    >
       {selectionMode === 'multiple' && (
-        <Box sx={{
-          display: 'flex', flexDirection: 'column',
-          boxSizing: 'border-box',
-          bgcolor: '#ffffff',
-          width: GRID_SELECTION_COLUMN_WIDTH, minWidth: GRID_SELECTION_COLUMN_WIDTH, maxWidth: GRID_SELECTION_COLUMN_WIDTH,
-          position: 'sticky', insetInlineStart: 0, zIndex: 6,
-          borderInlineEnd: `1px solid ${theme.palette.divider}`,
-          flexShrink: 0,
-          flex: 'none'
-        }}>
-          <Box sx={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', p: 0,
-            borderBottom: `1px solid ${theme.palette.divider}`, height: headerHeight,
-            boxSizing: 'border-box', overflow: 'hidden',
-          }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            boxSizing: 'border-box',
+            bgcolor: '#ffffff',
+            width: GRID_SELECTION_COLUMN_WIDTH,
+            minWidth: GRID_SELECTION_COLUMN_WIDTH,
+            maxWidth: GRID_SELECTION_COLUMN_WIDTH,
+            position: 'sticky',
+            insetInlineStart: 0,
+            zIndex: 6,
+            borderInlineEnd: `1px solid ${theme.palette.divider}`,
+            flexShrink: 0,
+            flex: 'none',
+          }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              p: 0,
+              borderBottom: `1px solid ${theme.palette.divider}`,
+              height: headerHeight,
+              boxSizing: 'border-box',
+              overflow: 'hidden',
+            }}
+          >
             <Checkbox
               size="small"
               checked={Boolean(allSelected)}
               onChange={(event) => onSelectAll?.(event.target.checked)}
               slotProps={{ input: { 'aria-label': t('grid.select_all') } }}
-              sx={{ p: 0.5, m: 0, color: 'text.secondary', '&.Mui-checked': { color: 'primary.main' } }}
+              sx={{
+                p: 0.5,
+                m: 0,
+                color: 'text.secondary',
+                '&.Mui-checked': { color: 'primary.main' },
+              }}
             />
           </Box>
           {!hideFilterRow && (
@@ -235,7 +298,9 @@ export function DataGridHeaderInternal<T>({
           column={col}
           sortModel={sortModel}
           onSort={onSort}
-          offset={pinnedLeftOffsets[i] + (selectionMode === 'multiple' ? GRID_SELECTION_COLUMN_WIDTH : 0)}
+          offset={
+            pinnedLeftOffsets[i] + (selectionMode === 'multiple' ? GRID_SELECTION_COLUMN_WIDTH : 0)
+          }
           side="left"
           filters={filters}
           onFilterChange={handleFilterChange}
@@ -251,7 +316,7 @@ export function DataGridHeaderInternal<T>({
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={unpinnedColIds} strategy={horizontalListSortingStrategy}>
-          {unpinnedCols.map(col => (
+          {unpinnedCols.map((col) => (
             <SortableHeader
               key={col.field as string}
               column={col}
@@ -272,13 +337,15 @@ export function DataGridHeaderInternal<T>({
       </DndContext>
 
       {/* Filler to absorb remaining space and keep header/body widths aligned */}
-      <Box sx={{
-        flexGrow: 1,
-        flexShrink: 0,
-        minWidth: 0,
-        borderBottom: `1px solid ${theme.palette.divider}`,
-        bgcolor: '#ffffff',
-      }} />
+      <Box
+        sx={{
+          flexGrow: 1,
+          flexShrink: 0,
+          minWidth: 0,
+          borderBottom: `1px solid ${theme.palette.divider}`,
+          bgcolor: '#ffffff',
+        }}
+      />
 
       {pinnedRightCols.map((col, i) => (
         <PinnedHeaderCell
@@ -323,19 +390,28 @@ export function DataGridHeaderInternal<T>({
       />
 
       {/* Choose Columns dialog */}
-      <Dialog open={isChooseColumnsOpen} onClose={() => setIsChooseColumnsOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ fontSize: '1rem', fontWeight: 600 }}>{t('grid.choose_columns')}</DialogTitle>
+      <Dialog
+        open={isChooseColumnsOpen}
+        onClose={() => setIsChooseColumnsOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontSize: '1rem', fontWeight: 600 }}>
+          {t('grid.choose_columns')}
+        </DialogTitle>
         <DialogContent dividers>
           <FormGroup>
-            {initialColumns.map(col => (
+            {initialColumns.map((col) => (
               <FormControlLabel
                 key={col.field as string}
                 control={
                   <AppBooleanField
-                    value={!columns.find(c => c.field === col.field)?.hidden}
-                    onChange={(val) => setColumns(prev => prev.map(c =>
-                      c.field === col.field ? { ...c, hidden: !val } : c
-                    ))}
+                    value={!columns.find((c) => c.field === col.field)?.hidden}
+                    onChange={(val) =>
+                      setColumns((prev) =>
+                        prev.map((c) => (c.field === col.field ? { ...c, hidden: !val } : c))
+                      )
+                    }
                   />
                 }
                 label={<Typography variant="body2">{t(col.headerName || '')}</Typography>}
@@ -344,7 +420,9 @@ export function DataGridHeaderInternal<T>({
           </FormGroup>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setIsChooseColumnsOpen(false)} size="small" variant="contained">{t('common.close')}</Button>
+          <Button onClick={() => setIsChooseColumnsOpen(false)} size="small" variant="contained">
+            {t('common.close')}
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

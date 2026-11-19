@@ -15,7 +15,9 @@ import type { SalesOrderDocumentView } from './useSalesOrderDocument';
 import type { buildSalesOrderTotals } from './salesOrderTotals';
 import type { buildSalesOrderHeaderPanel } from './SalesOrderHeaderPanel';
 
-type Scope = SalesOrderDocumentView & ReturnType<typeof buildSalesOrderTotals> & ReturnType<typeof buildSalesOrderHeaderPanel>;
+type Scope = SalesOrderDocumentView &
+  ReturnType<typeof buildSalesOrderTotals> &
+  ReturnType<typeof buildSalesOrderHeaderPanel>;
 
 export function buildSalesOrderLineFields(scope: Scope) {
   const {
@@ -93,7 +95,7 @@ export function buildSalesOrderLineFields(scope: Scope) {
         disabled={savingLineDetail}
         onChange={(event) => {
           const value = event.target.value;
-          setLineDetailDraft((draft) => draft ? { ...draft, [name]: value } : draft);
+          setLineDetailDraft((draft) => (draft ? { ...draft, [name]: value } : draft));
         }}
         onBlur={() => void saveLineDetail()}
       />
@@ -138,15 +140,26 @@ export function buildSalesOrderLineFields(scope: Scope) {
   // in view mode, like D365) and the record card built from the loaded option.
   const lineMasterOptions = (name: keyof DetailLine): { code: string; name: string }[] => {
     switch (name) {
-      case 'site': return dimensionsQuery.data?.sites ?? [];
-      case 'warehouse': return dimensionsQuery.data?.warehouses ?? [];
-      case 'taxGroup': return taxGroupsQuery.data?.salesTaxGroups ?? [];
-      case 'taxItemGroup': return taxGroupsQuery.data?.itemSalesTaxGroups ?? [];
+      case 'site':
+        return dimensionsQuery.data?.sites ?? [];
+      case 'warehouse':
+        return dimensionsQuery.data?.warehouses ?? [];
+      case 'taxGroup':
+        return taxGroupsQuery.data?.salesTaxGroups ?? [];
+      case 'taxItemGroup':
+        return taxGroupsQuery.data?.itemSalesTaxGroups ?? [];
       case 'deliveryMode':
-        return (lookupsQuery.data?.deliveryModes ?? []).map((o) => ({ code: o.value, name: o.label }));
+        return (lookupsQuery.data?.deliveryModes ?? []).map((o) => ({
+          code: o.value,
+          name: o.label,
+        }));
       case 'deliveryTerms':
-        return (lookupsQuery.data?.deliveryTerms ?? []).map((o) => ({ code: o.value, name: o.label }));
-      default: return [];
+        return (lookupsQuery.data?.deliveryTerms ?? []).map((o) => ({
+          code: o.value,
+          name: o.label,
+        }));
+      default:
+        return [];
     }
   };
   const lineMasterValue = (name: keyof DetailLine, label: string, value?: unknown) => {
@@ -163,13 +176,13 @@ export function buildSalesOrderLineFields(scope: Scope) {
       />
     );
   };
-  const lineLookupShell = (content: React.ReactNode) => (
-    <Box sx={{ minWidth: 0 }}>{content}</Box>
-  );
+  const lineLookupShell = (content: React.ReactNode) => <Box sx={{ minWidth: 0 }}>{content}</Box>;
   const deliveryAddressField = () => {
     if (!displayedLine) return null;
     const options = deliveryAddressesQuery.data ?? [];
-    const selected = options.find((option) => option.value === String(displayedLine.deliveryPostalAddress ?? ''));
+    const selected = options.find(
+      (option) => option.value === String(displayedLine.deliveryPostalAddress ?? '')
+    );
     const preview = (content: React.ReactNode) => (
       <RecordPreview
         entity={POSTAL_ADDRESS_RECORD_PREVIEW}
@@ -180,32 +193,39 @@ export function buildSalesOrderLineFields(scope: Scope) {
       </RecordPreview>
     );
     if (!activeHeader)
-      return <>{preview(field('Delivery address', selected?.label ?? '', true, true))}{field('Address', selected?.address ?? '', true)}</>;
+      return (
+        <>
+          {preview(field('Delivery address', selected?.label ?? '', true, true))}
+          {field('Address', selected?.address ?? '', true)}
+        </>
+      );
     return (
       <>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-          {preview(<Box sx={{ flex: 1, minWidth: 0 }}>
-            <LookupField
-              name="deliveryPostalAddress"
-              label={t('salesOrder.ui.deliveryAddress', 'Delivery address')}
-              value={lineDetailDraft?.deliveryPostalAddress ?? ''}
-              options={options.map((option) => ({
-                id: option.value,
-                code: option.label,
-                name: `${option.label}${option.isPrimary ? ' (Primary)' : ''}`,
-              }))}
-              displayMode="select"
-              searchable
-              lazyLoading={false}
-              disabled={savingLineDetail || deliveryAddressesQuery.isLoading}
-              onChange={(value) => {
-                if (!lineDetailDraft) return;
-                const next = { ...lineDetailDraft, deliveryPostalAddress: String(value ?? '') };
-                setLineDetailDraft(next);
-                void saveLineDetail(next);
-              }}
-            />
-          </Box>)}
+          {preview(
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <LookupField
+                name="deliveryPostalAddress"
+                label={t('salesOrder.ui.deliveryAddress', 'Delivery address')}
+                value={lineDetailDraft?.deliveryPostalAddress ?? ''}
+                options={options.map((option) => ({
+                  id: option.value,
+                  code: option.label,
+                  name: `${option.label}${option.isPrimary ? ' (Primary)' : ''}`,
+                }))}
+                displayMode="select"
+                searchable
+                lazyLoading={false}
+                disabled={savingLineDetail || deliveryAddressesQuery.isLoading}
+                onChange={(value) => {
+                  if (!lineDetailDraft) return;
+                  const next = { ...lineDetailDraft, deliveryPostalAddress: String(value ?? '') };
+                  setLineDetailDraft(next);
+                  void saveLineDetail(next);
+                }}
+              />
+            </Box>
+          )}
           <IconButton
             size="small"
             aria-label={t('salesOrder.ui.addDeliveryAddress', 'Add delivery address')}
@@ -229,7 +249,11 @@ export function buildSalesOrderLineFields(scope: Scope) {
         label={label}
         value={lineDetailDraft?.unit ?? ''}
         // Units load page by page from the server as the user searches/scrolls.
-        options={lineDetailDraft?.unit ? [{ id: lineDetailDraft.unit, code: lineDetailDraft.unit, name: lineDetailDraft.unit }] : []}
+        options={
+          lineDetailDraft?.unit
+            ? [{ id: lineDetailDraft.unit, code: lineDetailDraft.unit, name: lineDetailDraft.unit }]
+            : []
+        }
         queryKey={salesOrderQueryKeys.lookup(company, 'units')}
         fetchPage={fetchSalesOrderUnitOptions}
         displayMode="select"
@@ -257,7 +281,17 @@ export function buildSalesOrderLineFields(scope: Scope) {
         label={label}
         value={lineDetailDraft?.packingUnit ?? ''}
         // Units load page by page from the server as the user searches/scrolls.
-        options={lineDetailDraft?.packingUnit ? [{ id: lineDetailDraft.packingUnit, code: lineDetailDraft.packingUnit, name: lineDetailDraft.packingUnit }] : []}
+        options={
+          lineDetailDraft?.packingUnit
+            ? [
+                {
+                  id: lineDetailDraft.packingUnit,
+                  code: lineDetailDraft.packingUnit,
+                  name: lineDetailDraft.packingUnit,
+                },
+              ]
+            : []
+        }
         queryKey={salesOrderQueryKeys.lookup(company, 'units')}
         fetchPage={fetchSalesOrderUnitOptions}
         displayMode="select"
@@ -274,7 +308,13 @@ export function buildSalesOrderLineFields(scope: Scope) {
       />
     );
   };
-  const lineValue = (name: keyof DetailLine, label: string, date = false, editable = false, lookup = false) => {
+  const lineValue = (
+    name: keyof DetailLine,
+    label: string,
+    date = false,
+    editable = false,
+    lookup = false
+  ) => {
     const value = displayedLine?.[name];
     const text = value == null || value === '' ? undefined : String(value);
     return field(label, date ? text?.slice(0, 10) : text, editable, lookup);
@@ -311,14 +351,29 @@ export function buildSalesOrderLineFields(scope: Scope) {
     );
   };
   const lineEnumField = (
-    name: 'lineType' | 'deliveryType' | 'lineDeliveryType' | 'sourcingOrigin' | 'deliveryDateControlType' | 'mpsFullRunCtpStatus' | 'shipCarrierDlvType' | 'reservation' | 'intercompanyOrigin' | 'itemReferenceType',
+    name:
+      | 'lineType'
+      | 'deliveryType'
+      | 'lineDeliveryType'
+      | 'sourcingOrigin'
+      | 'deliveryDateControlType'
+      | 'mpsFullRunCtpStatus'
+      | 'shipCarrierDlvType'
+      | 'reservation'
+      | 'intercompanyOrigin'
+      | 'itemReferenceType',
     label: string,
     options: { value: number; label: string }[]
   ) => {
     if (!displayedLine) return null;
     const value = Number(displayedLine[name] ?? 0);
     if (!activeHeader)
-      return field(label, options.find((option) => option.value === value)?.label ?? String(value), true, true);
+      return field(
+        label,
+        options.find((option) => option.value === value)?.label ?? String(value),
+        true,
+        true
+      );
     return lineLookupShell(
       <LookupField
         name={name}
@@ -370,39 +425,63 @@ export function buildSalesOrderLineFields(scope: Scope) {
     );
   };
   const lineBooleanField = (
-    name: 'autoBatchReservation' | 'sameBatchSelection' | 'scrap' | 'stopped' | 'preventPartialDelivery' | 'directDelivery' | 'excludeFromMasterPlanning' | 'excludeFromRebate' | 'excludeFromRebateManagement',
+    name:
+      | 'autoBatchReservation'
+      | 'sameBatchSelection'
+      | 'scrap'
+      | 'stopped'
+      | 'preventPartialDelivery'
+      | 'directDelivery'
+      | 'excludeFromMasterPlanning'
+      | 'excludeFromRebate'
+      | 'excludeFromRebateManagement',
     label: string
   ) => {
     if (!displayedLine) return null;
-    const checked = name === 'directDelivery'
-      ? Number(displayedLine.lineDeliveryType ?? 0) === 2
-      : name === 'excludeFromMasterPlanning'
-        ? Boolean(displayedLine.excludeFromMasterPlanning)
-        : name === 'excludeFromRebate' || name === 'excludeFromRebateManagement'
-          ? Boolean(displayedLine[name])
-        : Boolean(displayedLine[name]);
+    const checked =
+      name === 'directDelivery'
+        ? Number(displayedLine.lineDeliveryType ?? 0) === 2
+        : name === 'excludeFromMasterPlanning'
+          ? Boolean(displayedLine.excludeFromMasterPlanning)
+          : name === 'excludeFromRebate' || name === 'excludeFromRebateManagement'
+            ? Boolean(displayedLine[name])
+            : Boolean(displayedLine[name]);
     if (!activeHeader)
       return field(label, checked ? t('common.yes', 'Yes') : t('common.no', 'No'), true);
     return (
       <Box sx={{ minWidth: 0, minHeight: 48 }}>
-        <Typography sx={{ mb: '6px', fontFamily: d365.fontFamily, fontSize: d365.labelFontSize, lineHeight: 1.2 }}>
+        <Typography
+          sx={{
+            mb: '6px',
+            fontFamily: d365.fontFamily,
+            fontSize: d365.labelFontSize,
+            lineHeight: 1.2,
+          }}
+        >
           {label}
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', height: d365.fieldControlHeight }}>
           <Switch
-              size="small"
-              checked={checked}
-              disabled={savingLineDetail}
-              onChange={(_, nextValue) => {
-                if (!lineDetailDraft) return;
-                const next = name === 'directDelivery'
-                  ? { ...lineDetailDraft, directDelivery: nextValue, lineDeliveryType: nextValue ? 2 : 0 }
-                  : name === 'excludeFromMasterPlanning' || name === 'excludeFromRebate' || name === 'excludeFromRebateManagement'
+            size="small"
+            checked={checked}
+            disabled={savingLineDetail}
+            onChange={(_, nextValue) => {
+              if (!lineDetailDraft) return;
+              const next =
+                name === 'directDelivery'
+                  ? {
+                      ...lineDetailDraft,
+                      directDelivery: nextValue,
+                      lineDeliveryType: nextValue ? 2 : 0,
+                    }
+                  : name === 'excludeFromMasterPlanning' ||
+                      name === 'excludeFromRebate' ||
+                      name === 'excludeFromRebateManagement'
                     ? { ...lineDetailDraft, [name]: nextValue }
                     : { ...lineDetailDraft, [name]: nextValue };
-                setLineDetailDraft(next);
-                void saveLineDetail(next);
-              }}
+              setLineDetailDraft(next);
+              void saveLineDetail(next);
+            }}
           />
           <Typography sx={{ fontFamily: d365.fontFamily, fontSize: d365.fontSize }}>
             {checked ? t('common.yes', 'Yes') : t('common.no', 'No')}
@@ -422,11 +501,13 @@ export function buildSalesOrderLineFields(scope: Scope) {
         value={lineDetailDraft?.returnLotId ?? ''}
         options={
           lineDetailDraft?.returnLotId
-            ? [{
-                id: lineDetailDraft.returnLotId,
-                code: lineDetailDraft.returnLotId,
-                name: lineDetailDraft.returnLotId,
-              }]
+            ? [
+                {
+                  id: lineDetailDraft.returnLotId,
+                  code: lineDetailDraft.returnLotId,
+                  name: lineDetailDraft.returnLotId,
+                },
+              ]
             : []
         }
         queryKey={salesOrderQueryKeys.lookup(company, 'return-lots', displayedLine.itemNumber)}
@@ -455,11 +536,44 @@ export function buildSalesOrderLineFields(scope: Scope) {
   };
   const inventoryTrackingField = (name: 'batchNumber' | 'serialNumber', label: string) => {
     if (!displayedLine) return null;
-    const fetchPage = name === 'batchNumber'
-      ? ({ pageNumber, pageSize, search, signal }: { pageNumber: number; pageSize: number; search: string; signal?: AbortSignal }) =>
-          salesOrderLinesApi.batchNumbers({ itemNumber: displayedLine.itemNumber, pageNumber, pageSize, search, signal })
-      : ({ pageNumber, pageSize, search, signal }: { pageNumber: number; pageSize: number; search: string; signal?: AbortSignal }) =>
-          salesOrderLinesApi.serialNumbers({ itemNumber: displayedLine.itemNumber, pageNumber, pageSize, search, signal });
+    const fetchPage =
+      name === 'batchNumber'
+        ? ({
+            pageNumber,
+            pageSize,
+            search,
+            signal,
+          }: {
+            pageNumber: number;
+            pageSize: number;
+            search: string;
+            signal?: AbortSignal;
+          }) =>
+            salesOrderLinesApi.batchNumbers({
+              itemNumber: displayedLine.itemNumber,
+              pageNumber,
+              pageSize,
+              search,
+              signal,
+            })
+        : ({
+            pageNumber,
+            pageSize,
+            search,
+            signal,
+          }: {
+            pageNumber: number;
+            pageSize: number;
+            search: string;
+            signal?: AbortSignal;
+          }) =>
+            salesOrderLinesApi.serialNumbers({
+              itemNumber: displayedLine.itemNumber,
+              pageNumber,
+              pageSize,
+              search,
+              signal,
+            });
     const value = displayedLine[name] ?? '';
     if (!activeHeader) return field(label, value, true, true);
     return lineLookupShell(
@@ -468,7 +582,12 @@ export function buildSalesOrderLineFields(scope: Scope) {
         label={label}
         value={value}
         options={value ? [{ id: value, code: value, name: value }] : []}
-        queryKey={salesOrderQueryKeys.lookup(company, 'inventory-tracking', name, displayedLine.itemNumber)}
+        queryKey={salesOrderQueryKeys.lookup(
+          company,
+          'inventory-tracking',
+          name,
+          displayedLine.itemNumber
+        )}
         fetchPage={fetchPage}
         displayMode="select"
         searchable
@@ -495,11 +614,15 @@ export function buildSalesOrderLineFields(scope: Scope) {
         value={displayedLine.ledgerDimension ?? 0}
         options={
           displayedLine.ledgerDimension
-            ? [{
-                id: displayedLine.ledgerDimension,
-                code: displayedLine.ledgerDimensionDisplay ?? String(displayedLine.ledgerDimension),
-                name: displayedLine.ledgerDimensionDisplay ?? String(displayedLine.ledgerDimension),
-              }]
+            ? [
+                {
+                  id: displayedLine.ledgerDimension,
+                  code:
+                    displayedLine.ledgerDimensionDisplay ?? String(displayedLine.ledgerDimension),
+                  name:
+                    displayedLine.ledgerDimensionDisplay ?? String(displayedLine.ledgerDimension),
+                },
+              ]
             : []
         }
         queryKey={salesOrderQueryKeys.lookup(company, 'ledger-dimensions')}
@@ -514,7 +637,9 @@ export function buildSalesOrderLineFields(scope: Scope) {
           const next = {
             ...lineDetailDraft,
             ledgerDimension: Number(value ?? 0),
-            ledgerDimensionDisplay: Array.isArray(option) ? option[0]?.name ?? '' : option?.name ?? '',
+            ledgerDimensionDisplay: Array.isArray(option)
+              ? (option[0]?.name ?? '')
+              : (option?.name ?? ''),
           };
           setLineDetailDraft(next);
           void saveLineDetail(next);

@@ -119,80 +119,93 @@ export function DynamicControlRenderer({
   const type = normalizeDynamicControlType(control.controlType);
   const options = control.options ?? [];
   const disabled = Boolean(control.readOnly || preview);
-  const databaseReference = control.referenceType === 'Employee' || control.referenceType === 'Showroom';
+  const databaseReference =
+    control.referenceType === 'Employee' || control.referenceType === 'Showroom';
   if (databaseReference && control.processId && control.requestControlId) {
     return (
-      <Box sx={{
-        display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 0.45,
-        '& .MuiOutlinedInput-root': {
-          borderRadius: '3px',
-          bgcolor: disabled ? 'action.disabledBackground' : '#fff',
-        },
-        '&& .MuiAutocomplete-root .MuiOutlinedInput-root.MuiInputBase-sizeSmall': {
-          py: 0,
-          paddingInlineStart: 0,
-        },
-        '&& .MuiAutocomplete-root .MuiOutlinedInput-root .MuiAutocomplete-input': {
-          padding: '6px 8px',
-        },
-      }}>
-      <Typography component="label" sx={{ fontSize: 12.5, lineHeight: 1.2, fontWeight: 700 }}>
-        {control.label}
-        {control.required ? ' *' : ''}
-      </Typography>
-      <LookupField
-        externalLabel
-        name={`requestControl_${control.requestControlId}`}
-        label={control.label}
-        value={value || undefined}
-        onChange={(nextValue) => onChange(nextValue == null ? '' : String(nextValue))}
-        options={options.map((option) => ({ id: option.value, code: option.value, name: option.label }))}
-        disabled={disabled}
-        required={control.required}
-        error={error}
-        helperText={helperText}
-        displayMode="select"
-        searchable
-        sideMode="server"
-        lazyLoading
-        showAllNamesInOptions
-        pageSize={25}
-        queryKey={['workflow-reference-options', control.processId, control.requestControlId]}
-        fetchPage={async ({ pageNumber, pageSize, search, signal }) => {
-          try {
-            const page = await dynamicRequestFormApi.getReferenceOptions(
-              control.processId!, control.requestControlId!, { pageNumber, pageSize, search, signal }
-            );
-            return {
-              ...page,
-              data: page.data.map((option) => ({
-                id: option.value,
-                code: option.value,
-                name: option.label,
-                nameAlias: option.labelAlias,
-              })),
-            };
-          } catch (error) {
-            if (signal?.aborted) throw error;
-            const term = search.trim().toLocaleLowerCase();
-            const available = options.filter((option) =>
-              !term || option.value.toLocaleLowerCase().includes(term)
-                || option.label.toLocaleLowerCase().includes(term)
-            );
-            const start = (pageNumber - 1) * pageSize;
-            return {
-              data: available.slice(start, start + pageSize).map((option) => ({
-                id: option.value,
-                code: option.value,
-                name: option.label,
-              })),
-              pageNumber,
-              totalPages: Math.max(1, Math.ceil(available.length / pageSize)),
-              totalRecords: available.length,
-            };
-          }
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 1fr)',
+          gap: 0.45,
+          '& .MuiOutlinedInput-root': {
+            borderRadius: '3px',
+            bgcolor: disabled ? 'action.disabledBackground' : '#fff',
+          },
+          '&& .MuiAutocomplete-root .MuiOutlinedInput-root.MuiInputBase-sizeSmall': {
+            py: 0,
+            paddingInlineStart: 0,
+          },
+          '&& .MuiAutocomplete-root .MuiOutlinedInput-root .MuiAutocomplete-input': {
+            padding: '6px 8px',
+          },
         }}
-      />
+      >
+        <Typography component="label" sx={{ fontSize: 12.5, lineHeight: 1.2, fontWeight: 700 }}>
+          {control.label}
+          {control.required ? ' *' : ''}
+        </Typography>
+        <LookupField
+          externalLabel
+          name={`requestControl_${control.requestControlId}`}
+          label={control.label}
+          value={value || undefined}
+          onChange={(nextValue) => onChange(nextValue == null ? '' : String(nextValue))}
+          options={options.map((option) => ({
+            id: option.value,
+            code: option.value,
+            name: option.label,
+          }))}
+          disabled={disabled}
+          required={control.required}
+          error={error}
+          helperText={helperText}
+          displayMode="select"
+          searchable
+          sideMode="server"
+          lazyLoading
+          showAllNamesInOptions
+          pageSize={25}
+          queryKey={['workflow-reference-options', control.processId, control.requestControlId]}
+          fetchPage={async ({ pageNumber, pageSize, search, signal }) => {
+            try {
+              const page = await dynamicRequestFormApi.getReferenceOptions(
+                control.processId!,
+                control.requestControlId!,
+                { pageNumber, pageSize, search, signal }
+              );
+              return {
+                ...page,
+                data: page.data.map((option) => ({
+                  id: option.value,
+                  code: option.value,
+                  name: option.label,
+                  nameAlias: option.labelAlias,
+                })),
+              };
+            } catch (error) {
+              if (signal?.aborted) throw error;
+              const term = search.trim().toLocaleLowerCase();
+              const available = options.filter(
+                (option) =>
+                  !term ||
+                  option.value.toLocaleLowerCase().includes(term) ||
+                  option.label.toLocaleLowerCase().includes(term)
+              );
+              const start = (pageNumber - 1) * pageSize;
+              return {
+                data: available.slice(start, start + pageSize).map((option) => ({
+                  id: option.value,
+                  code: option.value,
+                  name: option.label,
+                })),
+                pageNumber,
+                totalPages: Math.max(1, Math.ceil(available.length / pageSize)),
+                totalRecords: available.length,
+              };
+            }
+          }}
+        />
       </Box>
     );
   }
@@ -438,21 +451,39 @@ export function DynamicControlRenderer({
       ? 'number'
       : type === 'datetime' || type === 'datetimelocal'
         ? 'datetime-local'
-      : type === 'date' || type === 'calendar'
-        ? 'date'
-        : type === 'time'
-          ? 'time'
-          : type === 'url'
-            ? 'url'
-            : type === 'email'
-              ? 'email'
-              : 'text';
+        : type === 'date' || type === 'calendar'
+          ? 'date'
+          : type === 'time'
+            ? 'time'
+            : type === 'url'
+              ? 'url'
+              : type === 'email'
+                ? 'email'
+                : 'text';
   const multiline = type === 'longtext' || type === 'textarea';
-  const dateRules = inputType === 'date' || inputType === 'datetime-local'
-    ? (control.validations ?? []).filter((rule) => ['mindate', 'maxdate'].includes(rule.type.toLowerCase()) && (!rule.severity || rule.severity.toLowerCase() === 'error')) : [];
-  const minima = dateRules.filter((rule) => rule.type.toLowerCase() === 'mindate').map((rule) => resolveDateBound(rule.value ?? rule.expression ?? '')).filter((date): date is string => date != null).sort();
-  const maxima = dateRules.filter((rule) => rule.type.toLowerCase() === 'maxdate').map((rule) => resolveDateBound(rule.value ?? rule.expression ?? '')).filter((date): date is string => date != null).sort();
-  const failedDateRule = value ? dateRules.find((rule) => !dateBoundValid(rule.type, value, rule.value ?? rule.expression ?? '')) : undefined;
+  const dateRules =
+    inputType === 'date' || inputType === 'datetime-local'
+      ? (control.validations ?? []).filter(
+          (rule) =>
+            ['mindate', 'maxdate'].includes(rule.type.toLowerCase()) &&
+            (!rule.severity || rule.severity.toLowerCase() === 'error')
+        )
+      : [];
+  const minima = dateRules
+    .filter((rule) => rule.type.toLowerCase() === 'mindate')
+    .map((rule) => resolveDateBound(rule.value ?? rule.expression ?? ''))
+    .filter((date): date is string => date != null)
+    .sort();
+  const maxima = dateRules
+    .filter((rule) => rule.type.toLowerCase() === 'maxdate')
+    .map((rule) => resolveDateBound(rule.value ?? rule.expression ?? ''))
+    .filter((date): date is string => date != null)
+    .sort();
+  const failedDateRule = value
+    ? dateRules.find(
+        (rule) => !dateBoundValid(rule.type, value, rule.value ?? rule.expression ?? '')
+      )
+    : undefined;
   const min = minima.at(-1);
   const max = maxima[0];
   return (
@@ -476,9 +507,11 @@ export function DynamicControlRenderer({
         error={error || !!failedDateRule}
         helperText={helperText || failedDateRule?.errorMessage}
         slotProps={{
-          htmlInput: { 'aria-label': control.label,
+          htmlInput: {
+            'aria-label': control.label,
             min: min ? min + (inputType === 'datetime-local' ? 'T00:00' : '') : undefined,
-            max: max ? max + (inputType === 'datetime-local' ? 'T23:59:59.999' : '') : undefined },
+            max: max ? max + (inputType === 'datetime-local' ? 'T23:59:59.999' : '') : undefined,
+          },
           ...(type === 'date' || type === 'calendar' || type === 'time'
             ? { inputLabel: { shrink: true } }
             : {}),

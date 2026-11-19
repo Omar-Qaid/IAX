@@ -29,5 +29,18 @@ export {
 } from './publishedTemplateSelection';
 
 // Document layout and pagination
-export { ReportViewerDocument, type reportCompany, type PrintoutMetadataItem, type PrintoutHeaderConfig, type PrintoutFooterConfig, type PrintoutPageSettings, type ReportViewerDocumentProps, PrintoutHeader, PrintoutFooter } from './ReportViewerDocument';
-export { ReportViewerPaginationProvider, useReportViewerPagination } from './ReportViewerPaginationContext';
+export {
+  ReportViewerDocument,
+  type reportCompany,
+  type PrintoutMetadataItem,
+  type PrintoutHeaderConfig,
+  type PrintoutFooterConfig,
+  type PrintoutPageSettings,
+  type ReportViewerDocumentProps,
+  PrintoutHeader,
+  PrintoutFooter,
+} from './ReportViewerDocument';
+export {
+  ReportViewerPaginationProvider,
+  useReportViewerPagination,
+} from './ReportViewerPaginationContext';

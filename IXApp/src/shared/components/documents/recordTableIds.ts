@@ -10,19 +10,31 @@ export const documentTableIds = {
 } as const;
 
 const knownTableIds: Record<string, number> = {
-  wfrequests: documentTableIds.wfRequest, workflowrequests: documentTableIds.wfRequest,
-  wfrequestdetails: documentTableIds.wfRequestDetail, customers: documentTableIds.custTable, custtable: documentTableIds.custTable,
-  salesorders: documentTableIds.salesTable, salestable: documentTableIds.salesTable,
-  saleslines: documentTableIds.salesLine, salesline: documentTableIds.salesLine,
-  vendors: documentTableIds.vendTable, vendtable: documentTableIds.vendTable,
-  purchaseorders: documentTableIds.purchTable, purchtable: documentTableIds.purchTable,
-  employees: documentTableIds.hcmWorker, hcmworkers: documentTableIds.hcmWorker,
+  wfrequests: documentTableIds.wfRequest,
+  workflowrequests: documentTableIds.wfRequest,
+  wfrequestdetails: documentTableIds.wfRequestDetail,
+  customers: documentTableIds.custTable,
+  custtable: documentTableIds.custTable,
+  salesorders: documentTableIds.salesTable,
+  salestable: documentTableIds.salesTable,
+  saleslines: documentTableIds.salesLine,
+  salesline: documentTableIds.salesLine,
+  vendors: documentTableIds.vendTable,
+  vendtable: documentTableIds.vendTable,
+  purchaseorders: documentTableIds.purchTable,
+  purchtable: documentTableIds.purchTable,
+  employees: documentTableIds.hcmWorker,
+  hcmworkers: documentTableIds.hcmWorker,
 };
 
 export const recordTableId = (name: string): number => {
   const normalized = name.replace(/[^a-z0-9]/gi, '').toLowerCase();
-  const known = knownTableIds[normalized]; if (known) return known;
+  const known = knownTableIds[normalized];
+  if (known) return known;
   let hash = 2166136261;
-  for (const character of normalized) { hash ^= character.charCodeAt(0); hash = Math.imul(hash, 16777619); }
+  for (const character of normalized) {
+    hash ^= character.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
   return 10_000 + (Math.abs(hash) % 2_000_000_000);
 };

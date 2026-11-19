@@ -15,7 +15,13 @@ const moduleOptions = [
 ];
 const columns: ColumnDef<Group>[] = [
   { field: 'groupId', headerName: 'Group', editable: true },
-  { field: 'module', headerName: 'Module', type: 'singleSelect', valueOptions: moduleOptions, editable: true },
+  {
+    field: 'module',
+    headerName: 'Module',
+    type: 'singleSelect',
+    valueOptions: moduleOptions,
+    editable: true,
+  },
 ];
 const rows: Group[] = [
   { id: 'a', groupId: 'G1', module: 0 },
@@ -43,9 +49,9 @@ const renderGrid = (gridRows: Group[] = rows) => {
 };
 
 const moduleSelect = (rowId: string) =>
-  within(document.querySelector<HTMLElement>(`[data-row-id="${rowId}"] [data-field="module"]`)!).getByRole(
-    'combobox'
-  );
+  within(
+    document.querySelector<HTMLElement>(`[data-row-id="${rowId}"] [data-field="module"]`)!
+  ).getByRole('combobox');
 
 describe('dropdown cell editor', () => {
   it('saves the option value with its type, not as a string', async () => {
@@ -65,10 +71,11 @@ describe('dropdown cell editor', () => {
     expect(moduleSelect('b')).toHaveTextContent('Vendor');
     fireEvent.mouseDown(moduleSelect('b'));
     const listbox = await screen.findByRole('listbox');
-    expect(within(listbox).getAllByRole('option').map((o) => o.textContent)).toEqual([
-      'Customer',
-      'Vendor',
-    ]);
+    expect(
+      within(listbox)
+        .getAllByRole('option')
+        .map((o) => o.textContent)
+    ).toEqual(['Customer', 'Vendor']);
   });
 
   it('keeps a stored value that is not in the options visible instead of blank', () => {
@@ -90,7 +97,9 @@ describe('dropdown cell editor', () => {
     fireEvent.keyDown(select, { key: 'Enter' });
     expect(await screen.findByRole('listbox')).toBeDefined();
     expect(onRowSave).not.toHaveBeenCalled();
-    expect(document.querySelector('[data-row-id="a"] [data-field="module"] [role="combobox"]')).not.toBeNull();
+    expect(
+      document.querySelector('[data-row-id="a"] [data-field="module"] [role="combobox"]')
+    ).not.toBeNull();
   });
 
   it('does not write the line when the same option is picked again', async () => {
@@ -108,7 +117,14 @@ describe('dropdown cell editor', () => {
 describe('dropdown columns in search, filters and export', () => {
   const process = (filters: FilterModel[], globalSearch = '') =>
     renderHook(() =>
-      useGridDataProcessing({ rows, columns, globalSearch, filters, sortModel: [], serverSide: false })
+      useGridDataProcessing({
+        rows,
+        columns,
+        globalSearch,
+        filters,
+        sortModel: [],
+        serverSide: false,
+      })
     ).result.current.map((row) => row.id);
 
   it('matches the label users see as well as the stored value', () => {
@@ -128,7 +144,9 @@ describe('dropdown columns in search, filters and export', () => {
   });
 
   it('normalizes plain and object options and keeps value types', () => {
-    expect(normalizeValueOptions(['A', { value: 2, label: 'Two' }, { value: null, label: 'None' }])).toEqual([
+    expect(
+      normalizeValueOptions(['A', { value: 2, label: 'Two' }, { value: null, label: 'None' }])
+    ).toEqual([
       { key: 'A', value: 'A', label: 'A', disabled: undefined },
       { key: '2', value: 2, label: 'Two', disabled: false },
       { key: '', value: null, label: 'None', disabled: false },

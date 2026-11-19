@@ -40,10 +40,16 @@ export const DEFAULT_VALIDATION_MESSAGES: Record<BuilderValidationType, string> 
   inputMask: 'The value does not match the required format.',
 };
 
-const customMessageTypes = new Set<BuilderValidationType>(['regex', 'pattern', 'expression', 'custom']);
+const customMessageTypes = new Set<BuilderValidationType>([
+  'regex',
+  'pattern',
+  'expression',
+  'custom',
+]);
 
 export const validationUsesCustomMessage = (type: BuilderValidationType): boolean =>
   customMessageTypes.has(type);
 
-export const resolvedValidationMessage = (rule: Pick<BuilderValidation, 'type' | 'message'>): string =>
-  rule.message.trim() || DEFAULT_VALIDATION_MESSAGES[rule.type];
+export const resolvedValidationMessage = (
+  rule: Pick<BuilderValidation, 'type' | 'message'>
+): string => rule.message.trim() || DEFAULT_VALIDATION_MESSAGES[rule.type];

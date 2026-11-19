@@ -15,7 +15,9 @@ const viewports = [
 
 for (const viewport of viewports) {
   for (const language of ['en', 'ar'] as const) {
-    test(`${viewport.name} has no page-level overflow in ${language}`, async ({ page }, testInfo) => {
+    test(`${viewport.name} has no page-level overflow in ${language}`, async ({
+      page,
+    }, testInfo) => {
       test.skip(testInfo.project.name !== 'desktop-chromium');
       await page.setViewportSize(viewport);
       await page.goto('/dashboard');
@@ -54,13 +56,16 @@ for (const language of ['en', 'ar'] as const) {
     await expect(drawer).toBeVisible();
 
     if (language === 'ar') {
-      await expect.poll(async () => (await drawer.boundingBox())?.x ?? Number.POSITIVE_INFINITY)
+      await expect
+        .poll(async () => (await drawer.boundingBox())?.x ?? Number.POSITIVE_INFINITY)
         .toBeLessThanOrEqual(10);
     } else {
-      await expect.poll(async () => {
-        const box = await drawer.boundingBox();
-        return box ? Math.abs(box.x + box.width - 1024) : Number.POSITIVE_INFINITY;
-      }).toBeLessThanOrEqual(10);
+      await expect
+        .poll(async () => {
+          const box = await drawer.boundingBox();
+          return box ? Math.abs(box.x + box.width - 1024) : Number.POSITIVE_INFINITY;
+        })
+        .toBeLessThanOrEqual(10);
     }
   });
 }

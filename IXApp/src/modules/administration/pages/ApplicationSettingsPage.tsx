@@ -40,21 +40,70 @@ export function ApplicationSettingsPage(): React.ReactElement {
         id: 'application',
         title: t('settings.application'),
         fields: [
-          { name: 'appName', label: t('settings.appName'), type: 'text', disabled: !canUpdateGlobal },
-          { name: 'defaultLanguage', label: t('settings.defaultLanguage'), type: 'text', disabled: !canUpdateGlobal },
-          { name: 'timeZone', label: t('settings.timeZone'), type: 'text', disabled: !canUpdateGlobal },
-          { name: 'currency', label: t('settings.currency'), type: 'text', disabled: !canUpdateGlobal },
-          { name: 'dateFormat', label: t('settings.dateFormat'), type: 'text', disabled: !canUpdateGlobal },
-          { name: 'decimalPlaces', label: t('settings.decimalPlaces'), type: 'number', min: 0, disabled: !canUpdateGlobal },
+          {
+            name: 'appName',
+            label: t('settings.appName'),
+            type: 'text',
+            disabled: !canUpdateGlobal,
+          },
+          {
+            name: 'defaultLanguage',
+            label: t('settings.defaultLanguage'),
+            type: 'text',
+            disabled: !canUpdateGlobal,
+          },
+          {
+            name: 'timeZone',
+            label: t('settings.timeZone'),
+            type: 'text',
+            disabled: !canUpdateGlobal,
+          },
+          {
+            name: 'currency',
+            label: t('settings.currency'),
+            type: 'text',
+            disabled: !canUpdateGlobal,
+          },
+          {
+            name: 'dateFormat',
+            label: t('settings.dateFormat'),
+            type: 'text',
+            disabled: !canUpdateGlobal,
+          },
+          {
+            name: 'decimalPlaces',
+            label: t('settings.decimalPlaces'),
+            type: 'number',
+            min: 0,
+            disabled: !canUpdateGlobal,
+          },
         ],
       },
       {
         id: 'system',
         title: t('settings.system'),
         fields: [
-          { name: 'paginationSize', label: t('settings.paginationSize'), type: 'number', min: 1, max: 100, disabled: !canUpdateGlobal },
-          { name: 'maxUploadSize', label: t('settings.maxUploadSize'), type: 'number', min: 1, disabled: !canUpdateGlobal },
-          { name: 'enableAuditLog', label: t('settings.enableAuditLog'), type: 'boolean', disabled: !canUpdateGlobal },
+          {
+            name: 'paginationSize',
+            label: t('settings.paginationSize'),
+            type: 'number',
+            min: 1,
+            max: 100,
+            disabled: !canUpdateGlobal,
+          },
+          {
+            name: 'maxUploadSize',
+            label: t('settings.maxUploadSize'),
+            type: 'number',
+            min: 1,
+            disabled: !canUpdateGlobal,
+          },
+          {
+            name: 'enableAuditLog',
+            label: t('settings.enableAuditLog'),
+            type: 'boolean',
+            disabled: !canUpdateGlobal,
+          },
         ],
       },
       {
@@ -65,7 +114,11 @@ export function ApplicationSettingsPage(): React.ReactElement {
           { name: 'language', label: t('settings.language'), type: 'text' },
           { name: 'pageSize', label: t('settings.pageSize'), type: 'number', min: 1, max: 100 },
           { name: 'dashboardLayout', label: t('settings.dashboardLayout'), type: 'text' },
-          { name: 'notificationEnabled', label: t('settings.notificationEnabled'), type: 'boolean' },
+          {
+            name: 'notificationEnabled',
+            label: t('settings.notificationEnabled'),
+            type: 'boolean',
+          },
         ],
       },
     ],
@@ -126,7 +179,8 @@ export function ApplicationSettingsPage(): React.ReactElement {
       notificationEnabled: Boolean(values.notificationEnabled),
     });
     const updates: Array<Promise<unknown>> = [];
-    if (canUpdateGlobal && !deepEqual(nextGlobal, global)) updates.push(updateGlobal.mutateAsync(nextGlobal));
+    if (canUpdateGlobal && !deepEqual(nextGlobal, global))
+      updates.push(updateGlobal.mutateAsync(nextGlobal));
     if (!deepEqual(nextUser, user)) updates.push(updateUser.mutateAsync(nextUser));
     await Promise.all(updates);
   };

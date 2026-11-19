@@ -20,7 +20,12 @@ interface Params {
  * `salesOrderQueryKeys`: the order (by ID), the record pane list, lines, totals,
  * addresses and the lookups its editors need.
  */
-export function useSalesOrderDocumentData({ salesOrderId, editingOrderId, copyMode, copySourceId }: Params) {
+export function useSalesOrderDocumentData({
+  salesOrderId,
+  editingOrderId,
+  copyMode,
+  copySourceId,
+}: Params) {
   const company = useCompanyStore((state) => state.currentCompany);
   // The record pane shares the list page cache; the open order loads by its ID.
   const ordersQuery = useQuery({
@@ -42,7 +47,9 @@ export function useSalesOrderDocumentData({ salesOrderId, editingOrderId, copyMo
     : orders[0];
   // Still loading while the order is unknown and either source is pending
   // (prevents a "no sales orders" flash before the list arrives).
-  const orderLoading = !order && (salesOrderId ? detailQuery.isPending || ordersQuery.isPending : ordersQuery.isPending);
+  const orderLoading =
+    !order &&
+    (salesOrderId ? detailQuery.isPending || ordersQuery.isPending : ordersQuery.isPending);
   const headerEditing = Boolean(order) && editingOrderId === order?.id;
   /** Refreshes the open order and the record pane. */
   const refetchOrder = async (options?: { throwOnError?: boolean }) => {

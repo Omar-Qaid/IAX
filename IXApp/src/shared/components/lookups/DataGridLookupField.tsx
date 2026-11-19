@@ -11,6 +11,13 @@ export function DataGridLookupField<TFieldValues extends FieldValues = FieldValu
   props: Omit<LookupFieldProps<TFieldValues>, 'displayMode'>
 ): React.ReactElement {
   return (
-    <LookupField {...props} displayMode="select" masterRoute={undefined} externalLabel compact gridCell />
+    <LookupField
+      {...props}
+      displayMode="select"
+      masterRoute={undefined}
+      externalLabel
+      compact
+      gridCell
+    />
   );
 }

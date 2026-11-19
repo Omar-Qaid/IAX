@@ -24,10 +24,28 @@ const lookupColumns = [
   { field: 'nameAlias', header: 'workflowSetup.fields.nameAlias', flex: 1, showInLtr: false },
 ] as const;
 
-const createLookupPage = <T extends { code: string | null; name: string | null; nameAlias?: string | null; description?: string | null }>(
-  load: (signal?: AbortSignal) => Promise<T[]>
-) =>
-  async ({ pageNumber, pageSize, search, signal }: { pageNumber: number; pageSize: number; search: string; signal?: AbortSignal }) => {
+const createLookupPage =
+  <
+    T extends {
+      code: string | null;
+      name: string | null;
+      nameAlias?: string | null;
+      description?: string | null;
+    },
+  >(
+    load: (signal?: AbortSignal) => Promise<T[]>
+  ) =>
+  async ({
+    pageNumber,
+    pageSize,
+    search,
+    signal,
+  }: {
+    pageNumber: number;
+    pageSize: number;
+    search: string;
+    signal?: AbortSignal;
+  }) => {
     const records = await load(signal);
     const query = search.trim().toLocaleLowerCase();
     const filtered = query
@@ -179,23 +197,68 @@ export function WfActivitiesPage(): React.ReactElement {
             id: 'notifications',
             title: t('wfActivity.groups.notifications'),
             fields: [
-              { name: 'sysNotificationTemplateId', label: t('wfActivity.fields.notificationTemplate'), type: 'number' },
-              { name: 'isSystemNotificationEnabled', label: t('wfActivity.fields.isSystemNotificationEnabled'), type: 'boolean' },
-              { name: 'isEmailNotificationEnabled', label: t('wfActivity.fields.isEmailNotificationEnabled'), type: 'boolean' },
-              { name: 'isSmsNotificationEnabled', label: t('wfActivity.fields.isSmsNotificationEnabled'), type: 'boolean' },
-              { name: 'isWhatsAppNotificationEnabled', label: t('wfActivity.fields.isWhatsAppNotificationEnabled'), type: 'boolean' },
+              {
+                name: 'sysNotificationTemplateId',
+                label: t('wfActivity.fields.notificationTemplate'),
+                type: 'number',
+              },
+              {
+                name: 'isSystemNotificationEnabled',
+                label: t('wfActivity.fields.isSystemNotificationEnabled'),
+                type: 'boolean',
+              },
+              {
+                name: 'isEmailNotificationEnabled',
+                label: t('wfActivity.fields.isEmailNotificationEnabled'),
+                type: 'boolean',
+              },
+              {
+                name: 'isSmsNotificationEnabled',
+                label: t('wfActivity.fields.isSmsNotificationEnabled'),
+                type: 'boolean',
+              },
+              {
+                name: 'isWhatsAppNotificationEnabled',
+                label: t('wfActivity.fields.isWhatsAppNotificationEnabled'),
+                type: 'boolean',
+              },
             ],
           },
           {
             id: 'behavior',
             title: t('wfActivity.groups.behavior'),
             fields: [
-              { name: 'mandatoryDocuments', label: t('wfActivity.fields.mandatoryDocuments'), type: 'boolean' },
-              { name: 'canViewPreviousDocuments', label: t('wfActivity.fields.canViewPreviousDocuments'), type: 'boolean' },
-              { name: 'canViewPreviousSteps', label: t('wfActivity.fields.canViewPreviousSteps'), type: 'boolean' },
-              { name: 'isAutoPassEnabled', label: t('wfActivity.fields.isAutoPassEnabled'), type: 'boolean' },
-              { name: 'autoPassAfterHours', label: t('wfActivity.fields.autoPassAfterHours'), type: 'number' },
-              { name: 'extendedProperties', label: t('wfActivity.fields.extendedProperties'), multiline: true, rows: 3 },
+              {
+                name: 'mandatoryDocuments',
+                label: t('wfActivity.fields.mandatoryDocuments'),
+                type: 'boolean',
+              },
+              {
+                name: 'canViewPreviousDocuments',
+                label: t('wfActivity.fields.canViewPreviousDocuments'),
+                type: 'boolean',
+              },
+              {
+                name: 'canViewPreviousSteps',
+                label: t('wfActivity.fields.canViewPreviousSteps'),
+                type: 'boolean',
+              },
+              {
+                name: 'isAutoPassEnabled',
+                label: t('wfActivity.fields.isAutoPassEnabled'),
+                type: 'boolean',
+              },
+              {
+                name: 'autoPassAfterHours',
+                label: t('wfActivity.fields.autoPassAfterHours'),
+                type: 'number',
+              },
+              {
+                name: 'extendedProperties',
+                label: t('wfActivity.fields.extendedProperties'),
+                multiline: true,
+                rows: 3,
+              },
             ],
           },
         ],
@@ -263,10 +326,32 @@ export function WfActivitiesPage(): React.ReactElement {
       extendedProperties: String(values.extendedProperties || '') || null,
     }),
     headerFields: [
-      { id: 'code', label: t('wfActivity.fields.code'), disabled: true, getValue: (record) => textValue(record.code), setValue: (record, value) => ({ ...record, code: String(value) || null }) },
-      { id: 'name', label: t('wfActivity.fields.name'), getValue: (record) => textValue(record.name), getDisplayValue: (record) => localizedName(record, isRtl), setValue: (record, value) => ({ ...record, name: String(value) || null }) },
-      { id: 'nameAlias', label: t('workflowSetup.fields.nameAlias'), getValue: (record) => textValue(record.nameAlias), setValue: (record, value) => ({ ...record, nameAlias: String(value) || null }) },
-      { id: 'description', label: t('wfActivity.fields.description'), getValue: (record) => textValue(record.description), setValue: (record, value) => ({ ...record, description: String(value) || null }) },
+      {
+        id: 'code',
+        label: t('wfActivity.fields.code'),
+        disabled: true,
+        getValue: (record) => textValue(record.code),
+        setValue: (record, value) => ({ ...record, code: String(value) || null }),
+      },
+      {
+        id: 'name',
+        label: t('wfActivity.fields.name'),
+        getValue: (record) => textValue(record.name),
+        getDisplayValue: (record) => localizedName(record, isRtl),
+        setValue: (record, value) => ({ ...record, name: String(value) || null }),
+      },
+      {
+        id: 'nameAlias',
+        label: t('workflowSetup.fields.nameAlias'),
+        getValue: (record) => textValue(record.nameAlias),
+        setValue: (record, value) => ({ ...record, nameAlias: String(value) || null }),
+      },
+      {
+        id: 'description',
+        label: t('wfActivity.fields.description'),
+        getValue: (record) => textValue(record.description),
+        setValue: (record, value) => ({ ...record, description: String(value) || null }),
+      },
     ],
     sections,
     permissions: {
@@ -276,16 +361,29 @@ export function WfActivitiesPage(): React.ReactElement {
       delete: 'Workflow.Activities.Delete',
     },
     validate: (record) => ({
-      ...(!record.name?.trim() ? { name: t('validation.required', { field: t('wfActivity.fields.name') }) } : {}),
-      ...(record.activityTypeId <= 0 ? { activityTypeId: t('validation.required', { field: t('wfActivity.fields.activityType') }) } : {}),
-      ...(record.stepId <= 0 ? { stepId: t('validation.required', { field: t('wfActivity.fields.step') }) } : {}),
+      ...(!record.name?.trim()
+        ? { name: t('validation.required', { field: t('wfActivity.fields.name') }) }
+        : {}),
+      ...(record.activityTypeId <= 0
+        ? {
+            activityTypeId: t('validation.required', {
+              field: t('wfActivity.fields.activityType'),
+            }),
+          }
+        : {}),
+      ...(record.stepId <= 0
+        ? { stepId: t('validation.required', { field: t('wfActivity.fields.step') }) }
+        : {}),
     }),
     advancedFilter: {
       fieldLabel: t('wfActivity.fields.name'),
       getValue: (record) => localizedName(record, isRtl),
-      matches: (record, value) => localizedName(record, isRtl).toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()),
+      matches: (record, value) =>
+        localizedName(record, isRtl).toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()),
     },
   };
 
-  return <ListDetailsPage variant="enterprise" title={t('pages.wfActivities.title')} config={config} />;
+  return (
+    <ListDetailsPage variant="enterprise" title={t('pages.wfActivities.title')} config={config} />
+  );
 }

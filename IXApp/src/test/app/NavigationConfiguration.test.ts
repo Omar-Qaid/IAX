@@ -96,9 +96,9 @@ describe('module navigation configuration', () => {
     expect(findPageDefinitionForPath('/workflow/request-from/10')?.id).toBe('request-from');
     expect(findPageDefinitionForPath('/workflow/request-from/10/100')?.id).toBe('request-from');
     expect(
-      AVAILABLE_MODULE_NAV_CONFIGS['mod-Workflow']?.sections.find(
-        (section) => section.id === 'requests'
-      )?.links.some((link) => link.path === ROUTE_PATHS.WORKFLOW.REQUEST_SUBMISSION)
+      AVAILABLE_MODULE_NAV_CONFIGS['mod-Workflow']?.sections
+        .find((section) => section.id === 'requests')
+        ?.links.some((link) => link.path === ROUTE_PATHS.WORKFLOW.REQUEST_SUBMISSION)
     ).toBe(true);
     expect(getPageDefinition(ROUTE_PATHS.WORKFLOW.PROCESSES)?.permission).toBe(
       PERMISSIONS.WF_PROCESS_VIEW

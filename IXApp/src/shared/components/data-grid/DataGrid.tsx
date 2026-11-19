@@ -8,7 +8,16 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Box, IconButton, Link, Paper, Tooltip, Typography, useTheme, useMediaQuery } from '@mui/material';
+import {
+  Box,
+  IconButton,
+  Link,
+  Paper,
+  Tooltip,
+  Typography,
+  useTheme,
+  useMediaQuery,
+} from '@mui/material';
 import ViewSidebarOutlinedIcon from '@mui/icons-material/ViewSidebarOutlined';
 import { Link as RouterLink } from 'react-router-dom';
 import type { ColumnDef, DataGridProps, DataGridHandle, GridCellAddress } from './types';
@@ -100,32 +109,42 @@ function DataGridInternal<T>(
   const saveInFlightRef = useRef<Promise<boolean> | null>(null);
   const focusedCellRef = useRef({ r: 0, c: 0 });
   const initialColumns = useMemo(
-    () => rawInitialColumns.map<ColumnDef<T>>((column) => {
-      if (!column.getDetailHref) return column;
-      return {
-        ...column,
-        renderCell: (params) => {
-          const href = column.getDetailHref?.(params.row);
-          const label = column.renderCell
-            ? column.renderCell(params)
-            : String((column.valueGetter ? column.valueGetter({ row: params.row }) : params.value) ?? '');
-          if (!href || label == null || label === '') return label;
-          return (
-            <Link
-              component={RouterLink}
-              to={href}
-              underline="hover"
-              onClick={(event) => event.stopPropagation()}
-              onDoubleClick={(event) => event.stopPropagation()}
-              onKeyDown={(event) => event.stopPropagation()}
-              sx={{ font: 'inherit', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-            >
-              {label}
-            </Link>
-          );
-        },
-      };
-    }),
+    () =>
+      rawInitialColumns.map<ColumnDef<T>>((column) => {
+        if (!column.getDetailHref) return column;
+        return {
+          ...column,
+          renderCell: (params) => {
+            const href = column.getDetailHref?.(params.row);
+            const label = column.renderCell
+              ? column.renderCell(params)
+              : String(
+                  (column.valueGetter ? column.valueGetter({ row: params.row }) : params.value) ??
+                    ''
+                );
+            if (!href || label == null || label === '') return label;
+            return (
+              <Link
+                component={RouterLink}
+                to={href}
+                underline="hover"
+                onClick={(event) => event.stopPropagation()}
+                onDoubleClick={(event) => event.stopPropagation()}
+                onKeyDown={(event) => event.stopPropagation()}
+                sx={{
+                  font: 'inherit',
+                  maxWidth: '100%',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {label}
+              </Link>
+            );
+          },
+        };
+      }),
     [rawInitialColumns]
   );
   const [focusedRowId, setFocusedRowId] = useState<string | null>(null);
@@ -188,61 +207,67 @@ function DataGridInternal<T>(
     [masterForm, startEdit, getRowId, onRowDoubleClick]
   );
 
-  const handleCancelEdit = useCallback((refocus = true) => {
-    cancelEdit();
-    if (!refocus) return;
-    setTimeout(() => {
-      const { r, c } = focusedCellRef.current;
-      const cell = gridRootRef.current?.querySelector<HTMLElement>(
-        `[data-row-index="${r}"][data-col-index="${c}"]`
-      );
-      if (cell) cell.focus();
-    }, 100);
-  }, [cancelEdit]);
+  const handleCancelEdit = useCallback(
+    (refocus = true) => {
+      cancelEdit();
+      if (!refocus) return;
+      setTimeout(() => {
+        const { r, c } = focusedCellRef.current;
+        const cell = gridRootRef.current?.querySelector<HTMLElement>(
+          `[data-row-index="${r}"][data-col-index="${c}"]`
+        );
+        if (cell) cell.focus();
+      }, 100);
+    },
+    [cancelEdit]
+  );
 
-  const handleSaveEdit = useCallback((refocus = true): Promise<boolean> => {
-    if (saveInFlightRef.current) return saveInFlightRef.current;
-    if (editingRowId == null) return Promise.resolve(true);
+  const handleSaveEdit = useCallback(
+    (refocus = true): Promise<boolean> => {
+      if (saveInFlightRef.current) return saveInFlightRef.current;
+      if (editingRowId == null) return Promise.resolve(true);
 
-    const saveWork = (async () => {
-      // D365 writes a record only when it was modified: leaving an untouched
-      // line just ends editing instead of issuing an update.
-      if (!onRowSave || !isDirty) {
-        handleCancelEdit(refocus);
-        return true;
-      }
-      const isNew = editingRowId === NEW_ROW_ID;
-      const scrollTop = scrollContainerRef.current?.scrollTop ?? 0;
-      setSaving(true);
-      try {
-        await onRowSave(editValues, isNew);
-        pendingScrollTopRef.current = scrollTop;
-        handleCancelEdit(refocus);
-        return true;
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        notifyError(msg);
-        return false;
-      } finally {
-        setSaving(false);
-      }
-    })();
+      const saveWork = (async () => {
+        // D365 writes a record only when it was modified: leaving an untouched
+        // line just ends editing instead of issuing an update.
+        if (!onRowSave || !isDirty) {
+          handleCancelEdit(refocus);
+          return true;
+        }
+        const isNew = editingRowId === NEW_ROW_ID;
+        const scrollTop = scrollContainerRef.current?.scrollTop ?? 0;
+        setSaving(true);
+        try {
+          await onRowSave(editValues, isNew);
+          pendingScrollTopRef.current = scrollTop;
+          handleCancelEdit(refocus);
+          return true;
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          notifyError(msg);
+          return false;
+        } finally {
+          setSaving(false);
+        }
+      })();
 
-    saveInFlightRef.current = saveWork;
-    void saveWork.finally(() => {
-      if (saveInFlightRef.current === saveWork) saveInFlightRef.current = null;
-    });
-    return saveWork;
-  }, [
-    onRowSave,
-    editingRowId,
-    editValues,
-    isDirty,
-    handleCancelEdit,
-    setSaving,
-    notifyError,
-    scrollContainerRef,
-  ]);
+      saveInFlightRef.current = saveWork;
+      void saveWork.finally(() => {
+        if (saveInFlightRef.current === saveWork) saveInFlightRef.current = null;
+      });
+      return saveWork;
+    },
+    [
+      onRowSave,
+      editingRowId,
+      editValues,
+      isDirty,
+      handleCancelEdit,
+      setSaving,
+      notifyError,
+      scrollContainerRef,
+    ]
+  );
 
   useEffect(() => {
     if (editingRowId == null || saving) return;
@@ -588,7 +613,10 @@ function DataGridInternal<T>(
   }));
 
   // -- Pencil on a view cell: edit mode, then edit that row and focus the cell --
-  const [pendingCellEdit, setPendingCellEdit] = useState<{ id: string | number; field: string } | null>(null);
+  const [pendingCellEdit, setPendingCellEdit] = useState<{
+    id: string | number;
+    field: string;
+  } | null>(null);
   const requestCellEdit = useCallback(
     (row: T, field: string) => {
       setPendingCellEdit({ id: getRowId(row), field });
@@ -599,7 +627,9 @@ function DataGridInternal<T>(
   useEffect(() => {
     const pending = pendingCellEdit;
     if (!pending || !masterForm || editingRowId != null) return;
-    const row = processedRows.find((candidate) => String(getRowId(candidate)) === String(pending.id));
+    const row = processedRows.find(
+      (candidate) => String(getRowId(candidate)) === String(pending.id)
+    );
     setPendingCellEdit(null);
     if (!row) return;
     startEdit(pending.id, row);

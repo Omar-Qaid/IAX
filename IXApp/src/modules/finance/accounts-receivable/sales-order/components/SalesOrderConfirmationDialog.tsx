@@ -57,15 +57,27 @@ const overviewColumns: ColumnDef<OverviewRow>[] = [
   { field: 'currencyCode', headerName: 'Currency', width: 100 },
   { field: 'quantity', headerName: 'Quantity', width: 110, type: 'number', align: 'right' },
   {
-    field: 'netAmount', headerName: 'Net amount', width: 130, type: 'number', align: 'right',
+    field: 'netAmount',
+    headerName: 'Net amount',
+    width: 130,
+    type: 'number',
+    align: 'right',
     renderCell: ({ row }) => money(row.netAmount, row.currencyCode),
   },
   {
-    field: 'taxAmount', headerName: 'Tax', width: 120, type: 'number', align: 'right',
+    field: 'taxAmount',
+    headerName: 'Tax',
+    width: 120,
+    type: 'number',
+    align: 'right',
     renderCell: ({ row }) => money(row.taxAmount, row.currencyCode),
   },
   {
-    field: 'totalAmount', headerName: 'Total', width: 130, type: 'number', align: 'right',
+    field: 'totalAmount',
+    headerName: 'Total',
+    width: 130,
+    type: 'number',
+    align: 'right',
     renderCell: ({ row }) => money(row.totalAmount, row.currencyCode),
   },
 ];
@@ -82,7 +94,9 @@ export function SalesOrderConfirmationDialog({
 }: Props): React.ReactElement {
   const company = useCompanyStore((state) => state.currentCompany);
   const queryClient = useQueryClient();
-  const [confirmationDate, setConfirmationDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [confirmationDate, setConfirmationDate] = useState(() =>
+    new Date().toISOString().slice(0, 10)
+  );
   const [posting, setPosting] = useState(false);
   const [pendingRequestId, setPendingRequestId] = useState<string>();
   const [error, setError] = useState('');
@@ -104,17 +118,19 @@ export function SalesOrderConfirmationDialog({
   const overviewRows = useMemo<OverviewRow[]>(() => {
     const header = previewQuery.data?.header;
     if (!header) return [];
-    return [{
-      id: header.id,
-      update: 'Confirmation',
-      salesId,
-      customerName,
-      currencyCode: header.currencyCode,
-      quantity: header.qty,
-      netAmount: header.salesBalance,
-      taxAmount: header.sumTax,
-      totalAmount: header.confirmAmount,
-    }];
+    return [
+      {
+        id: header.id,
+        update: 'Confirmation',
+        salesId,
+        customerName,
+        currencyCode: header.currencyCode,
+        quantity: header.qty,
+        netAmount: header.salesBalance,
+        taxAmount: header.sumTax,
+        totalAmount: header.confirmAmount,
+      },
+    ];
   }, [customerName, previewQuery.data?.header, salesId]);
 
   const lineColumns = useMemo<ColumnDef<SalesOrderConfirmationLine>[]>(
@@ -126,19 +142,32 @@ export function SalesOrderConfirmationDialog({
       { field: 'wmsLocationId', headerName: 'Location', width: 130 },
       { field: 'qty', headerName: 'Update', width: 110, type: 'number', align: 'right' },
       {
-        field: 'salesPrice', headerName: 'Unit price', width: 120, type: 'number', align: 'right',
-        renderCell: ({ row }) => money(row.salesPrice, previewQuery.data?.header.currencyCode ?? ''),
+        field: 'salesPrice',
+        headerName: 'Unit price',
+        width: 120,
+        type: 'number',
+        align: 'right',
+        renderCell: ({ row }) =>
+          money(row.salesPrice, previewQuery.data?.header.currencyCode ?? ''),
       },
       {
-        field: 'lineAmount', headerName: 'Net amount', width: 130, type: 'number', align: 'right',
-        renderCell: ({ row }) => money(row.lineAmount, previewQuery.data?.header.currencyCode ?? ''),
+        field: 'lineAmount',
+        headerName: 'Net amount',
+        width: 130,
+        type: 'number',
+        align: 'right',
+        renderCell: ({ row }) =>
+          money(row.lineAmount, previewQuery.data?.header.currencyCode ?? ''),
       },
     ],
     [previewQuery.data?.header.currencyCode, salesId]
   );
 
   const post = async () => {
-    if (mode === 'proForma' || !postingEnabled) { onClose(); return; }
+    if (mode === 'proForma' || !postingEnabled) {
+      onClose();
+      return;
+    }
     if (!canPost || posting || !confirmationDate) return;
     setPosting(true);
     setError('');
@@ -147,7 +176,9 @@ export function SalesOrderConfirmationDialog({
       setPendingRequestId(requestId);
       await salesOrderConfirmationApi.post(orderId, confirmationDate, requestId);
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.confirmations(company, orderId) }),
+        queryClient.invalidateQueries({
+          queryKey: salesOrderQueryKeys.confirmations(company, orderId),
+        }),
         onPosted(),
       ]);
       setPendingRequestId(undefined);
@@ -168,11 +199,18 @@ export function SalesOrderConfirmationDialog({
       busy={posting}
       actions={
         <>
-          <Button onClick={onClose} disabled={posting}>Cancel</Button>
+          <Button onClick={onClose} disabled={posting}>
+            Cancel
+          </Button>
           <Button
             variant="contained"
             onClick={() => void post()}
-            disabled={posting || previewQuery.isLoading || !previewQuery.data || (mode === 'confirmation' && postingEnabled && (!canPost || !confirmationDate))}
+            disabled={
+              posting ||
+              previewQuery.isLoading ||
+              !previewQuery.data ||
+              (mode === 'confirmation' && postingEnabled && (!canPost || !confirmationDate))
+            }
           >
             {posting ? 'Posting…' : mode === 'proForma' || !postingEnabled ? 'Close preview' : 'OK'}
           </Button>
@@ -180,10 +218,18 @@ export function SalesOrderConfirmationDialog({
       }
     >
       <Stack spacing={1} sx={{ minHeight: '100%' }}>
-        <Typography variant="body2" color="text.secondary">Standard view</Typography>
+        <Typography variant="body2" color="text.secondary">
+          Standard view
+        </Typography>
         {error && <Alert severity="error">{error}</Alert>}
-        {previewQuery.error instanceof Error && <Alert severity="error">{previewQuery.error.message}</Alert>}
-        {mode === 'proForma' && <Alert severity="info">Preview only. No confirmation journal or order status change will be posted.</Alert>}
+        {previewQuery.error instanceof Error && (
+          <Alert severity="error">{previewQuery.error.message}</Alert>
+        )}
+        {mode === 'proForma' && (
+          <Alert severity="info">
+            Preview only. No confirmation journal or order status change will be posted.
+          </Alert>
+        )}
 
         <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -203,7 +249,13 @@ export function SalesOrderConfirmationDialog({
               {mode === 'confirmation' && (
                 <FormControlLabel
                   label="Posting"
-                  control={<Switch checked={postingEnabled} disabled={posting} onChange={(event) => setPostingEnabled(event.target.checked)} />}
+                  control={
+                    <Switch
+                      checked={postingEnabled}
+                      disabled={posting}
+                      onChange={(event) => setPostingEnabled(event.target.checked)}
+                    />
+                  }
                 />
               )}
               <Typography variant="body2">Quantity: All</Typography>

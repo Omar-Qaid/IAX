@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseBuilderOperator, resolveBuilderOperator, resolveOperatorId } from '@modules/process-builder/api/processBuilderOperators';
+import {
+  parseBuilderOperator,
+  resolveBuilderOperator,
+  resolveOperatorId,
+} from '@modules/process-builder/api/processBuilderOperators';
 
 describe('Process Builder operator catalog', () => {
   const catalog = [
@@ -10,8 +14,13 @@ describe('Process Builder operator catalog', () => {
     expect(resolveBuilderOperator(catalog[1])).toBe('>');
   });
   it.each([
-    ['OP1', '>'], ['OP2', '<'], ['OP3', '>='], ['OP4', '<='],
-    ['OP5', '='], ['OP6', '!='], ['OP7', 'between'],
+    ['OP1', '>'],
+    ['OP2', '<'],
+    ['OP3', '>='],
+    ['OP4', '<='],
+    ['OP5', '='],
+    ['OP6', '!='],
+    ['OP7', 'between'],
   ] as const)('loads and preserves legacy operator %s', (code, operator) => {
     const legacy = [{ recId: 5, code, name: 'Localized operator' }];
     expect(resolveBuilderOperator(legacy[0])).toBe(operator);
@@ -22,11 +31,19 @@ describe('Process Builder operator catalog', () => {
     expect(resolveOperatorId('=', catalog, 11)).toBe(11);
   });
   it('does not interpret unknown codes as equality', () => {
-    expect(() => resolveBuilderOperator({ recId: 1, code: 'CUSTOM', name: '=' })).toThrow('Unsupported');
-    expect(() => resolveOperatorId('=', [{ recId: 1, code: 'CUSTOM', name: '=' }])).toThrow('supported active');
+    expect(() => resolveBuilderOperator({ recId: 1, code: 'CUSTOM', name: '=' })).toThrow(
+      'Unsupported'
+    );
+    expect(() => resolveOperatorId('=', [{ recId: 1, code: 'CUSTOM', name: '=' }])).toThrow(
+      'supported active'
+    );
   });
-  it.each([[' <> ', '!='], ['BETWEEN', 'between'], [' IsEmpty ', 'isEmpty']] as const)(
-    'normalizes supported operator %s', (input, output) => expect(parseBuilderOperator(input)).toBe(output)
+  it.each([
+    [' <> ', '!='],
+    ['BETWEEN', 'between'],
+    [' IsEmpty ', 'isEmpty'],
+  ] as const)('normalizes supported operator %s', (input, output) =>
+    expect(parseBuilderOperator(input)).toBe(output)
   );
   it('rejects ambiguous mappings and preserves existing inactive operators', () => {
     const duplicate = [...catalog, { recId: 33, code: 'EQ', name: '=' }];

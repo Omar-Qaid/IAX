@@ -157,12 +157,15 @@ export const hcmWorkerApi = {
   }): Promise<HcmWorkerLookupPage> {
     const response = await apiClient.get<ApiResponse<HcmWorkerLookupPageDto>>(
       '/v1/HcmWorker/lookup',
-      { params: {
-        pageNumber: params.pageNumber,
-        pageSize: params.pageSize,
-        search: params.search || undefined,
-        selectedId: params.selectedId || undefined,
-      }, signal: params.signal }
+      {
+        params: {
+          pageNumber: params.pageNumber,
+          pageSize: params.pageSize,
+          search: params.search || undefined,
+          selectedId: params.selectedId || undefined,
+        },
+        signal: params.signal,
+      }
     );
     const page = requireData(response.data);
     return {
@@ -210,9 +213,10 @@ export const hcmWorkerApi = {
     workerId: number,
     signal?: AbortSignal
   ): Promise<HcmWorkerOrganizationAssignmentV1Record[]> {
-    const response = await apiClient.get<
-      ApiResponse<HcmWorkerOrganizationAssignmentV1Record[]>
-    >(`/v1/HcmWorker/${workerId}/organization-assignments-v1`, { signal });
+    const response = await apiClient.get<ApiResponse<HcmWorkerOrganizationAssignmentV1Record[]>>(
+      `/v1/HcmWorker/${workerId}/organization-assignments-v1`,
+      { signal }
+    );
     return requireData(response.data);
   },
   async assignmentChain(

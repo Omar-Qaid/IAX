@@ -446,7 +446,8 @@ export const useProcessBuilderStore = create<State>((set) => {
             ...transition,
             variableId: variableIds[transition.variableId] ?? transition.variableId,
             additionalConditions: transition.additionalConditions?.map((condition) => ({
-              ...condition, variableId: variableIds[condition.variableId] ?? condition.variableId,
+              ...condition,
+              variableId: variableIds[condition.variableId] ?? condition.variableId,
             })),
           })),
         },
@@ -646,21 +647,28 @@ export const useProcessBuilderStore = create<State>((set) => {
     updateRequestControl: (key, values) =>
       change((d) => ({
         ...d,
-        requestControls: d.requestControls.map((x) => (x.id === key ? updateControlOptions(x, values) : x)),
+        requestControls: d.requestControls.map((x) =>
+          x.id === key ? updateControlOptions(x, values) : x
+        ),
       })),
     removeRequestControl: (key) =>
       set((state) => {
         const document = {
           ...state.document,
           requestControls: sequenceControls(
-            state.document.requestControls.filter((item) => item.id !== key).map((item) => ({
-              ...item,
-              visibilityCondition: item.visibilityCondition?.variableId === key ? null : item.visibilityCondition,
-              optionFeatureConfigurations: item.optionFeatureConfigurations?.map((feature) => ({
-                ...feature,
-                visibleControlIds: feature.visibleControlIds.filter((targetId) => targetId !== key),
-              })),
-            }))
+            state.document.requestControls
+              .filter((item) => item.id !== key)
+              .map((item) => ({
+                ...item,
+                visibilityCondition:
+                  item.visibilityCondition?.variableId === key ? null : item.visibilityCondition,
+                optionFeatureConfigurations: item.optionFeatureConfigurations?.map((feature) => ({
+                  ...feature,
+                  visibleControlIds: feature.visibleControlIds.filter(
+                    (targetId) => targetId !== key
+                  ),
+                })),
+              }))
           ),
           transitions: state.document.transitions.map((transition) =>
             transition.triggerSource === 'requestControl' && transition.triggerId === key
@@ -724,7 +732,14 @@ export const useProcessBuilderStore = create<State>((set) => {
           optionAliases.splice(toIndex, 0, movedAlias);
           optionScores.splice(toIndex, 0, movedScore);
           optionFeatureConfigurations.splice(toIndex, 0, movedFeatures);
-          return { ...control, options, optionAliases, optionScores, optionFeatureConfigurations, optionIds: moveOptionMetadata(control, fromIndex, toIndex).optionIds };
+          return {
+            ...control,
+            options,
+            optionAliases,
+            optionScores,
+            optionFeatureConfigurations,
+            optionIds: moveOptionMetadata(control, fromIndex, toIndex).optionIds,
+          };
         }),
       })),
     reorderActivityControlOptions: (stepId, activityId, controlId, fromIndex, toIndex) =>
@@ -753,7 +768,11 @@ export const useProcessBuilderStore = create<State>((set) => {
                           const options = [...control.options];
                           const [moved] = options.splice(fromIndex, 1);
                           options.splice(toIndex, 0, moved);
-                          return { ...control, options, ...moveOptionMetadata(control, fromIndex, toIndex) };
+                          return {
+                            ...control,
+                            options,
+                            ...moveOptionMetadata(control, fromIndex, toIndex),
+                          };
                         }),
                       }
                 ),
@@ -948,7 +967,9 @@ export const useProcessBuilderStore = create<State>((set) => {
                   a.id === activityId
                     ? {
                         ...a,
-                        controls: a.controls.map((c) => (c.id === key ? updateControlOptions(c, values) : c)),
+                        controls: a.controls.map((c) =>
+                          c.id === key ? updateControlOptions(c, values) : c
+                        ),
                       }
                     : a
                 ),

@@ -7,11 +7,22 @@ export interface WorkspaceSectionProps {
   children: React.ReactNode;
 }
 
-export const WorkspaceSection: React.FC<WorkspaceSectionProps> = ({ title, subtitle, children }) => (
+export const WorkspaceSection: React.FC<WorkspaceSectionProps> = ({
+  title,
+  subtitle,
+  children,
+}) => (
   <Box component="section">
-    <Typography variant="h6" sx={{ fontWeight: 600 }}>{title}</Typography>
-    {subtitle && <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{subtitle}</Typography>}
-    <Grid container spacing={1}>{children}</Grid>
+    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+      {title}
+    </Typography>
+    {subtitle && (
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+        {subtitle}
+      </Typography>
+    )}
+    <Grid container spacing={1}>
+      {children}
+    </Grid>
   </Box>
 );
-

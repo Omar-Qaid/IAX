@@ -38,7 +38,11 @@ export const WorkspaceTile: React.FC<WorkspaceTileProps> = ({
     >
       <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <Box>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ fontWeight: 600, textTransform: 'uppercase' }}
+          >
             {title}
           </Typography>
           <Typography variant="h4" color={`${color}.main`} sx={{ fontWeight: 700, my: 0.5 }}>

@@ -5,25 +5,41 @@ import { apiClient } from '@core/api/apiClient';
 import type { EnterpriseListDetailsConfig } from '@patterns/list-details/types';
 import { EcoResStorageDimensionGroupPage } from '@modules/finance/inventory/dimension-groups/pages/EcoResStorageDimensionGroupPage';
 import { EcoResTrackingDimensionGroupPage } from '@modules/finance/inventory/dimension-groups/pages/EcoResTrackingDimensionGroupPage';
-import { storageDimensionGroupApi, type StorageDimensionGroupRecord } from '@modules/finance/inventory/dimension-groups/api/storageDimensionGroupApi';
-import { trackingDimensionGroupApi, type TrackingDimensionGroupRecord } from '@modules/finance/inventory/dimension-groups/api/trackingDimensionGroupApi';
+import {
+  storageDimensionGroupApi,
+  type StorageDimensionGroupRecord,
+} from '@modules/finance/inventory/dimension-groups/api/storageDimensionGroupApi';
+import {
+  trackingDimensionGroupApi,
+  type TrackingDimensionGroupRecord,
+} from '@modules/finance/inventory/dimension-groups/api/trackingDimensionGroupApi';
 
-let renderedConfig: EnterpriseListDetailsConfig<StorageDimensionGroupRecord | TrackingDimensionGroupRecord>;
+let renderedConfig: EnterpriseListDetailsConfig<
+  StorageDimensionGroupRecord | TrackingDimensionGroupRecord
+>;
 vi.mock('@patterns/list-details/ListDetailsPage', () => ({
-  ListDetailsPage: ({ config }: { config: typeof renderedConfig }) => { renderedConfig = config; return null; },
+  ListDetailsPage: ({ config }: { config: typeof renderedConfig }) => {
+    renderedConfig = config;
+    return null;
+  },
 }));
 vi.mock('@core/localization/useAppTranslation', () => ({
   useAppTranslation: () => ({ t: (key: string, fallback?: string) => fallback ?? key }),
 }));
 vi.mock('@core/api/apiClient', () => ({ apiClient: { delete: vi.fn() } }));
-afterEach(() => { cleanup(); vi.clearAllMocks(); });
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 it('creates a basic site and warehouse group without location tracking', () => {
   render(<EcoResStorageDimensionGroupPage />);
   const group = renderedConfig.createRecord() as StorageDimensionGroupRecord;
   expect([group.useSite, group.useWarehouse, group.useLocation]).toEqual([true, true, false]);
   expect(renderedConfig.validate?.({ ...group, groupId: 'BASIC', name: 'Basic' })).toEqual({});
-  expect(renderedConfig.validate?.({ ...group, groupId: 'ADV', name: 'Advanced', useLocation: true })).toHaveProperty('useSite');
+  expect(
+    renderedConfig.validate?.({ ...group, groupId: 'ADV', name: 'Advanced', useLocation: true })
+  ).toHaveProperty('useSite');
 });
 
 it('rejects batch and serial tracking in the basic group form', () => {
@@ -31,7 +47,9 @@ it('rejects batch and serial tracking in the basic group form', () => {
   const group = renderedConfig.createRecord() as TrackingDimensionGroupRecord;
   expect([group.useBatchNumber, group.useSerialNumber]).toEqual([false, false]);
   expect(renderedConfig.validate?.({ ...group, groupId: 'NONE', name: 'No tracking' })).toEqual({});
-  expect(renderedConfig.validate?.({ ...group, groupId: 'BATCH', name: 'Batch', useBatchNumber: true })).toHaveProperty('useBatchNumber');
+  expect(
+    renderedConfig.validate?.({ ...group, groupId: 'BATCH', name: 'Batch', useBatchNumber: true })
+  ).toHaveProperty('useBatchNumber');
 });
 
 it('does not treat false delete responses as successful group deletion', async () => {

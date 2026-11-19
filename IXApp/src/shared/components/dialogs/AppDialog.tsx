@@ -33,7 +33,16 @@ export const AppDialog: React.FC<AppDialogProps> = ({
   const { t } = useAppTranslation();
   return (
     <Dialog open={open} onClose={onClose} maxWidth={maxWidth} fullWidth={fullWidth}>
-      <DialogTitle sx={{ m: 0, p: 1, px: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <DialogTitle
+        sx={{
+          m: 0,
+          p: 1,
+          px: 1.5,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
         <Typography component="span" variant="h6" sx={{ fontWeight: 700 }}>
           {title}
         </Typography>

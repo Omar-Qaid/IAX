@@ -9,9 +9,37 @@ export function useMasterFormPage<T extends object>(initialRecord: T) {
   const [mode, setMode] = useState<MasterFormMode>('view');
   const dirty = mode !== 'view' && !deepEqual(record, draft);
   useUnsavedChanges(dirty);
-  const edit = useCallback(() => { setDraft(record); setMode('edit'); }, [record]);
-  const create = useCallback((next: T) => { setDraft(next); setMode('create'); }, []);
-  const cancel = useCallback(() => { setDraft(record); setMode('view'); }, [record]);
-  const commit = useCallback((saved: T = draft) => { setRecord(saved); setDraft(saved); setMode('view'); }, [draft]);
-  return { record, setRecord, draft, setDraft, mode, isEditing: mode !== 'view', dirty, edit, create, cancel, commit };
+  const edit = useCallback(() => {
+    setDraft(record);
+    setMode('edit');
+  }, [record]);
+  const create = useCallback((next: T) => {
+    setDraft(next);
+    setMode('create');
+  }, []);
+  const cancel = useCallback(() => {
+    setDraft(record);
+    setMode('view');
+  }, [record]);
+  const commit = useCallback(
+    (saved: T = draft) => {
+      setRecord(saved);
+      setDraft(saved);
+      setMode('view');
+    },
+    [draft]
+  );
+  return {
+    record,
+    setRecord,
+    draft,
+    setDraft,
+    mode,
+    isEditing: mode !== 'view',
+    dirty,
+    edit,
+    create,
+    cancel,
+    commit,
+  };
 }

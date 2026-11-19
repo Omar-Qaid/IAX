@@ -16,14 +16,25 @@ it('opens the existing editor from a lookup pencil', () => {
         listPane={null}
         listPaneVisible={false}
         header={null}
-        sections={[{
-          id: 'general', title: 'General', groups: [{
-            id: 'payment', fields: [{
-              name: 'paymTermId', label: 'Terms of payment', type: 'select',
-              options: [{ value: '90', label: '90 Days' }],
-            }],
-          }],
-        }]}
+        sections={[
+          {
+            id: 'general',
+            title: 'General',
+            groups: [
+              {
+                id: 'payment',
+                fields: [
+                  {
+                    name: 'paymTermId',
+                    label: 'Terms of payment',
+                    type: 'select',
+                    options: [{ value: '90', label: '90 Days' }],
+                  },
+                ],
+              },
+            ],
+          },
+        ]}
         values={{ paymTermId: '90' }}
         editing={false}
         yesLabel="Yes"
@@ -48,15 +59,24 @@ it('offers the same edit action for empty lookups and editable text, number, and
         listPane={null}
         listPaneVisible={false}
         header={null}
-        sections={[{
-          id: 'general', title: 'General', groups: [{ id: 'fields', fields: [
-            { name: 'term', label: 'Payment term', type: 'select', options: [] },
-            { name: 'name', label: 'Name' },
-            { name: 'amount', label: 'Amount', type: 'number' },
-            { name: 'active', label: 'Active', type: 'boolean' },
-            { name: 'readOnly', label: 'Read only', type: 'display' },
-          ] }],
-        }]}
+        sections={[
+          {
+            id: 'general',
+            title: 'General',
+            groups: [
+              {
+                id: 'fields',
+                fields: [
+                  { name: 'term', label: 'Payment term', type: 'select', options: [] },
+                  { name: 'name', label: 'Name' },
+                  { name: 'amount', label: 'Amount', type: 'number' },
+                  { name: 'active', label: 'Active', type: 'boolean' },
+                  { name: 'readOnly', label: 'Read only', type: 'display' },
+                ],
+              },
+            ],
+          },
+        ]}
         values={{ term: '', name: '', amount: 0, active: false, readOnly: '' }}
         editing={false}
         yesLabel="Yes"
@@ -68,7 +88,10 @@ it('offers the same edit action for empty lookups and editable text, number, and
   );
 
   for (const [label, name] of [
-    ['Payment term', 'term'], ['Name', 'name'], ['Amount', 'amount'], ['Active', 'active'],
+    ['Payment term', 'term'],
+    ['Name', 'name'],
+    ['Amount', 'amount'],
+    ['Active', 'active'],
   ]) {
     fireEvent.click(screen.getByRole('button', { name: `Edit ${label}` }));
     expect(edit).toHaveBeenLastCalledWith(name);
@@ -79,12 +102,21 @@ it('offers the same edit action for empty lookups and editable text, number, and
 });
 
 it('shows list-grid values as display fields until edit mode starts', () => {
-  const { rerender } = render(<ListGridField label="Customer group" value="10" options={[{ value: '10', label: 'Retail' }]} />);
+  const { rerender } = render(
+    <ListGridField label="Customer group" value="10" options={[{ value: '10', label: 'Retail' }]} />
+  );
   expect(screen.getByText('Retail')).toBeInTheDocument();
   expect(screen.queryByRole('textbox')).toBeNull();
   expect(screen.queryByRole('combobox')).toBeNull();
 
-  rerender(<ListGridField label="Customer group" value="10" options={[{ value: '10', label: 'Retail' }]} editing />);
+  rerender(
+    <ListGridField
+      label="Customer group"
+      value="10"
+      options={[{ value: '10', label: 'Retail' }]}
+      editing
+    />
+  );
   expect(screen.getByRole('combobox')).toBeInTheDocument();
 });
 
@@ -94,12 +126,31 @@ it('displays a custom lookup as text in view mode and mounts its editor only in 
     listPane: null,
     listPaneVisible: false,
     header: null,
-    sections: [{ id: 'general', title: 'General', groups: [{ id: 'classification', fields: [{
-      name: 'priorityId', label: 'Priority', type: 'select' as const, renderOwnLabel: true,
-      formatValue: () => 'High', render: renderLookup,
-    }] }] }],
+    sections: [
+      {
+        id: 'general',
+        title: 'General',
+        groups: [
+          {
+            id: 'classification',
+            fields: [
+              {
+                name: 'priorityId',
+                label: 'Priority',
+                type: 'select' as const,
+                renderOwnLabel: true,
+                formatValue: () => 'High',
+                render: renderLookup,
+              },
+            ],
+          },
+        ],
+      },
+    ],
     values: { priorityId: 1 },
-    yesLabel: 'Yes', noLabel: 'No', onChange: vi.fn(),
+    yesLabel: 'Yes',
+    noLabel: 'No',
+    onChange: vi.fn(),
   };
   const { rerender } = render(<ListDetailsLayout {...props} editing={false} />);
   expect(screen.getByText('High')).toBeInTheDocument();
@@ -115,7 +166,12 @@ it('renders shared lookup values without dropdown controls in view mode', () => 
   const { rerender } = render(
     <QueryClientProvider client={client}>
       <FieldPresentationProvider viewMode>
-        <LookupField name="priorityId" label="Priority" value="high" options={[{ id: 'high', code: 'HIGH', name: 'High' }]} />
+        <LookupField
+          name="priorityId"
+          label="Priority"
+          value="high"
+          options={[{ id: 'high', code: 'HIGH', name: 'High' }]}
+        />
       </FieldPresentationProvider>
     </QueryClientProvider>
   );
@@ -135,17 +191,57 @@ it('renders shared lookup values without dropdown controls in view mode', () => 
 
 it('uses the route configured on a custom field for its shared lookup icon', () => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(<QueryClientProvider client={client}><MemoryRouter initialEntries={['/form']}><Routes>
-    <Route path="/form" element={<ListDetailsLayout
-      listPane={null} listPaneVisible={false} header={null} editing={false}
-      sections={[{ id: 'general', title: 'General', groups: [{ id: 'classification', fields: [{
-        name: 'priorityId', label: 'Priority', masterRoute: '/workflow/priorities', renderOwnLabel: true,
-        render: ({ value }) => <LookupField name="priorityId" label="Priority" value={String(value)} options={[{ id: 'high', code: 'HIGH', name: 'High' }]} />,
-      }] }] }]}
-      values={{ priorityId: 'high' }} yesLabel="Yes" noLabel="No" onChange={vi.fn()}
-    />} />
-    <Route path="/workflow/priorities" element={<div>Priorities page</div>} />
-  </Routes></MemoryRouter></QueryClientProvider>);
+  render(
+    <QueryClientProvider client={client}>
+      <MemoryRouter initialEntries={['/form']}>
+        <Routes>
+          <Route
+            path="/form"
+            element={
+              <ListDetailsLayout
+                listPane={null}
+                listPaneVisible={false}
+                header={null}
+                editing={false}
+                sections={[
+                  {
+                    id: 'general',
+                    title: 'General',
+                    groups: [
+                      {
+                        id: 'classification',
+                        fields: [
+                          {
+                            name: 'priorityId',
+                            label: 'Priority',
+                            masterRoute: '/workflow/priorities',
+                            renderOwnLabel: true,
+                            render: ({ value }) => (
+                              <LookupField
+                                name="priorityId"
+                                label="Priority"
+                                value={String(value)}
+                                options={[{ id: 'high', code: 'HIGH', name: 'High' }]}
+                              />
+                            ),
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ]}
+                values={{ priorityId: 'high' }}
+                yesLabel="Yes"
+                noLabel="No"
+                onChange={vi.fn()}
+              />
+            }
+          />
+          <Route path="/workflow/priorities" element={<div>Priorities page</div>} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>
+  );
 
   fireEvent.click(screen.getByRole('button', { name: 'Open Priority details' }));
   expect(screen.getByText('Priorities page')).toBeInTheDocument();

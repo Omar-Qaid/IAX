@@ -4,16 +4,16 @@ Modules own domain pages, DTOs/view models, APIs or repository adapters, queries
 
 ## Current modules
 
-| Module | Implemented pages and behavior |
-| --- | --- |
-| `identity` | Login form using `AuthContext` and the configured auth adapter. |
-| `dashboard` | `WorkspacePage` populated from the shared mock datasets. |
-| `finance/accounts-receivable` | Customer and customer-group lists, parameter setup, payment mode/term list-details pages, sales-order list and document view. Several pages currently use module-local state or shared mock datasets rather than HTTP. |
-| `finance/foundation` | Currency and exchange-rate-type API-backed pages; exchange-rate details currently use local page data. |
-| `administration` | API/mock repository settings forms with TanStack Query; API-backed number-sequence list-details page. |
-| `organization` | Legal-entity list-details page using a repository interface selected between API and mock adapters, plus logistics drawers. |
-| `workflow` | API-backed process/category/type/control/priority/variable/step/activity setup pages and reusable workflow APIs. |
-| `process-builder` | Workflow-owned multi-workspace designer package integrating process, activity, request-control, option, validation, and transition APIs. Its established physical path is retained for route/import compatibility. See [Process Builder](process-builder.md). |
+| Module                        | Implemented pages and behavior                                                                                                                                                                                                                                |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `identity`                    | Login form using `AuthContext` and the configured auth adapter.                                                                                                                                                                                               |
+| `dashboard`                   | `WorkspacePage` populated from the shared mock datasets.                                                                                                                                                                                                      |
+| `finance/accounts-receivable` | Customer and customer-group lists, parameter setup, payment mode/term list-details pages, sales-order list and document view. Several pages currently use module-local state or shared mock datasets rather than HTTP.                                        |
+| `finance/foundation`          | Currency and exchange-rate-type API-backed pages; exchange-rate details currently use local page data.                                                                                                                                                        |
+| `administration`              | API/mock repository settings forms with TanStack Query; API-backed number-sequence list-details page.                                                                                                                                                         |
+| `organization`                | Legal-entity list-details page using a repository interface selected between API and mock adapters, plus logistics drawers.                                                                                                                                   |
+| `workflow`                    | API-backed process/category/type/control/priority/variable/step/activity setup pages and reusable workflow APIs.                                                                                                                                              |
+| `process-builder`             | Workflow-owned multi-workspace designer package integrating process, activity, request-control, option, validation, and transition APIs. Its established physical path is retained for route/import compatibility. See [Process Builder](process-builder.md). |
 
 ## Observed implementation styles
 

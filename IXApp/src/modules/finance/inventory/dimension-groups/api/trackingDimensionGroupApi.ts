@@ -46,8 +46,11 @@ export const trackingDimensionGroupApi = {
     );
   },
   async delete(id: string): Promise<void> {
-    if (requireData(
-      (await apiClient.delete<ApiResponse<boolean>>(`${endpoint}/${encodeURIComponent(id)}`)).data
-    ) !== true) throw new ApiError('The tracking dimension group could not be deleted.', 400);
+    if (
+      requireData(
+        (await apiClient.delete<ApiResponse<boolean>>(`${endpoint}/${encodeURIComponent(id)}`)).data
+      ) !== true
+    )
+      throw new ApiError('The tracking dimension group could not be deleted.', 400);
   },
 };

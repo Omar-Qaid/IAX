@@ -20,7 +20,10 @@ const requireData = <T>(response: ApiResponse<T>): T => {
     throw new ApiError(response.message || 'The batch-group response did not contain data.', 500);
   return response.data;
 };
-const toRecord = (dto: GroupDto): SysBackgroundJobGroupRecord => ({ ...dto, id: String(dto.recId) });
+const toRecord = (dto: GroupDto): SysBackgroundJobGroupRecord => ({
+  ...dto,
+  id: String(dto.recId),
+});
 const toDto = ({ id: _id, ...record }: SysBackgroundJobGroupRecord): GroupDto => ({
   ...record,
   groupCode: record.groupCode.trim(),
@@ -37,7 +40,10 @@ export const sysBackgroundJobGroupApi = {
     return toRecord(requireData(response.data));
   },
   async update(record: SysBackgroundJobGroupRecord): Promise<SysBackgroundJobGroupRecord> {
-    const response = await apiClient.put<ApiResponse<GroupDto>>(`${endpoint}/${record.recId}`, toDto(record));
+    const response = await apiClient.put<ApiResponse<GroupDto>>(
+      `${endpoint}/${record.recId}`,
+      toDto(record)
+    );
     return toRecord(requireData(response.data));
   },
   async remove(record: SysBackgroundJobGroupRecord): Promise<void> {

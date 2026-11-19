@@ -24,7 +24,10 @@ import { documentTableIds } from '@shared/components/documents/recordTableIds';
 import { recordTableId } from '@shared/components/documents/recordTableIds';
 import { wfProcessApi } from '../api/wfProcessApi';
 import { wfRequestApi, type MailTrackingEntryDto, type WfRequestRecord } from '../api/wfRequestApi';
-import { DynamicControlRenderer, normalizeDynamicControlType } from '../components/DynamicControlRenderer';
+import {
+  DynamicControlRenderer,
+  normalizeDynamicControlType,
+} from '../components/DynamicControlRenderer';
 import { MailFieldValue } from '../components/MailFieldValue';
 import { WorkflowMailReportViewerViewer } from '../report-viewer/pages/WorkflowMailReportViewerPage';
 import { WorkflowOfficialFormViewer } from '../report-viewer/pages/WorkflowOfficialFormViewerPage';
@@ -287,7 +290,11 @@ function CurrentActivityControls({
   );
   const [values, setValues] = React.useState<Record<number, string>>({});
   React.useEffect(() => {
-    setValues(Object.fromEntries(controls.map((control) => [control.activityControlId, control.value ?? ''])));
+    setValues(
+      Object.fromEntries(
+        controls.map((control) => [control.activityControlId, control.value ?? ''])
+      )
+    );
   }, [controls]);
   const save = useMutation({
     mutationFn: () =>
@@ -358,23 +365,32 @@ function CurrentActivityControls({
           {currentLanguage.code === 'ar' ? 'تم حفظ بيانات النشاط.' : 'Activity data saved.'}
         </Alert>
       )}
-      {controls.length > 0 && <Box>
-        <Button
-          size="small"
-          variant="contained"
-          disabled={save.isPending}
-          onClick={() => save.mutate()}
-        >
-          {save.isPending
-            ? currentLanguage.code === 'ar' ? 'جارٍ الحفظ…' : 'Saving…'
-            : currentLanguage.code === 'ar' ? 'حفظ' : 'Save'}
-        </Button>
-      </Box>}
+      {controls.length > 0 && (
+        <Box>
+          <Button
+            size="small"
+            variant="contained"
+            disabled={save.isPending}
+            onClick={() => save.mutate()}
+          >
+            {save.isPending
+              ? currentLanguage.code === 'ar'
+                ? 'جارٍ الحفظ…'
+                : 'Saving…'
+              : currentLanguage.code === 'ar'
+                ? 'حفظ'
+                : 'Save'}
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 }
 
-export function TrackingTimeline({ entries, requestId }: TrackingTimelineProps): React.ReactElement {
+export function TrackingTimeline({
+  entries,
+  requestId,
+}: TrackingTimelineProps): React.ReactElement {
   const { t, currentLanguage } = useAppTranslation();
   return (
     <Box
@@ -587,9 +603,7 @@ export function TrackingTimeline({ entries, requestId }: TrackingTimelineProps):
                   {entry.notes}
                 </Box>
               </Box>
-              {entry.isCurrent && (
-                <CurrentActivityControls requestId={requestId} entry={entry} />
-              )}
+              {entry.isCurrent && <CurrentActivityControls requestId={requestId} entry={entry} />}
             </Paper>
           </Box>
         ))}

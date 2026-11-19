@@ -16,8 +16,15 @@ export const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }
         backgroundColor: 'background.default',
       }}
     >
-      <Paper elevation={3} sx={{ p: { xs: 2, sm: 4 }, width: '100%', maxWidth: 400, minWidth: 0, borderRadius: 2 }}>
-        <Typography variant="h5" color="primary" sx={{ textAlign: 'center', mb: 2, fontWeight: 700 }}>
+      <Paper
+        elevation={3}
+        sx={{ p: { xs: 2, sm: 4 }, width: '100%', maxWidth: 400, minWidth: 0, borderRadius: 2 }}
+      >
+        <Typography
+          variant="h5"
+          color="primary"
+          sx={{ textAlign: 'center', mb: 2, fontWeight: 700 }}
+        >
           {t('nav.app_title')}
         </Typography>
         {children}

@@ -10,11 +10,36 @@ import { customerQuickCreateApi, type CustomerRecord } from '../api/customerQuic
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../../routes/accountsReceivableRoutePaths';
 import { FOUNDATION_ROUTE_PATHS } from '@modules/finance/foundation/routes/foundationRoutePaths';
 
-interface CustomerQuickCreateProps { open: boolean; nextAccount: string; onClose: () => void; onSave: (customer: CustomerRecord, openAfterSave: boolean) => void | Promise<void> }
-const initialValues = (accountNumber: string): Record<string, FastTabValue> => ({ accountNumber, name: '', nameAr: '', customerGroupId: '', currencyCode: 'SAR', termsOfPayment: '', paymentMethod: '', deliveryMode: '', salesTaxGroup: '', customerCategory: '', vatNumber: '', notes: '', country: '', street: '' });
+interface CustomerQuickCreateProps {
+  open: boolean;
+  nextAccount: string;
+  onClose: () => void;
+  onSave: (customer: CustomerRecord, openAfterSave: boolean) => void | Promise<void>;
+}
+const initialValues = (accountNumber: string): Record<string, FastTabValue> => ({
+  accountNumber,
+  name: '',
+  nameAr: '',
+  customerGroupId: '',
+  currencyCode: 'SAR',
+  termsOfPayment: '',
+  paymentMethod: '',
+  deliveryMode: '',
+  salesTaxGroup: '',
+  customerCategory: '',
+  vatNumber: '',
+  notes: '',
+  country: '',
+  street: '',
+});
 
-export function CustomerQuickCreate({ open, nextAccount, onClose, onSave }: CustomerQuickCreateProps): React.ReactElement {
-  const company = useCompanyStore(state => state.currentCompany);
+export function CustomerQuickCreate({
+  open,
+  nextAccount,
+  onClose,
+  onSave,
+}: CustomerQuickCreateProps): React.ReactElement {
+  const company = useCompanyStore((state) => state.currentCompany);
   const { t } = useAppTranslation();
   const option = useCallback((value: string, key: string) => ({ value, label: t(key) }), [t]);
   const lookups = useQuery({
@@ -24,56 +49,175 @@ export function CustomerQuickCreate({ open, nextAccount, onClose, onSave }: Cust
     staleTime: 5 * 60 * 1000,
   });
   const lookup = lookups.data;
-  const sections = useMemo<FastTabSection[]>(() => [{ id: 'details', title: t('customerQuickCreate.sections.details'), summary: <FastTabSummary values={['--', 'SAR', '--', '--', '--', '--']} />, fields: [
-    { name: 'accountNumber', label: t('fields.customerAccount'), disabled: true }, { name: 'salesTaxGroup', label: t('fields.salesTaxGroup'), type: 'select', masterRoute: TAX_ROUTE_PATHS.TAX_GROUPS, options: lookup?.salesTaxGroups ?? [] },
-    { name: 'customerCategory', label: t('customerQuickCreate.fields.category'), type: 'select', required: true, options: [option('retail', 'customerQuickCreate.options.retail'), option('wholesale', 'customerQuickCreate.options.wholesale')] },
-    { name: 'name', label: t('fields.customerName'), required: true },
-    { name: 'nameAr', label: t('fields.arabicName') },
-    { name: 'customerGroupId', label: t('fields.customerGroup'), type: 'select', masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_GROUPS, required: true, options: lookup?.customerGroups ?? [] }, { name: 'vatNumber', label: t('customerQuickCreate.fields.vatNumber') },
-    { name: 'currencyCode', label: t('fields.currency'), type: 'select', masterRoute: FOUNDATION_ROUTE_PATHS.CURRENCIES, width: 100, options: lookup?.currencies ?? [{ value: 'SAR', label: 'SAR' }] }, { name: 'notes', label: t('customerQuickCreate.fields.notes'), type: 'multiline', rows: 4 },
-    { name: 'termsOfPayment', label: t('fields.termsOfPayment'), type: 'select', masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_TERMS, options: lookup?.paymentTerms ?? [] },
-    { name: 'paymentMethod', label: t('customerQuickCreate.fields.paymentMethod'), type: 'select', masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_METHODS, options: lookup?.paymentMethods ?? [] },
-    { name: 'deliveryMode', label: t('customerQuickCreate.fields.deliveryMode'), type: 'select', options: lookup?.deliveryModes ?? [] },
-  ] }, { id: 'address', title: t('customerQuickCreate.sections.address'), fields: [{ name: 'country', label: t('customerQuickCreate.fields.country'), type: 'select', required: true, options: lookup?.countryRegions ?? [] }, { name: 'street', label: t('customerQuickCreate.fields.street') }] }], [lookup, option, t]);
-  return <FastTabsDrawer
-    open={open}
-    resetKey={nextAccount}
-    title={t('customerQuickCreate.title')}
-    viewLabel={t('common.standardView')}
-    sections={sections}
-    loading={lookups.isLoading}
-    loadError={lookups.error instanceof Error ? lookups.error.message : null}
-    initialValues={() => initialValues(nextAccount)}
-    onFieldChange={(name, value) => {
-      if (name !== 'customerGroupId') return;
-      const group = lookup?.customerGroups.find((item) => item.value === String(value));
-      return {
-        termsOfPayment: group?.paymTermId ?? '',
-        salesTaxGroup: group?.taxGroupId ?? '',
-      };
-    }}
-    validate={(values) => ['name', 'customerGroupId', 'customerCategory', 'country'].reduce<Record<string, string>>((result, name) => { if (!String(values[name] ?? '').trim()) result[name] = t('validation.required', { field: name }); return result; }, {})}
-    onSubmit={async (values, mode) => {
-      const customer = await customerQuickCreateApi.create({
-        name: String(values.name), nameAlias: String(values.nameAr), custGroupId: String(values.customerGroupId),
-        currencyCode: String(values.currencyCode), custCategory: String(values.customerCategory),
-        paymTermId: String(values.termsOfPayment), paymModeId: String(values.paymentMethod),
-        dlvModeId: String(values.deliveryMode), taxGroupId: String(values.salesTaxGroup),
-        vatNum: String(values.vatNumber), countryRegionId: String(values.country), street: String(values.street), memo: String(values.notes),
-      });
-      await onSave(customer, mode === 'save-and-open');
-    }}
-    saveLabel={t('actions.save')}
-    saveAndOpenLabel={t('customerQuickCreate.saveAndOpen')}
-    cancelLabel={t('actions.cancel')}
-    closeLabel={t('actions.close')}
-    helpLabel={t('common.help')}
-    onCancel={onClose}
-  />;
+  const sections = useMemo<FastTabSection[]>(
+    () => [
+      {
+        id: 'details',
+        title: t('customerQuickCreate.sections.details'),
+        summary: <FastTabSummary values={['--', 'SAR', '--', '--', '--', '--']} />,
+        fields: [
+          { name: 'accountNumber', label: t('fields.customerAccount'), disabled: true },
+          {
+            name: 'salesTaxGroup',
+            label: t('fields.salesTaxGroup'),
+            type: 'select',
+            masterRoute: TAX_ROUTE_PATHS.TAX_GROUPS,
+            options: lookup?.salesTaxGroups ?? [],
+          },
+          {
+            name: 'customerCategory',
+            label: t('customerQuickCreate.fields.category'),
+            type: 'select',
+            required: true,
+            options: [
+              option('retail', 'customerQuickCreate.options.retail'),
+              option('wholesale', 'customerQuickCreate.options.wholesale'),
+            ],
+          },
+          { name: 'name', label: t('fields.customerName'), required: true },
+          { name: 'nameAr', label: t('fields.arabicName') },
+          {
+            name: 'customerGroupId',
+            label: t('fields.customerGroup'),
+            type: 'select',
+            masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_GROUPS,
+            required: true,
+            options: lookup?.customerGroups ?? [],
+          },
+          { name: 'vatNumber', label: t('customerQuickCreate.fields.vatNumber') },
+          {
+            name: 'currencyCode',
+            label: t('fields.currency'),
+            type: 'select',
+            masterRoute: FOUNDATION_ROUTE_PATHS.CURRENCIES,
+            width: 100,
+            options: lookup?.currencies ?? [{ value: 'SAR', label: 'SAR' }],
+          },
+          {
+            name: 'notes',
+            label: t('customerQuickCreate.fields.notes'),
+            type: 'multiline',
+            rows: 4,
+          },
+          {
+            name: 'termsOfPayment',
+            label: t('fields.termsOfPayment'),
+            type: 'select',
+            masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_TERMS,
+            options: lookup?.paymentTerms ?? [],
+          },
+          {
+            name: 'paymentMethod',
+            label: t('customerQuickCreate.fields.paymentMethod'),
+            type: 'select',
+            masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_METHODS,
+            options: lookup?.paymentMethods ?? [],
+          },
+          {
+            name: 'deliveryMode',
+            label: t('customerQuickCreate.fields.deliveryMode'),
+            type: 'select',
+            options: lookup?.deliveryModes ?? [],
+          },
+        ],
+      },
+      {
+        id: 'address',
+        title: t('customerQuickCreate.sections.address'),
+        fields: [
+          {
+            name: 'country',
+            label: t('customerQuickCreate.fields.country'),
+            type: 'select',
+            required: true,
+            options: lookup?.countryRegions ?? [],
+          },
+          { name: 'street', label: t('customerQuickCreate.fields.street') },
+        ],
+      },
+    ],
+    [lookup, option, t]
+  );
+  return (
+    <FastTabsDrawer
+      open={open}
+      resetKey={nextAccount}
+      title={t('customerQuickCreate.title')}
+      viewLabel={t('common.standardView')}
+      sections={sections}
+      loading={lookups.isLoading}
+      loadError={lookups.error instanceof Error ? lookups.error.message : null}
+      initialValues={() => initialValues(nextAccount)}
+      onFieldChange={(name, value) => {
+        if (name !== 'customerGroupId') return;
+        const group = lookup?.customerGroups.find((item) => item.value === String(value));
+        return {
+          termsOfPayment: group?.paymTermId ?? '',
+          salesTaxGroup: group?.taxGroupId ?? '',
+        };
+      }}
+      validate={(values) =>
+        ['name', 'customerGroupId', 'customerCategory', 'country'].reduce<Record<string, string>>(
+          (result, name) => {
+            if (!String(values[name] ?? '').trim())
+              result[name] = t('validation.required', { field: name });
+            return result;
+          },
+          {}
+        )
+      }
+      onSubmit={async (values, mode) => {
+        const customer = await customerQuickCreateApi.create({
+          name: String(values.name),
+          nameAlias: String(values.nameAr),
+          custGroupId: String(values.customerGroupId),
+          currencyCode: String(values.currencyCode),
+          custCategory: String(values.customerCategory),
+          paymTermId: String(values.termsOfPayment),
+          paymModeId: String(values.paymentMethod),
+          dlvModeId: String(values.deliveryMode),
+          taxGroupId: String(values.salesTaxGroup),
+          vatNum: String(values.vatNumber),
+          countryRegionId: String(values.country),
+          street: String(values.street),
+          memo: String(values.notes),
+        });
+        await onSave(customer, mode === 'save-and-open');
+      }}
+      saveLabel={t('actions.save')}
+      saveAndOpenLabel={t('customerQuickCreate.saveAndOpen')}
+      cancelLabel={t('actions.cancel')}
+      closeLabel={t('actions.close')}
+      helpLabel={t('common.help')}
+      onCancel={onClose}
+    />
+  );
 }
 
 function FastTabSummary({ values }: { values: string[] }): React.ReactElement {
-  return <Box aria-hidden="true" sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', height: 22 }}>
-    {values.map((value, index) => <Typography key={`${value}-${index}`} component="span" sx={{ minWidth: 32, px: 0.75, borderInlineStart: 1, borderColor: 'divider', color: value === 'SAR' ? 'primary.main' : 'text.secondary', textAlign: 'center', fontSize: '0.6875rem', lineHeight: 1 }}>{value}</Typography>)}
-  </Box>;
+  return (
+    <Box
+      aria-hidden="true"
+      sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', height: 22 }}
+    >
+      {values.map((value, index) => (
+        <Typography
+          key={`${value}-${index}`}
+          component="span"
+          sx={{
+            minWidth: 32,
+            px: 0.75,
+            borderInlineStart: 1,
+            borderColor: 'divider',
+            color: value === 'SAR' ? 'primary.main' : 'text.secondary',
+            textAlign: 'center',
+            fontSize: '0.6875rem',
+            lineHeight: 1,
+          }}
+        >
+          {value}
+        </Typography>
+      ))}
+    </Box>
+  );
 }

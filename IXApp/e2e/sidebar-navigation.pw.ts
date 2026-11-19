@@ -19,7 +19,11 @@ test('renders the shared D365 navigation proportions', async ({ page }, testInfo
       navigation.getByText(label, { exact: true }).boundingBox()
     )
   );
-  expect(labelPositions.every((position, index) => index === 0 || position!.y > labelPositions[index - 1]!.y)).toBe(true);
+  expect(
+    labelPositions.every(
+      (position, index) => index === 0 || position!.y > labelPositions[index - 1]!.y
+    )
+  ).toBe(true);
 
   const sectionLabels = ['Favorites', 'Recent', 'Workspaces', 'Modules'];
   for (const label of sectionLabels) {

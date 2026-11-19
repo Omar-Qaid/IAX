@@ -34,6 +34,8 @@ test('uses temporary structure and settings drawers on mobile', async ({ page },
   await settings.click();
   await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Process Information' })).toBeVisible();
-  await page.screenshot({ path: 'test-results/process-builder-mobile-settings.png', fullPage: false });
+  await page.screenshot({
+    path: 'test-results/process-builder-mobile-settings.png',
+    fullPage: false,
+  });
 });
-

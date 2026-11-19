@@ -32,7 +32,9 @@ export function SalesOrderChargesPage(): React.ReactElement {
   if (ordersQuery.isLoading || (lineId && linesQuery.isLoading)) return <LoadingState />;
   const order = (ordersQuery.data ?? []).find((candidate) => candidate.id === salesOrderId);
   if (!order) return <ErrorState message="Sales order not found." />;
-  const line = lineId ? (linesQuery.data ?? []).find((candidate) => candidate.id === lineId) : undefined;
+  const line = lineId
+    ? (linesQuery.data ?? []).find((candidate) => candidate.id === lineId)
+    : undefined;
   if (lineId && !line) return <ErrorState message="Sales order line not found." />;
   return (
     <DocumentChargesPage
@@ -46,7 +48,9 @@ export function SalesOrderChargesPage(): React.ReactElement {
       defaultTaxItemGroup={line?.taxItemGroup}
       canEdit={canEdit && order.salesStatus.toLowerCase() === 'backorder'}
       onChanged={() => {
-        void queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.totals(company, order.id) });
+        void queryClient.invalidateQueries({
+          queryKey: salesOrderQueryKeys.totals(company, order.id),
+        });
         void queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.list(company) });
       }}
       onBack={() => navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrder(order.id))}

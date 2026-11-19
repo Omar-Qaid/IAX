@@ -27,9 +27,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   const { orderQuery, orderLoading, refetchOrder, t, order } = doc;
   if (orderLoading) return <LoadingState />;
   if (orderQuery.isError && !order)
-    return (
-      <ErrorState message={orderQuery.error.message} onRetry={() => void refetchOrder()} />
-    );
+    return <ErrorState message={orderQuery.error.message} onRetry={() => void refetchOrder()} />;
   if (!order) return <ErrorState message={t('messages.noSalesOrders')} />;
   // View builders, in order: each one renders from the document plus earlier parts.
   const s0 = { ...doc, order };
@@ -205,7 +203,14 @@ export function SalesOrderDetailsPage(): React.ReactElement {
             if (record && record.id !== order.id && !activeHeader)
               navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrder(record.id));
           },
-          presentation: { mode: 'list', listWidth: 280, listResizable: true, listInitiallyVisible: false, listVisibilityStorageKey: 'ixapp.sales-order.list-visible', detailEndPadding: 8 },
+          presentation: {
+            mode: 'list',
+            listWidth: 280,
+            listResizable: true,
+            listInitiallyVisible: false,
+            listVisibilityStorageKey: 'ixapp.sales-order.list-visible',
+            detailEndPadding: 8,
+          },
           actionPaneAfterListContent: (
             <>
               <EnterpriseCrudActions
@@ -305,9 +310,14 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         sections={totalsSections}
         okLabel={t('common.ok', 'OK')}
       />
-      <Snackbar open={Boolean(confirmNowError)} onClose={() => setConfirmNowError('')}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
-        <Alert severity="error" onClose={() => setConfirmNowError('')}>{confirmNowError}</Alert>
+      <Snackbar
+        open={Boolean(confirmNowError)}
+        onClose={() => setConfirmNowError('')}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert severity="error" onClose={() => setConfirmNowError('')}>
+          {confirmNowError}
+        </Alert>
       </Snackbar>
       <SalesOrderConfirmationDialog
         open={confirmationsOpen}
@@ -318,9 +328,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         canPost={Boolean(canEditHeader) && !activeHeader}
         onClose={() => setConfirmationsOpen(false)}
         onPosted={async () => {
-          await Promise.all([
-            invalidateOrder(order.id),
-          ]);
+          await Promise.all([invalidateOrder(order.id)]);
         }}
       />
       <SalesOrderPackingSlipPostingDialog
@@ -330,26 +338,32 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         canPost={Boolean(canEditHeader) && !activeHeader}
         onClose={() => setPackingSlipPostingOpen(false)}
         onPosted={async () => {
-          await Promise.all([
-            invalidateOrder(order.id),
-          ]);
+          await Promise.all([invalidateOrder(order.id)]);
         }}
       />
       <DocumentCopyDrawer
         open={Boolean(copyMode)}
         title={copyMode === 'fromJournal' ? 'Copy from journal' : 'Copy from all'}
-        sourceSectionLabel={copyMode === 'fromJournal' ? t('salesOrder.ui.confirmationJournals', 'Confirmation journals') : t('salesOrder.ui.salesOrders', 'Sales orders')}
-        additionalSections={copyMode === 'fromJournal'
-          ? ['Quotations', 'Packing slips', 'Invoices', 'Project invoices']
-          : ['Quotations', 'Confirmation']}
+        sourceSectionLabel={
+          copyMode === 'fromJournal'
+            ? t('salesOrder.ui.confirmationJournals', 'Confirmation journals')
+            : t('salesOrder.ui.salesOrders', 'Sales orders')
+        }
+        additionalSections={
+          copyMode === 'fromJournal'
+            ? ['Quotations', 'Packing slips', 'Invoices', 'Project invoices']
+            : ['Quotations', 'Confirmation']
+        }
         sources={copySourcesQuery.data ?? []}
         lines={copyLinesQuery.data ?? []}
         loadingSources={copySourcesQuery.isLoading}
         loadingLines={copyLinesQuery.isLoading}
         busy={copyBusy}
-        error={copyError
-          || (copySourcesQuery.error instanceof Error ? copySourcesQuery.error.message : '')
-          || (copyLinesQuery.error instanceof Error ? copyLinesQuery.error.message : '')}
+        error={
+          copyError ||
+          (copySourcesQuery.error instanceof Error ? copySourcesQuery.error.message : '') ||
+          (copyLinesQuery.error instanceof Error ? copyLinesQuery.error.message : '')
+        }
         onSourceChange={(source) => setCopySourceId(source?.id)}
         onClose={() => {
           if (copyBusy) return;
@@ -363,9 +377,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
           setCopyError('');
           try {
             await salesOrderCopyApi.copy(order.id, copyMode, lineIds, options);
-            await Promise.all([
-              invalidateOrder(order.id),
-            ]);
+            await Promise.all([invalidateOrder(order.id)]);
             setCopyMode(undefined);
             setCopySourceId(undefined);
           } catch (error) {
@@ -378,7 +390,9 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       <LogisticsPostalAddressDrawer
         open={deliveryAddressDrawerOpen}
         onClose={() => setDeliveryAddressDrawerOpen(false)}
-        onSave={(address) => { void saveNewDeliveryAddress(address); }}
+        onSave={(address) => {
+          void saveNewDeliveryAddress(address);
+        }}
         initialData={deliveryAddressInitialData}
       />
     </SalesOrderLinesProvider>

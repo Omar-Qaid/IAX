@@ -19,9 +19,5 @@ export const FormColumn: React.FC<{
   md?: number;
   lg?: number;
 }> = ({ children, xs = 12, sm = 6, md = 4, lg = 3 }) => {
-  return (
-    <Grid size={{ xs, sm, md, lg }}>
-      {children}
-    </Grid>
-  );
+  return <Grid size={{ xs, sm, md, lg }}>{children}</Grid>;
 };

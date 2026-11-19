@@ -8,8 +8,24 @@ test('renders Exchange rate types with the D365 list-page layout', async ({ page
       body: JSON.stringify({
         success: true,
         data: [
-          { recId: 1, name: 'Standard', description: 'Standard exchange rate', isActive: true, rowVersion: null, recVersion: 1, dataAreaId: 'dat' },
-          { recId: 2, name: 'Budget', description: 'Budget exchange rate', isActive: true, rowVersion: null, recVersion: 1, dataAreaId: 'dat' },
+          {
+            recId: 1,
+            name: 'Standard',
+            description: 'Standard exchange rate',
+            isActive: true,
+            rowVersion: null,
+            recVersion: 1,
+            dataAreaId: 'dat',
+          },
+          {
+            recId: 2,
+            name: 'Budget',
+            description: 'Budget exchange rate',
+            isActive: true,
+            rowVersion: null,
+            recVersion: 1,
+            dataAreaId: 'dat',
+          },
         ],
       }),
     });

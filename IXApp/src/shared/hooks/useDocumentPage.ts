@@ -7,12 +7,15 @@ interface UseDocumentPageOptions<T> {
   saveData?: (id: string, data: Partial<T>) => Promise<T>;
 }
 
-export function useDocumentPage<T>(documentId: string | undefined, options: UseDocumentPageOptions<T>) {
+export function useDocumentPage<T>(
+  documentId: string | undefined,
+  options: UseDocumentPageOptions<T>
+) {
   const { loadData } = options;
   const [document, setDocument] = useState<T | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isDirty, setIsDirty] = useState<boolean>(false);
-  
+
   const { notifyError, notifySuccess } = useNotifications();
   useUnsavedChanges(isDirty);
 
@@ -66,6 +69,6 @@ export function useDocumentPage<T>(documentId: string | undefined, options: UseD
     fetchDocument,
     executeProcessAction,
     notifySuccess,
-    notifyError
+    notifyError,
   };
 }

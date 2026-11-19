@@ -69,8 +69,16 @@ function PartyBalancePage({ kind }: { kind: BalancePartyKind }): React.ReactElem
       onRefresh={() =>
         void queryClient.invalidateQueries({ queryKey: ['party-balance-currency', company] })
       }
-      onViewContacts={hasPermission(PERMISSIONS.CONTACT_VIEW) ? () => navigate(accountContacts(kind, accountNum)) : undefined}
-      onOpenTransactions={kind === 'customer' ? () => navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customerOpenTransactions(accountNum)) : undefined}
+      onViewContacts={
+        hasPermission(PERMISSIONS.CONTACT_VIEW)
+          ? () => navigate(accountContacts(kind, accountNum))
+          : undefined
+      }
+      onOpenTransactions={
+        kind === 'customer'
+          ? () => navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customerOpenTransactions(accountNum))
+          : undefined
+      }
       onBack={() =>
         kind === 'customer'
           ? navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customer(String(balance.data.recId)))

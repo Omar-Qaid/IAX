@@ -34,17 +34,14 @@ export function isArabicUiFontFamily(fontFamily: string): boolean {
 
 export const APP_FONT_FAMILY_CSS_VARIABLE = '--app-font-family';
 
-export const APP_FONT_FAMILY =
-  `var(${APP_FONT_FAMILY_CSS_VARIABLE}, ${DEFAULT_UI_FONT_FAMILY})`;
+export const APP_FONT_FAMILY = `var(${APP_FONT_FAMILY_CSS_VARIABLE}, ${DEFAULT_UI_FONT_FAMILY})`;
 
 export function resolveUiFontFamily(
   direction: 'ltr' | 'rtl',
-  preferredFontFamily = DEFAULT_UI_FONT_FAMILY,
+  preferredFontFamily = DEFAULT_UI_FONT_FAMILY
 ): string {
   if (direction === 'ltr') {
-    return isArabicUiFontFamily(preferredFontFamily)
-      ? DEFAULT_UI_FONT_FAMILY
-      : preferredFontFamily;
+    return isArabicUiFontFamily(preferredFontFamily) ? DEFAULT_UI_FONT_FAMILY : preferredFontFamily;
   }
 
   if (isArabicUiFontFamily(preferredFontFamily)) {

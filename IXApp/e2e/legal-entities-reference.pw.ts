@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 
-test('matches the compact Legal entities reference shell and preserves settings', async ({ page }, testInfo) => {
+test('matches the compact Legal entities reference shell and preserves settings', async ({
+  page,
+}, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop-chromium');
   await page.setViewportSize({ width: 1920, height: 881 });
   await page.goto('/organization-administration/legal-entities');

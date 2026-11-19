@@ -39,13 +39,7 @@ export interface PrintTemplateDocument {
 
 export interface PrintFieldBinding {
   sourceType:
-    | 'system'
-    | 'company'
-    | 'report'
-    | 'requestControl'
-    | 'workflow'
-    | 'attachment'
-    | 'repeating';
+    'system' | 'company' | 'report' | 'requestControl' | 'workflow' | 'attachment' | 'repeating';
   source?: string | null;
   requestControlId?: number | null;
   controlId?: number | null;

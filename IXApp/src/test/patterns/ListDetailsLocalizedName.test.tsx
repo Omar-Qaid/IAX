@@ -21,12 +21,15 @@ function LocalizedRecord() {
         getPrimaryText: (record) => localizedName(record, isRtl),
         getValues: () => ({}),
         setValues: (record) => record,
-        headerFields: [{
-          id: 'name', label: 'Name',
-          getValue: (record) => record.name,
-          getDisplayValue: (record) => localizedName(record, isRtl),
-          setValue: (record, value) => ({ ...record, name: String(value) }),
-        }],
+        headerFields: [
+          {
+            id: 'name',
+            label: 'Name',
+            getValue: (record) => record.name,
+            getDisplayValue: (record) => localizedName(record, isRtl),
+            setValue: (record, value) => ({ ...record, name: String(value) }),
+          },
+        ],
         sections: [],
       }}
     />

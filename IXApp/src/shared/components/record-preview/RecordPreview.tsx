@@ -45,7 +45,8 @@ export function RecordPreview({
       : undefined;
   record = record ?? optionRecord;
   // Nothing to show: no entity, no key, or an entity that cannot load and got no record.
-  const loadable = resolved !== undefined && (record !== undefined || definition?.load !== undefined);
+  const loadable =
+    resolved !== undefined && (record !== undefined || definition?.load !== undefined);
   if (!resolved || key === '' || !loadable) return <>{children}</>;
   return (
     <RecordPreviewTrigger entity={resolved} recordKey={key} record={record} inline={inline}>

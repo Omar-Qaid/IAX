@@ -16,4 +16,3 @@ export const useDisclosure = (initialOpen = false): DisclosureControls => {
 
   return { open, onOpen, onClose, onToggle, setOpen };
 };
-

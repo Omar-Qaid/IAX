@@ -39,14 +39,22 @@ export interface InventOnHandFilters {
 }
 
 export const inventOnHandApi = {
-  async page(filters: InventOnHandFilters, page: number, pageSize: number, signal?: AbortSignal): Promise<InventOnHandPage> {
+  async page(
+    filters: InventOnHandFilters,
+    page: number,
+    pageSize: number,
+    signal?: AbortSignal
+  ): Promise<InventOnHandPage> {
     const response = await apiClient.get<ApiResponse<InventOnHandPage>>('/v1/InventOnHand/paged', {
       params: { ...filters, page, pageSize },
       signal,
     });
     const result = response.data.data;
     if (!response.data.success || !result || !Array.isArray(result.rows)) {
-      throw new ApiError(response.data.message || 'The on-hand inventory response did not contain a page.', 500);
+      throw new ApiError(
+        response.data.message || 'The on-hand inventory response did not contain a page.',
+        500
+      );
     }
     return result;
   },

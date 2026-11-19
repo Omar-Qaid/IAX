@@ -34,20 +34,44 @@ const renderPage = (props: Partial<React.ComponentProps<typeof MasterDetailPage>
           filterLabel="Filter"
           emptyLabel="No records"
           actionPane={<button type="button">Edit</button>}
-          tabs={<MasterDetailTabs ariaLabel="Views" value="lines" onChange={() => undefined} tabs={[{ value: 'lines', label: 'Lines' }, { value: 'header', label: 'Header' }]} />}
+          tabs={
+            <MasterDetailTabs
+              ariaLabel="Views"
+              value="lines"
+              onChange={() => undefined}
+              tabs={[
+                { value: 'lines', label: 'Lines' },
+                { value: 'header', label: 'Header' },
+              ]}
+            />
+          }
           {...props}
         >
           <MasterDetailSection title="Sales order header" summary={['CUST-100', 'SAR']}>
             <MasterDetailFieldGroups>
               <MasterDetailFieldGroup title="Warehouse">
-                <MasterDetailField label="Site" value="JED" masterRoute="/inventory/sites" previewOption={{ code: 'JED', name: 'Jeddah' }} />
+                <MasterDetailField
+                  label="Site"
+                  value="JED"
+                  masterRoute="/inventory/sites"
+                  previewOption={{ code: 'JED', name: 'Jeddah' }}
+                />
                 <MasterDetailField label="Release status" value="Open" />
-                <MasterDetailField label="Notes" value="" editing editor={<input aria-label="Notes" />} />
+                <MasterDetailField
+                  label="Notes"
+                  value=""
+                  editing
+                  editor={<input aria-label="Notes" />}
+                />
               </MasterDetailFieldGroup>
             </MasterDetailFieldGroups>
           </MasterDetailSection>
           <MasterDetailSection title="Sales order lines">
-            <MasterDetailLines toolbarLabel="Line actions" toolbar={<button type="button">Add line</button>} grid={<div>grid</div>} />
+            <MasterDetailLines
+              toolbarLabel="Line actions"
+              toolbar={<button type="button">Add line</button>}
+              grid={<div>grid</div>}
+            />
           </MasterDetailSection>
         </MasterDetailPage>
       </MemoryRouter>
@@ -98,10 +122,15 @@ describe('MasterDetailPage', () => {
   });
 
   it('applies the advanced filter from the right rail', () => {
-    renderPage({ advancedFilter: { fields: [{ id: 'customer', label: 'Customer', getValue: (record) => record.subtitle }] } });
+    renderPage({
+      advancedFilter: {
+        fields: [{ id: 'customer', label: 'Customer', getValue: (record) => record.subtitle }],
+      },
+    });
     // The rail's Filter button is the last one named Filter (the first toggles the record list).
     fireEvent.click(screen.getAllByRole('button', { name: /^Filter$/ }).at(-1)!);
-    const filterPane = screen.getByRole('heading', { name: 'Filters' }).parentElement!.parentElement!;
+    const filterPane = screen.getByRole('heading', { name: 'Filters' }).parentElement!
+      .parentElement!;
     const panel = within(filterPane).getAllByRole('textbox').at(-1)!;
     fireEvent.change(panel, { target: { value: 'retail' } });
     fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
@@ -110,13 +139,37 @@ describe('MasterDetailPage', () => {
   });
 
   it('shows related information for the open record', () => {
-    renderPage({ relatedInformation: { title: 'Customer', sections: [{ id: 'c', label: 'Statistics', content: <span>Balance 1,000</span>, defaultExpanded: true }] } });
+    renderPage({
+      relatedInformation: {
+        title: 'Customer',
+        sections: [
+          {
+            id: 'c',
+            label: 'Statistics',
+            content: <span>Balance 1,000</span>,
+            defaultExpanded: true,
+          },
+        ],
+      },
+    });
     fireEvent.click(screen.getByRole('button', { name: /Information/i }));
     expect(screen.getByText('Balance 1,000')).toBeInTheDocument();
   });
 
   it('renders field-config sections with the shared engine, in view and edit mode', () => {
-    const sections = [{ id: 'general', title: 'General', groups: [{ id: 'g', title: 'Delivery', fields: [{ name: 'deliveryName', label: 'Delivery name', type: 'text' as const }] }] }];
+    const sections = [
+      {
+        id: 'general',
+        title: 'General',
+        groups: [
+          {
+            id: 'g',
+            title: 'Delivery',
+            fields: [{ name: 'deliveryName', label: 'Delivery name', type: 'text' as const }],
+          },
+        ],
+      },
+    ];
     renderPage({ sections, values: { deliveryName: 'Main' } });
     expect(screen.getByRole('group', { name: 'Delivery' })).toBeInTheDocument();
     expect(screen.getByText('Main')).toBeInTheDocument();

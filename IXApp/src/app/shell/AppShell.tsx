@@ -21,19 +21,56 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
   const isMini = navLayout === 'mini';
   const isHorizontal = navLayout === 'horizontal';
-  const finalSidebarWidth = isHorizontal ? 0 : (isMini ? SIDEBARCOLLAPSEDWIDTH : (isDrawerOpen ? SIDEBARWIDTH : SIDEBARCOLLAPSEDWIDTH));
+  const finalSidebarWidth = isHorizontal
+    ? 0
+    : isMini
+      ? SIDEBARCOLLAPSEDWIDTH
+      : isDrawerOpen
+        ? SIDEBARWIDTH
+        : SIDEBARCOLLAPSEDWIDTH;
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100vh', minHeight: 0, overflow: 'hidden', bgcolor: 'background.default', '@supports (height: 100dvh)': { height: '100dvh' } }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        width: '100%',
+        height: '100vh',
+        minHeight: 0,
+        overflow: 'hidden',
+        bgcolor: 'background.default',
+        '@supports (height: 100dvh)': { height: '100dvh' },
+      }}
+    >
       <Box
         component="a"
         href="#main-content"
-        sx={{ position: 'fixed', insetInlineStart: 8, top: -48, zIndex: 'tooltip', bgcolor: 'background.paper', color: 'primary.main', px: 2, py: 1, border: 1, borderColor: 'primary.main', '&:focus': { top: 8 } }}
+        sx={{
+          position: 'fixed',
+          insetInlineStart: 8,
+          top: -48,
+          zIndex: 'tooltip',
+          bgcolor: 'background.paper',
+          color: 'primary.main',
+          px: 2,
+          py: 1,
+          border: 1,
+          borderColor: 'primary.main',
+          '&:focus': { top: 8 },
+        }}
       >
         {t('accessibility.skipToContent', 'Skip to main content')}
       </Box>
       <AppTopBar />
-      <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative', pt: `${LAYOUT.TOPBARHEIGHT}px` }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flex: 1,
+          overflow: 'hidden',
+          position: 'relative',
+          pt: `${LAYOUT.TOPBARHEIGHT}px`,
+        }}
+      >
         {!isHorizontal && <AppSidebar />}
         <Box
           component="main"

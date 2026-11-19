@@ -24,7 +24,9 @@ export function CellEditHost({
         '&:hover .grid-cell-edit, & .grid-cell-edit:focus-visible': { opacity: 1 },
       }}
     >
-      <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{children}</Box>
+      <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        {children}
+      </Box>
       <IconButton
         className="grid-cell-edit"
         size="small"

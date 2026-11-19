@@ -105,12 +105,19 @@ function OrganizationHierarchyNodesContent({
     return <Typography sx={{ p: 2 }}>{t('common.loading')}</Typography>;
   }
   if (!hierarchies.data?.length) {
-    return <Box sx={{ p: 2 }}>
-      <Typography>{t('common.noData')}</Typography>
-      <Button onClick={onExit ?? (() => navigate('/organization-administration/organization-hierarchies/setup'))}>
-        {t('organizationStructure.hierarchiesTitle')}
-      </Button>
-    </Box>;
+    return (
+      <Box sx={{ p: 2 }}>
+        <Typography>{t('common.noData')}</Typography>
+        <Button
+          onClick={
+            onExit ??
+            (() => navigate('/organization-administration/organization-hierarchies/setup'))
+          }
+        >
+          {t('organizationStructure.hierarchiesTitle')}
+        </Button>
+      </Box>
+    );
   }
 
   return (
@@ -126,7 +133,9 @@ function OrganizationHierarchyNodesContent({
         if (onHierarchyChange) onHierarchyChange(id);
         else navigate(`/organization-administration/organization-hierarchies/${id}/nodes`);
       }}
-      onExit={onExit ?? (() => navigate('/organization-administration/organization-hierarchies/setup'))}
+      onExit={
+        onExit ?? (() => navigate('/organization-administration/organization-hierarchies/setup'))
+      }
     />
   );
 }

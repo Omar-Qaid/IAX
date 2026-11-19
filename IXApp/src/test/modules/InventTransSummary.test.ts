@@ -2,22 +2,25 @@ import { describe, expect, it } from 'vitest';
 import type { InventTransRecord } from '../../modules/finance/inventory/inquiries/api/inventTransApi';
 import { summarizeInventTransRows } from '../../modules/finance/inventory/inquiries/components/summarizeInventTransRows';
 
-const transaction = (overrides: Partial<InventTransRecord>): InventTransRecord => ({
-  itemNumber: 'ITEM-A',
-  currencyCode: 'SAR',
-  quantity: 0,
-  costAmount: 0,
-  receiptStatus: '',
-  issueStatus: '',
-  ...overrides,
-} as InventTransRecord);
+const transaction = (overrides: Partial<InventTransRecord>): InventTransRecord =>
+  ({
+    itemNumber: 'ITEM-A',
+    currencyCode: 'SAR',
+    quantity: 0,
+    costAmount: 0,
+    receiptStatus: '',
+    issueStatus: '',
+    ...overrides,
+  }) as InventTransRecord;
 
 describe('inventory transaction summary', () => {
   it('totals transactions for one item and currency', () => {
-    expect(summarizeInventTransRows([
-      transaction({ quantity: 10, costAmount: 100, receiptStatus: 'Received' }),
-      transaction({ quantity: -3, costAmount: -30, issueStatus: 'Sold' }),
-    ])).toEqual({ quantity: 7, costAmount: 70, receipts: 1, issues: 1 });
+    expect(
+      summarizeInventTransRows([
+        transaction({ quantity: 10, costAmount: 100, receiptStatus: 'Received' }),
+        transaction({ quantity: -3, costAmount: -30, issueStatus: 'Sold' }),
+      ])
+    ).toEqual({ quantity: 7, costAmount: 70, receipts: 1, issues: 1 });
   });
 
   it('does not combine quantities of different items', () => {

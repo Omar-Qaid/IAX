@@ -10,10 +10,7 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import JsBarcode from 'jsbarcode';
 import { QRCodeSVG } from 'qrcode.react';
-import {
-  ReportViewerDocument,
-  type reportCompany,
-} from './ReportViewerDocument';
+import { ReportViewerDocument, type reportCompany } from './ReportViewerDocument';
 import type {
   PrintFieldBinding,
   PrintTemplateDocument,
@@ -34,11 +31,19 @@ interface Props {
 }
 
 const requestBinding = (element: PrintTemplateElement): PrintFieldBinding | null => {
-  if (element.type === 'field' || element.type === 'signature' || element.type === 'qrCode' || element.type === 'barcode')
+  if (
+    element.type === 'field' ||
+    element.type === 'signature' ||
+    element.type === 'qrCode' ||
+    element.type === 'barcode'
+  )
     return element.binding.sourceType === 'requestControl' ? element.binding : null;
   if (element.type === 'table')
     return element.dataSource.sourceType === 'requestControl' ? element.dataSource : null;
-  if ((element.type === 'image' || element.type === 'attachment') && element.binding?.sourceType === 'requestControl')
+  if (
+    (element.type === 'image' || element.type === 'attachment') &&
+    element.binding?.sourceType === 'requestControl'
+  )
     return element.binding;
   return null;
 };
@@ -52,7 +57,12 @@ export const requestControlBodyElements = (items: PrintTemplateElement[]): Print
       const elements = requestControlBodyElements(element.elements);
       return elements.length > 0 ? [{ ...element, elements }] : [];
     }
-    if (element.type === 'field' || element.type === 'signature' || element.type === 'qrCode' || element.type === 'barcode')
+    if (
+      element.type === 'field' ||
+      element.type === 'signature' ||
+      element.type === 'qrCode' ||
+      element.type === 'barcode'
+    )
       return isCompanyOrReportBinding(element.binding) ? [] : [element];
     if (element.type === 'table')
       return isCompanyOrReportBinding(element.dataSource) ? [] : [element];
@@ -73,13 +83,17 @@ export const requestControlBodyBindings = (items: PrintTemplateElement[]): Print
     return [];
   });
 
-export const requestControlTemplateElements = (template: PrintTemplateDocument): PrintTemplateElement[] => [
+export const requestControlTemplateElements = (
+  template: PrintTemplateDocument
+): PrintTemplateElement[] => [
   ...requestControlBodyElements(template.header),
   ...requestControlBodyElements(template.sections),
   ...requestControlBodyElements(template.footer),
 ];
 
-export const requestControlTemplateBindings = (template: PrintTemplateDocument): PrintFieldBinding[] => [
+export const requestControlTemplateBindings = (
+  template: PrintTemplateDocument
+): PrintFieldBinding[] => [
   ...requestControlBodyBindings(template.header),
   ...requestControlBodyBindings(template.sections),
   ...requestControlBodyBindings(template.footer),
@@ -305,17 +319,29 @@ function RuntimeElement({
   } as const;
   const children = (items: PrintTemplateElement[]) =>
     items.map((child) => (
-      <RuntimeElement key={child.id} element={child} data={data} template={template} renderRequestControl={renderRequestControl} layoutMode={layoutMode} />
+      <RuntimeElement
+        key={child.id}
+        element={child}
+        data={data}
+        template={template}
+        renderRequestControl={renderRequestControl}
+        layoutMode={layoutMode}
+      />
     ));
   const localizedText = (primary: string | null | undefined, alias?: string | null) =>
     template.direction === 'rtl' ? alias || primary || '' : primary || alias || '';
   if (element.type === 'text')
-    return <Typography sx={sx}>{localizedText(element.value, element.valueAlias || element.textAlias)}</Typography>;
+    return (
+      <Typography sx={sx}>
+        {localizedText(element.value, element.valueAlias || element.textAlias)}
+      </Typography>
+    );
   if (element.type === 'field') {
     const label = localizedText(element.label, element.labelAlias);
-    const editableControl = element.binding.sourceType === 'requestControl'
-      ? renderRequestControl?.(element.binding, element.type)
-      : null;
+    const editableControl =
+      element.binding.sourceType === 'requestControl'
+        ? renderRequestControl?.(element.binding, element.type)
+        : null;
     const raw = resolveRuntimeBinding(data, element.binding);
     if (editableControl && layoutMode === 'requestBody')
       return <Box sx={{ ...sx, minWidth: 0 }}>{editableControl}</Box>;
@@ -338,9 +364,7 @@ function RuntimeElement({
       return (
         <Box className="printout-field" sx={{ ...sx, minWidth: 0 }}>
           {label ? (
-            <Typography sx={{ mb: 0.35, fontWeight: 700, textAlign: 'start' }}>
-              {label}
-            </Typography>
+            <Typography sx={{ mb: 0.35, fontWeight: 700, textAlign: 'start' }}>{label}</Typography>
           ) : null}
           <Box
             dir="auto"
@@ -436,9 +460,10 @@ function RuntimeElement({
     ) : null;
   }
   if (element.type === 'table') {
-    const editableControl = element.dataSource.sourceType === 'requestControl'
-      ? renderRequestControl?.(element.dataSource, element.type)
-      : null;
+    const editableControl =
+      element.dataSource.sourceType === 'requestControl'
+        ? renderRequestControl?.(element.dataSource, element.type)
+        : null;
     if (editableControl) return <Box sx={sx}>{editableControl}</Box>;
     const resolved = resolveRuntimeBinding(data, element.dataSource);
     let rows: unknown[] = Array.isArray(resolved) ? resolved : [];
@@ -536,7 +561,9 @@ function RuntimeElement({
     return (
       <Box sx={{ ...sx, minHeight: 62, borderBottom: '1px solid #172b4d', p: 0.75 }}>
         {element.label ? (
-          <Typography sx={{ fontWeight: 700, fontSize: 11 }}>{localizedText(element.label, element.labelAlias)}</Typography>
+          <Typography sx={{ fontWeight: 700, fontSize: 11 }}>
+            {localizedText(element.label, element.labelAlias)}
+          </Typography>
         ) : null}
         {image ? (
           <Box
@@ -569,11 +596,24 @@ function RuntimeElement({
   return null;
 }
 
-export function ReportTemplateRenderer({ template, data, company, renderRequestControl, layoutMode = 'document' }: Props): React.ReactElement {
+export function ReportTemplateRenderer({
+  template,
+  data,
+  company,
+  renderRequestControl,
+  layoutMode = 'document',
+}: Props): React.ReactElement {
   const render = (items: PrintTemplateElement[]) => (
     <Box sx={{ display: 'grid', gap: 0.75 }}>
       {items.map((element) => (
-        <RuntimeElement key={element.id} element={element} data={data} template={template} renderRequestControl={renderRequestControl} layoutMode={layoutMode} />
+        <RuntimeElement
+          key={element.id}
+          element={element}
+          data={data}
+          template={template}
+          renderRequestControl={renderRequestControl}
+          layoutMode={layoutMode}
+        />
       ))}
     </Box>
   );

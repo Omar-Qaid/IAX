@@ -18,7 +18,8 @@ function isSameValue(a: unknown, b: unknown): boolean {
   const blank = (v: unknown) => v == null || v === '';
   if (blank(a) && blank(b)) return true;
   if (a == null || b == null) return false;
-  if (typeof a === 'object' || typeof b === 'object') return JSON.stringify(a) === JSON.stringify(b);
+  if (typeof a === 'object' || typeof b === 'object')
+    return JSON.stringify(a) === JSON.stringify(b);
   return String(a) === String(b);
 }
 
@@ -26,7 +27,12 @@ export function useInlineEdit<T>() {
   const [state, setState] = useState<InlineEditState<T>>(EMPTY_STATE);
 
   const startEdit = useCallback((rowId: string | number, row: T) => {
-    setState({ editingRowId: rowId, editValues: { ...row }, originalValues: { ...row }, saving: false });
+    setState({
+      editingRowId: rowId,
+      editValues: { ...row },
+      originalValues: { ...row },
+      saving: false,
+    });
   }, []);
 
   const startAdd = useCallback((defaults: Partial<T> = {}) => {
@@ -34,11 +40,11 @@ export function useInlineEdit<T>() {
   }, []);
 
   const updateField = useCallback((field: string, value: unknown) => {
-    setState(prev => ({ ...prev, editValues: { ...prev.editValues, [field]: value } }));
+    setState((prev) => ({ ...prev, editValues: { ...prev.editValues, [field]: value } }));
   }, []);
 
   const setSaving = useCallback((saving: boolean) => {
-    setState(prev => ({ ...prev, saving }));
+    setState((prev) => ({ ...prev, saving }));
   }, []);
 
   const cancelEdit = useCallback(() => {

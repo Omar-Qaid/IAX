@@ -21,20 +21,18 @@ describe('direction-aware typography', () => {
 
   it('preserves an explicitly selected Arabic font in RTL', () => {
     expect(resolveUiFontFamily('rtl', ARABIC_UI_FONT_FAMILIES.tajawal)).toBe(
-      ARABIC_UI_FONT_FAMILIES.tajawal,
+      ARABIC_UI_FONT_FAMILIES.tajawal
     );
   });
 
   it('supports the user-supplied FS Albert Arabic font', () => {
     expect(resolveUiFontFamily('rtl', ARABIC_UI_FONT_FAMILIES.fsAlbertArabic)).toBe(
-      ARABIC_UI_FONT_FAMILIES.fsAlbertArabic,
+      ARABIC_UI_FONT_FAMILIES.fsAlbertArabic
     );
   });
 
   it('does not carry an Arabic-only selection into LTR', () => {
-    expect(resolveUiFontFamily('ltr', ARABIC_UI_FONT_FAMILIES.cairo)).toBe(
-      DEFAULT_UI_FONT_FAMILY,
-    );
+    expect(resolveUiFontFamily('ltr', ARABIC_UI_FONT_FAMILIES.cairo)).toBe(DEFAULT_UI_FONT_FAMILY);
   });
 
   it('uses Saudi Font in the default RTL MUI theme only', () => {

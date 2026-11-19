@@ -49,7 +49,12 @@ registerRecordPreview<TaxGroupPreview>(FOUNDATION_RECORD_PREVIEWS.SALES_TAX_GROU
   load: pagedRecordLoader('/v1/TaxGroup', 'TaxGroup'),
   fromOption: (option) => ({ taxGroup: option.code, taxGroupName: option.name ?? '' }),
   fields: [
-    { labelKey: 'fields.salesTaxGroup', defaultLabel: 'Sales tax group', value: 'taxGroup', lookup: true },
+    {
+      labelKey: 'fields.salesTaxGroup',
+      defaultLabel: 'Sales tax group',
+      value: 'taxGroup',
+      lookup: true,
+    },
     { labelKey: 'fields.description', defaultLabel: 'Description', value: 'taxGroupName' },
   ],
 });
@@ -74,7 +79,12 @@ registerRecordPreview<TaxAuthorityPreview>(FOUNDATION_RECORD_PREVIEWS.TAX_AUTHOR
   load: pagedRecordLoader('/v1/TaxAuthorityAddress', 'TaxAuthority'),
   fromOption: (option) => ({ taxAuthority: option.code, name: option.name ?? '' }),
   fields: [
-    { labelKey: 'fields.taxAuthority', defaultLabel: 'Tax authority', value: 'taxAuthority', lookup: true },
+    {
+      labelKey: 'fields.taxAuthority',
+      defaultLabel: 'Tax authority',
+      value: 'taxAuthority',
+      lookup: true,
+    },
     { labelKey: 'fields.name', defaultLabel: 'Name', value: 'name' },
   ],
 });
@@ -84,7 +94,12 @@ registerRecordPreview<DeliveryCodePreview>(FOUNDATION_RECORD_PREVIEWS.DELIVERY_M
   load: pagedRecordLoader('/v1/DlvMode', 'Code'),
   fromOption: (option) => ({ code: option.code, txt: option.name ?? '' }),
   fields: [
-    { labelKey: 'fields.deliveryMode', defaultLabel: 'Mode of delivery', value: 'code', lookup: true },
+    {
+      labelKey: 'fields.deliveryMode',
+      defaultLabel: 'Mode of delivery',
+      value: 'code',
+      lookup: true,
+    },
     { labelKey: 'fields.description', defaultLabel: 'Description', value: 'txt' },
   ],
 });
@@ -93,7 +108,12 @@ registerRecordPreview<DeliveryCodePreview>(FOUNDATION_RECORD_PREVIEWS.DELIVERY_T
   load: pagedRecordLoader('/v1/DlvTerm', 'Code'),
   fromOption: (option) => ({ code: option.code, txt: option.name ?? '' }),
   fields: [
-    { labelKey: 'customerQuickCreate.fields.deliveryTerms', defaultLabel: 'Delivery terms', value: 'code', lookup: true },
+    {
+      labelKey: 'customerQuickCreate.fields.deliveryTerms',
+      defaultLabel: 'Delivery terms',
+      value: 'code',
+      lookup: true,
+    },
     { labelKey: 'fields.description', defaultLabel: 'Description', value: 'txt' },
   ],
 });

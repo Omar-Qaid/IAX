@@ -44,6 +44,6 @@ it('does not send the literal undefined string when saving a customer from a spa
       paymTermId: '',
       vatNum: '',
       inventSiteId: '',
-    }),
+    })
   );
 });

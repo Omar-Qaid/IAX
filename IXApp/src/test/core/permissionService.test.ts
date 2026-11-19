@@ -3,7 +3,12 @@ import { userHasPermission } from '@core/permissions/permissionService';
 import type { UserProfile } from '@core/auth/types';
 
 const user = (permissions: string[], roles: string[] = []): UserProfile => ({
-  id: '1', username: 'user', email: 'user@example.com', displayName: 'User', roles, permissions,
+  id: '1',
+  username: 'user',
+  email: 'user@example.com',
+  displayName: 'User',
+  roles,
+  permissions,
 });
 
 describe('userHasPermission', () => {

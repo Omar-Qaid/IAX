@@ -1,8 +1,13 @@
 import { useState, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Box, IconButton, Tooltip, InputAdornment,
-  Typography, Collapse, Button,
+  Box,
+  IconButton,
+  Tooltip,
+  InputAdornment,
+  Typography,
+  Collapse,
+  Button,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
@@ -52,11 +57,17 @@ export const DataGridToolbar = memo(function DataGridToolbar({
   const _rowLabel = (() => {
     if (serverSide) {
       return loadedRows < totalRowCount
-        ? t('grid.rows_loaded', { loaded: loadedRows.toLocaleString(), total: totalRowCount.toLocaleString() })
+        ? t('grid.rows_loaded', {
+            loaded: loadedRows.toLocaleString(),
+            total: totalRowCount.toLocaleString(),
+          })
         : t('grid.rows_count', { count: loadedRows });
     }
     return filteredRows < totalRowCount
-      ? t('grid.rows_filtered', { filtered: filteredRows.toLocaleString(), total: totalRowCount.toLocaleString() })
+      ? t('grid.rows_filtered', {
+          filtered: filteredRows.toLocaleString(),
+          total: totalRowCount.toLocaleString(),
+        })
       : t('grid.rows_count', { count: totalRowCount });
   })();
 
@@ -65,12 +76,20 @@ export const DataGridToolbar = memo(function DataGridToolbar({
   return (
     <Box sx={{ bgcolor: 'background.paper', borderBottom: '1px solid', borderColor: 'divider' }}>
       {/* Main toolbar row */}
-      <Box sx={{ display: 'flex', alignItems: 'center', px: 1, py: 0.5, gap: 0.75, minHeight: uiDensity.toolbarHeight }}>
-
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          px: 1,
+          py: 0.5,
+          gap: 0.75,
+          minHeight: uiDensity.toolbarHeight,
+        }}
+      >
         {/* Row count — hidden on xs */}
-        <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1 }}>
-
-
+        <Box
+          sx={{ flexGrow: 1, display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1 }}
+        >
           <AppTextField
             inputRef={searchInputRef}
             placeholder={t('actions.filter')}
@@ -115,7 +134,13 @@ export const DataGridToolbar = memo(function DataGridToolbar({
                 ),
                 endAdornment: globalSearch ? (
                   <InputAdornment position="end">
-                    <IconButton aria-label={t('common.clear')} size="small" edge="end" onClick={() => setGlobalSearch('')} sx={{ p: 0.5 }}>
+                    <IconButton
+                      aria-label={t('common.clear')}
+                      size="small"
+                      edge="end"
+                      onClick={() => setGlobalSearch('')}
+                      sx={{ p: 0.5 }}
+                    >
                       <CloseIcon sx={{ fontSize: 16 }} />
                     </IconButton>
                   </InputAdornment>
@@ -125,7 +150,7 @@ export const DataGridToolbar = memo(function DataGridToolbar({
           />
         </Box>
 
-        <DataGridSelectionSummary 
+        <DataGridSelectionSummary
           serverSide={serverSide}
           loadedRows={loadedRows}
           totalRowCount={totalRowCount}
@@ -133,7 +158,7 @@ export const DataGridToolbar = memo(function DataGridToolbar({
         />
 
         {/* Add Row button (master-form mode only) */}
-        {(masterForm && !hideAddRowButton) && (
+        {masterForm && !hideAddRowButton && (
           <Tooltip title={isEditing ? t('grid.add_row_disabled') : t('grid.add_row')}>
             <span>
               <Button
@@ -158,8 +183,6 @@ export const DataGridToolbar = memo(function DataGridToolbar({
           </Tooltip>
         )}
 
-
-
         {/* Mobile search toggle */}
         <Box sx={{ display: { xs: 'flex', sm: 'none' } }}>
           <Tooltip title={mobileSearchOpen ? t('common.close') : t('common.search')}>
@@ -168,7 +191,7 @@ export const DataGridToolbar = memo(function DataGridToolbar({
               size="small"
               color={globalSearch ? 'primary' : 'default'}
               onClick={() => {
-                setMobileSearchOpen(o => !o);
+                setMobileSearchOpen((o) => !o);
                 if (mobileSearchOpen) setGlobalSearch('');
               }}
             >
@@ -180,7 +203,9 @@ export const DataGridToolbar = memo(function DataGridToolbar({
 
       {/* Mobile search row */}
       <Collapse in={mobileSearchOpen} timeout={200}>
-        <Box sx={{ display: { xs: 'flex', sm: 'none' }, px: 1.5, pb: 1, gap: 1, alignItems: 'center' }}>
+        <Box
+          sx={{ display: { xs: 'flex', sm: 'none' }, px: 1.5, pb: 1, gap: 1, alignItems: 'center' }}
+        >
           <AppTextField
             fullWidth
             placeholder={`${t('common.search')}...`}
@@ -202,7 +227,11 @@ export const DataGridToolbar = memo(function DataGridToolbar({
             }}
           />
           {isFiltered && (
-            <Typography variant="caption" color="primary" sx={{ whiteSpace: 'nowrap', fontWeight: 600 }}>
+            <Typography
+              variant="caption"
+              color="primary"
+              sx={{ whiteSpace: 'nowrap', fontWeight: 600 }}
+            >
               {serverSide ? `${loadedRows}/${totalRowCount}` : `${filteredRows}/${totalRowCount}`}
             </Typography>
           )}

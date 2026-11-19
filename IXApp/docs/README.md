@@ -4,37 +4,37 @@ This directory documents the frontend implemented in `IXApp/src`. It is intended
 
 ## Start here
 
-| Topic | Document |
-| --- | --- |
-| Architecture and dependency direction | [Architecture boundaries](ARCHITECTURE-BOUNDARIES.md) |
-| Bootstrap, providers, theme, and app stores | [Application layer](app.md) |
-| Routes, layouts, navigation, and shell behavior | [Routing and layouts](routing-and-layouts.md) and [App shell](app-shell.md) |
-| API transport, server state, form state, and UI state | [API and state](api-and-state.md) |
-| Authentication, sessions, and authorization | [Authentication](authentication.md) |
-| Low-level infrastructure and error handling | [Core layer](core.md) |
-| Shared component catalog | [Shared layer](shared.md) |
-| Page-pattern catalog and implementation status | [Page patterns](patterns.md) |
-| Business features and pages | [Business modules](modules.md) |
-| Process Builder | [Process Builder](process-builder.md) |
-| UI conventions, accessibility, RTL, and responsive behavior | [UI/UX and responsive design](ui-ux-and-responsive.md) |
-| Coding, naming, and contribution workflow | [Development guidelines](development.md) |
-| Unit, integration, and browser tests | [Testing](testing.md) |
-| Mock data and mock adapters | [Mocks](mocks.md) |
+| Topic                                                       | Document                                                                    |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Architecture and dependency direction                       | [Architecture boundaries](ARCHITECTURE-BOUNDARIES.md)                       |
+| Bootstrap, providers, theme, and app stores                 | [Application layer](app.md)                                                 |
+| Routes, layouts, navigation, and shell behavior             | [Routing and layouts](routing-and-layouts.md) and [App shell](app-shell.md) |
+| API transport, server state, form state, and UI state       | [API and state](api-and-state.md)                                           |
+| Authentication, sessions, and authorization                 | [Authentication](authentication.md)                                         |
+| Low-level infrastructure and error handling                 | [Core layer](core.md)                                                       |
+| Shared component catalog                                    | [Shared layer](shared.md)                                                   |
+| Page-pattern catalog and implementation status              | [Page patterns](patterns.md)                                                |
+| Business features and pages                                 | [Business modules](modules.md)                                              |
+| Process Builder                                             | [Process Builder](process-builder.md)                                       |
+| UI conventions, accessibility, RTL, and responsive behavior | [UI/UX and responsive design](ui-ux-and-responsive.md)                      |
+| Coding, naming, and contribution workflow                   | [Development guidelines](development.md)                                    |
+| Unit, integration, and browser tests                        | [Testing](testing.md)                                                       |
+| Mock data and mock adapters                                 | [Mocks](mocks.md)                                                           |
 
 ## Source code map
 
 Start with [`src/README.md`](../src/README.md), then follow the folder-level navigation:
 
-| Area | Folder documentation |
-| --- | --- |
-| Application composition | [`src/app`](../src/app/README.md) |
-| Assets | [`src/assets`](../src/assets/README.md) |
-| Core infrastructure | [`src/core`](../src/core/README.md) |
-| Mock datasets | [`src/mocks`](../src/mocks/README.md) |
-| Business modules | [`src/modules`](../src/modules/README.md) |
-| Page patterns | [`src/patterns`](../src/patterns/README.md) |
-| Shared library | [`src/shared`](../src/shared/README.md) |
-| Frontend tests | [`src/test`](../src/test/README.md) |
+| Area                    | Folder documentation                        |
+| ----------------------- | ------------------------------------------- |
+| Application composition | [`src/app`](../src/app/README.md)           |
+| Assets                  | [`src/assets`](../src/assets/README.md)     |
+| Core infrastructure     | [`src/core`](../src/core/README.md)         |
+| Mock datasets           | [`src/mocks`](../src/mocks/README.md)       |
+| Business modules        | [`src/modules`](../src/modules/README.md)   |
+| Page patterns           | [`src/patterns`](../src/patterns/README.md) |
+| Shared library          | [`src/shared`](../src/shared/README.md)     |
+| Frontend tests          | [`src/test`](../src/test/README.md)         |
 
 ## Business modules
 

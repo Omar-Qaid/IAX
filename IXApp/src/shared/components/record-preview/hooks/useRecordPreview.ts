@@ -65,19 +65,22 @@ export function useRecordPreview(entity: string, recordKey: string, preloaded?: 
   // When loading fails (e.g. no access to the master's endpoint) a card still
   // shows the code, built like an option without a name.
   const fallback =
-    query.isError && definition?.fromOption ? definition.fromOption({ code: recordKey }) : undefined;
+    query.isError && definition?.fromOption
+      ? definition.fromOption({ code: recordKey })
+      : undefined;
   const record = preloaded ?? query.data ?? fallback;
   const language = i18n.language;
   const rows: RecordPreviewRow[] =
     record && definition
-      ? definition.fields.map((field) => ({
-          label: t(field.labelKey, field.defaultLabel),
-          value:
-            typeof field.value === 'function'
-              ? field.value(record as never, { isRtl, language })
-              : (record as Record<string, unknown>)[field.value as string],
-          lookup: field.lookup,
-        }))
+      ? definition.fields
+          .map((field) => ({
+            label: t(field.labelKey, field.defaultLabel),
+            value:
+              typeof field.value === 'function'
+                ? field.value(record as never, { isRtl, language })
+                : (record as Record<string, unknown>)[field.value as string],
+            lookup: field.lookup,
+          }))
           .filter((row) => fallback === undefined || (row.value != null && row.value !== ''))
       : [];
 

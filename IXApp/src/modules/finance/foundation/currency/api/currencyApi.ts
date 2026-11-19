@@ -56,7 +56,10 @@ export const currencyApi = {
     return toRecord(requireData(response.data));
   },
   async update(record: CurrencyRecord): Promise<CurrencyRecord> {
-    const response = await apiClient.put<ApiResponse<CurrencyDto>>(`${endpoint}/${record.recId}`, toDto(record));
+    const response = await apiClient.put<ApiResponse<CurrencyDto>>(
+      `${endpoint}/${record.recId}`,
+      toDto(record)
+    );
     return toRecord(requireData(response.data));
   },
   async delete(record: CurrencyRecord): Promise<void> {

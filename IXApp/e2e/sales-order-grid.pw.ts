@@ -10,17 +10,43 @@ test('packing slip displays the stock rejection returned by the API', async ({ p
   await page.route('http://localhost:33319/api/v1/SalesTable/**', async (route) => {
     const path = new URL(route.request().url()).pathname;
     if (path.endsWith('/packing-slips') && route.request().method() === 'POST') {
-      await route.fulfill({ status: 422, json: { success: false, message, data: null, errors: null } });
+      await route.fulfill({
+        status: 422,
+        json: { success: false, message, data: null, errors: null },
+      });
       return;
     }
     let data: unknown = [];
     if (path.endsWith('/list')) {
-      data = [{ recId: 1, salesId: 'SO-PACK-001', customerName: 'Test customer',
-        currencyCode: 'SAR', salesStatus: 'Backorder', documentStatus: 'None' }];
+      data = [
+        {
+          recId: 1,
+          salesId: 'SO-PACK-001',
+          customerName: 'Test customer',
+          currencyCode: 'SAR',
+          salesStatus: 'Backorder',
+          documentStatus: 'None',
+        },
+      ];
     } else if (path.endsWith('/posting-preview')) {
       data = {
-        header: { id: '1', salesId: 'SO-PACK-001', customerName: 'Test customer', currencyCode: 'SAR', siteId: 'MAIN' },
-        lines: [{ id: '10', lineNumber: 1, itemId: 'ITEM-001', name: 'Test item', quantity: 6, netAmount: 60 }],
+        header: {
+          id: '1',
+          salesId: 'SO-PACK-001',
+          customerName: 'Test customer',
+          currencyCode: 'SAR',
+          siteId: 'MAIN',
+        },
+        lines: [
+          {
+            id: '10',
+            lineNumber: 1,
+            itemId: 'ITEM-001',
+            name: 'Test item',
+            quantity: 6,
+            netAmount: 60,
+          },
+        ],
       };
     }
     await route.fulfill({ json: { success: true, data } });
@@ -32,7 +58,9 @@ test('packing slip displays the stock rejection returned by the API', async ({ p
   await drawer.getByRole('spinbutton', { name: 'Update quantity for ITEM-001' }).fill('2');
   await drawer.getByRole('button', { name: 'OK' }).click();
   await expect(drawer.getByRole('alert').filter({ hasText: message })).toBeVisible();
-  await expect(drawer.getByRole('spinbutton', { name: 'Update quantity for ITEM-001' })).toHaveValue('2');
+  await expect(
+    drawer.getByRole('spinbutton', { name: 'Update quantity for ITEM-001' })
+  ).toHaveValue('2');
   await expect(drawer.getByRole('button', { name: 'OK' })).toBeEnabled();
 });
 
@@ -151,7 +179,10 @@ for (const language of ['en', 'ar']) {
     await page.goto('/accounts-receivable/sales-orders/1');
     const grid = page.getByRole('grid');
     await expect(grid).toHaveAttribute('aria-rowcount', '1500', { timeout: 30000 });
-    await page.getByText(language === 'ar' ? 'تعديل' : 'Edit', { exact: true }).first().click();
+    await page
+      .getByText(language === 'ar' ? 'تعديل' : 'Edit', { exact: true })
+      .first()
+      .click();
     await expect(grid.locator('[data-row-id="1"]')).toBeVisible();
     expect(await grid.locator('[data-row-id]').count()).toBeLessThan(50);
     const quantityCell = grid.locator('[data-row-id="1"] [data-field="quantity"]');

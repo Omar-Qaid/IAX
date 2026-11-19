@@ -17,61 +17,106 @@ export interface ReferenceFilterValuePage {
   totalRecords: number;
 }
 
-const textOperators = ['equals', 'notEquals', 'contains', 'startsWith', 'endsWith', 'isEmpty', 'isNotEmpty'];
-const comparableOperators = ['equals', 'notEquals', 'greaterThan', 'greaterThanOrEqual', 'lessThan', 'lessThanOrEqual', 'isEmpty', 'isNotEmpty'];
+const textOperators = [
+  'equals',
+  'notEquals',
+  'contains',
+  'startsWith',
+  'endsWith',
+  'isEmpty',
+  'isNotEmpty',
+];
+const comparableOperators = [
+  'equals',
+  'notEquals',
+  'greaterThan',
+  'greaterThanOrEqual',
+  'lessThan',
+  'lessThanOrEqual',
+  'isEmpty',
+  'isNotEmpty',
+];
 const equalityOperators = ['equals', 'notEquals', 'isEmpty', 'isNotEmpty'];
-const field = (name: string, dataType: ReferenceFilterField['dataType'], nullable = false, isForeignKey = false): ReferenceFilterField => ({
+const field = (
+  name: string,
+  dataType: ReferenceFilterField['dataType'],
+  nullable = false,
+  isForeignKey = false
+): ReferenceFilterField => ({
   name,
   dataType,
   nullable,
   isForeignKey,
-  operators: isForeignKey || dataType === 'boolean' ? equalityOperators : dataType === 'string' ? textOperators : comparableOperators,
+  operators:
+    isForeignKey || dataType === 'boolean'
+      ? equalityOperators
+      : dataType === 'string'
+        ? textOperators
+        : comparableOperators,
 });
 
-export const referenceFilterFieldsFallback = (referenceType: 'Employee' | 'Showroom'): ReferenceFilterField[] => {
+export const referenceFilterFieldsFallback = (
+  referenceType: 'Employee' | 'Showroom'
+): ReferenceFilterField[] => {
   const common = [
-    field('CreatedAt', 'date', true), field('CreatedBy', 'string', true),
-    field('DataAreaId', 'string'), field('IsActive', 'boolean'), field('IsDeleted', 'boolean'),
-    field('LastModifiedAt', 'date', true), field('LastModifiedBy', 'string', true),
-    field('OwnerAccountId', 'string', true), field('RecId', 'integer'), field('RecVersion', 'integer'),
+    field('CreatedAt', 'date', true),
+    field('CreatedBy', 'string', true),
+    field('DataAreaId', 'string'),
+    field('IsActive', 'boolean'),
+    field('IsDeleted', 'boolean'),
+    field('LastModifiedAt', 'date', true),
+    field('LastModifiedBy', 'string', true),
+    field('OwnerAccountId', 'string', true),
+    field('RecId', 'integer'),
+    field('RecVersion', 'integer'),
   ];
-  const specific = referenceType === 'Employee'
-    ? [
-        field('BirthDate', 'date', true), field('GenderId', 'integer', false, true),
-        field('HireDate', 'date', true), field('NationalityId', 'integer', false, true),
-        field('Person', 'integer', false, true),
-        field('PersonnelNumber', 'string'), field('UserId', 'string', true, true),
-        ...common.map((item) => ({ ...item, name: `OrganizationAssignment.${item.name}` })),
-        field('OrganizationAssignment.DepartmentId', 'integer', true, true),
-        field('OrganizationAssignment.HcmManagerWorkerId', 'integer', false, true),
-        field('OrganizationAssignment.HcmWorkerId', 'integer', false, true),
-        field('OrganizationAssignment.OccupationId', 'integer', true, true),
-        field('OrganizationAssignment.ValidFrom', 'date'),
-        field('OrganizationAssignment.ValidTo', 'date', true),
-        field('OrganizationAssignment.IsPrimary', 'boolean'),
-      ]
-    : [
-        field('Party', 'integer', false, true), field('PersonnelNumber', 'string'),
-        ...common.map((item) => ({ ...item, name: `ShowroomAssignment.${item.name}` })),
-        field('ShowroomAssignment.HcmWorkerId', 'integer', false, true),
-        field('ShowroomAssignment.HcmShowroomId', 'integer', false, true),
-        field('ShowroomAssignment.ValidFrom', 'date'),
-        field('ShowroomAssignment.ValidTo', 'date', true),
-        field('ShowroomAssignment.IsPrimary', 'boolean'),
-      ];
+  const specific =
+    referenceType === 'Employee'
+      ? [
+          field('BirthDate', 'date', true),
+          field('GenderId', 'integer', false, true),
+          field('HireDate', 'date', true),
+          field('NationalityId', 'integer', false, true),
+          field('Person', 'integer', false, true),
+          field('PersonnelNumber', 'string'),
+          field('UserId', 'string', true, true),
+          ...common.map((item) => ({ ...item, name: `OrganizationAssignment.${item.name}` })),
+          field('OrganizationAssignment.DepartmentId', 'integer', true, true),
+          field('OrganizationAssignment.HcmManagerWorkerId', 'integer', false, true),
+          field('OrganizationAssignment.HcmWorkerId', 'integer', false, true),
+          field('OrganizationAssignment.OccupationId', 'integer', true, true),
+          field('OrganizationAssignment.ValidFrom', 'date'),
+          field('OrganizationAssignment.ValidTo', 'date', true),
+          field('OrganizationAssignment.IsPrimary', 'boolean'),
+        ]
+      : [
+          field('Party', 'integer', false, true),
+          field('PersonnelNumber', 'string'),
+          ...common.map((item) => ({ ...item, name: `ShowroomAssignment.${item.name}` })),
+          field('ShowroomAssignment.HcmWorkerId', 'integer', false, true),
+          field('ShowroomAssignment.HcmShowroomId', 'integer', false, true),
+          field('ShowroomAssignment.ValidFrom', 'date'),
+          field('ShowroomAssignment.ValidTo', 'date', true),
+          field('ShowroomAssignment.IsPrimary', 'boolean'),
+        ];
   return [...common, ...specific].sort((left, right) => left.name.localeCompare(right.name));
 };
 
 const data = <T>(response: ApiResponse<T>): T => {
-  if (!response.success || response.data == null) throw new ApiError(response.message || 'Reference filter data is unavailable.', 500);
+  if (!response.success || response.data == null)
+    throw new ApiError(response.message || 'Reference filter data is unavailable.', 500);
   return response.data;
 };
 
 export const referenceFilterApi = {
-  async fields(referenceType: 'Employee' | 'Showroom', signal?: AbortSignal): Promise<ReferenceFilterField[]> {
+  async fields(
+    referenceType: 'Employee' | 'Showroom',
+    signal?: AbortSignal
+  ): Promise<ReferenceFilterField[]> {
     try {
       const response = await apiClient.get<ApiResponse<ReferenceFilterField[]>>(
-        `/v1/WfRequest/reference-filters/${referenceType}/fields`, { signal }
+        `/v1/WfRequest/reference-filters/${referenceType}/fields`,
+        { signal }
       );
       return data(response.data);
     } catch (error) {
@@ -79,10 +124,21 @@ export const referenceFilterApi = {
       return referenceFilterFieldsFallback(referenceType);
     }
   },
-  async values(referenceType: 'Employee' | 'Showroom', field: string, params: { pageNumber: number; pageSize: number; search: string; signal?: AbortSignal }): Promise<ReferenceFilterValuePage> {
+  async values(
+    referenceType: 'Employee' | 'Showroom',
+    field: string,
+    params: { pageNumber: number; pageSize: number; search: string; signal?: AbortSignal }
+  ): Promise<ReferenceFilterValuePage> {
     const response = await apiClient.get<ApiResponse<ReferenceFilterValuePage>>(
       `/v1/WfRequest/reference-filters/${referenceType}/fields/${encodeURIComponent(field)}/values`,
-      { params: { pageNumber: params.pageNumber, pageSize: params.pageSize, search: params.search || undefined }, signal: params.signal }
+      {
+        params: {
+          pageNumber: params.pageNumber,
+          pageSize: params.pageSize,
+          search: params.search || undefined,
+        },
+        signal: params.signal,
+      }
     );
     return data(response.data);
   },

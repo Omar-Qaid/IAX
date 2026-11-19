@@ -100,62 +100,114 @@ export function SalesOrderPackingSlipPostingDialog({
   }, [open, orderId]);
 
   const preview = previewQuery.data;
-  const overviewRows = useMemo<OverviewRow[]>(() => preview ? [{
-    id: preview.header.id,
-    update: 'Packing slip',
-    customerPackingSlip: '',
-    shipmentNumber: '',
-    salesId,
-    siteId: preview.header.siteId,
-    customerName: preview.header.customerName,
-    currencyCode: preview.header.currencyCode,
-  }] : [], [preview, salesId]);
+  const overviewRows = useMemo<OverviewRow[]>(
+    () =>
+      preview
+        ? [
+            {
+              id: preview.header.id,
+              update: 'Packing slip',
+              customerPackingSlip: '',
+              shipmentNumber: '',
+              salesId,
+              siteId: preview.header.siteId,
+              customerName: preview.header.customerName,
+              currencyCode: preview.header.currencyCode,
+            },
+          ]
+        : [],
+    [preview, salesId]
+  );
 
-  const lineColumns = useMemo<ColumnDef<PackingSlipPostingLine>[]>(() => [
-    { field: 'salesCategory', headerName: 'Sales category', width: 170 },
-    { field: 'name', headerName: 'Text', width: 220 },
-    { field: 'salesId', headerName: 'Sales order', width: 150, valueGetter: () => salesId },
-    { field: 'inventLocationId', headerName: 'Warehouse', width: 155 },
-    { field: 'wmsLocationId', headerName: 'Location', width: 145 },
-    { field: 'catchWeightQuantity', headerName: 'CW update', width: 120, type: 'number', align: 'right' },
-    { field: 'productNumber', headerName: 'Product number', width: 190 },
-    { field: 'itemId', headerName: 'Item number', width: 160 },
-    {
-      field: 'quantity', headerName: 'Update', width: 125, align: 'right',
-      renderCell: ({ row }) => (
-        <TextField
-          size="small"
-          type="number"
-          value={quantities[row.id] ?? String(row.quantity)}
-          disabled={!postingEnabled || posting}
-          onChange={(event) => setQuantities((current) => ({ ...current, [row.id]: event.target.value }))}
-          slotProps={{ htmlInput: { min: 0, max: row.quantity, step: 'any', 'aria-label': `Update quantity for ${row.itemId}` } }}
-          sx={{ width: '100%', '& .MuiInputBase-input': { py: 0.25, px: 0.5, textAlign: 'right' } }}
-        />
-      ),
-    },
-    {
-      field: 'netAmount', headerName: 'Net amount', width: 135, type: 'number', align: 'right',
-      renderCell: ({ row }) => {
-        const entered = Number(quantities[row.id] ?? row.quantity);
-        const amount = row.quantity > 0 ? row.netAmount * entered / row.quantity : 0;
-        return amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const lineColumns = useMemo<ColumnDef<PackingSlipPostingLine>[]>(
+    () => [
+      { field: 'salesCategory', headerName: 'Sales category', width: 170 },
+      { field: 'name', headerName: 'Text', width: 220 },
+      { field: 'salesId', headerName: 'Sales order', width: 150, valueGetter: () => salesId },
+      { field: 'inventLocationId', headerName: 'Warehouse', width: 155 },
+      { field: 'wmsLocationId', headerName: 'Location', width: 145 },
+      {
+        field: 'catchWeightQuantity',
+        headerName: 'CW update',
+        width: 120,
+        type: 'number',
+        align: 'right',
       },
-    },
-  ], [posting, postingEnabled, quantities, salesId]);
+      { field: 'productNumber', headerName: 'Product number', width: 190 },
+      { field: 'itemId', headerName: 'Item number', width: 160 },
+      {
+        field: 'quantity',
+        headerName: 'Update',
+        width: 125,
+        align: 'right',
+        renderCell: ({ row }) => (
+          <TextField
+            size="small"
+            type="number"
+            value={quantities[row.id] ?? String(row.quantity)}
+            disabled={!postingEnabled || posting}
+            onChange={(event) =>
+              setQuantities((current) => ({ ...current, [row.id]: event.target.value }))
+            }
+            slotProps={{
+              htmlInput: {
+                min: 0,
+                max: row.quantity,
+                step: 'any',
+                'aria-label': `Update quantity for ${row.itemId}`,
+              },
+            }}
+            sx={{
+              width: '100%',
+              '& .MuiInputBase-input': { py: 0.25, px: 0.5, textAlign: 'right' },
+            }}
+          />
+        ),
+      },
+      {
+        field: 'netAmount',
+        headerName: 'Net amount',
+        width: 135,
+        type: 'number',
+        align: 'right',
+        renderCell: ({ row }) => {
+          const entered = Number(quantities[row.id] ?? row.quantity);
+          const amount = row.quantity > 0 ? (row.netAmount * entered) / row.quantity : 0;
+          return amount.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          });
+        },
+      },
+    ],
+    [posting, postingEnabled, quantities, salesId]
+  );
 
-  const selectedLines = (preview?.lines ?? []).map((line) => ({
-    salesLineId: line.id,
-    quantity: Number(quantities[line.id] ?? line.quantity),
-  })).filter((line) => Number.isFinite(line.quantity) && line.quantity > 0);
+  const selectedLines = (preview?.lines ?? [])
+    .map((line) => ({
+      salesLineId: line.id,
+      quantity: Number(quantities[line.id] ?? line.quantity),
+    }))
+    .filter((line) => Number.isFinite(line.quantity) && line.quantity > 0);
   const hasInvalidQuantity = (preview?.lines ?? []).some((line) => {
     const value = Number(quantities[line.id] ?? line.quantity);
     return !Number.isFinite(value) || value < 0 || value > line.quantity;
   });
 
   const submit = async () => {
-    if (!postingEnabled) { onClose(); return; }
-    if (!canPost || posting || !preview || !deliveryDate || selectedLines.length === 0 || hasInvalidQuantity) return;
+    if (!postingEnabled) {
+      onClose();
+      return;
+    }
+    if (
+      !canPost ||
+      posting ||
+      !preview ||
+      !deliveryDate ||
+      selectedLines.length === 0 ||
+      hasInvalidQuantity
+    )
+      return;
     setPosting(true);
     setError('');
     try {
@@ -171,8 +223,12 @@ export function SalesOrderPackingSlipPostingDialog({
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.list(company) }),
         queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.lines(company, orderId) }),
-        queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.packingSlips(company, orderId) }),
-        queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.packingSlipPreview(company, orderId) }),
+        queryClient.invalidateQueries({
+          queryKey: salesOrderQueryKeys.packingSlips(company, orderId),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: salesOrderQueryKeys.packingSlipPreview(company, orderId),
+        }),
         onPosted(),
       ]);
       setRequestId(undefined);
@@ -193,14 +249,27 @@ export function SalesOrderPackingSlipPostingDialog({
       busy={posting}
       actions={
         <>
-          {error && <Alert severity="error" sx={{ flex: 1, minWidth: 0 }}>{error}</Alert>}
-          <Button onClick={onClose} disabled={posting}>Cancel</Button>
-          <Button variant="outlined" disabled>Batch</Button>
+          {error && (
+            <Alert severity="error" sx={{ flex: 1, minWidth: 0 }}>
+              {error}
+            </Alert>
+          )}
+          <Button onClick={onClose} disabled={posting}>
+            Cancel
+          </Button>
+          <Button variant="outlined" disabled>
+            Batch
+          </Button>
           <Button
             variant="contained"
             onClick={() => void submit()}
-            disabled={posting || previewQuery.isLoading || !preview || (postingEnabled && (!canPost
-              || !deliveryDate || selectedLines.length === 0 || hasInvalidQuantity))}
+            disabled={
+              posting ||
+              previewQuery.isLoading ||
+              !preview ||
+              (postingEnabled &&
+                (!canPost || !deliveryDate || selectedLines.length === 0 || hasInvalidQuantity))
+            }
           >
             {posting ? 'Posting…' : postingEnabled ? 'OK' : 'Close preview'}
           </Button>
@@ -208,19 +277,32 @@ export function SalesOrderPackingSlipPostingDialog({
       }
     >
       <Stack spacing={1} sx={{ minHeight: '100%' }}>
-        <Typography variant="body2" color="text.secondary">Standard view</Typography>
+        <Typography variant="body2" color="text.secondary">
+          Standard view
+        </Typography>
         <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-          <Button size="small" disabled>Arrange</Button>
-          <Button size="small" disabled>Select</Button>
-          <Button size="small" disabled endIcon={<ExpandMoreIcon />}>Printer setup</Button>
+          <Button size="small" disabled>
+            Arrange
+          </Button>
+          <Button size="small" disabled>
+            Select
+          </Button>
+          <Button size="small" disabled endIcon={<ExpandMoreIcon />}>
+            Printer setup
+          </Button>
         </Stack>
-        {previewQuery.error instanceof Error && <Alert severity="error">{previewQuery.error.message}</Alert>}
+        {previewQuery.error instanceof Error && (
+          <Alert severity="error">{previewQuery.error.message}</Alert>
+        )}
         <Alert severity="info">
-          Posting records the delivery and updates inventory. Ledger posting follows the item's model group settings.
+          Posting records the delivery and updates inventory. Ledger posting follows the item's
+          model group settings.
         </Alert>
 
         <Accordion disableGutters>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}><Typography sx={{ fontWeight: 600 }}>Parameters</Typography></AccordionSummary>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography sx={{ fontWeight: 600 }}>Parameters</Typography>
+          </AccordionSummary>
           <AccordionDetails sx={{ pt: 0 }}>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
               <FormControl size="small" sx={{ minWidth: 180 }}>
@@ -251,21 +333,39 @@ export function SalesOrderPackingSlipPostingDialog({
               />
               <FormControlLabel
                 label="Posting"
-                control={<Switch checked={postingEnabled} disabled={posting} onChange={(event) => setPostingEnabled(event.target.checked)} />}
+                control={
+                  <Switch
+                    checked={postingEnabled}
+                    disabled={posting}
+                    onChange={(event) => setPostingEnabled(event.target.checked)}
+                  />
+                }
               />
             </Box>
           </AccordionDetails>
         </Accordion>
 
         <Accordion disableGutters defaultExpanded>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}><Typography sx={{ fontWeight: 600 }}>Overview</Typography></AccordionSummary>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography sx={{ fontWeight: 600 }}>Overview</Typography>
+          </AccordionSummary>
           <AccordionDetails sx={{ pt: 0 }}>
             <Stack direction="row" spacing={1} sx={{ mb: 0.5 }}>
-              <Button size="small" disabled>Add</Button>
-              <Button size="small" disabled>Remove</Button>
-              <Button size="small" disabled>Tracking information</Button>
-              <Button size="small" disabled>Sales tax</Button>
-              <Button size="small" disabled>Shipments</Button>
+              <Button size="small" disabled>
+                Add
+              </Button>
+              <Button size="small" disabled>
+                Remove
+              </Button>
+              <Button size="small" disabled>
+                Tracking information
+              </Button>
+              <Button size="small" disabled>
+                Sales tax
+              </Button>
+              <Button size="small" disabled>
+                Shipments
+              </Button>
             </Stack>
             <DataGrid
               rows={overviewRows}
@@ -288,21 +388,38 @@ export function SalesOrderPackingSlipPostingDialog({
         </Accordion>
 
         <Accordion disableGutters>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}><Typography sx={{ fontWeight: 600 }}>Setup</Typography></AccordionSummary>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography sx={{ fontWeight: 600 }}>Setup</Typography>
+          </AccordionSummary>
           <AccordionDetails sx={{ pt: 0 }}>
-            <Typography variant="body2">Physical inventory update only. Financial inventory and invoice balances remain unchanged.</Typography>
+            <Typography variant="body2">
+              Physical inventory update only. Financial inventory and invoice balances remain
+              unchanged.
+            </Typography>
           </AccordionDetails>
         </Accordion>
 
         <Accordion disableGutters defaultExpanded>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}><Typography sx={{ fontWeight: 600 }}>Lines</Typography></AccordionSummary>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography sx={{ fontWeight: 600 }}>Lines</Typography>
+          </AccordionSummary>
           <AccordionDetails sx={{ pt: 0 }}>
             <Stack direction="row" spacing={1} sx={{ mb: 0.5 }}>
-              <Button size="small" disabled>Delete</Button>
-              <Button size="small" disabled>Sales order line</Button>
-              <Button size="small" disabled>Inventory</Button>
-              <Button size="small" disabled>Reset batch disposition code</Button>
-              <Button size="small" disabled>Update line</Button>
+              <Button size="small" disabled>
+                Delete
+              </Button>
+              <Button size="small" disabled>
+                Sales order line
+              </Button>
+              <Button size="small" disabled>
+                Inventory
+              </Button>
+              <Button size="small" disabled>
+                Reset batch disposition code
+              </Button>
+              <Button size="small" disabled>
+                Update line
+              </Button>
             </Stack>
             <DataGrid
               rows={preview?.lines ?? []}

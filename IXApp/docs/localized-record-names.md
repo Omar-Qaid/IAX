@@ -4,14 +4,14 @@ Display a record's `nameAlias` in RTL and `name` in LTR. Empty aliases fall back
 
 ## Module coverage
 
-| Area | Contract and display behavior |
-| --- | --- |
-| Organization / HCM | Roles, units, workers, positions and hierarchy records use `nameAlias`; their editors keep both name fields. Hierarchy lookup appears above tree search. |
-| Legal entities | The existing contract calls the Arabic field `arabicName`; lists and read-only headers use it in RTL. Both inputs remain available. |
-| Workflow | Master lists, record headers and shared lookups select localized names. Setup grids retain separate editable name and alias columns. Request process/category selection and report templates already support aliases. |
-| Process Builder | Process, step, activity and variable aliases survive load/save and have separate settings inputs. Trees, diagrams, rule labels and selections use localized names. Variable identifiers, operator resolution and expressions keep their original values. Controls retain their existing separate labels. |
-| Finance customers | The response calls the Arabic name `nameAr`; customer lists, record headers and sales-order customer selections display it in RTL. Customer writes continue mapping it to `nameAlias`. |
-| Shared lookups | Dropdown, dialog and grid lookups select localized names and preserve the original selected record. Grid fields default to `nameAlias`; explicitly configured legacy label fields remain supported. |
+| Area               | Contract and display behavior                                                                                                                                                                                                                                                                            |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Organization / HCM | Roles, units, workers, positions and hierarchy records use `nameAlias`; their editors keep both name fields. Hierarchy lookup appears above tree search.                                                                                                                                                 |
+| Legal entities     | The existing contract calls the Arabic field `arabicName`; lists and read-only headers use it in RTL. Both inputs remain available.                                                                                                                                                                      |
+| Workflow           | Master lists, record headers and shared lookups select localized names. Setup grids retain separate editable name and alias columns. Request process/category selection and report templates already support aliases.                                                                                    |
+| Process Builder    | Process, step, activity and variable aliases survive load/save and have separate settings inputs. Trees, diagrams, rule labels and selections use localized names. Variable identifiers, operator resolution and expressions keep their original values. Controls retain their existing separate labels. |
+| Finance customers  | The response calls the Arabic name `nameAr`; customer lists, record headers and sales-order customer selections display it in RTL. Customer writes continue mapping it to `nameAlias`.                                                                                                                   |
+| Shared lookups     | Dropdown, dialog and grid lookups select localized names and preserve the original selected record. Grid fields default to `nameAlias`; explicitly configured legacy label fields remain supported.                                                                                                      |
 
 ## Contract limits
 

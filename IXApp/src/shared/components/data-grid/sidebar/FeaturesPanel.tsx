@@ -141,7 +141,9 @@ export function FeaturesPanel<T>({
             sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <BorderVerticalIcon sx={{ fontSize: 16, marginInlineEnd: 1, color: 'text.secondary' }} />
+              <BorderVerticalIcon
+                sx={{ fontSize: 16, marginInlineEnd: 1, color: 'text.secondary' }}
+              />
               <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
                 {t('grid.show_column_borders')}
               </Typography>

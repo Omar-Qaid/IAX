@@ -1,5 +1,7 @@
 export const hasLookupValue = (value: unknown): boolean =>
-  value !== null && value !== undefined && value !== '' &&
+  value !== null &&
+  value !== undefined &&
+  value !== '' &&
   (!Array.isArray(value) || value.length > 0);
 
 import type { Theme } from '@mui/material/styles';
@@ -13,4 +15,3 @@ export const lookupValueSx = (value: unknown) => ({
       })
     : {},
 });
-

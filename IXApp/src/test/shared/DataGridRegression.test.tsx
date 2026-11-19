@@ -18,17 +18,29 @@ const columns: ColumnDef<Row>[] = [
 it('opens the linked record from its key cell without triggering the row action', async () => {
   const onRowClick = vi.fn();
   const linkedColumns: ColumnDef<Row>[] = [
-    { field: 'id', headerName: 'Product number',
-      getDetailHref: (row) => row.active ? `/products/${row.id}` : undefined },
+    {
+      field: 'id',
+      headerName: 'Product number',
+      getDetailHref: (row) => (row.active ? `/products/${row.id}` : undefined),
+    },
     columns[1],
   ];
   render(
     <MemoryRouter initialEntries={['/products']}>
       <Routes>
-        <Route path="/products" element={<DataGrid columns={linkedColumns} rows={[
-          { id: 'ITEM-001', amount: 1, active: true },
-          { id: 'ITEM-002', amount: 2, active: false },
-        ]} onRowClick={onRowClick} />} />
+        <Route
+          path="/products"
+          element={
+            <DataGrid
+              columns={linkedColumns}
+              rows={[
+                { id: 'ITEM-001', amount: 1, active: true },
+                { id: 'ITEM-002', amount: 2, active: false },
+              ]}
+              onRowClick={onRowClick}
+            />
+          }
+        />
         <Route path="/products/ITEM-001" element={<h1>Edit ITEM-001</h1>} />
       </Routes>
     </MemoryRouter>
@@ -43,10 +55,10 @@ it('opens the linked record from its key cell without triggering the row action'
 });
 
 it('preserves reordered columns and reads storage only once as editor callbacks change', () => {
-  // Spied on the instance, not Storage.prototype: under Node's experimental localStorage
-  // global, setupTests substitutes an in-memory Storage that does not inherit from
-  // Storage.prototype, so a prototype spy would record nothing.
-  const getItem = vi.spyOn(globalThis.localStorage, 'getItem');
+  // Both jsdom Storage and the Node fallback implement methods on their own
+  // prototype. Spying there avoids native Storage's named-property proxy.
+  const storagePrototype = Object.getPrototypeOf(globalThis.localStorage) as Storage;
+  const getItem = vi.spyOn(storagePrototype, 'getItem');
   const committed = vi.fn();
   const { result, rerender } = renderHook(
     ({ input }) => {

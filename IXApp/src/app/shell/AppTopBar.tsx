@@ -132,8 +132,7 @@ export const AppTopBar: React.FC = memo(() => {
   // Auth & Permissions
   const { user, logout, hasPermission } = useAuth();
   const userName = user?.displayName || user?.username || user?.email;
-  const isAdmin =
-    user?.roles.some((role) => role === 'Admin' || role === 'SystemAdmin') ?? false;
+  const isAdmin = user?.roles.some((role) => role === 'Admin' || role === 'SystemAdmin') ?? false;
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const isMenuOpen = Boolean(anchorEl);
   const [companyAnchorEl, setCompanyAnchorEl] = useState<null | HTMLElement>(null);
@@ -169,11 +168,14 @@ export const AppTopBar: React.FC = memo(() => {
     void changeLanguage(nextLanguage);
   }, [changeLanguage, currentLanguage.code, setRtl]);
 
-  const handleCompanyChange = useCallback((companyCode: string) => {
-    if (!setCompany(companyCode)) return;
-    setCompanyAnchorEl(null);
-    void queryClient.invalidateQueries();
-  }, [queryClient, setCompany]);
+  const handleCompanyChange = useCallback(
+    (companyCode: string) => {
+      if (!setCompany(companyCode)) return;
+      setCompanyAnchorEl(null);
+      void queryClient.invalidateQueries();
+    },
+    [queryClient, setCompany]
+  );
 
   const handleModuleClick = useCallback(
     (event: React.MouseEvent<HTMLElement>, moduleId: string) => {
@@ -231,7 +233,12 @@ export const AppTopBar: React.FC = memo(() => {
           <IconButton size="small" onClick={openSidebar} sx={hamburgerSx}>
             <MenuIcon sx={{ fontSize: topBar.iconSize }} />
           </IconButton>
-          <IconButton size="small" onClick={openSidebar} sx={waffleSx} aria-label={t('nav.app_launcher')}>
+          <IconButton
+            size="small"
+            onClick={openSidebar}
+            sx={waffleSx}
+            aria-label={t('nav.app_launcher')}
+          >
             <WaffleIcon sx={{ fontSize: 24 }} />
           </IconButton>
         </Box>
@@ -247,25 +254,76 @@ export const AppTopBar: React.FC = memo(() => {
             borderInlineEnd: `1px solid ${topBar.divider}`,
           }}
         >
-          <Typography noWrap sx={{ ...titleSx, m: 0, fontFamily: topBar.fontFamily, fontSize: topBar.productFontSize }}>
+          <Typography
+            noWrap
+            sx={{
+              ...titleSx,
+              m: 0,
+              fontFamily: topBar.fontFamily,
+              fontSize: topBar.productFontSize,
+            }}
+          >
             {titleText}
           </Typography>
         </Box>
 
         {!isHorizontal && !isMobile && breadcrumbs.length > 0 && (
-          <Box component="nav" aria-label={t('common.breadcrumbs', 'Breadcrumbs')} sx={{ height: topBar.height, display: 'flex', alignItems: 'center', minWidth: 0, maxWidth: { md: 260, xl: 390 }, px: 1.5, gap: 0.5, flexShrink: 1, overflow: 'hidden' }}>
-            {breadcrumbs.map((item, index) => <React.Fragment key={`${item.labelKey}-${index}`}>
-              {index > 0 && <ChevronRightIcon sx={{ fontSize: 17, color: topBar.mutedText, flexShrink: 0 }} />}
-              <Typography component={item.path ? 'button' : 'span'} onClick={item.path ? () => navigate(item.path!) : undefined} noWrap sx={{ appearance: 'none', border: 0, bgcolor: 'transparent', p: 0, color: topBar.text, fontFamily: topBar.fontFamily, fontSize: 12, cursor: item.path ? 'pointer' : 'default', overflow: 'hidden', textOverflow: 'ellipsis', '&:hover': item.path ? { textDecoration: 'underline' } : undefined }}>
-                {t(item.labelKey)}
-              </Typography>
-            </React.Fragment>)}
+          <Box
+            component="nav"
+            aria-label={t('common.breadcrumbs', 'Breadcrumbs')}
+            sx={{
+              height: topBar.height,
+              display: 'flex',
+              alignItems: 'center',
+              minWidth: 0,
+              maxWidth: { md: 260, xl: 390 },
+              px: 1.5,
+              gap: 0.5,
+              flexShrink: 1,
+              overflow: 'hidden',
+            }}
+          >
+            {breadcrumbs.map((item, index) => (
+              <React.Fragment key={`${item.labelKey}-${index}`}>
+                {index > 0 && (
+                  <ChevronRightIcon sx={{ fontSize: 17, color: topBar.mutedText, flexShrink: 0 }} />
+                )}
+                <Typography
+                  component={item.path ? 'button' : 'span'}
+                  onClick={item.path ? () => navigate(item.path!) : undefined}
+                  noWrap
+                  sx={{
+                    appearance: 'none',
+                    border: 0,
+                    bgcolor: 'transparent',
+                    p: 0,
+                    color: topBar.text,
+                    fontFamily: topBar.fontFamily,
+                    fontSize: 12,
+                    cursor: item.path ? 'pointer' : 'default',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    '&:hover': item.path ? { textDecoration: 'underline' } : undefined,
+                  }}
+                >
+                  {t(item.labelKey)}
+                </Typography>
+              </React.Fragment>
+            ))}
           </Box>
         )}
 
         {/* Horizontal navigation tabs */}
         {isHorizontal && !isMobile && (
-          <Box sx={{ display: 'flex', gap: 0.5, marginInlineStart: 2, alignItems: 'center', height: '100%' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 0.5,
+              marginInlineStart: 2,
+              alignItems: 'center',
+              height: '100%',
+            }}
+          >
             <Button
               size="small"
               onClick={() => navigate('/dashboard')}
@@ -332,12 +390,35 @@ export const AppTopBar: React.FC = memo(() => {
           </Box>
         )}
 
-        <Box sx={{ flex: 1, minWidth: 40, px: { xs: 0.5, md: 2 }, display: 'flex', justifyContent: 'center' }}>
+        <Box
+          sx={{
+            flex: 1,
+            minWidth: 40,
+            px: { xs: 0.5, md: 2 },
+            display: 'flex',
+            justifyContent: 'center',
+          }}
+        >
           <Button
             onClick={openCommandPalette}
             startIcon={<SearchIcon sx={{ fontSize: 18 }} />}
             aria-label={t('nav.global_search')}
-            sx={{ display: { xs: 'none', md: 'flex' }, width: 'min(100%, 510px)', height: 30, justifyContent: 'flex-start', px: 1.5, color: '#fff', bgcolor: topBar.searchBackground, borderRadius: '3px', textTransform: 'none', fontFamily: topBar.fontFamily, fontSize: 13, fontWeight: 400, '&:hover': { bgcolor: '#36557f' }, '& .MuiButton-startIcon': { marginInlineEnd: 1, marginInlineStart: 0, color: '#fff' } }}
+            sx={{
+              display: { xs: 'none', md: 'flex' },
+              width: 'min(100%, 510px)',
+              height: 30,
+              justifyContent: 'flex-start',
+              px: 1.5,
+              color: '#fff',
+              bgcolor: topBar.searchBackground,
+              borderRadius: '3px',
+              textTransform: 'none',
+              fontFamily: topBar.fontFamily,
+              fontSize: 13,
+              fontWeight: 400,
+              '&:hover': { bgcolor: '#36557f' },
+              '& .MuiButton-startIcon': { marginInlineEnd: 1, marginInlineStart: 0, color: '#fff' },
+            }}
           >
             {t('nav.global_search')}
           </Button>
@@ -368,7 +449,8 @@ export const AppTopBar: React.FC = memo(() => {
             }}
           >
             <Typography noWrap sx={{ fontFamily: 'inherit', fontSize: 12, color: 'inherit' }}>
-              {currentCompany}{selectedLegalEntity?.name ? ` | ${selectedLegalEntity.name}` : ''}
+              {currentCompany}
+              {selectedLegalEntity?.name ? ` | ${selectedLegalEntity.name}` : ''}
             </Typography>
           </Button>
 
@@ -379,18 +461,59 @@ export const AppTopBar: React.FC = memo(() => {
             onClose={() => setCompanyAnchorEl(null)}
             anchorOrigin={{ vertical: 'bottom', horizontal: inlineStart }}
             transformOrigin={{ vertical: 'top', horizontal: inlineStart }}
-            slotProps={{ paper: { sx: { mt: 0.25, minWidth: 380, maxHeight: 360, borderRadius: 0, border: 1, borderColor: 'divider' } } }}
+            slotProps={{
+              paper: {
+                sx: {
+                  mt: 0.25,
+                  minWidth: 380,
+                  maxHeight: 360,
+                  borderRadius: 0,
+                  border: 1,
+                  borderColor: 'divider',
+                },
+              },
+            }}
           >
-            {legalEntities.isLoading && <MenuItem disabled>{t('common.loading', 'Loading...')}</MenuItem>}
-            {legalEntities.isError && <MenuItem disabled>{t('errors.generic', 'Unable to load legal entities.')}</MenuItem>}
+            {legalEntities.isLoading && (
+              <MenuItem disabled>{t('common.loading', 'Loading...')}</MenuItem>
+            )}
+            {legalEntities.isError && (
+              <MenuItem disabled>{t('errors.generic', 'Unable to load legal entities.')}</MenuItem>
+            )}
             {availableLegalEntities.map((entity) => {
-              const selected = entity.dataArea.toLocaleUpperCase() === currentCompany.toLocaleUpperCase();
-              return <MenuItem key={entity.recId} selected={selected} onClick={() => handleCompanyChange(entity.dataArea)} sx={{ display: 'grid', gridTemplateColumns: '88px minmax(210px, 1fr)', gap: 1.5, borderInlineStart: selected ? 3 : 0, borderInlineStartColor: 'primary.main', '&.Mui-selected': { bgcolor: '#d4e0f7' } }}>
-                <Typography noWrap sx={{ fontSize: 13, color: selected ? 'primary.main' : 'text.primary' }}>{entity.dataArea}</Typography>
-                <Typography noWrap sx={{ fontSize: 13 }}>{entity.name}</Typography>
-              </MenuItem>;
+              const selected =
+                entity.dataArea.toLocaleUpperCase() === currentCompany.toLocaleUpperCase();
+              return (
+                <MenuItem
+                  key={entity.recId}
+                  selected={selected}
+                  onClick={() => handleCompanyChange(entity.dataArea)}
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: '88px minmax(210px, 1fr)',
+                    gap: 1.5,
+                    borderInlineStart: selected ? 3 : 0,
+                    borderInlineStartColor: 'primary.main',
+                    '&.Mui-selected': { bgcolor: '#d4e0f7' },
+                  }}
+                >
+                  <Typography
+                    noWrap
+                    sx={{ fontSize: 13, color: selected ? 'primary.main' : 'text.primary' }}
+                  >
+                    {entity.dataArea}
+                  </Typography>
+                  <Typography noWrap sx={{ fontSize: 13 }}>
+                    {entity.name}
+                  </Typography>
+                </MenuItem>
+              );
             })}
-            {!legalEntities.isLoading && !legalEntities.isError && !availableLegalEntities.length && <MenuItem disabled>{t('common.noData', 'No legal entities found.')}</MenuItem>}
+            {!legalEntities.isLoading &&
+              !legalEntities.isError &&
+              !availableLegalEntities.length && (
+                <MenuItem disabled>{t('common.noData', 'No legal entities found.')}</MenuItem>
+              )}
           </Menu>
 
           {/* Notifications */}
@@ -404,7 +527,11 @@ export const AppTopBar: React.FC = memo(() => {
 
           {/* Settings */}
           <Tooltip title={t('common.settings', 'Settings')}>
-            <IconButton size="small" onClick={openSettings} sx={{ ...iconBtnSx, borderInlineStart: `1px solid ${topBar.divider}` }}>
+            <IconButton
+              size="small"
+              onClick={openSettings}
+              sx={{ ...iconBtnSx, borderInlineStart: `1px solid ${topBar.divider}` }}
+            >
               <SettingsIcon sx={{ fontSize: topBar.iconSize }} />
             </IconButton>
           </Tooltip>
@@ -436,7 +563,14 @@ export const AppTopBar: React.FC = memo(() => {
             >
               <Avatar
                 src={user?.avatarUrl}
-                sx={{ width: topBar.avatarSize, height: topBar.avatarSize, bgcolor: '#c7dbf6', color: '#172b4d', fontFamily: topBar.fontFamily, fontSize: 15 }}
+                sx={{
+                  width: topBar.avatarSize,
+                  height: topBar.avatarSize,
+                  bgcolor: '#c7dbf6',
+                  color: '#172b4d',
+                  fontFamily: topBar.fontFamily,
+                  fontSize: 15,
+                }}
               >
                 {userInitials}
               </Avatar>

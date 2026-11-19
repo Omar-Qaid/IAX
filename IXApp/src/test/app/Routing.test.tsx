@@ -13,7 +13,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 describe('Routing Architecture', () => {
   it('registers the authenticated DocuView route', () => {
     const applicationRoute = appRoutes.find((route) => route.path === ROUTE_PATHS.HOME);
-    expect(applicationRoute?.children?.some((route) => route.path === ROUTE_PATHS.DOCU_VIEW)).toBe(true);
+    expect(applicationRoute?.children?.some((route) => route.path === ROUTE_PATHS.DOCU_VIEW)).toBe(
+      true
+    );
   });
 
   it('renders protected child component when authorized', () => {
@@ -38,12 +40,15 @@ describe('Routing Architecture', () => {
           <MemoryRouter initialEntries={['/accounts-receivable/customers']}>
             <Routes>
               <Route element={<AppLayout />}>
-                <Route path="/accounts-receivable/customers" element={<div>Customers route content</div>} />
+                <Route
+                  path="/accounts-receivable/customers"
+                  element={<div>Customers route content</div>}
+                />
               </Route>
             </Routes>
           </MemoryRouter>
         </AuthProvider>
-      </QueryClientProvider>,
+      </QueryClientProvider>
     );
 
     expect(await screen.findByText('Customers route content')).toBeDefined();

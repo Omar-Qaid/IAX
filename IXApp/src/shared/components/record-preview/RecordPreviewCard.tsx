@@ -81,7 +81,10 @@ export function RecordPreviewCard({
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
-                  color: (theme) => (row.lookup && text ? enterpriseSurfaces(theme).accent : theme.palette.text.primary),
+                  color: (theme) =>
+                    row.lookup && text
+                      ? enterpriseSurfaces(theme).accent
+                      : theme.palette.text.primary,
                 }}
               >
                 {text}

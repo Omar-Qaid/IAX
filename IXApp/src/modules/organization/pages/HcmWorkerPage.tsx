@@ -51,7 +51,9 @@ export function HcmWorkerPage(): React.ReactElement {
 function HcmWorkerContent({ company }: { company: string }): React.ReactElement {
   const { t, isRtl } = useAppTranslation();
   const queryClient = useQueryClient();
-  const [assignmentFiltersVisible, setAssignmentFiltersVisible] = useGridFilterRow('organization.worker.assignments');
+  const [assignmentFiltersVisible, setAssignmentFiltersVisible] = useGridFilterRow(
+    'organization.worker.assignments'
+  );
   const lookups = {
     occupations: useQuery({
       queryKey: ['hcm-workers', company, 'occupations'],

@@ -22,11 +22,7 @@ describe('Logistics Address Integration', () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <LogisticsPostalAddressDrawer
-          open={true}
-          onClose={handleClose}
-          onSave={handleSave}
-        />
+        <LogisticsPostalAddressDrawer open={true} onClose={handleClose} onSave={handleSave} />
       </QueryClientProvider>
     );
 
@@ -47,11 +43,7 @@ describe('Logistics Address Integration', () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <LogisticsElectronicAddressDrawer
-          open={true}
-          onClose={handleClose}
-          onSave={handleSave}
-        />
+        <LogisticsElectronicAddressDrawer open={true} onClose={handleClose} onSave={handleSave} />
       </QueryClientProvider>
     );
 

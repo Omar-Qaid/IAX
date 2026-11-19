@@ -9,7 +9,8 @@ export interface StatusBadgeProps {
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   const { t } = useAppTranslation();
 
-  let color: 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' = 'default';
+  let color: 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' =
+    'default';
 
   const s = (status || '').toLowerCase();
   if (s === 'active' || s === 'confirmed' || s === 'invoiced') {

@@ -15,9 +15,16 @@ export interface InventParametersRecord {
   mandatoryItemTaxGroup: boolean;
 }
 
-export interface InventParametersLookup { id: string; name: string; }
-export interface InventParametersWarehouseLookup extends InventParametersLookup { siteId: string; }
-export interface InventParametersJournalLookup extends InventParametersLookup { journalType: number; }
+export interface InventParametersLookup {
+  id: string;
+  name: string;
+}
+export interface InventParametersWarehouseLookup extends InventParametersLookup {
+  siteId: string;
+}
+export interface InventParametersJournalLookup extends InventParametersLookup {
+  journalType: number;
+}
 export interface InventParametersLookups {
   units: InventParametersLookup[];
   sites: InventParametersLookup[];
@@ -27,7 +34,11 @@ export interface InventParametersLookups {
 
 const endpoint = '/v1/InventParameters';
 const requireData = <T>(response: ApiResponse<T>): T => {
-  if (!response.success || response.data == null) throw new ApiError(response.message || 'The inventory parameters response did not contain data.', 500);
+  if (!response.success || response.data == null)
+    throw new ApiError(
+      response.message || 'The inventory parameters response did not contain data.',
+      500
+    );
   return response.data;
 };
 
@@ -37,7 +48,10 @@ export const inventParametersApi = {
     return requireData(response.data);
   },
   async lookups(signal?: AbortSignal): Promise<InventParametersLookups> {
-    const response = await apiClient.get<ApiResponse<InventParametersLookups>>(`${endpoint}/lookups`, { signal });
+    const response = await apiClient.get<ApiResponse<InventParametersLookups>>(
+      `${endpoint}/lookups`,
+      { signal }
+    );
     return requireData(response.data);
   },
   async save(value: InventParametersRecord): Promise<InventParametersRecord> {

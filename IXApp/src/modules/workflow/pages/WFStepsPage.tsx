@@ -153,7 +153,8 @@ export function WFStepsPage(): React.ReactElement {
       {
         id: 'name',
         label: t('wfStep.fields.name'),
-        getValue: (record) => textValue(record.name), getDisplayValue: (record) => localizedName(record, isRtl),
+        getValue: (record) => textValue(record.name),
+        getDisplayValue: (record) => localizedName(record, isRtl),
         setValue: (record, value) => ({ ...record, name: String(value) || null }),
       },
       {
@@ -180,9 +181,7 @@ export function WFStepsPage(): React.ReactElement {
       fieldLabel: t('wfStep.fields.name'),
       getValue: (record) => localizedName(record, isRtl),
       matches: (record, value) =>
-        localizedName(record, isRtl)
-          .toLocaleLowerCase()
-          .includes(value.trim().toLocaleLowerCase()),
+        localizedName(record, isRtl).toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()),
     },
     commands: [
       {

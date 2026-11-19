@@ -10,14 +10,14 @@ Read [Application bootstrap](docs/app.md), [Routing and layouts](docs/routing-an
 
 ## Layers
 
-| Layer | Current responsibility |
-| --- | --- |
-| `app` | Bootstrap, providers, routing, layouts, shell/navigation, theme, application UI stores |
-| `modules` | Business features, pages, APIs/adapters, queries, validation, and feature state |
+| Layer      | Current responsibility                                                                  |
+| ---------- | --------------------------------------------------------------------------------------- |
+| `app`      | Bootstrap, providers, routing, layouts, shell/navigation, theme, application UI stores  |
+| `modules`  | Business features, pages, APIs/adapters, queries, validation, and feature state         |
 | `patterns` | Reusable page compositions without business ownership; several folders remain scaffolds |
-| `shared` | Route-agnostic components, hooks, services, validation, types, and utilities |
-| `core` | API/auth/error/localization/permission infrastructure and generic contracts |
-| `mocks` | Shared mock datasets used by the adapters that support mock mode |
+| `shared`   | Route-agnostic components, hooks, services, validation, types, and utilities            |
+| `core`     | API/auth/error/localization/permission infrastructure and generic contracts             |
+| `mocks`    | Shared mock datasets used by the adapters that support mock mode                        |
 
 The precise allowed dependency matrix is in [Architecture boundaries](docs/ARCHITECTURE-BOUNDARIES.md). The architecture audit enforces layer direction, bounded-context ownership, acyclic source imports, resolved internal imports, and direct MUI icon imports.
 

@@ -22,12 +22,33 @@ afterEach(() => {
 
 it('loads organization units only when the searchable lookup opens and saves the selected ID', async () => {
   const units = vi.spyOn(api, 'units').mockResolvedValue([
-    { id: 5, code: 'FIN', name: 'Finance', nameAlias: 'المالية', type: 1, parentOrganizationUnitId: null, validFrom: '2026-01-01', validTo: null },
-    { id: 6, code: 'OPS', name: 'Operations', type: 1, parentOrganizationUnitId: null, validFrom: '2026-01-01', validTo: null },
+    {
+      id: 5,
+      code: 'FIN',
+      name: 'Finance',
+      nameAlias: 'المالية',
+      type: 1,
+      parentOrganizationUnitId: null,
+      validFrom: '2026-01-01',
+      validTo: null,
+    },
+    {
+      id: 6,
+      code: 'OPS',
+      name: 'Operations',
+      type: 1,
+      parentOrganizationUnitId: null,
+      validFrom: '2026-01-01',
+      validTo: null,
+    },
   ]);
   render(<OrganizationHierarchyPage />);
-  act(() => { capture.mock.calls.at(-1)![0].dataGridProps.onNewRow(); });
-  const column = capture.mock.calls.at(-1)![0].columns.find((item: { field: string }) => item.field === 'rootOrganizationUnitId');
+  act(() => {
+    capture.mock.calls.at(-1)![0].dataGridProps.onNewRow();
+  });
+  const column = capture.mock.calls
+    .at(-1)![0]
+    .columns.find((item: { field: string }) => item.field === 'rootOrganizationUnitId');
   const onChange = vi.fn();
   render(column.renderEditCell({ value: 0, onChange, disabled: false }));
   expect(units).not.toHaveBeenCalled();

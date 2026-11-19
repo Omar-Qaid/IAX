@@ -130,7 +130,7 @@ export const ActionPane: React.FC<ActionPaneProps> = ({
                 gap: 0.25,
                 marginInlineStart: 'auto',
                 paddingInlineStart: 1.5,
-                position: {xs: 'static', md: 'sticky'},
+                position: { xs: 'static', md: 'sticky' },
                 insetInlineEnd: 0,
                 flexShrink: 0,
                 bgcolor: 'background.paper',

@@ -30,11 +30,21 @@ export const MasterFormPage: React.FC<MasterFormPageProps> = ({
   return (
     <PageContainer>
       <PageHeader title={title} subtitle={subtitle} />
-      <ActionPane endActions={<RecordAttachmentsButton refTableId={refTableId ?? recordTableId(title)} refRecId={refRecId} />}>
+      <ActionPane
+        endActions={
+          <RecordAttachmentsButton
+            refTableId={refTableId ?? recordTableId(title)}
+            refRecId={refRecId}
+          />
+        }
+      >
         <ActionPaneBackButton label={t('actions.back')} onClick={() => navigate(-1)} />
         {actionPane}
       </ActionPane>
-      <Paper elevation={0} sx={{ p: 1.25, borderRadius: 1, border: (t) => `1px solid ${t.palette.divider}` }}>
+      <Paper
+        elevation={0}
+        sx={{ p: 1.25, borderRadius: 1, border: (t) => `1px solid ${t.palette.divider}` }}
+      >
         <Box sx={{ width: '100%' }}>{children}</Box>
       </Paper>
     </PageContainer>

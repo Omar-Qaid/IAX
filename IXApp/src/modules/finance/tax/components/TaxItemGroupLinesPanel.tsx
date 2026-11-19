@@ -21,16 +21,28 @@ export function TaxItemGroupLinesPanel({
     () => taxCodes.map((tax) => ({ value: tax.taxCode, label: `${tax.taxCode} - ${tax.taxName}` })),
     [taxCodes]
   );
-  const columns = React.useMemo<ColumnDef<TaxItemGroupLine>[]>(() => [
-    { field: 'taxCode', headerName: 'Sales tax code', type: 'singleSelect', valueOptions: codeOptions, width: 205, editable: true },
-    { field: 'taxValue', headerName: 'Percentage/Amount', type: 'number', width: 175 },
-    { field: 'taxCodeName', headerName: 'Name', minWidth: 260, flex: 1 },
-  ], [codeOptions]);
+  const columns = React.useMemo<ColumnDef<TaxItemGroupLine>[]>(
+    () => [
+      {
+        field: 'taxCode',
+        headerName: 'Sales tax code',
+        type: 'singleSelect',
+        valueOptions: codeOptions,
+        width: 205,
+        editable: true,
+      },
+      { field: 'taxValue', headerName: 'Percentage/Amount', type: 'number', width: 175 },
+      { field: 'taxCodeName', headerName: 'Name', minWidth: 260, flex: 1 },
+    ],
+    [codeOptions]
+  );
   const newRow = (): Partial<TaxItemGroupLine> => ({
     id: `new-${crypto.randomUUID()}`,
     recId: 0,
     taxItemGroup: record.taxItemGroup,
-    taxCode: taxCodes.find((tax) => !record.lines.some((line) => line.taxCode === tax.taxCode))?.taxCode ?? '',
+    taxCode:
+      taxCodes.find((tax) => !record.lines.some((line) => line.taxCode === tax.taxCode))?.taxCode ??
+      '',
     taxExemptCode: 'NONE',
     taxCodeName: '',
     taxValue: 0,
@@ -38,7 +50,8 @@ export function TaxItemGroupLinesPanel({
   const saveRow = (partial: Partial<TaxItemGroupLine>, isNew: boolean) => {
     const row = partial as TaxItemGroupLine;
     const tax = taxCodes.find((item) => item.taxCode === row.taxCode);
-    if (!tax || record.lines.some((item) => item.id !== row.id && item.taxCode === row.taxCode)) return;
+    if (!tax || record.lines.some((item) => item.id !== row.id && item.taxCode === row.taxCode))
+      return;
     const normalized: TaxItemGroupLine = {
       ...row,
       taxItemGroup: record.taxItemGroup,
@@ -51,13 +64,16 @@ export function TaxItemGroupLinesPanel({
       ...record,
       lines: isNew
         ? [...record.lines, normalized]
-        : record.lines.map((item) => item.id === normalized.id ? normalized : item),
+        : record.lines.map((item) => (item.id === normalized.id ? normalized : item)),
     });
     setSelectedIds([normalized.id]);
   };
   const remove = () => {
     const selected = new Set(selectedIds.map(String));
-    onRecordChange({ ...record, lines: record.lines.filter((line) => !selected.has(String(line.id))) });
+    onRecordChange({
+      ...record,
+      lines: record.lines.filter((line) => !selected.has(String(line.id))),
+    });
     setSelectedIds([]);
   };
   return (

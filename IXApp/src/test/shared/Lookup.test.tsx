@@ -24,7 +24,10 @@ describe('LookupField', () => {
 
     const input = screen.getByRole('combobox', { name: 'Sales tax group' });
     expect(input.closest('.MuiInputBase-root')).toHaveClass('MuiOutlinedInput-root');
-    expect(input.closest('.MuiTextField-root')?.querySelector('label')).toHaveAttribute('data-shrink', 'true');
+    expect(input.closest('.MuiTextField-root')?.querySelector('label')).toHaveAttribute(
+      'data-shrink',
+      'true'
+    );
   });
 
   it('normalizes autocomplete spacing to the shared outlined field baseline', () => {

@@ -832,7 +832,7 @@ export function ActivitiesWorkspace({
     id: item.recId,
     code: item.code ?? '',
     name: item.name ?? '',
-              nameAlias: item.nameAlias,
+    nameAlias: item.nameAlias,
   }));
   const node = s.selected;
   const step =
@@ -863,7 +863,9 @@ export function ActivitiesWorkspace({
           sx={{ flex: 1, fontSize: tokens.fontSize.heading, fontWeight: 700 }}
         >
           {t('wfProcessBuilder.workspace.activitiesForStep', {
-            name: (step ? localizedName(step, isRtl) : undefined) ?? t('wfProcessBuilder.workspace.selectStep'),
+            name:
+              (step ? localizedName(step, isRtl) : undefined) ??
+              t('wfProcessBuilder.workspace.selectStep'),
           })}
         </Typography>
         {s.dirty && <UnsavedStatus />}
@@ -1336,7 +1338,11 @@ export function ActivityFormWorkspace({
   const { t, isRtl } = useAppTranslation();
   const s = useProcessBuilderStore();
   const activityOptions = s.document.steps.flatMap((step) =>
-    step.activities.map((activity) => ({ activity, stepId: step.id, stepName: localizedName(step, isRtl) }))
+    step.activities.map((activity) => ({
+      activity,
+      stepId: step.id,
+      stepName: localizedName(step, isRtl),
+    }))
   );
   const paletteOrder = [
     'text',
@@ -1425,7 +1431,9 @@ export function ActivityFormWorkspace({
           component="h2"
           sx={{ flex: 1, fontSize: tokens.fontSize.heading, fontWeight: 700 }}
         >
-          {t('wfProcessBuilder.workspace.activityFormNamed', { name: localizedName(activity, isRtl) })}
+          {t('wfProcessBuilder.workspace.activityFormNamed', {
+            name: localizedName(activity, isRtl),
+          })}
         </Typography>
         {s.dirty && <UnsavedStatus compact />}
         <Button
@@ -2145,14 +2153,18 @@ export function TransitionsWorkspace({
                   id: item.recId,
                   code: item.code ?? '',
                   name: item.name ?? '',
-              nameAlias: item.nameAlias,
+                  nameAlias: item.nameAlias,
                 }))}
                 onChange={(value, option) =>
                   s.updateTransition(x.id, {
                     operatorId: value == null ? '' : String(value),
-                    operator: option && !Array.isArray(option)
-                      ? resolveBuilderOperator({ code: option.code ?? null, name: option.name ?? null })
-                      : x.operator,
+                    operator:
+                      option && !Array.isArray(option)
+                        ? resolveBuilderOperator({
+                            code: option.code ?? null,
+                            name: option.name ?? null,
+                          })
+                        : x.operator,
                   })
                 }
                 required
@@ -2164,7 +2176,11 @@ export function TransitionsWorkspace({
                 disabled={x.operator === 'isEmpty'}
                 onChange={(value) => s.updateTransition(x.id, { value })}
               />
-              <TransitionRuleGroup transition={x} variables={s.document.variables} onChange={(patch) => s.updateTransition(x.id, patch)} />
+              <TransitionRuleGroup
+                transition={x}
+                variables={s.document.variables}
+                onChange={(patch) => s.updateTransition(x.id, patch)}
+              />
               <TextField
                 select
                 size="small"

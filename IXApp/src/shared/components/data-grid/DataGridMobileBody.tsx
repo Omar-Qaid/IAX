@@ -45,23 +45,26 @@ interface MobileGridBodyProps<T> {
 const UNMEASURED_CARD_COUNT = 10;
 const ESTIMATED_CARD_HEIGHT = 180;
 
-function DataGridMobileBodyInternal<T>({
-  rows,
-  columns,
-  getRowId,
-  scrollContainerRef,
-  loading,
-  hasMore,
-  hasActiveFilters,
-  onRowClick,
-  onRowDoubleClick,
-  onEdit,
-  onDelete,
-  onViewHistory,
-  selectionMode = 'single',
-  selectedIds = [],
-  onSelectionChange,
-}: MobileGridBodyProps<T>, ref: React.Ref<GridBodyHandle>) {
+function DataGridMobileBodyInternal<T>(
+  {
+    rows,
+    columns,
+    getRowId,
+    scrollContainerRef,
+    loading,
+    hasMore,
+    hasActiveFilters,
+    onRowClick,
+    onRowDoubleClick,
+    onEdit,
+    onDelete,
+    onViewHistory,
+    selectionMode = 'single',
+    selectedIds = [],
+    onSelectionChange,
+  }: MobileGridBodyProps<T>,
+  ref: React.Ref<GridBodyHandle>
+) {
   const { t } = useTranslation();
   const theme = useTheme();
 
@@ -349,7 +352,11 @@ function DataGridMobileBodyInternal<T>({
                     {titleCol && (
                       <>
                         <Typography
-                          sx={{ fontWeight: 700, color: 'primary.main', fontSize: uiDensity.gridFontSize }}
+                          sx={{
+                            fontWeight: 700,
+                            color: 'primary.main',
+                            fontSize: uiDensity.gridFontSize,
+                          }}
                         >
                           {t(titleCol.headerName)}:
                         </Typography>

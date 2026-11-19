@@ -44,10 +44,7 @@ import TextSnippetOutlined from '@mui/icons-material/TextSnippetOutlined';
 import VideoFileOutlined from '@mui/icons-material/VideoFileOutlined';
 import type { RenderableControl, RenderableValidation } from './dynamicControlTypes';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
-import {
-  readFileMetadata,
-  type FileMetadata,
-} from './dynamic-special-controls/fileMetadata';
+import { readFileMetadata, type FileMetadata } from './dynamic-special-controls/fileMetadata';
 
 export { readFileMetadata } from './dynamic-special-controls/fileMetadata';
 
@@ -988,7 +985,9 @@ export function SignatureControl({
               sx={{ width: '100%', alignItems: 'center', color: 'text.secondary' }}
             >
               <EditOutlined color="primary" sx={{ fontSize: 19 }} />
-              <Typography sx={{ flex: 1, fontSize: 12, fontWeight: 650 }}>{t('workflowControls.signature.none')}</Typography>
+              <Typography sx={{ flex: 1, fontSize: 12, fontWeight: 650 }}>
+                {t('workflowControls.signature.none')}
+              </Typography>
               {canEdit && (
                 <Button
                   size="small"
@@ -1365,7 +1364,10 @@ function MapPicker({
         }}
         onClick={(event) => event.stopPropagation()}
       >
-        <Tooltip title={t('workflowControls.location.zoomIn')} placement={currentLanguage.dir === 'rtl' ? 'left' : 'right'}>
+        <Tooltip
+          title={t('workflowControls.location.zoomIn')}
+          placement={currentLanguage.dir === 'rtl' ? 'left' : 'right'}
+        >
           <IconButton
             size="small"
             aria-label={t('workflowControls.location.zoomIn')}
@@ -1376,7 +1378,10 @@ function MapPicker({
             <Add sx={{ fontSize: 17 }} />
           </IconButton>
         </Tooltip>
-        <Tooltip title={t('workflowControls.location.zoomOut')} placement={currentLanguage.dir === 'rtl' ? 'left' : 'right'}>
+        <Tooltip
+          title={t('workflowControls.location.zoomOut')}
+          placement={currentLanguage.dir === 'rtl' ? 'left' : 'right'}
+        >
           <IconButton
             size="small"
             aria-label={t('workflowControls.location.zoomOut')}
@@ -1396,7 +1401,13 @@ function MapPicker({
       </Paper>
       <Typography
         variant="caption"
-        sx={{ position: 'absolute', insetInlineEnd: 4, bottom: 2, bgcolor: 'rgba(255,255,255,.8)', px: 0.5 }}
+        sx={{
+          position: 'absolute',
+          insetInlineEnd: 4,
+          bottom: 2,
+          bgcolor: 'rgba(255,255,255,.8)',
+          px: 0.5,
+        }}
       >
         © OpenStreetMap
       </Typography>
@@ -1468,7 +1479,9 @@ export function LocationControl({
       setResults(nextResults);
       if (nextResults.length === 0) setDialogError(t('workflowControls.location.noResults'));
     } catch (reason) {
-      setDialogError(reason instanceof Error ? reason.message : t('workflowControls.location.searchFailed'));
+      setDialogError(
+        reason instanceof Error ? reason.message : t('workflowControls.location.searchFailed')
+      );
     } finally {
       setBusy(false);
     }
@@ -1786,7 +1799,9 @@ export function LocationControl({
                     void search();
                   }
                 }}
-                slotProps={{ htmlInput: { 'aria-label': t('workflowControls.location.searchPlaceholder') } }}
+                slotProps={{
+                  htmlInput: { 'aria-label': t('workflowControls.location.searchPlaceholder') },
+                }}
                 sx={{ '& .MuiInputBase-root': { height: 40, boxSizing: 'border-box' } }}
               />
               <Tooltip title={t('actions.search')}>
@@ -1910,7 +1925,9 @@ export function LocationControl({
               setOpen(false);
             }}
           >
-            {resolvingLocation ? t('workflowControls.location.loading') : t('workflowControls.location.save')}
+            {resolvingLocation
+              ? t('workflowControls.location.loading')
+              : t('workflowControls.location.save')}
           </Button>
         </DialogActions>
       </Dialog>

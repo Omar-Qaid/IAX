@@ -123,18 +123,48 @@ function AuditChange({ change }: { change: RecordAuditChange }): React.ReactElem
     >
       <Typography
         variant="caption"
-        sx={{ display: 'block', color: 'text.secondary', fontWeight: 600, overflowWrap: 'anywhere' }}
+        sx={{
+          display: 'block',
+          color: 'text.secondary',
+          fontWeight: 600,
+          overflowWrap: 'anywhere',
+        }}
       >
         {t(change.field, humanizeField(change.field))}
       </Typography>
-      <Box sx={{ display: structured ? 'grid' : 'flex', alignItems: structured ? 'stretch' : 'center', gap: structured ? 0.5 : 1, flexWrap: 'wrap', minWidth: 0 }}>
-        <Box sx={{ minWidth: 0, maxWidth: '100%', bgcolor: (theme) => alpha(theme.palette.error.main, 0.1), px: 0.5, borderRadius: 0.5 }}>
+      <Box
+        sx={{
+          display: structured ? 'grid' : 'flex',
+          alignItems: structured ? 'stretch' : 'center',
+          gap: structured ? 0.5 : 1,
+          flexWrap: 'wrap',
+          minWidth: 0,
+        }}
+      >
+        <Box
+          sx={{
+            minWidth: 0,
+            maxWidth: '100%',
+            bgcolor: (theme) => alpha(theme.palette.error.main, 0.1),
+            px: 0.5,
+            borderRadius: 0.5,
+          }}
+        >
           <RecordValueDisplay value={change.old} tone="old" strikeThrough />
         </Box>
         <Typography variant="caption" color="text.secondary">
           →
         </Typography>
-        <Box sx={{ minWidth: 0, maxWidth: '100%', bgcolor: (theme) => alpha(theme.palette.success.main, 0.1), px: 0.5, borderRadius: 0.5, fontWeight: 600 }}>
+        <Box
+          sx={{
+            minWidth: 0,
+            maxWidth: '100%',
+            bgcolor: (theme) => alpha(theme.palette.success.main, 0.1),
+            px: 0.5,
+            borderRadius: 0.5,
+            fontWeight: 600,
+          }}
+        >
           <RecordValueDisplay value={change.new} tone="new" />
         </Box>
       </Box>
@@ -262,7 +292,17 @@ export function AppRecordAuditDrawer({
       anchor={drawerAnchor}
       open={open}
       onClose={onClose}
-      slotProps={{ paper: { sx: { width: { xs: '100vw', sm: 400 }, maxWidth: '100vw', borderInlineStart: 1, borderInlineStartColor: 'divider', borderInlineEnd: 0 } } }}
+      slotProps={{
+        paper: {
+          sx: {
+            width: { xs: '100vw', sm: 400 },
+            maxWidth: '100vw',
+            borderInlineStart: 1,
+            borderInlineStartColor: 'divider',
+            borderInlineEnd: 0,
+          },
+        },
+      }}
       sx={{ zIndex: (theme) => theme.zIndex.drawer + 2 }}
     >
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>

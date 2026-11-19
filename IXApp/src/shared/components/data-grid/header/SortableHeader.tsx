@@ -21,7 +21,11 @@ interface SortableHeaderProps<T> {
   onFilterChange: (field: string, value: string) => void;
   onFilterIconClick: (event: React.MouseEvent<HTMLElement>, column: ColumnDef<T>) => void;
   onMenuOpen: (event: React.MouseEvent<HTMLElement>, column: ColumnDef<T>) => void;
-  onResizeStart: (event: React.MouseEvent, field: string, edge?: 'inline-start' | 'inline-end') => void;
+  onResizeStart: (
+    event: React.MouseEvent,
+    field: string,
+    edge?: 'inline-start' | 'inline-end'
+  ) => void;
   headerHeight: number;
   showColumnBorders?: boolean;
   hideFilterRow?: boolean;
@@ -78,10 +82,19 @@ export function SortableHeader<T>({
         {...attributes}
         {...listeners}
         role="columnheader"
-        aria-sort={sort?.sort === 'asc' ? 'ascending' : sort?.sort === 'desc' ? 'descending' : 'none'}
+        aria-sort={
+          sort?.sort === 'asc' ? 'ascending' : sort?.sort === 'desc' ? 'descending' : 'none'
+        }
         onKeyDown={(event) => {
-          if (event.target === event.currentTarget && event.key === 'Enter' && !isDragging && column.sortable !== false) {
-            event.preventDefault(); event.stopPropagation(); onSort(String(column.field));
+          if (
+            event.target === event.currentTarget &&
+            event.key === 'Enter' &&
+            !isDragging &&
+            column.sortable !== false
+          ) {
+            event.preventDefault();
+            event.stopPropagation();
+            onSort(String(column.field));
           } else listeners?.onKeyDown?.(event);
         }}
         onClick={() => {
@@ -152,7 +165,13 @@ export function SortableHeader<T>({
             size="small"
             aria-label={t('grid.column_menu', { column: t(column.headerName || '') })}
             className="column-header-action"
-            sx={{ p: 0.25, marginInlineStart: 0.25, opacity: 0, flexShrink: 0, color: 'text.primary' }}
+            sx={{
+              p: 0.25,
+              marginInlineStart: 0.25,
+              opacity: 0,
+              flexShrink: 0,
+              color: 'text.primary',
+            }}
             onClick={(e) => {
               e.stopPropagation();
               onMenuOpen(e, column);

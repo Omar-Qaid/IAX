@@ -11,6 +11,8 @@ export function validateRecordOwnership(
       throw new Error(`${context}: missing or duplicate record identity '${record.id}'.`);
     seen.add(record.id);
     if (/^\d+$/.test(record.id) && !available.has(record.id))
-      throw new Error(`${context}: record '${record.id}' is stale or belongs to another parent. Reload before saving.`);
+      throw new Error(
+        `${context}: record '${record.id}' is stale or belongs to another parent. Reload before saving.`
+      );
   }
 }

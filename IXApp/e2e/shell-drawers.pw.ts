@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 
-test('positions settings and notification drawers below the global header', async ({ page }, testInfo) => {
+test('positions settings and notification drawers below the global header', async ({
+  page,
+}, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop-chromium');
   await page.goto('/foundation/exchange-rate-types');
 

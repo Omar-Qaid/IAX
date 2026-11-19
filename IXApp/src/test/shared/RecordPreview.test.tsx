@@ -156,12 +156,12 @@ describe('option-based cards', () => {
     render(
       <AppProviders>
         <MemoryRouter>
-        <LookupDisplayField
-          label="Warehouse"
-          value="FIFO-WH2"
-          masterRoute="/inventory/warehouses"
-          previewOption={{ code: 'FIFO-WH2', name: 'FIFO warehouse 2' }}
-        />
+          <LookupDisplayField
+            label="Warehouse"
+            value="FIFO-WH2"
+            masterRoute="/inventory/warehouses"
+            previewOption={{ code: 'FIFO-WH2', name: 'FIFO warehouse 2' }}
+          />
         </MemoryRouter>
       </AppProviders>
     );
@@ -200,7 +200,12 @@ describe('where it appears', () => {
     ];
     render(
       <AppProviders>
-        <DataGrid<Customer> rows={[{ id: '1', group: 'CONTR' }]} columns={columns} height={200} hideToolbar />
+        <DataGrid<Customer>
+          rows={[{ id: '1', group: 'CONTR' }]}
+          columns={columns}
+          height={200}
+          hideToolbar
+        />
       </AppProviders>
     );
     hover(screen.getByText('CONTR'));
@@ -211,7 +216,11 @@ describe('where it appears', () => {
   it('previews a form lookup by its masterRoute, with no per-field setup', async () => {
     render(
       <AppProviders>
-        <LookupDisplayField label="Customer group" value="CONTR" masterRoute="/test/customer-groups" />
+        <LookupDisplayField
+          label="Customer group"
+          value="CONTR"
+          masterRoute="/test/customer-groups"
+        />
       </AppProviders>
     );
     await act(async () => {
@@ -232,7 +241,11 @@ describe('registered master-data cards (D365: identifying fields only)', () => {
     const get = vi.spyOn(apiClient, 'get');
     render(
       <AppProviders>
-        <RecordPreview entity={POSTAL_ADDRESS_RECORD_PREVIEW} recordKey="5637144576" record={address}>
+        <RecordPreview
+          entity={POSTAL_ADDRESS_RECORD_PREVIEW}
+          recordKey="5637144576"
+          record={address}
+        >
           <span>Head office</span>
         </RecordPreview>
       </AppProviders>
@@ -250,7 +263,15 @@ describe('registered master-data cards (D365: identifying fields only)', () => {
     vi.spyOn(apiClient, 'get').mockResolvedValue({
       data: {
         success: true,
-        data: [{ recId: 1, accountNumber: 'C-0000003', name: 'Abdullah Rashid Al-Qarni Est.', customerGroupId: 'RETAIL', currencyCode: 'SAR' }],
+        data: [
+          {
+            recId: 1,
+            accountNumber: 'C-0000003',
+            name: 'Abdullah Rashid Al-Qarni Est.',
+            customerGroupId: 'RETAIL',
+            currencyCode: 'SAR',
+          },
+        ],
       },
     } as never);
     render(
@@ -280,32 +301,71 @@ describe('registered master-data cards (D365: identifying fields only)', () => {
   });
 
   it.each([
-    ['inventSite', '/v1/InventSite/paged', 'SiteId', { siteId: 'DAM', name: 'Dammam site' }, ['Site', 'DAM', 'Name', 'Dammam site']],
-    ['inventLocation', '/v1/InventLocation/paged', 'InventLocationId', { inventLocationId: 'DAM', name: 'Dammam Central Warehouse' }, ['Warehouse', 'Dammam Central Warehouse']],
-    ['taxGroup', '/v1/TaxGroup/paged', 'TaxGroup', { taxGroup: 'VAT15%', taxGroupName: 'Value Added TAX 15%' }, ['Sales tax group', 'VAT15%', 'Description', 'Value Added TAX 15%']],
-    ['currency', '/v1/Currency/paged', 'CurrencyCode', { currencyCode: 'SAR', txt: 'Saudi riyal' }, ['Currency', 'Saudi riyal']],
-    ['paymentTerms', '/v1/PaymTerm/paged', 'PaymTermId', { paymTermId: 'Net30', description: '30 days' }, ['Terms of payment', '30 days']],
-    ['customerGroup', '/v1/CustGroup/paged', 'CustGroupId', { custGroupId: 'CONTR', name: 'Contractors' }, ['Customer group', 'Description', 'Contractors']],
-  ])('shows the %s card with its key and description only', async (entity, endpoint, keyField, dto, expected) => {
-    const get = vi
-      .spyOn(apiClient, 'get')
-      .mockResolvedValue({ data: { success: true, data: [dto] } } as never);
-    const key = String(Object.values(dto)[0]);
-    render(
-      <AppProviders>
-        <RecordPreview entity={entity} recordKey={key}>
-          <span>value-{entity}</span>
-        </RecordPreview>
-      </AppProviders>
-    );
-    hover(screen.getByText(`value-${entity}`));
-    const card = await screen.findByRole('tooltip');
-    await waitFor(() => expect(card).toHaveTextContent(String(expected.at(-1))));
-    expected.forEach((text) => expect(card).toHaveTextContent(text));
-    const [url, config] = get.mock.calls[0] as [string, { params: URLSearchParams }];
-    expect(url).toBe(endpoint);
-    expect(config.params.get('Filters[0].Field')).toBe(keyField);
-    // Exactly two rows (label + value each), like the D365 cards: key and description.
-    expect(card.querySelectorAll('p')).toHaveLength(4);
-  });
+    [
+      'inventSite',
+      '/v1/InventSite/paged',
+      'SiteId',
+      { siteId: 'DAM', name: 'Dammam site' },
+      ['Site', 'DAM', 'Name', 'Dammam site'],
+    ],
+    [
+      'inventLocation',
+      '/v1/InventLocation/paged',
+      'InventLocationId',
+      { inventLocationId: 'DAM', name: 'Dammam Central Warehouse' },
+      ['Warehouse', 'Dammam Central Warehouse'],
+    ],
+    [
+      'taxGroup',
+      '/v1/TaxGroup/paged',
+      'TaxGroup',
+      { taxGroup: 'VAT15%', taxGroupName: 'Value Added TAX 15%' },
+      ['Sales tax group', 'VAT15%', 'Description', 'Value Added TAX 15%'],
+    ],
+    [
+      'currency',
+      '/v1/Currency/paged',
+      'CurrencyCode',
+      { currencyCode: 'SAR', txt: 'Saudi riyal' },
+      ['Currency', 'Saudi riyal'],
+    ],
+    [
+      'paymentTerms',
+      '/v1/PaymTerm/paged',
+      'PaymTermId',
+      { paymTermId: 'Net30', description: '30 days' },
+      ['Terms of payment', '30 days'],
+    ],
+    [
+      'customerGroup',
+      '/v1/CustGroup/paged',
+      'CustGroupId',
+      { custGroupId: 'CONTR', name: 'Contractors' },
+      ['Customer group', 'Description', 'Contractors'],
+    ],
+  ])(
+    'shows the %s card with its key and description only',
+    async (entity, endpoint, keyField, dto, expected) => {
+      const get = vi
+        .spyOn(apiClient, 'get')
+        .mockResolvedValue({ data: { success: true, data: [dto] } } as never);
+      const key = String(Object.values(dto)[0]);
+      render(
+        <AppProviders>
+          <RecordPreview entity={entity} recordKey={key}>
+            <span>value-{entity}</span>
+          </RecordPreview>
+        </AppProviders>
+      );
+      hover(screen.getByText(`value-${entity}`));
+      const card = await screen.findByRole('tooltip');
+      await waitFor(() => expect(card).toHaveTextContent(String(expected.at(-1))));
+      expected.forEach((text) => expect(card).toHaveTextContent(text));
+      const [url, config] = get.mock.calls[0] as [string, { params: URLSearchParams }];
+      expect(url).toBe(endpoint);
+      expect(config.params.get('Filters[0].Field')).toBe(keyField);
+      // Exactly two rows (label + value each), like the D365 cards: key and description.
+      expect(card.querySelectorAll('p')).toHaveLength(4);
+    }
+  );
 });

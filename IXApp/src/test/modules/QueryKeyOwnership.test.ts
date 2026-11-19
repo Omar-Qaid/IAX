@@ -17,8 +17,16 @@ describe('module-owned query keys', () => {
     expect(customerQueryKeys.list({ page: 2 })).toEqual(['customers', 'list', { page: 2 }]);
     expect(customerGroupQueryKeys.detail('retail')).toEqual(['customerGroups', 'detail', 'retail']);
     // Company-scoped; every key of one order sits under order(company, id).
-    expect(salesOrderQueryKeys.detail('DAT', '1')).toEqual(['salesOrders', 'DAT', 'order', '1', 'header']);
-    expect(salesOrderQueryKeys.lines('DAT', '1').slice(0, 4)).toEqual([...salesOrderQueryKeys.order('DAT', '1')]);
+    expect(salesOrderQueryKeys.detail('DAT', '1')).toEqual([
+      'salesOrders',
+      'DAT',
+      'order',
+      '1',
+      'header',
+    ]);
+    expect(salesOrderQueryKeys.lines('DAT', '1').slice(0, 4)).toEqual([
+      ...salesOrderQueryKeys.order('DAT', '1'),
+    ]);
     expect(salesOrderQueryKeys.list('DAT')).not.toEqual(salesOrderQueryKeys.list('USMF'));
   });
 

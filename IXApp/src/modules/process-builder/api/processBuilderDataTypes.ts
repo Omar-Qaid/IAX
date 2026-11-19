@@ -30,9 +30,12 @@ export function resolveVariableDataTypeId(
   // Keep the existing identity, including an inactive type, when its meaning is unchanged.
   if (currentId != null && resolveBuilderDataType(currentId, catalog) === type) return currentId;
   const matches = catalog.filter(
-    (item) => item.isActive !== false && semanticTypes[item.code?.trim().toUpperCase() ?? ''] === type
+    (item) =>
+      item.isActive !== false && semanticTypes[item.code?.trim().toUpperCase() ?? ''] === type
   );
   if (matches.length !== 1)
-    throw new Error(`Workflow data type '${type}' requires exactly one supported active catalog entry.`);
+    throw new Error(
+      `Workflow data type '${type}' requires exactly one supported active catalog entry.`
+    );
   return matches[0].recId;
 }

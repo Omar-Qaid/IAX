@@ -8,7 +8,8 @@ export interface BaseEntity {
   modifiedBy?: string;
 }
 
-export type StatusType = 'active' | 'onHold' | 'blocked' | 'draft' | 'confirmed' | 'invoiced' | 'cancelled' | 'open';
+export type StatusType =
+  'active' | 'onHold' | 'blocked' | 'draft' | 'confirmed' | 'invoiced' | 'cancelled' | 'open';
 
 export interface SelectOption<T = string> {
   value: T;

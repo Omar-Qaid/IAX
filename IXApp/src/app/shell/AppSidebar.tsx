@@ -183,7 +183,12 @@ const SidebarContent = React.memo(
             size="small"
             onClick={onToggle}
             aria-label={t('nav.toggle_navigation')}
-            sx={{ width: 34, height: 34, color: isDark ? '#f3f2f1' : nav.icon, '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,.08)' : nav.hover } }}
+            sx={{
+              width: 34,
+              height: 34,
+              color: isDark ? '#f3f2f1' : nav.icon,
+              '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,.08)' : nav.hover },
+            }}
           >
             <MenuIcon sx={{ fontSize: nav.iconSize }} />
           </IconButton>
@@ -360,7 +365,13 @@ export const AppSidebar = () => {
           open={sidebarOpen}
           onOpen={() => setSidebarOpen(true)}
           onClose={() => setSidebarOpen(false)}
-          sx={{ '& .MuiDrawer-paper': { width: SIDEBARWIDTH, maxWidth: 'calc(100vw - 40px)', borderRadius: 0 } }}
+          sx={{
+            '& .MuiDrawer-paper': {
+              width: SIDEBARWIDTH,
+              maxWidth: 'calc(100vw - 40px)',
+              borderRadius: 0,
+            },
+          }}
         >
           <SidebarContent
             collapsed={false}
@@ -392,7 +403,7 @@ export const AppSidebar = () => {
 
   const isMini = navLayout === 'mini';
   const finalSidebarWidth = isMini
-      ? SIDEBARCOLLAPSEDWIDTH
+    ? SIDEBARCOLLAPSEDWIDTH
     : sidebarOpen
       ? SIDEBARWIDTH
       : SIDEBARCOLLAPSEDWIDTH;

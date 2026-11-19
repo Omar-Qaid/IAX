@@ -61,7 +61,7 @@ it('reloads the same customer route in the new company instead of retaining the 
           <Route path="/customers/:customerId" element={<CustTablePage />} />
         </Routes>
       </AppProviders>
-    </MemoryRouter>,
+    </MemoryRouter>
   );
   await screen.findByText('C-dat : Customer dat');
   act(() => useCompanyStore.setState({ currentCompany: 'usmf' }));

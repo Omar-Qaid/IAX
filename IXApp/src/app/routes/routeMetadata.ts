@@ -37,10 +37,7 @@ const navigationMetadata: RouteMetadata[] = Object.values(AVAILABLE_MODULE_NAV_C
 export const ROUTE_METADATA: RouteMetadata[] = [
   {
     path: ROUTE_PATHS.PROCESS_BUILDER,
-    breadcrumbs: [
-      home,
-      { labelKey: 'pages.wfProcessBuilder.title' },
-    ],
+    breadcrumbs: [home, { labelKey: 'pages.wfProcessBuilder.title' }],
   },
   {
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDER_DETAILS,
@@ -54,10 +51,7 @@ export const ROUTE_METADATA: RouteMetadata[] = [
   ...navigationMetadata,
 ];
 
-export const getRouteBreadcrumbs = (
-  pathname: string,
-  search = ''
-): BreadcrumbDefinition[] => {
+export const getRouteBreadcrumbs = (pathname: string, search = ''): BreadcrumbDefinition[] => {
   const processScopedChild =
     new URLSearchParams(search).has('processId') &&
     (pathname === ROUTE_PATHS.WORKFLOW.VARIABLES || pathname === ROUTE_PATHS.WORKFLOW.STEPS);
@@ -68,16 +62,12 @@ export const getRouteBreadcrumbs = (
       { labelKey: 'nav.workflow', path: ROUTE_PATHS.WORKFLOW.PROCESSES },
       { labelKey: 'nav.workflowProcesses', path: ROUTE_PATHS.WORKFLOW.PROCESSES },
       {
-        labelKey:
-          pathname === ROUTE_PATHS.WORKFLOW.VARIABLES ? 'nav.wfVariables' : 'nav.wfSteps',
+        labelKey: pathname === ROUTE_PATHS.WORKFLOW.VARIABLES ? 'nav.wfVariables' : 'nav.wfSteps',
       },
     ];
   }
 
-  if (
-    pathname === ROUTE_PATHS.WORKFLOW.ACTIVITIES &&
-    new URLSearchParams(search).has('stepId')
-  ) {
+  if (pathname === ROUTE_PATHS.WORKFLOW.ACTIVITIES && new URLSearchParams(search).has('stepId')) {
     return [
       home,
       { labelKey: 'nav.workflow', path: ROUTE_PATHS.WORKFLOW.PROCESSES },

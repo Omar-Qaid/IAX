@@ -38,7 +38,11 @@ export const PageBreadcrumbs: React.FC = () => {
           const key = `${item.labelKey}-${index}`;
 
           return last || !item.path ? (
-            <Typography key={key} color="text.primary" sx={{ fontSize: '0.75rem', fontWeight: 600 }}>
+            <Typography
+              key={key}
+              color="text.primary"
+              sx={{ fontSize: '0.75rem', fontWeight: 600 }}
+            >
               {t(item.labelKey)}
             </Typography>
           ) : (

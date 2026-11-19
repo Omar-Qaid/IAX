@@ -17,26 +17,26 @@ The checked-in development environment calls `http://localhost:33319/api` and do
 
 Only these variables are read by the runtime environment module:
 
-| Variable | Purpose |
-| --- | --- |
-| `VITE_API_BASE_URL` | Base URL passed to the Axios API client |
+| Variable               | Purpose                                          |
+| ---------------------- | ------------------------------------------------ |
+| `VITE_API_BASE_URL`    | Base URL passed to the Axios API client          |
 | `VITE_ENABLE_MOCK_API` | Uses available mock adapters when exactly `true` |
 
 `VITE_APP_NAME` is present in the environment files but is not currently consumed by `src/core/configuration/environment.ts`.
 
 ## Commands
 
-| Command | Purpose |
-| --- | --- |
-| `npm run dev` | Start Vite development mode |
-| `npm run build` | Type-check and create a production bundle |
-| `npm run typecheck` | Run TypeScript without emitting files |
-| `npm run lint` | Run ESLint |
-| `npm run test:run` | Run the Vitest suite once |
-| `npm run test:e2e` | Run Playwright through the project wrapper |
-| `npm run audit:architecture` | Check source-layer and import boundaries |
-| `npm run audit:encoding` | Check source encoding |
-| `npm run verify` | Run the repository's full validation chain |
+| Command                      | Purpose                                    |
+| ---------------------------- | ------------------------------------------ |
+| `npm run dev`                | Start Vite development mode                |
+| `npm run build`              | Type-check and create a production bundle  |
+| `npm run typecheck`          | Run TypeScript without emitting files      |
+| `npm run lint`               | Run ESLint                                 |
+| `npm run test:run`           | Run the Vitest suite once                  |
+| `npm run test:e2e`           | Run Playwright through the project wrapper |
+| `npm run audit:architecture` | Check source-layer and import boundaries   |
+| `npm run audit:encoding`     | Check source encoding                      |
+| `npm run verify`             | Run the repository's full validation chain |
 
 ## Documentation
 

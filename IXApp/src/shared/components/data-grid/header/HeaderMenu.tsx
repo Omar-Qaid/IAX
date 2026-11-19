@@ -61,9 +61,25 @@ export function HeaderMenu<T>({
           onClose();
           setPinMenuAnchor(null);
         }}
-        anchorOrigin={{ vertical: 'bottom', horizontal: theme.direction === 'rtl' ? 'left' : 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: theme.direction === 'rtl' ? 'right' : 'left' }}
-        slotProps={{ paper: { sx: { width: 240, maxWidth: 'calc(100vw - 16px)', p: 0, direction: theme.direction, textAlign: 'start' } } }}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: theme.direction === 'rtl' ? 'left' : 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: theme.direction === 'rtl' ? 'right' : 'left',
+        }}
+        slotProps={{
+          paper: {
+            sx: {
+              width: 240,
+              maxWidth: 'calc(100vw - 16px)',
+              p: 0,
+              direction: theme.direction,
+              textAlign: 'start',
+            },
+          },
+        }}
       >
         {activeColumn?.sortable !== false && (
           <MenuItem
@@ -117,7 +133,10 @@ export function HeaderMenu<T>({
               slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }}
             />
           </Box>
-          <ChevronRightIcon fontSize="small" sx={{ transform: theme.direction === 'rtl' ? 'scaleX(-1)' : 'none' }} />
+          <ChevronRightIcon
+            fontSize="small"
+            sx={{ transform: theme.direction === 'rtl' ? 'scaleX(-1)' : 'none' }}
+          />
         </MenuItem>
 
         <Divider />
@@ -173,8 +192,20 @@ export function HeaderMenu<T>({
         open={Boolean(pinMenuAnchor)}
         onClose={() => setPinMenuAnchor(null)}
         anchorOrigin={{ vertical: 'top', horizontal: theme.direction === 'rtl' ? 'left' : 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: theme.direction === 'rtl' ? 'right' : 'left' }}
-        slotProps={{ paper: { sx: { width: 170, maxWidth: 'calc(100vw - 16px)', direction: theme.direction, textAlign: 'start' } } }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: theme.direction === 'rtl' ? 'right' : 'left',
+        }}
+        slotProps={{
+          paper: {
+            sx: {
+              width: 170,
+              maxWidth: 'calc(100vw - 16px)',
+              direction: theme.direction,
+              textAlign: 'start',
+            },
+          },
+        }}
       >
         {(
           [

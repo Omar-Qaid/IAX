@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { validationTypesForControl } from '@modules/process-builder/validationTypesForControl';
-import { builderControlType, builderValidationType } from '@modules/process-builder/api/processBuilderApi';
+import {
+  builderControlType,
+  builderValidationType,
+} from '@modules/process-builder/api/processBuilderApi';
 
 describe('process builder validation types', () => {
   it('offers applicant and global uniqueness only for numeric controls', () => {
@@ -13,8 +16,12 @@ describe('process builder validation types', () => {
 
   it('shows only canonical validation choices while legacy aliases remain loadable', () => {
     const textTypes = validationTypesForControl('text');
-    expect(textTypes).toEqual(expect.arrayContaining(['exactLength', 'pattern', 'inputMask', 'compare', 'expression']));
-    expect(textTypes).not.toEqual(expect.arrayContaining(['length', 'regex', 'mask', 'comparison', 'custom']));
+    expect(textTypes).toEqual(
+      expect.arrayContaining(['exactLength', 'pattern', 'inputMask', 'compare', 'expression'])
+    );
+    expect(textTypes).not.toEqual(
+      expect.arrayContaining(['length', 'regex', 'mask', 'comparison', 'custom'])
+    );
     expect(new Set(textTypes).size).toBe(textTypes.length);
   });
 

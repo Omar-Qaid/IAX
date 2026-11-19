@@ -42,23 +42,10 @@ export function UserSettingsForm({ settings }: { settings: UserSettings }): Reac
           {updateSettings.error.message}
         </Alert>
       )}
-      <PageSection
-        title={t('settings.preferences')}
-        description={t('settings.preferencesHelp')}
-      >
+      <PageSection title={t('settings.preferences')} description={t('settings.preferencesHelp')}>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
-          <AppTextField
-            name="theme"
-            label={t('settings.theme')}
-            control={control}
-            required
-          />
-          <AppTextField
-            name="language"
-            label={t('settings.language')}
-            control={control}
-            required
-          />
+          <AppTextField name="theme" label={t('settings.theme')} control={control} required />
+          <AppTextField name="language" label={t('settings.language')} control={control} required />
           <AppNumberField
             name="pageSize"
             label={t('settings.pageSize')}

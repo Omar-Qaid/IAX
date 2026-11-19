@@ -111,7 +111,8 @@ export function RequestFromPage(): React.ReactElement {
   const requestedProcess = records.find((process) => process.recId === requestedProcessId);
   const effectiveProcessId = selectedProcessId ?? requestedProcess?.recId ?? records[0]?.recId ?? 0;
   React.useEffect(() => {
-    if (effectiveProcessId > 0 && selectedProcessId == null) setSelectedProcessId(effectiveProcessId);
+    if (effectiveProcessId > 0 && selectedProcessId == null)
+      setSelectedProcessId(effectiveProcessId);
   }, [effectiveProcessId, selectedProcessId]);
   const requestDate = React.useMemo(() => new Date().toISOString().slice(0, 10), []);
   const requestDateLabel = React.useMemo(

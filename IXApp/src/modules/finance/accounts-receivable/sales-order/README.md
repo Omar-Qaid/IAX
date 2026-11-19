@@ -8,13 +8,13 @@ See [Document pages](../../../../../docs/patterns/DOCUMENT_PAGE.md).
 
 ## Folders
 
-| Folder | What it holds |
-| --- | --- |
-| `api/` | Typed API clients: `salesOrderListApi` (list, `get` by ID, header update), `salesOrderLinesApi`, confirmation, packing slip, copy. `salesOrderLookupPages.ts` holds server-paged lookup sources (units). |
-| `pages/` | Routed pages: `SalesOrderListPage`, `SalesOrderDetailsPage`, `SalesOrderChargesPage`, journals `CustConfirmJournal`, `CustPackingSlipJournal`. |
-| `details/` | The document page split by concern (below). |
-| `lines/` | The editable lines grid (`SalesOrderLinesGrid`), its cells, line state and discount maths. |
-| `components/` | Dialogs: quick create, confirmation, packing slip posting. |
+| Folder        | What it holds                                                                                                                                                                                            |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `api/`        | Typed API clients: `salesOrderListApi` (list, `get` by ID, header update), `salesOrderLinesApi`, confirmation, packing slip, copy. `salesOrderLookupPages.ts` holds server-paged lookup sources (units). |
+| `pages/`      | Routed pages: `SalesOrderListPage`, `SalesOrderDetailsPage`, `SalesOrderChargesPage`, journals `CustConfirmJournal`, `CustPackingSlipJournal`.                                                           |
+| `details/`    | The document page split by concern (below).                                                                                                                                                              |
+| `lines/`      | The editable lines grid (`SalesOrderLinesGrid`), its cells, line state and discount maths.                                                                                                               |
+| `components/` | Dialogs: quick create, confirmation, packing slip posting.                                                                                                                                               |
 
 ## Document page (`details/`)
 

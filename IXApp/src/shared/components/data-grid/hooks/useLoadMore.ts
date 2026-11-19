@@ -11,12 +11,12 @@ const REQUEST_TIMEOUT_MS = 15_000;
 const RETRY_BACKOFF_MS = 2_000;
 
 interface UseLoadMoreOptions {
-    rowCount: number;
-    hasMore: boolean;
-    loading: boolean;
-    rowHeight: number;
-    loadNextPage: () => void;
-    scrollContainerRef: React.RefObject<HTMLDivElement | null>;
+  rowCount: number;
+  hasMore: boolean;
+  loading: boolean;
+  rowHeight: number;
+  loadNextPage: () => void;
+  scrollContainerRef: React.RefObject<HTMLDivElement | null>;
 }
 
 /**
@@ -28,86 +28,89 @@ interface UseLoadMoreOptions {
  * automatically, so a failing endpoint is not called in a loop.
  */
 export function useLoadMore({
-    rowCount,
-    hasMore,
-    loading,
-    rowHeight,
-    loadNextPage,
-    scrollContainerRef,
+  rowCount,
+  hasMore,
+  loading,
+  rowHeight,
+  loadNextPage,
+  scrollContainerRef,
 }: UseLoadMoreOptions): { onScroll: () => void } {
-    const inFlightRef = useRef<{ rowCount: number; startedAt: number } | null>(null);
-    const failedAtRef = useRef<{ rowCount: number; at: number } | null>(null);
-    const hasMoreRef = useRef(hasMore);
-    const loadingRef = useRef(loading);
-    const rowHeightRef = useRef(rowHeight);
-    const rowCountRef = useRef(rowCount);
-    const loadNextPageRef = useRef(loadNextPage);
+  const inFlightRef = useRef<{ rowCount: number; startedAt: number } | null>(null);
+  const failedAtRef = useRef<{ rowCount: number; at: number } | null>(null);
+  const hasMoreRef = useRef(hasMore);
+  const loadingRef = useRef(loading);
+  const rowHeightRef = useRef(rowHeight);
+  const rowCountRef = useRef(rowCount);
+  const loadNextPageRef = useRef(loadNextPage);
 
-    useEffect(() => {
-        hasMoreRef.current = hasMore;
-        loadingRef.current = loading;
-        rowHeightRef.current = rowHeight;
-        rowCountRef.current = rowCount;
-        loadNextPageRef.current = loadNextPage;
-    }, [hasMore, loading, rowHeight, rowCount, loadNextPage]);
+  useEffect(() => {
+    hasMoreRef.current = hasMore;
+    loadingRef.current = loading;
+    rowHeightRef.current = rowHeight;
+    rowCountRef.current = rowCount;
+    loadNextPageRef.current = loadNextPage;
+  }, [hasMore, loading, rowHeight, rowCount, loadNextPage]);
 
-    // Release the lock when the request settles. Rows arriving means success;
-    // loading ending with the same count means it failed or returned nothing.
-    useEffect(() => {
-        const request = inFlightRef.current;
-        if (!request) return;
-        if (rowCount !== request.rowCount) {
-            inFlightRef.current = null;
-            failedAtRef.current = null;
-        } else if (!loading) {
-            inFlightRef.current = null;
-            failedAtRef.current = { rowCount, at: Date.now() };
-        }
-    }, [loading, rowCount]);
+  // Release the lock when the request settles. Rows arriving means success;
+  // loading ending with the same count means it failed or returned nothing.
+  useEffect(() => {
+    const request = inFlightRef.current;
+    if (!request) return;
+    if (rowCount !== request.rowCount) {
+      inFlightRef.current = null;
+      failedAtRef.current = null;
+    } else if (!loading) {
+      inFlightRef.current = null;
+      failedAtRef.current = { rowCount, at: Date.now() };
+    }
+  }, [loading, rowCount]);
 
-    const tryLoad = useCallback((userScroll: boolean) => {
-        if (!hasMoreRef.current || loadingRef.current) return;
-        if (rowCountRef.current === 0) return; // the first page is the page's own query
+  const tryLoad = useCallback(
+    (userScroll: boolean) => {
+      if (!hasMoreRef.current || loadingRef.current) return;
+      if (rowCountRef.current === 0) return; // the first page is the page's own query
 
-        const now = Date.now();
-        const request = inFlightRef.current;
-        if (request) {
-            if (now - request.startedAt < REQUEST_TIMEOUT_MS) return;
-            inFlightRef.current = null;
-            failedAtRef.current = { rowCount: request.rowCount, at: now };
-        }
-        const failed = failedAtRef.current;
-        if (failed && failed.rowCount === rowCountRef.current) {
-            if (!userScroll || now - failed.at < RETRY_BACKOFF_MS) return;
-        }
+      const now = Date.now();
+      const request = inFlightRef.current;
+      if (request) {
+        if (now - request.startedAt < REQUEST_TIMEOUT_MS) return;
+        inFlightRef.current = null;
+        failedAtRef.current = { rowCount: request.rowCount, at: now };
+      }
+      const failed = failedAtRef.current;
+      if (failed && failed.rowCount === rowCountRef.current) {
+        if (!userScroll || now - failed.at < RETRY_BACKOFF_MS) return;
+      }
 
-        const el = scrollContainerRef.current;
-        if (!el) return;
-        const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-        const threshold = Math.max(
-            rowHeightRef.current * LOAD_THRESHOLD_ROWS,
-            el.clientHeight * LOAD_THRESHOLD_VIEWPORTS,
-        );
-        if (distanceFromBottom < threshold) {
-            inFlightRef.current = { rowCount: rowCountRef.current, startedAt: now };
-            loadNextPageRef.current();
-        }
-    }, [scrollContainerRef]);
+      const el = scrollContainerRef.current;
+      if (!el) return;
+      const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+      const threshold = Math.max(
+        rowHeightRef.current * LOAD_THRESHOLD_ROWS,
+        el.clientHeight * LOAD_THRESHOLD_VIEWPORTS
+      );
+      if (distanceFromBottom < threshold) {
+        inFlightRef.current = { rowCount: rowCountRef.current, startedAt: now };
+        loadNextPageRef.current();
+      }
+    },
+    [scrollContainerRef]
+  );
 
-    const onScroll = useCallback(() => tryLoad(true), [tryLoad]);
+  const onScroll = useCallback(() => tryLoad(true), [tryLoad]);
 
-    // Short pages or a tall viewport leave no scrollbar: keep filling until it scrolls.
-    useEffect(() => {
-        const el = scrollContainerRef.current;
-        if (!el || typeof ResizeObserver === 'undefined') return;
-        const ro = new ResizeObserver(() => tryLoad(false));
-        ro.observe(el);
-        return () => ro.disconnect();
-    }, [scrollContainerRef, tryLoad]);
+  // Short pages or a tall viewport leave no scrollbar: keep filling until it scrolls.
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => tryLoad(false));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [scrollContainerRef, tryLoad]);
 
-    useEffect(() => {
-        if (!loading) tryLoad(false);
-    }, [rowCount, loading, hasMore, tryLoad]);
+  useEffect(() => {
+    if (!loading) tryLoad(false);
+  }, [rowCount, loading, hasMore, tryLoad]);
 
-    return { onScroll };
+  return { onScroll };
 }

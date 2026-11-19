@@ -21,14 +21,39 @@ export function DataGridEmptyState({ hasActiveFilters }: DataGridEmptyStateProps
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 10, px: 4, userSelect: 'none', bgcolor: 'background.paper' }}>
-      <Box sx={{ width: 72, height: 72, borderRadius: '50%', bgcolor: theme.palette.action.hover, display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: 10,
+        px: 4,
+        userSelect: 'none',
+        bgcolor: 'background.paper',
+      }}
+    >
+      <Box
+        sx={{
+          width: 72,
+          height: 72,
+          borderRadius: '50%',
+          bgcolor: theme.palette.action.hover,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          mb: 2,
+        }}
+      >
         <SearchOffIcon sx={{ fontSize: 34, color: theme.palette.text.disabled }} />
       </Box>
       <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.secondary', mb: 0.5 }}>
         {t('grid.no_records')}
       </Typography>
-      <Typography variant="body2" sx={{ color: 'text.disabled', textAlign: 'center', maxWidth: 280, lineHeight: 1.6 }}>
+      <Typography
+        variant="body2"
+        sx={{ color: 'text.disabled', textAlign: 'center', maxWidth: 280, lineHeight: 1.6 }}
+      >
         {t('grid.no_results_msg')}
       </Typography>
     </Box>

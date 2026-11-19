@@ -122,7 +122,10 @@ export function FilterInput<T>({
       }
       onChange={(val) => onFilterChange(field, String(val ?? ''))}
       slotProps={{
-        htmlInput: { 'aria-label': t('grid.open_column_filter', { column: t(column.headerName) }), 'data-grid-filter-field': field },
+        htmlInput: {
+          'aria-label': t('grid.open_column_filter', { column: t(column.headerName) }),
+          'data-grid-filter-field': field,
+        },
         input: {
           endAdornment: onFilterIconClick ? (
             <IconButton
@@ -151,7 +154,10 @@ export function FilterInput<T>({
               fontSize: '0.7rem',
               opacity: 0.5,
             },
-            '& fieldset': { border: '1px solid transparent', transition: 'border-color 120ms ease' },
+            '& fieldset': {
+              border: '1px solid transparent',
+              transition: 'border-color 120ms ease',
+            },
             '&:hover fieldset': { borderColor: 'divider' },
             '&:hover': { bgcolor: 'action.hover' },
             '&.Mui-focused fieldset': {

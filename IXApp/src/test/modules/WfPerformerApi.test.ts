@@ -13,12 +13,21 @@ describe('workflow performer users API', () => {
     vi.mocked(apiClient.get).mockResolvedValue({
       data: {
         success: true,
-        data: [{ recId: 31, performerId: 7, userID: 42, relatedField: 0, extendedProperties: null }],
+        data: [
+          { recId: 31, performerId: 7, userID: 42, relatedField: 0, extendedProperties: null },
+        ],
       },
     });
 
     await expect(loadWfPerformerUsers(7)).resolves.toEqual([
-      { id: '31', recId: 31, performerId: 7, userID: 42, relatedField: 0, extendedProperties: null },
+      {
+        id: '31',
+        recId: 31,
+        performerId: 7,
+        userID: 42,
+        relatedField: 0,
+        extendedProperties: null,
+      },
     ]);
     expect(apiClient.get).toHaveBeenCalledWith('/v1/WfPerformer/7/users', { signal: undefined });
   });

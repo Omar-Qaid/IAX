@@ -1,12 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import type { InventJournal } from '../../modules/finance/inventory/journals/api/inventJournalApi';
-import { canPostJournal, createJournalLineDraft } from '../../modules/finance/inventory/journals/components/inventJournalDraft';
+import {
+  canPostJournal,
+  createJournalLineDraft,
+} from '../../modules/finance/inventory/journals/components/inventJournalDraft';
 
-const journal = (overrides: Partial<InventJournal> = {}): InventJournal => ({
-  journalId: 'IJ-1', journalType: 0, posted: false, countingFrozen: false, countingConfirmed: false,
-  inventSiteId: 'JED', inventLocationId: 'MAIN',
-  ...overrides,
-} as InventJournal);
+const journal = (overrides: Partial<InventJournal> = {}): InventJournal =>
+  ({
+    journalId: 'IJ-1',
+    journalType: 0,
+    posted: false,
+    countingFrozen: false,
+    countingConfirmed: false,
+    inventSiteId: 'JED',
+    inventLocationId: 'MAIN',
+    ...overrides,
+  }) as InventJournal;
 
 describe('inventory journal draft', () => {
   it('starts a new line at the journal header site and warehouse', () => {

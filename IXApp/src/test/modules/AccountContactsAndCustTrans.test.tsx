@@ -3,7 +3,10 @@ import { describe, expect, it, vi } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AccountContactsPage } from '@modules/finance/foundation/contacts/pages/AccountContactsPage';
-import { accountContactsRoute, contactDetailsRoute } from '@modules/finance/foundation/contacts/routes/contactRoutes';
+import {
+  accountContactsRoute,
+  contactDetailsRoute,
+} from '@modules/finance/foundation/contacts/routes/contactRoutes';
 import { CustTrans } from '@modules/finance/accounts-receivable/customer/pages/CustTrans';
 import { apiClient } from '@core/api/apiClient';
 import '@core/localization/i18n';

@@ -28,7 +28,14 @@ export function TransitionValueField({
   const resolvedLabel = label ?? t('wfProcessBuilder.settings.comparisonValue');
   if (dataType === 'boolean')
     return (
-      <TextField select size="small" label={resolvedLabel} value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>
+      <TextField
+        select
+        size="small"
+        label={resolvedLabel}
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+      >
         <MenuItem value="">{t('wfProcessBuilder.settings.selectValue')}</MenuItem>
         <MenuItem value="true">{t('wfProcessBuilder.settings.yes')}</MenuItem>
         <MenuItem value="false">{t('wfProcessBuilder.settings.no')}</MenuItem>

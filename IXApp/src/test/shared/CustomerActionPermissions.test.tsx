@@ -37,14 +37,30 @@ describe('customer action permission enforcement', () => {
     expect(screen.queryByRole('button', { name: 'Delete' })).toBeNull();
   });
   it('also protects Save while preserving Cancel', () => {
-    render(<EnterpriseCrudActions {...labels} editing savePermission="edit" onSave={vi.fn()} onCancel={vi.fn()} />);
+    render(
+      <EnterpriseCrudActions
+        {...labels}
+        editing
+        savePermission="edit"
+        onSave={vi.fn()}
+        onCancel={vi.fn()}
+      />
+    );
     expect(screen.queryByRole('button', { name: 'Save' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
   });
   it('allows Save for a create-only user when the parent is creating a record', () => {
     access.allowed.add('create');
-    render(<EnterpriseCrudActions {...labels} editing savePermission="create" onSave={vi.fn()} onCancel={vi.fn()} />);
-    expect(screen.getByRole('button', {name: 'Save'})).toBeEnabled();
+    render(
+      <EnterpriseCrudActions
+        {...labels}
+        editing
+        savePermission="create"
+        onSave={vi.fn()}
+        onCancel={vi.fn()}
+      />
+    );
+    expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
   });
   it('disables unsupported utilities and opens the current page in a new window', () => {
     const open = vi.spyOn(window, 'open').mockReturnValue(null);
@@ -55,7 +71,7 @@ describe('customer action permission enforcement', () => {
         notificationsLabel="Notifications"
         refreshLabel="Refresh"
         openWindowLabel="Open window"
-      />,
+      />
     );
     for (const name of ['Personalize', 'Guide', 'Notifications', 'Refresh'])
       expect(screen.getByRole('button', { name })).toBeDisabled();
