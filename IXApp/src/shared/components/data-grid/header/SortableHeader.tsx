@@ -108,7 +108,7 @@ export function SortableHeader<T>({
           display: 'flex',
           alignItems: 'center',
           // Same inline padding as the body cells so headers line up with values.
-          p: '3px 6px',
+          p: '3px var(--data-grid-cell-padding, 6px)',
           borderBottom: `1px solid ${enterpriseSurfaces(theme).gridLine}`,
           justifyContent:
             headerAlign(column) === 'center'
@@ -123,7 +123,15 @@ export function SortableHeader<T>({
           minHeight: headerHeight,
           boxSizing: 'border-box',
           '&:hover .column-header-action, &:focus-within .column-header-action': { opacity: 1 },
+          // Only the hovered header label moves; body cells keep their alignment.
+          '&:hover .MuiTypography-root, &:focus-visible .MuiTypography-root': {
+            paddingLeft: '8px',
+            paddingRight: hideColumnMenu ? (sort ? '16px' : 0) : sort ? '38px' : '22px',
+          },
           '@media (hover: none)': { '& .column-header-action': { opacity: 1 } },
+          '&:hover .column-sort-indicator, &:focus-within .column-sort-indicator': {
+            right: hideColumnMenu ? 6 : 26,
+          },
           '&:hover': {
             bgcolor: theme.palette.mode === 'light' ? '#e9e8e7' : theme.palette.action.hover,
           },
@@ -149,6 +157,8 @@ export function SortableHeader<T>({
           variant="subtitle2"
           sx={{
             flexGrow: 1,
+            minWidth: 0,
+            width: '100%',
             fontWeight: 600,
             color: 'text.primary',
             overflow: 'hidden',
@@ -158,15 +168,34 @@ export function SortableHeader<T>({
             fontSize: uiDensity.gridFontSize,
             letterSpacing: 0,
             textAlign: headerAlign(column) ?? 'start',
+            boxSizing: 'border-box',
+            paddingLeft: 0,
+            paddingRight: sort ? '16px' : 0,
           }}
         >
           {t(column.headerName || '')}
         </Typography>
         {sort?.sort === 'asc' && (
-          <ArrowUpward sx={{ fontSize: 12, marginInlineStart: 0.25, color: 'primary.main' }} />
+          <ArrowUpward
+            className="column-sort-indicator"
+            sx={{
+              fontSize: 12,
+              position: 'absolute',
+              right: 6,
+              color: 'primary.main',
+            }}
+          />
         )}
         {sort?.sort === 'desc' && (
-          <ArrowDownward sx={{ fontSize: 12, marginInlineStart: 0.25, color: 'primary.main' }} />
+          <ArrowDownward
+            className="column-sort-indicator"
+            sx={{
+              fontSize: 12,
+              position: 'absolute',
+              right: 6,
+              color: 'primary.main',
+            }}
+          />
         )}
         {!hideColumnMenu && (
           <IconButton
@@ -175,10 +204,21 @@ export function SortableHeader<T>({
             className="column-header-action"
             sx={{
               p: 0.25,
-              marginInlineStart: 0.25,
+              position: 'absolute',
+              right: 4,
+              top: '50%',
+              transform: 'translateY(-50%)',
               opacity: 0,
               flexShrink: 0,
               color: 'text.primary',
+              // Covers the text end it overlays, on the header hover color.
+              bgcolor: theme.palette.mode === 'light' ? '#e9e8e7' : theme.palette.action.hover,
+              '&:hover .column-sort-indicator, &:focus-within .column-sort-indicator': {
+                right: hideColumnMenu ? 6 : 26,
+              },
+              '&:hover': {
+                bgcolor: theme.palette.mode === 'light' ? '#dcdad8' : theme.palette.action.selected,
+              },
             }}
             onClick={(e) => {
               e.stopPropagation();
@@ -229,6 +269,9 @@ export function SortableHeader<T>({
           cursor: 'col-resize',
           zIndex: 10,
           insetInlineEnd: 0,
+          '&:hover .column-sort-indicator, &:focus-within .column-sort-indicator': {
+            right: hideColumnMenu ? 6 : 26,
+          },
           '&:hover': { bgcolor: 'primary.main', opacity: 0.65 },
         }}
       />

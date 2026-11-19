@@ -54,7 +54,8 @@ export function ListGridDetailsPanel<T extends ListDetailRecord>({
         gap: '17px',
         minWidth: 0,
         alignItems: 'start',
-        '& [role="gridcell"]': { borderBottom: 0, borderInlineEnd: 0, px: '7px' },
+        '--data-grid-cell-padding': '7px',
+        '& [role="gridcell"]': { borderBottom: 0, borderInlineEnd: 0 },
         '& [role="row"][aria-selected="true"] > [role="gridcell"]:first-of-type': {
           borderInlineStart: '3px solid #315efb',
         },

@@ -53,7 +53,7 @@ const GridCellInternal = <T,>({
         display: 'flex',
         alignItems: 'center',
         boxSizing: 'border-box',
-        p: col.field === '_selection' ? 0 : '0 6px',
+        p: col.field === '_selection' ? 0 : '0 var(--data-grid-cell-padding, 6px)',
         height: rowHeight,
         borderBottom: showCellBorders ? `1px solid ${enterpriseSurfaces(theme).gridLine}` : 'none',
         borderInlineEnd: showColumnBorders
@@ -66,6 +66,27 @@ const GridCellInternal = <T,>({
         flexShrink: 0,
         flexGrow: 0,
         fontSize: uiDensity.gridFontSize,
+        textAlign: cellAlign(col),
+        '& input, & textarea': { textAlign: cellAlign(col) },
+        '& .MuiSelect-select': { textAlign: cellAlign(col), paddingRight: '0 !important' },
+        '& .MuiAutocomplete-inputRoot': { paddingInlineEnd: '0 !important' },
+        '& .MuiSelect-icon, & .MuiAutocomplete-endAdornment, & .MuiInputAdornment-positionEnd': {
+          position: 'absolute',
+          right: 0,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          margin: 0,
+          opacity: 0,
+        },
+        '& .grid-cell-edit': { opacity: 0 },
+        '&:hover .MuiSelect-icon, &:hover .MuiAutocomplete-endAdornment, &:hover .MuiInputAdornment-positionEnd, &:hover .grid-cell-edit, &:focus-within .MuiSelect-icon, &:focus-within .MuiAutocomplete-endAdornment, &:focus-within .MuiInputAdornment-positionEnd, &:focus-within .grid-cell-edit':
+          {
+            opacity: 1,
+          },
+        '@media (hover: none)': {
+          '& .MuiSelect-icon, & .MuiAutocomplete-endAdornment, & .MuiInputAdornment-positionEnd, & .grid-cell-edit':
+            { opacity: 1 },
+        },
         overflow: 'hidden',
         bgcolor: 'inherit',
         justifyContent:

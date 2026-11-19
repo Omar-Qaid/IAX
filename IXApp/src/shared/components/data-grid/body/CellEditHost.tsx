@@ -35,7 +35,15 @@ export function CellEditHost({
           event.stopPropagation();
           onEdit();
         }}
-        sx={{ p: 0.25, ml: 0.5, flexShrink: 0, color: 'text.secondary' }}
+        sx={{
+          p: 0.25,
+          position: 'absolute',
+          right: 0,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          color: 'text.secondary',
+          bgcolor: 'background.paper',
+        }}
       >
         <EditOutlinedIcon sx={{ fontSize: 14 }} />
       </IconButton>

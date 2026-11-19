@@ -100,14 +100,20 @@ export function PinnedHeaderCell<T>({
         sx={{
           display: 'flex',
           alignItems: 'center',
-          p: '3px 6px',
+          p: '3px var(--data-grid-cell-padding, 6px)',
           borderBottom: (theme) => `1px solid ${enterpriseSurfaces(theme).gridLine}`,
           position: 'relative',
           height: headerHeight,
           minHeight: headerHeight,
           boxSizing: 'border-box',
           '&:hover .column-menu-trigger, &:focus-within .column-menu-trigger': { opacity: 1 },
+          '&:hover .MuiTypography-root, &:focus-visible .MuiTypography-root': {
+            paddingRight: hideColumnMenu ? (sort ? '16px' : 0) : sort ? '38px' : '22px',
+          },
           '@media (hover: none)': { '& .column-menu-trigger': { opacity: 1 } },
+          '&:hover .column-sort-indicator, &:focus-within .column-sort-indicator': {
+            right: hideColumnMenu ? 6 : 26,
+          },
           '&:hover': {
             bgcolor: (theme) =>
               theme.palette.mode === 'light' ? '#e9e8e7' : theme.palette.action.hover,
@@ -118,6 +124,8 @@ export function PinnedHeaderCell<T>({
           variant="subtitle2"
           sx={{
             flexGrow: 1,
+            minWidth: 0,
+            width: '100%',
             fontWeight: 600,
             fontFamily: APP_FONT_FAMILY,
             fontSize: uiDensity.gridFontSize,
@@ -126,12 +134,25 @@ export function PinnedHeaderCell<T>({
             whiteSpace: 'nowrap',
             letterSpacing: 0,
             textAlign: headerAlign(column) ?? 'start',
+            boxSizing: 'border-box',
+            paddingLeft: 0,
+            paddingRight: sort ? '16px' : 0,
           }}
         >
           {t(column.headerName || '')}
         </Typography>
-        {sort === 'asc' && <ArrowUpwardIcon sx={{ fontSize: 14 }} />}
-        {sort === 'desc' && <ArrowDownwardIcon sx={{ fontSize: 14 }} />}
+        {sort === 'asc' && (
+          <ArrowUpwardIcon
+            className="column-sort-indicator"
+            sx={{ fontSize: 14, position: 'absolute', right: 6 }}
+          />
+        )}
+        {sort === 'desc' && (
+          <ArrowDownwardIcon
+            className="column-sort-indicator"
+            sx={{ fontSize: 14, position: 'absolute', right: 6 }}
+          />
+        )}
         {!hideColumnMenu && (
           <IconButton
             size="small"
@@ -139,7 +160,10 @@ export function PinnedHeaderCell<T>({
             className="column-menu-trigger"
             sx={{
               p: 0.25,
-              marginInlineStart: 0.25,
+              position: 'absolute',
+              right: 4,
+              top: '50%',
+              transform: 'translateY(-50%)',
               opacity: 0,
               flexShrink: 0,
               color: 'text.primary',
@@ -193,6 +217,9 @@ export function PinnedHeaderCell<T>({
           cursor: 'col-resize',
           zIndex: 10,
           ...(side === 'left' ? { insetInlineEnd: 0 } : { insetInlineStart: 0 }),
+          '&:hover .column-sort-indicator, &:focus-within .column-sort-indicator': {
+            right: hideColumnMenu ? 6 : 26,
+          },
           '&:hover': { bgcolor: 'primary.main', opacity: 0.5 },
         }}
       />

@@ -4,11 +4,11 @@ type Align = 'left' | 'center' | 'right';
 
 /**
  * Alignment of a column's values: the column's own `align`, otherwise numbers
- * on the right and everything else at the start (D365 grids). Every grid gets
+ * on the right and text on the left. Every grid gets
  * this by default; a page overrides it with `align`.
  */
 export const cellAlign = <T>(col: Pick<ColumnDef<T>, 'align' | 'type'>): Align | undefined =>
-  col.align ?? (col.type === 'number' ? 'right' : undefined);
+  col.align ?? (col.type === 'number' ? 'right' : 'left');
 
 /** Header alignment follows the values unless `headerAlign` is set. */
 export const headerAlign = <T>(
