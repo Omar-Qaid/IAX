@@ -27,4 +27,6 @@ Editable cells (`editable: true`) show a pencil on hover while no row is being e
 - **Always-editable grids** (`masterForm`): the pencil edits that row and focuses the clicked cell, the same as a double-click.
 - **Grids whose page owns edit mode** (document lines): pass `onCellEditRequest`. The pencil calls it so the page switches to edit mode. Once `masterForm` is on, the grid edits the row and focuses the clicked cell. Master-detail pages get this through `MasterDetailLinesGrid`.
 
+- **Grids with their own cell editors** (for example sales order lines on list-details): wrap the view cell in `CellEditHost` (`body/CellEditHost`). On click, switch the page to edit mode, then focus that cell.
+
 Each pencil is named "Edit <column>" for screen readers. Read-only grids show no pencil. `editRowHighlight: 'none'` drops the edited-row outline, giving the cell-editing look.

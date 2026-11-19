@@ -527,3 +527,28 @@ it('keeps header tab dropdowns editable in edit mode', async () => {
   // No view-mode pencils left on header fields while editing.
   expect(screen.queryByRole('button', { name: 'Edit Site' })).toBeNull();
 });
+
+it('edits a line cell from view mode with the cell pencil (D365 edit from view)', async () => {
+  queryClient.removeQueries({ queryKey: salesOrderQueryKeys.all });
+  vi.mocked(salesOrderLinesApi.list).mockResolvedValueOnce([
+    {
+      id: '43',
+      lineNumber: 1,
+      itemNumber: 'ITEM-43',
+      description: 'Mouse item',
+      quantity: 2,
+      unit: 'Pcs',
+      unitPrice: 5,
+      lineTotal: 10,
+      deliveryDate: '2026-09-09',
+    },
+  ]);
+  openOrder('1');
+  await screen.findAllByText('ITEM-43');
+  expect(screen.queryByRole('button', { name: 'Save' })).toBeNull();
+  const grid = within(screen.getByRole('grid'));
+  fireEvent.click(grid.getByRole('button', { name: 'Edit Quantity' }));
+  // The page switches to edit mode and the clicked cell is being edited.
+  expect(await screen.findByRole('button', { name: 'Save' })).toBeEnabled();
+  await waitFor(() => expect(grid.getByRole('spinbutton', { name: 'Quantity' })).toHaveFocus());
+});
