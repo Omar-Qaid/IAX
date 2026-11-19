@@ -1124,6 +1124,12 @@ function DataGridInternal<T>(
       }
       aria-busy={loading}
       sx={{
+        '& input[type="number"]': { MozAppearance: 'textfield' },
+        '& input[type="number"]::-webkit-inner-spin-button, & input[type="number"]::-webkit-outer-spin-button':
+          {
+            WebkitAppearance: 'none',
+            margin: 0,
+          },
         display: 'flex',
         flexDirection: 'column',
         height: height ?? '100%',

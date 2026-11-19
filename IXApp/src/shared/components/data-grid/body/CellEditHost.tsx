@@ -22,9 +22,23 @@ export function CellEditHost({
         alignItems: 'center',
         '& .grid-cell-edit': { opacity: 0 },
         '&:hover .grid-cell-edit, & .grid-cell-edit:focus-visible': { opacity: 1 },
+        '&:hover > .grid-cell-value, &:focus-within > .grid-cell-value': {
+          paddingRight: '22px',
+        },
       }}
     >
-      <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+      <Box
+        className="grid-cell-value"
+        sx={{
+          flex: 1,
+          width: '100%',
+          minWidth: 0,
+          boxSizing: 'border-box',
+          paddingRight: 'var(--grid-cell-edit-space, 0px)',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
+      >
         {children}
       </Box>
       <IconButton
@@ -42,7 +56,8 @@ export function CellEditHost({
           top: '50%',
           transform: 'translateY(-50%)',
           color: 'text.secondary',
-          bgcolor: 'background.paper',
+          bgcolor: 'transparent',
+          '&:hover, &:focus-visible, &.Mui-focusVisible': { bgcolor: 'transparent' },
         }}
       >
         <EditOutlinedIcon sx={{ fontSize: 14 }} />
