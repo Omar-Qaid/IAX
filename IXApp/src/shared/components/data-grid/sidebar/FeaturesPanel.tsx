@@ -116,9 +116,11 @@ export function FeaturesPanel<T>({
                   cursor: 'pointer',
                   p: '8px 12px',
                   borderRadius: 1.5,
-                  bgcolor: rowHeight === d.value ? '#f0f4ff' : 'transparent',
+                  bgcolor: rowHeight === d.value ? 'action.selected' : 'transparent',
                   color: rowHeight === d.value ? 'primary.main' : 'text.primary',
-                  '&:hover': { bgcolor: rowHeight === d.value ? '#f0f4ff' : '#f5f5f5' },
+                  '&:hover': {
+                    bgcolor: rowHeight === d.value ? 'action.selected' : 'action.hover',
+                  },
                   transition: 'all 0.2s',
                 }}
               >
@@ -183,9 +185,9 @@ export function FeaturesPanel<T>({
                 cursor: 'pointer',
                 p: '8px 12px',
                 borderRadius: 1.5,
-                bgcolor: selectionMode === mode ? '#f0f4ff' : 'transparent',
+                bgcolor: selectionMode === mode ? 'action.selected' : 'transparent',
                 color: selectionMode === mode ? 'primary.main' : 'text.primary',
-                '&:hover': { bgcolor: selectionMode === mode ? '#f0f4ff' : '#f5f5f5' },
+                '&:hover': { bgcolor: selectionMode === mode ? 'action.selected' : 'action.hover' },
                 transition: 'all 0.2s',
                 border: '1px solid',
                 borderColor: selectionMode === mode ? 'primary.100' : 'transparent',
@@ -282,7 +284,7 @@ export function FeaturesPanel<T>({
                     justifyContent: 'space-between',
                     p: '2px 4px',
                     borderRadius: 0.5,
-                    '&:hover': { bgcolor: '#f0f0f0' },
+                    '&:hover': { bgcolor: 'action.hover' },
                   }}
                 >
                   <Typography

@@ -722,6 +722,8 @@ function InvoiceEditor({
     },
   ];
   const addLine = async () => {
+    // View mode: Add line switches the page to edit mode first (D365).
+    if (!editing) beginEdit();
     if (!draftRef.current || busy || !(await grid.current?.saveEdit())) return;
     const line = {
       ...newLine(),
@@ -813,7 +815,7 @@ function InvoiceEditor({
                   id: 'add',
                   label: t('freeTextInvoices.addLine'),
                   icon: <AddIcon />,
-                  disabled: !editing || busy,
+                  disabled: (!editing && !allowedEdit) || busy,
                   onClick: () => void addLine(),
                 },
                 {

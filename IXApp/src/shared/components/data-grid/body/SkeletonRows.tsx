@@ -29,8 +29,9 @@ export function SkeletonRows<T>({
           sx={{
             display: 'flex',
             height: rowHeight,
-            bgcolor: rowIdx % 2 === 1 ? '#fafafa' : '#fff',
-            borderBottom: '1px solid #f0f0f0',
+            bgcolor: rowIdx % 2 === 1 ? 'action.hover' : 'background.paper',
+            borderBottom: 1,
+            borderColor: 'divider',
           }}
         >
           {pinnedLeftCols.map((col, colIdx) => (

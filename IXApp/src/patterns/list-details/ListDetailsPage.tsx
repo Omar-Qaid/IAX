@@ -470,7 +470,10 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
             listPaneVisible={listPaneVisible}
             onListPaneClose={() => setListPaneVisible(false)}
             listWidthStorageKey={
-              config.presentation?.listWidthStorageKey ?? globalThis.location?.pathname
+              config.presentation?.listWidthStorageKey ??
+              // One width per page type, not per record: record URLs differ by id.
+              config.recordTableName ??
+              globalThis.location?.pathname
             }
             listPane={listPane}
             header={

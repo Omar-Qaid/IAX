@@ -1,5 +1,6 @@
 import React from 'react';
 import { Alert, Box, CircularProgress, Tooltip, Typography, useTheme } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutlined';
@@ -57,7 +58,7 @@ export function HcmWorkerAssignmentDiagram({ workerId, company }: Props): React.
         px: 2,
         py: 2.5,
         minWidth: 0,
-        background: 'linear-gradient(135deg, #f8faff 0%, #ffffff 48%, #f6fbf7 100%)',
+        bgcolor: 'background.paper',
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'stretch', width: '100%', minWidth: 0 }}>
@@ -65,11 +66,11 @@ export function HcmWorkerAssignmentDiagram({ workerId, company }: Props): React.
           const isShowroom = node.type === 'showroom';
           const isWorker = node.type === 'worker';
           const accent = isShowroom
-            ? '#107c10'
+            ? theme.palette.success.main
             : isWorker
-              ? '#7c3aed'
+              ? theme.palette.secondary.main
               : enterpriseSurfaces(theme).accent;
-          const paleAccent = isShowroom ? '#eaf6ea' : isWorker ? '#f1ebff' : '#eaf0ff';
+          const paleAccent = alpha(accent, 0.12);
           const displayName = localizedName(node, isRtl);
           const title =
             node.type === 'showroom'
@@ -90,15 +91,16 @@ export function HcmWorkerAssignmentDiagram({ workerId, company }: Props): React.
                     alignItems: 'center',
                   }}
                 >
-                  <Box sx={{ height: 2, flex: 1, bgcolor: '#c7d2eb' }} />
+                  <Box sx={{ height: 2, flex: 1, bgcolor: 'divider' }} />
                   <Box
                     sx={{
                       width: 24,
                       height: 24,
                       mx: -0.25,
                       borderRadius: '50%',
-                      bgcolor: '#fff',
-                      border: '1px solid #c7d2eb',
+                      bgcolor: 'background.paper',
+                      border: 1,
+                      borderColor: 'divider',
                       display: 'grid',
                       placeItems: 'center',
                     }}
@@ -111,7 +113,7 @@ export function HcmWorkerAssignmentDiagram({ workerId, company }: Props): React.
                       }}
                     />
                   </Box>
-                  <Box sx={{ height: 2, flex: 1, bgcolor: '#c7d2eb' }} />
+                  <Box sx={{ height: 2, flex: 1, bgcolor: 'divider' }} />
                 </Box>
               )}
               <Box
@@ -122,19 +124,23 @@ export function HcmWorkerAssignmentDiagram({ workerId, company }: Props): React.
                   minWidth: 0,
                   flex: '1 1 0',
                   overflow: 'hidden',
-                  border: '1px solid #d9e0ec',
+                  border: 1,
+                  borderColor: 'divider',
                   borderRadius: 2,
-                  bgcolor: '#fff',
+                  bgcolor: 'background.paper',
                   px: 1.75,
                   py: 1.5,
                   display: 'flex',
                   alignItems: 'center',
                   gap: 1.25,
                   boxShadow: isWorker
-                    ? `0 6px 18px ${accent}24`
+                    ? `0 6px 18px ${alpha(accent, 0.14)}`
                     : '0 3px 10px rgba(24, 42, 70, 0.08)',
                   transition: 'transform 160ms ease, box-shadow 160ms ease',
-                  '&:hover': { transform: 'translateY(-2px)', boxShadow: `0 8px 20px ${accent}22` },
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: `0 8px 20px ${alpha(accent, 0.13)}`,
+                  },
                   '&::before': {
                     content: '""',
                     position: 'absolute',
@@ -180,7 +186,12 @@ export function HcmWorkerAssignmentDiagram({ workerId, company }: Props): React.
                   </Typography>
                   <Tooltip title={displayName} arrow placement="top">
                     <Typography
-                      sx={{ color: '#172033', fontSize: 14, fontWeight: 700, lineHeight: 1.45 }}
+                      sx={{
+                        color: 'text.primary',
+                        fontSize: 14,
+                        fontWeight: 700,
+                        lineHeight: 1.45,
+                      }}
                       noWrap
                     >
                       {displayName}

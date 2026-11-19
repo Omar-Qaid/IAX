@@ -60,7 +60,7 @@ const compactSwitchSx = {
     '&.Mui-checked': { transform: 'translateX(10px)' },
   },
   '& .MuiSwitch-thumb': { width: 10, height: 10 },
-  '& .MuiSwitch-track': { borderRadius: 7, bgcolor: '#cbd5e1', opacity: 1 },
+  '& .MuiSwitch-track': { borderRadius: 7, bgcolor: tokens.borderStrong, opacity: 1 },
   '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
     bgcolor: 'primary.main',
     opacity: 1,
@@ -125,9 +125,9 @@ function UnsavedStatus({ compact = false }: { compact?: boolean }) {
       }
       sx={{
         height: compact ? 22 : 24,
-        color: '#7a4b00',
-        bgcolor: '#fff3cd',
-        borderColor: '#f0c36d',
+        color: 'warning.dark',
+        bgcolor: tokens.warningSoft,
+        borderColor: tokens.warning,
       }}
     />
   );
@@ -181,7 +181,7 @@ const workspaceCardSx = (selected = false) => ({
   border: '1px solid',
   borderColor: selected ? tokens.warning : tokens.border,
   borderRadius: `${tokens.radius}px`,
-  bgcolor: '#fff',
+  bgcolor: 'primary.contrastText',
   boxShadow: 'none',
   transition: 'border-color 120ms ease',
   '&:hover': { borderColor: selected ? tokens.warning : tokens.borderStrong },
@@ -249,7 +249,7 @@ export function DesignerWorkspace() {
                           height: 24,
                           borderRadius: '50%',
                           bgcolor: tokens.accent,
-                          color: '#fff',
+                          color: 'primary.contrastText',
                           '& .MuiChip-label': { px: 0 },
                         }}
                       />
@@ -270,8 +270,8 @@ export function DesignerWorkspace() {
                               ? tokens.warning
                               : step.active
                                 ? tokens.success
-                                : '#e0e0e0',
-                          color: s.dirty || step.active ? '#fff' : '#64748b',
+                                : 'action.selected',
+                          color: s.dirty || step.active ? 'primary.contrastText' : tokens.textMuted,
                         }}
                       />
                       <TextField
@@ -365,7 +365,7 @@ export function DesignerWorkspace() {
                             flexWrap: 'wrap',
                             gap: 1,
                             p: 1,
-                            bgcolor: '#fff',
+                            bgcolor: 'primary.contrastText',
                             border: '1px solid',
                             borderColor:
                               s.selected.kind === 'activity' && s.selected.id === activity.id
@@ -449,7 +449,7 @@ export function VariablesWorkspace({
         }
       />
       {s.document.id === 'new' && (
-        <Typography sx={{ color: '#9a4f00', fontSize: tokens.fontSize.secondary }}>
+        <Typography sx={{ color: 'warning.dark', fontSize: tokens.fontSize.secondary }}>
           {t('wfProcessBuilder.workspace.saveVariablesFirst')}
         </Typography>
       )}
@@ -489,7 +489,7 @@ export function VariablesWorkspace({
                           height: 24,
                           borderRadius: '50%',
                           bgcolor: tokens.accent,
-                          color: '#fff',
+                          color: 'primary.contrastText',
                           '& .MuiChip-label': { px: 0 },
                         }}
                       />
@@ -652,7 +652,7 @@ export function StepsWorkspace({
         }
       />
       {s.document.id === 'new' && (
-        <Typography sx={{ color: '#9a4f00', fontSize: tokens.fontSize.secondary }}>
+        <Typography sx={{ color: 'warning.dark', fontSize: tokens.fontSize.secondary }}>
           {t('wfProcessBuilder.workspace.saveStepsFirst')}
         </Typography>
       )}
@@ -690,7 +690,7 @@ export function StepsWorkspace({
                           height: 24,
                           borderRadius: '50%',
                           bgcolor: tokens.accent,
-                          color: '#fff',
+                          color: 'primary.contrastText',
                           '& .MuiChip-label': { px: 0 },
                         }}
                       />
@@ -932,7 +932,7 @@ export function ActivitiesWorkspace({
                       <Box
                         {...attributes}
                         {...listeners}
-                        sx={{ display: 'flex', cursor: 'grab', color: '#111827' }}
+                        sx={{ display: 'flex', cursor: 'grab', color: tokens.text }}
                       >
                         <DragIndicator />
                       </Box>
@@ -1157,7 +1157,7 @@ export function RequestFormWorkspace({
         }
       />
       {s.document.id === 'new' && (
-        <Typography sx={{ color: '#9a4f00', fontSize: tokens.fontSize.secondary }}>
+        <Typography sx={{ color: 'warning.dark', fontSize: tokens.fontSize.secondary }}>
           {t('wfProcessBuilder.workspace.saveProcessFirst')}
         </Typography>
       )}
@@ -1175,8 +1175,8 @@ export function RequestFormWorkspace({
               onClick={() => s.addRequestControl(item.type)}
               sx={{
                 minHeight: 32,
-                color: '#475569',
-                borderColor: '#d9dee8',
+                color: tokens.textMuted,
+                borderColor: tokens.border,
                 borderRadius: `${tokens.radius}px`,
                 textTransform: 'none',
                 px: 1.5,
@@ -1226,7 +1226,7 @@ export function RequestFormWorkspace({
                       <Box
                         {...attributes}
                         {...listeners}
-                        sx={{ display: 'flex', color: '#111827', cursor: 'grab' }}
+                        sx={{ display: 'flex', color: tokens.text, cursor: 'grab' }}
                       >
                         <DragIndicator />
                       </Box>
@@ -1384,7 +1384,7 @@ export function ActivityFormWorkspace({
             p: '28px',
             textAlign: 'center',
             border: `1px dashed ${tokens.borderStrong}`,
-            bgcolor: '#fff',
+            bgcolor: 'primary.contrastText',
           }}
         >
           <Typography sx={{ fontSize: tokens.fontSize.heading, fontWeight: 700 }}>
@@ -1606,7 +1606,7 @@ export function ActivityFormWorkspace({
                           gridColumn: { xs: '2', md: '2 / -1' },
                           p: 1.25,
                           border: `1px solid ${tokens.border}`,
-                          bgcolor: '#f8fafc',
+                          bgcolor: tokens.canvas,
                         }}
                       >
                         <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1 }}>
@@ -1861,8 +1861,8 @@ export function DiagramWorkspace() {
           minHeight: 500,
           p: 2,
           borderRadius: `${tokens.radius}px`,
-          backgroundColor: '#f8f9fb',
-          backgroundImage: 'radial-gradient(#d8dde7 1px, transparent 1px)',
+          backgroundColor: tokens.canvas,
+          backgroundImage: `radial-gradient(${tokens.borderStrong} 1px, transparent 1px)`,
           backgroundSize: '16px 16px',
         }}
       >
@@ -1870,21 +1870,21 @@ export function DiagramWorkspace() {
           <Chip
             label={t('wfProcessBuilder.workspace.requestFlow')}
             size="small"
-            sx={{ alignSelf: 'flex-start', bgcolor: '#eef0ff', color: '#635bff' }}
+            sx={{ alignSelf: 'flex-start', bgcolor: tokens.accentSoft, color: tokens.accent }}
           />
           <Box
             sx={{
               px: 3,
               py: 1,
-              border: '2px solid #10b981',
+              border: `2px solid ${tokens.success}`,
               borderRadius: 8,
-              bgcolor: '#ecfdf5',
+              bgcolor: tokens.successSoft,
               fontWeight: 700,
             }}
           >
             {t('wfProcessBuilder.start')}
           </Box>
-          <Box sx={{ height: 22, borderInlineStart: '2px solid #635bff' }} />
+          <Box sx={{ height: 22, borderInlineStart: `2px solid ${tokens.accent}` }} />
           <Box
             onClick={() => {
               s.select({ kind: 'process' });
@@ -1893,9 +1893,9 @@ export function DiagramWorkspace() {
             sx={{
               width: 280,
               p: 1.5,
-              border: '2px solid #635bff',
+              border: `2px solid ${tokens.accent}`,
               borderRadius: `${tokens.radius}px`,
-              bgcolor: '#fff',
+              bgcolor: 'primary.contrastText',
               textAlign: 'center',
               cursor: 'pointer',
             }}
@@ -1909,7 +1909,7 @@ export function DiagramWorkspace() {
           </Box>
           {d.steps.map((step) => (
             <React.Fragment key={step.id}>
-              <Box sx={{ height: 26, borderInlineStart: '2px solid #635bff' }} />
+              <Box sx={{ height: 26, borderInlineStart: `2px solid ${tokens.accent}` }} />
               {d.transitions
                 .filter((transition) => transition.targetStepId === step.id)
                 .map((transition) => (
@@ -1917,7 +1917,7 @@ export function DiagramWorkspace() {
                     key={transition.id}
                     size="small"
                     label={`${transition.operator} ${transition.value || '…'}`}
-                    sx={{ mb: 0.5, bgcolor: '#fff7ed', color: '#c2410c' }}
+                    sx={{ mb: 0.5, bgcolor: tokens.warningSoft, color: 'warning.dark' }}
                   />
                 ))}
               <Box
@@ -1927,9 +1927,11 @@ export function DiagramWorkspace() {
                   p: 1.5,
                   border: '2px solid',
                   borderColor:
-                    s.selected.kind === 'step' && s.selected.id === step.id ? '#635bff' : '#a5b4fc',
+                    s.selected.kind === 'step' && s.selected.id === step.id
+                      ? tokens.accent
+                      : tokens.accentLight,
                   borderRadius: `${tokens.radius}px`,
-                  bgcolor: '#fff',
+                  bgcolor: 'primary.contrastText',
                   textAlign: 'center',
                   cursor: 'pointer',
                 }}
@@ -1948,13 +1950,13 @@ export function DiagramWorkspace() {
         </Stack>
         <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
           <Typography variant="caption">
-            <Box component="span" sx={{ color: '#635bff' }}>
+            <Box component="span" sx={{ color: tokens.accent }}>
               ━
             </Box>{' '}
             {t('wfProcessBuilder.workspace.processPath')}
           </Typography>
           <Typography variant="caption">
-            <Box component="span" sx={{ color: '#f59e0b' }}>
+            <Box component="span" sx={{ color: tokens.warning }}>
               ●
             </Box>{' '}
             {t('wfProcessBuilder.workspace.conditionalTransition')}
@@ -2035,7 +2037,7 @@ export function TransitionsWorkspace({
                   height: 28,
                   borderRadius: '50%',
                   bgcolor: tokens.accent,
-                  color: '#fff',
+                  color: 'primary.contrastText',
                   '& .MuiChip-label': { px: 0.5 },
                 }}
               />

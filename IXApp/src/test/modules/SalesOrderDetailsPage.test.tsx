@@ -46,17 +46,15 @@ async function mockOrders() {
 vi.mock('@modules/finance/accounts-receivable/sales-order/api/salesOrderLinesApi', () => ({
   salesOrderLinesApi: {
     list: vi.fn().mockResolvedValue([]),
-    totals: vi
-      .fn()
-      .mockResolvedValue({
-        subtotal: 250,
-        totalDiscount: 0,
-        salesTax: 0,
-        totalCharges: 0,
-        invoiceAmount: 250,
-        quantity: 0,
-        costValue: 0,
-      }),
+    totals: vi.fn().mockResolvedValue({
+      subtotal: 250,
+      totalDiscount: 0,
+      salesTax: 0,
+      totalCharges: 0,
+      invoiceAmount: 250,
+      quantity: 0,
+      costValue: 0,
+    }),
     items: vi.fn().mockResolvedValue({
       data: [{ itemNumber: 'ITEM-1', name: 'Test item' }],
       pageNumber: 1,
@@ -501,14 +499,27 @@ it('keeps invalid cell edits focused and moves to Unit after a successful Tab sa
 it('preserves an unfinished new line when switching between Lines and Header', async () => {
   openOrder('1');
   await screen.findByText('SO-LIVE-001 : Live customer');
+  // Wait for each step: under a loaded test run the page lags behind the clicks.
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Edit' })).toBeEnabled());
   fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Add line' })).toBeEnabled());
   fireEvent.click(screen.getByRole('button', { name: 'Add line' }));
-  expect(screen.getByRole('textbox', { name: 'Item number' })).toBeDefined();
+  expect(await screen.findByRole('textbox', { name: 'Item number' })).toBeDefined();
   fireEvent.click(screen.getByRole('tab', { name: 'Header' }));
-  expect(screen.queryByRole('textbox', { name: 'Item number' })).toBeNull();
+  await waitFor(() => expect(screen.queryByRole('textbox', { name: 'Item number' })).toBeNull());
   fireEvent.click(screen.getByRole('tab', { name: 'Lines' }));
   expect(await screen.findByRole('textbox', { name: 'Item number' })).toBeDefined();
-  expect(screen.getByRole('button', { name: 'Add line' })).toBeDisabled();
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Add line' })).toBeDisabled());
+});
+
+it('adds a line from view mode and switches the page to edit mode', async () => {
+  openOrder('1');
+  await screen.findByText('SO-LIVE-001 : Live customer');
+  expect(screen.queryByRole('button', { name: 'Save' })).toBeNull();
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Add line' })).toBeEnabled());
+  fireEvent.click(screen.getByRole('button', { name: 'Add line' }));
+  expect(await screen.findByRole('button', { name: 'Save' })).toBeDefined();
+  expect(await screen.findByRole('textbox', { name: 'Item number' })).toBeDefined();
 });
 
 it('keeps header tab dropdowns editable in edit mode', async () => {

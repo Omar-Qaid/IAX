@@ -9,6 +9,8 @@ import FilterIcon from '@mui/icons-material/FilterList';
 import type { ColumnDef, FilterModel, SortModel } from '../types';
 import { FilterInput } from './FilterInput';
 import { APP_FONT_FAMILY } from '@shared/constants/fontFamilies';
+import { enterpriseSurfaces } from '@shared/constants/enterpriseSurfaces';
+import { headerAlign } from '../columnAlign';
 
 interface PinnedHeaderCellProps<T> {
   column: ColumnDef<T>;
@@ -55,7 +57,7 @@ export function PinnedHeaderCell<T>({
         display: 'flex',
         flexDirection: 'column',
         boxSizing: 'border-box',
-        bgcolor: '#ffffff',
+        bgcolor: 'background.paper',
         width: column.width || 150,
         minWidth: column.width || 150,
         maxWidth: column.width || 150,
@@ -68,12 +70,12 @@ export function PinnedHeaderCell<T>({
           ? {
               insetInlineStart: offset,
               borderInlineEnd: (theme) =>
-                showColumnBorders ? `1px solid ${theme.palette.divider}` : 'none',
+                showColumnBorders ? `1px solid ${enterpriseSurfaces(theme).gridLine}` : 'none',
             }
           : {
               insetInlineEnd: offset,
               borderInlineStart: (theme) =>
-                showColumnBorders ? `1px solid ${theme.palette.divider}` : 'none',
+                showColumnBorders ? `1px solid ${enterpriseSurfaces(theme).gridLine}` : 'none',
             }),
       }}
     >
@@ -98,8 +100,8 @@ export function PinnedHeaderCell<T>({
         sx={{
           display: 'flex',
           alignItems: 'center',
-          p: '3px 8px',
-          borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+          p: '3px 6px',
+          borderBottom: (theme) => `1px solid ${enterpriseSurfaces(theme).gridLine}`,
           position: 'relative',
           height: headerHeight,
           minHeight: headerHeight,
@@ -123,7 +125,7 @@ export function PinnedHeaderCell<T>({
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
             letterSpacing: 0,
-            textAlign: column.headerAlign ?? 'start',
+            textAlign: headerAlign(column) ?? 'start',
           }}
         >
           {t(column.headerName || '')}
@@ -157,7 +159,7 @@ export function PinnedHeaderCell<T>({
           sx={{
             p: '2px 8px',
             borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-            bgcolor: (theme) => (theme.palette.mode === 'light' ? '#ffffff' : '#2d3748'),
+            bgcolor: (theme) => theme.palette.background.paper,
             display: 'flex',
             alignItems: 'center',
             height: Math.max(26, headerHeight - 2),

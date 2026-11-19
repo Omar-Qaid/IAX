@@ -56,9 +56,9 @@ export function TreeControl<T>({ nodes, config }: TreeControlProps<T>): React.Re
                 gap: 0.75,
                 marginInlineStart: depth ? `${depth * 10}px` : 0,
                 px: 0.5,
-                bgcolor: selected ? '#dbe7fb' : undefined,
+                bgcolor: selected ? 'action.selected' : undefined,
                 textAlign: 'start',
-                '&:hover': { bgcolor: selected ? '#dbe7fb' : 'action.hover' },
+                '&:hover': { bgcolor: selected ? 'action.selected' : 'action.hover' },
               }}
             >
               {expanded ? (
@@ -80,8 +80,8 @@ export function TreeControl<T>({ nodes, config }: TreeControlProps<T>): React.Re
                 paddingInlineStart: `${depth * 34}px`,
                 fontSize: 13,
                 cursor: 'default',
-                bgcolor: selected ? '#dbe7fb' : undefined,
-                '&:hover': { bgcolor: selected ? '#dbe7fb' : 'action.hover' },
+                bgcolor: selected ? 'action.selected' : undefined,
+                '&:hover': { bgcolor: selected ? 'action.selected' : 'action.hover' },
               }}
             >
               {config.getLabel(node)}

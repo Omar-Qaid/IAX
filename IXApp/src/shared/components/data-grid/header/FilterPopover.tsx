@@ -152,7 +152,7 @@ export function FilterPopover<T>({
 
         <Divider sx={{ mb: 1.5 }} />
 
-        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600, color: '#333' }}>
+        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600, color: 'text.primary' }}>
           {column.headerName}
         </Typography>
 
@@ -244,7 +244,7 @@ export function FilterPopover<T>({
                     value: (f.value as string[]).filter((v) => v !== val),
                   }))
                 }
-                sx={{ borderRadius: 1, bgcolor: '#f5f5f5', border: '1px solid #e0e0e0' }}
+                sx={{ borderRadius: 1, bgcolor: 'action.hover', border: 1, borderColor: 'divider' }}
               />
             ))}
           </Box>
@@ -257,8 +257,8 @@ export function FilterPopover<T>({
             size="small"
             onClick={handleApply}
             sx={{
-              bgcolor: '#3b5bdb',
-              '&:hover': { bgcolor: '#2f49b5' },
+              bgcolor: 'primary.main',
+              '&:hover': { bgcolor: 'primary.dark' },
               textTransform: 'none',
               fontWeight: 600,
             }}
@@ -270,7 +270,12 @@ export function FilterPopover<T>({
             variant="outlined"
             size="small"
             onClick={handleClear}
-            sx={{ textTransform: 'none', color: '#333', borderColor: '#ccc', fontWeight: 600 }}
+            sx={{
+              textTransform: 'none',
+              color: 'text.primary',
+              borderColor: 'divider',
+              fontWeight: 600,
+            }}
           >
             {t('actions.clear')}
           </Button>

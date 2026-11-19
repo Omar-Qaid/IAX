@@ -46,8 +46,9 @@ export function ReportThumbnailPanel({
         display: 'grid',
         gridTemplateRows: '31px minmax(0, 1fr)',
         overflow: 'hidden',
-        bgcolor: '#d7d8dc',
-        borderInlineEnd: '1px solid #adb2ba',
+        bgcolor: 'action.selected',
+        borderInlineEnd: 1,
+        borderColor: 'divider',
       }}
     >
       {open ? (
@@ -58,8 +59,9 @@ export function ReportThumbnailPanel({
             sx={{
               alignItems: 'center',
               px: 0.5,
-              bgcolor: '#eeeeef',
-              borderBottom: '1px solid #b8bdc4',
+              bgcolor: 'action.hover',
+              borderBottom: 1,
+              borderColor: 'divider',
             }}
           >
             <IconButton
@@ -107,7 +109,7 @@ export function ReportThumbnailPanel({
                           mx: 'auto',
                           bgcolor: '#fff',
                           border: '2px solid',
-                          borderColor: selected ? '#315fa8' : '#9ba2ab',
+                          borderColor: selected ? 'primary.main' : 'divider',
                           boxShadow: selected
                             ? '0 0 0 2px rgba(49,95,168,.2)'
                             : '0 2px 5px rgba(0,0,0,.18)',

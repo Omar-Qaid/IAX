@@ -75,14 +75,14 @@ const NotificationItem: React.FC<{
   const getPriorityColor = (priority?: string) => {
     switch (priority) {
       case 'Critical':
-        return '#ef4444';
+        return 'error.main';
       case 'High':
-        return '#f97316';
+        return 'warning.main';
       case 'Medium':
-        return '#3b82f6';
+        return 'info.main';
       case 'Low':
       default:
-        return '#10b981';
+        return 'success.main';
     }
   };
 
@@ -170,14 +170,14 @@ const NotificationItem: React.FC<{
                 width: 36,
                 height: 36,
                 borderRadius: '2px',
-                bgcolor: '#ef4444',
+                bgcolor: 'error.main',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
               }}
             >
-              <InsertDriveFileIcon sx={{ fontSize: 18, color: '#fff' }} />
+              <InsertDriveFileIcon sx={{ fontSize: 18, color: 'error.contrastText' }} />
             </Box>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography

@@ -36,7 +36,7 @@ import { useAppTranslation } from '@core/localization/useAppTranslation';
 const toolbarButtonSx = {
   minWidth: 0,
   px: 1,
-  color: '#172b3a',
+  color: 'text.primary',
   textTransform: 'none',
   fontSize: 12,
   borderRadius: 0.5,
@@ -102,7 +102,8 @@ export function ReportToolbar(props: ReportToolbarProps): React.ReactElement {
           alignItems: 'center',
           gap: 0.25,
           px: 0.75,
-          borderBottom: '1px solid #d2d6dc',
+          borderBottom: 1,
+          borderColor: 'divider',
           borderRadius: '9px',
         }}
       >
@@ -183,8 +184,9 @@ export function ReportToolbar(props: ReportToolbarProps): React.ReactElement {
           gridTemplateColumns: '1fr auto 1fr',
           alignItems: 'center',
           px: 0.75,
-          borderBottom: '1px solid #c9ced6',
-          bgcolor: '#f7f7f8',
+          borderBottom: 1,
+          borderColor: 'divider',
+          bgcolor: 'action.hover',
         }}
       >
         <Stack direction="row" spacing={0.25} sx={{ alignItems: 'center', minWidth: 0 }}>
@@ -276,7 +278,7 @@ export function ReportToolbar(props: ReportToolbarProps): React.ReactElement {
             <ZoomIn />
           </IconButton>
           <Button
-            sx={{ ...toolbarButtonSx, minWidth: { xs: 112, sm: 145 }, bgcolor: '#e1e3e6' }}
+            sx={{ ...toolbarButtonSx, minWidth: { xs: 112, sm: 145 }, bgcolor: 'action.selected' }}
             endIcon={<ArrowDropDown />}
             onClick={(event) => setZoomAnchor(event.currentTarget)}
           >

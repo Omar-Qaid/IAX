@@ -48,9 +48,10 @@ export function FiltersPanel<T>({
                 sx={{
                   mb: 1,
                   p: 1,
-                  bgcolor: '#f8f9fa',
+                  bgcolor: 'action.hover',
                   borderRadius: 1,
-                  border: '1px solid #e0e0e0',
+                  border: 1,
+                  borderColor: 'divider',
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
@@ -94,7 +95,7 @@ export function FiltersPanel<T>({
       </Box>
 
       {filters.length > 0 && (
-        <Box sx={{ p: 1, borderTop: '1px solid #e0e0e0' }}>
+        <Box sx={{ p: 1, borderTop: 1, borderColor: 'divider' }}>
           <Button
             size="small"
             variant="outlined"

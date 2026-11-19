@@ -25,7 +25,7 @@ export function BuilderItemCard({
         p: 1.5,
         borderRadius: `${tokens.radius}px`,
         borderColor: selected ? tokens.warning : tokens.border,
-        bgcolor: '#fff',
+        bgcolor: tokens.surface,
         boxShadow: 'none',
         transition: 'border-color 120ms ease',
         '&:hover': { borderColor: selected ? tokens.warning : tokens.borderStrong },

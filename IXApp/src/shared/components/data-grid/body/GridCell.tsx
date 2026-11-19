@@ -2,6 +2,8 @@ import { uiDensity } from '@shared/constants/uiDensity';
 import React, { memo } from 'react';
 import { Box, alpha, useTheme } from '@mui/material';
 import type { ColumnDef } from '../types';
+import { enterpriseSurfaces } from '@shared/constants/enterpriseSurfaces';
+import { cellAlign } from '../columnAlign';
 
 interface GridCellProps<T> {
   row: T;
@@ -51,10 +53,12 @@ const GridCellInternal = <T,>({
         display: 'flex',
         alignItems: 'center',
         boxSizing: 'border-box',
-        p: col.field === '_selection' ? 0 : '0 12px',
+        p: col.field === '_selection' ? 0 : '0 6px',
         height: rowHeight,
-        borderBottom: showCellBorders ? `1px solid ${theme.palette.divider}` : 'none',
-        borderInlineEnd: showColumnBorders ? `1px solid ${theme.palette.divider}` : 'none',
+        borderBottom: showCellBorders ? `1px solid ${enterpriseSurfaces(theme).gridLine}` : 'none',
+        borderInlineEnd: showColumnBorders
+          ? `1px solid ${enterpriseSurfaces(theme).gridLine}`
+          : 'none',
         width: col.width || 150,
         minWidth: col.width || 150,
         maxWidth: col.width || 150,
@@ -65,13 +69,13 @@ const GridCellInternal = <T,>({
         overflow: 'hidden',
         bgcolor: 'inherit',
         justifyContent:
-          col.field === '_selection' || col.align === 'center'
+          col.field === '_selection' || cellAlign(col) === 'center'
             ? 'center'
-            : col.align === 'left'
+            : cellAlign(col) === 'left'
               ? theme.direction === 'rtl'
                 ? 'flex-end'
                 : 'flex-start'
-              : col.align === 'right'
+              : cellAlign(col) === 'right'
                 ? theme.direction === 'rtl'
                   ? 'flex-start'
                   : 'flex-end'

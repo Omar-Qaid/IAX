@@ -38,7 +38,15 @@ export function ColumnsPanel<T>({
 
   return (
     <>
-      <Box sx={{ p: 1, display: 'flex', alignItems: 'center', borderBottom: '1px solid #e0e0e0' }}>
+      <Box
+        sx={{
+          p: 1,
+          display: 'flex',
+          alignItems: 'center',
+          borderBottom: 1,
+          borderColor: 'divider',
+        }}
+      >
         <AppBooleanField
           value={pivotMode}
           onChange={(v) => setPivotMode(v)}
@@ -90,7 +98,7 @@ export function ColumnsPanel<T>({
         ))}
       </Box>
 
-      <Box sx={{ p: 1, borderTop: '1px solid #e0e0e0', bgcolor: '#fafafa' }}>
+      <Box sx={{ p: 1, borderTop: 1, borderColor: 'divider', bgcolor: 'action.hover' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
           <TableRowsIcon
             fontSize="small"
@@ -102,7 +110,8 @@ export function ColumnsPanel<T>({
         </Box>
         <Box
           sx={{
-            border: '1px dashed #ccc',
+            border: '1px dashed',
+            borderColor: 'divider',
             p: 1,
             mb: 2,
             textAlign: 'center',
@@ -126,7 +135,8 @@ export function ColumnsPanel<T>({
         </Box>
         <Box
           sx={{
-            border: '1px dashed #ccc',
+            border: '1px dashed',
+            borderColor: 'divider',
             p: 1,
             textAlign: 'center',
             bgcolor: 'white',

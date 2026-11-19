@@ -80,7 +80,7 @@ export function ProcessBuilderTreePanel() {
     minHeight: 36,
     '&.Mui-selected': { bgcolor: tokens.accentSoft, color: tokens.accent },
     '&.Mui-selected:hover': { bgcolor: tokens.accentSoft },
-    '&:hover': { bgcolor: '#f8fafc' },
+    '&:hover': { bgcolor: tokens.canvas },
     '&:focus-visible': { boxShadow: tokens.focusRing },
     '& .MuiListItemText-primary': {
       fontSize: tokens.fontSize.body,
@@ -107,7 +107,7 @@ export function ProcessBuilderTreePanel() {
   const branchSx = {
     marginInlineStart: '22px',
     paddingInlineStart: '10px',
-    borderInlineStart: '1px solid #cbd5e1',
+    borderInlineStart: `1px solid ${tokens.borderStrong}`,
   };
   return (
     <List
@@ -283,7 +283,7 @@ export function ProcessBuilderTreePanel() {
                         sx={{
                           marginInlineStart: '20px',
                           paddingInlineStart: '10px',
-                          borderInlineStart: '1px solid #cbd5e1',
+                          borderInlineStart: `1px solid ${tokens.borderStrong}`,
                         }}
                       >
                         {s.activities.map((a) => (
@@ -307,7 +307,7 @@ export function ProcessBuilderTreePanel() {
                               sx={{
                                 marginInlineStart: '20px',
                                 paddingInlineStart: '10px',
-                                borderInlineStart: '1px solid #dbe2ea',
+                                borderInlineStart: `1px solid ${tokens.border}`,
                               }}
                             >
                               {a.controls.map((control) => (

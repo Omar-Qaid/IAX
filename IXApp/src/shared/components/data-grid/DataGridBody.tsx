@@ -24,6 +24,7 @@ import { APP_FONT_FAMILY } from '@shared/constants/fontFamilies';
 import { hasLookupValue } from '@shared/components/lookups/lookupValueStyle';
 import { RecordPreview } from '@shared/components/record-preview';
 import { CellEditHost } from './body/CellEditHost';
+import { cellAlign } from './columnAlign';
 
 interface GridBodyProps<T> {
   rows: T[];
@@ -361,10 +362,10 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>(
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
-                textAlign: col.align ?? 'start',
+                textAlign: cellAlign(col) ?? 'start',
                 fontFamily: APP_FONT_FAMILY,
                 fontSize: uiDensity.gridFontSize,
-                color: '#323130',
+                color: 'text.primary',
               }}
             >
               {result}
@@ -397,10 +398,10 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>(
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
-              textAlign: col.align ?? 'start',
+              textAlign: cellAlign(col) ?? 'start',
               fontFamily: APP_FONT_FAMILY,
               fontSize: uiDensity.gridFontSize,
-              color: hasLookupValue(val) ? 'primary.main' : '#323130',
+              color: hasLookupValue(val) ? 'primary.main' : 'text.primary',
             }}
           >
             {label ?? (val != null ? String(val) : '')}
@@ -429,10 +430,10 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>(
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
-            textAlign: col.align ?? 'start',
+            textAlign: cellAlign(col) ?? 'start',
             fontFamily: APP_FONT_FAMILY,
             fontSize: uiDensity.gridFontSize,
-            color: '#323130',
+            color: 'text.primary',
           }}
         >
           {val != null ? String(val) : ''}

@@ -230,7 +230,7 @@ export function DataGridHeaderInternal<T>({
       sx={{
         display: 'flex',
         height: headerHeight * (hideFilterRow ? 1 : 2),
-        bgcolor: '#ffffff',
+        bgcolor: 'background.paper',
         width: 'max-content',
         minWidth: '100%',
         position: 'relative',
@@ -242,7 +242,7 @@ export function DataGridHeaderInternal<T>({
             display: 'flex',
             flexDirection: 'column',
             boxSizing: 'border-box',
-            bgcolor: '#ffffff',
+            bgcolor: 'background.paper',
             width: GRID_SELECTION_COLUMN_WIDTH,
             minWidth: GRID_SELECTION_COLUMN_WIDTH,
             maxWidth: GRID_SELECTION_COLUMN_WIDTH,
@@ -343,7 +343,7 @@ export function DataGridHeaderInternal<T>({
           flexShrink: 0,
           minWidth: 0,
           borderBottom: `1px solid ${theme.palette.divider}`,
-          bgcolor: '#ffffff',
+          bgcolor: 'background.paper',
         }}
       />
 

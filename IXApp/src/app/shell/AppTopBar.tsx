@@ -494,7 +494,7 @@ export const AppTopBar: React.FC = memo(() => {
                     gap: 1.5,
                     borderInlineStart: selected ? 3 : 0,
                     borderInlineStartColor: 'primary.main',
-                    '&.Mui-selected': { bgcolor: '#d4e0f7' },
+                    '&.Mui-selected': { bgcolor: 'action.selected' },
                   }}
                 >
                   <Typography
@@ -720,7 +720,7 @@ export const AppTopBar: React.FC = memo(() => {
                         borderRadius: '2px',
                         transition: 'all 0.15s',
                         '&:hover': {
-                          bgcolor: 'rgba(99,102,241,0.06)',
+                          bgcolor: 'action.hover',
                           textDecoration: 'underline',
                           color: 'primary.dark',
                         },

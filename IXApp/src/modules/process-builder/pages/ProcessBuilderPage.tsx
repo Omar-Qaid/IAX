@@ -52,6 +52,7 @@ import {
 } from '../store/useProcessBuilderStore';
 import { useProcessBuilderDraft } from '../hooks/useProcessBuilderDraft';
 import { processBuilderTokens as tokens } from '../components/processBuilderTokens';
+import { ProcessBuilderThemeVariables } from '../components/ProcessBuilderThemeVariables';
 import { useProcessBuilderLoader } from '../hooks/useProcessBuilderLoader';
 import { useProcessBuilderActions } from '../hooks/useProcessBuilderActions';
 import { navigationStorageKey } from '../hooks/processBuilderNavigation';
@@ -60,16 +61,16 @@ import { useAppTranslation } from '@core/localization/useAppTranslation';
 const slimScrollbarSx = {
   '&, & *': {
     scrollbarWidth: 'thin',
-    scrollbarColor: '#a8a8a8 transparent',
+    scrollbarColor: `${tokens.borderStrong} transparent`,
   },
   '&::-webkit-scrollbar, & *::-webkit-scrollbar': { width: 6, height: 6 },
   '&::-webkit-scrollbar-track, & *::-webkit-scrollbar-track': { backgroundColor: 'transparent' },
   '&::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb': {
-    backgroundColor: '#a8a8a8',
+    backgroundColor: tokens.borderStrong,
     borderRadius: 999,
   },
   '&::-webkit-scrollbar-thumb:hover, & *::-webkit-scrollbar-thumb:hover': {
-    backgroundColor: '#7d7d7d',
+    backgroundColor: tokens.textSubtle,
   },
   '& .MuiSwitch-root': {
     width: 24,
@@ -82,7 +83,7 @@ const slimScrollbarSx = {
     '&.Mui-checked': { transform: 'translateX(10px)' },
   },
   '& .MuiSwitch-thumb': { width: 10, height: 10 },
-  '& .MuiSwitch-track': { borderRadius: 7, bgcolor: '#cbd5e1', opacity: 1 },
+  '& .MuiSwitch-track': { borderRadius: 7, bgcolor: tokens.borderStrong, opacity: 1 },
   '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
     bgcolor: 'primary.main',
     opacity: 1,
@@ -248,512 +249,520 @@ export function ProcessBuilderPage() {
     },
   ];
   return (
-    <Box
-      sx={{
-        ...slimScrollbarSx,
-        height: { xs: 'calc(100dvh - 58px)', md: 'calc(100vh - 108px)' },
-        minHeight: { xs: 0, md: 620 },
-        bgcolor: '#fff',
-        borderTop: `2px solid ${tokens.accent}`,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        color: tokens.text,
-        fontFamily: APP_FONT_FAMILY,
-        fontSize: tokens.fontSize.body,
-        '& .MuiButton-root': {
-          minHeight: 28,
-          px: 1,
-          py: 0.375,
-          borderRadius: `${tokens.radius}px`,
-          fontSize: tokens.fontSize.secondary,
-          fontWeight: 500,
-          textTransform: 'none',
-        },
-        '& .MuiButton-sizeSmall': { minHeight: 26 },
-        '& .MuiButton-outlined': { borderColor: tokens.border, color: tokens.textMuted },
-        '& .MuiButton-text:not(.MuiButton-colorError)': { color: tokens.accent },
-        '& .MuiButton-contained.Mui-disabled': {
-          bgcolor: '#dedede',
-          color: '#a3a3a3',
-          opacity: 1,
-        },
-        '& .MuiIconButton-root': { borderRadius: `${tokens.radius}px` },
-        '& .MuiAccordionSummary-root': { px: 1.25 },
-        '& .MuiAccordionSummary-content': { my: 0.75 },
-        '& .MuiAccordionDetails-root': { p: 1.25 },
-        '& .MuiFormHelperText-root': { mt: 0.25, mx: 0.5, fontSize: tokens.fontSize.caption },
-        '& .MuiOutlinedInput-root': {
-          minHeight: tokens.controlHeight,
-          borderRadius: `${tokens.radius}px`,
-          fontSize: tokens.fontSize.body,
-          bgcolor: '#fff',
-        },
-        '& .MuiOutlinedInput-root:not(.MuiInputBase-multiline)': {
-          height: tokens.controlHeight,
-        },
-        '& .MuiOutlinedInput-input:not(textarea)': {
-          px: '8px',
-          py: '4px',
-        },
-        '& .MuiSelect-select.MuiInputBase-input': {
-          paddingInlineEnd: '28px !important',
-          py: '4px',
-        },
-        // The RTL Emotion cache mirrors these transforms; keep their source values LTR.
-        '& .MuiInputLabel-sizeSmall:not(.MuiInputLabel-shrink)': {
-          transform: 'translate(14px, 5px) scale(1)',
-        },
-        '& .MuiInputLabel-root': { fontSize: tokens.fontSize.secondary, fontWeight: 500 },
-        '& .MuiFormControlLabel-label': { fontSize: tokens.fontSize.secondary },
-        '& .MuiChip-root': { fontSize: tokens.fontSize.caption },
-        '& .MuiSvgIcon-root': { fontSize: 16 },
-        '& .MuiSwitch-root': { width: 24, height: 14, p: 0, marginInlineEnd: '4px' },
-        '& .MuiSwitch-root .MuiSwitch-switchBase': { p: '2px', borderRadius: '50%' },
-        '& .MuiSwitch-root .MuiSwitch-thumb': { width: 10, height: 10 },
-        '& .MuiSwitch-track': { borderRadius: 7, bgcolor: '#a3a3a3' },
-        '& .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked': {
-          transform: 'translateX(10px)',
-          color: tokens.accent,
-        },
-        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-          bgcolor: tokens.accentLight,
-          opacity: 1,
-        },
-        '& .MuiPaper-outlined': { borderColor: tokens.border },
-        '& :focus-visible': { outline: 'none', boxShadow: tokens.focusRing },
-        '@media (prefers-reduced-motion: reduce)': {
-          '&, & *': { scrollBehavior: 'auto !important', transitionDuration: '0.01ms !important' },
-        },
-      }}
-    >
-      <Typography
-        component="h1"
-        sx={{
-          position: 'absolute',
-          width: 1,
-          height: 1,
-          p: 0,
-          m: -1,
-          overflow: 'hidden',
-          clip: 'rect(0 0 0 0)',
-          whiteSpace: 'nowrap',
-          border: 0,
-        }}
-      >
-        {t('wfProcessBuilder.title')}
-      </Typography>
+    <>
+      <ProcessBuilderThemeVariables />
       <Box
         sx={{
-          minHeight: tokens.headerHeight,
-          px: 0.75,
+          ...slimScrollbarSx,
+          height: { xs: 'calc(100dvh - 58px)', md: 'calc(100vh - 108px)' },
+          minHeight: { xs: 0, md: 620 },
+          bgcolor: tokens.surface,
+          borderTop: `2px solid ${tokens.accent}`,
           display: 'flex',
-          alignItems: 'center',
-          gap: 0.5,
-          borderBottom: `1px solid ${tokens.border}`,
-          flexWrap: 'nowrap',
-          overflowX: 'auto',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          color: tokens.text,
+          fontFamily: APP_FONT_FAMILY,
+          fontSize: tokens.fontSize.body,
+          '& .MuiButton-root': {
+            minHeight: 28,
+            px: 1,
+            py: 0.375,
+            borderRadius: `${tokens.radius}px`,
+            fontSize: tokens.fontSize.secondary,
+            fontWeight: 500,
+            textTransform: 'none',
+          },
+          '& .MuiButton-sizeSmall': { minHeight: 26 },
+          '& .MuiButton-outlined': { borderColor: tokens.border, color: tokens.textMuted },
+          '& .MuiButton-text:not(.MuiButton-colorError)': { color: tokens.accent },
+          '& .MuiButton-contained.Mui-disabled': {
+            bgcolor: 'action.selected',
+            color: tokens.textSubtle,
+            opacity: 1,
+          },
+          '& .MuiIconButton-root': { borderRadius: `${tokens.radius}px` },
+          '& .MuiAccordionSummary-root': { px: 1.25 },
+          '& .MuiAccordionSummary-content': { my: 0.75 },
+          '& .MuiAccordionDetails-root': { p: 1.25 },
+          '& .MuiFormHelperText-root': { mt: 0.25, mx: 0.5, fontSize: tokens.fontSize.caption },
+          '& .MuiOutlinedInput-root': {
+            minHeight: tokens.controlHeight,
+            borderRadius: `${tokens.radius}px`,
+            fontSize: tokens.fontSize.body,
+            bgcolor: 'primary.contrastText',
+          },
+          '& .MuiOutlinedInput-root:not(.MuiInputBase-multiline)': {
+            height: tokens.controlHeight,
+          },
+          '& .MuiOutlinedInput-input:not(textarea)': {
+            px: '8px',
+            py: '4px',
+          },
+          '& .MuiSelect-select.MuiInputBase-input': {
+            paddingInlineEnd: '28px !important',
+            py: '4px',
+          },
+          // The RTL Emotion cache mirrors these transforms; keep their source values LTR.
+          '& .MuiInputLabel-sizeSmall:not(.MuiInputLabel-shrink)': {
+            transform: 'translate(14px, 5px) scale(1)',
+          },
+          '& .MuiInputLabel-root': { fontSize: tokens.fontSize.secondary, fontWeight: 500 },
+          '& .MuiFormControlLabel-label': { fontSize: tokens.fontSize.secondary },
+          '& .MuiChip-root': { fontSize: tokens.fontSize.caption },
+          '& .MuiSvgIcon-root': { fontSize: 16 },
+          '& .MuiSwitch-root': { width: 24, height: 14, p: 0, marginInlineEnd: '4px' },
+          '& .MuiSwitch-root .MuiSwitch-switchBase': { p: '2px', borderRadius: '50%' },
+          '& .MuiSwitch-root .MuiSwitch-thumb': { width: 10, height: 10 },
+          '& .MuiSwitch-track': { borderRadius: 7, bgcolor: tokens.textSubtle },
+          '& .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked': {
+            transform: 'translateX(10px)',
+            color: tokens.accent,
+          },
+          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+            bgcolor: tokens.accentLight,
+            opacity: 1,
+          },
+          '& .MuiPaper-outlined': { borderColor: tokens.border },
+          '& :focus-visible': { outline: 'none', boxShadow: tokens.focusRing },
+          '@media (prefers-reduced-motion: reduce)': {
+            '&, & *': {
+              scrollBehavior: 'auto !important',
+              transitionDuration: '0.01ms !important',
+            },
+          },
         }}
       >
-        <AccountTree sx={{ color: tokens.accent, fontSize: 16 }} />
-        <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#1f2937', whiteSpace: 'nowrap' }}>
+        <Typography
+          component="h1"
+          sx={{
+            position: 'absolute',
+            width: 1,
+            height: 1,
+            p: 0,
+            m: -1,
+            overflow: 'hidden',
+            clip: 'rect(0 0 0 0)',
+            whiteSpace: 'nowrap',
+            border: 0,
+          }}
+        >
           {t('wfProcessBuilder.title')}
         </Typography>
-        <Chip
-          size="small"
-          color={builder.document.active ? 'success' : 'default'}
-          label={
-            builder.document.active
-              ? t('wfProcessBuilder.status.active')
-              : t('wfProcessBuilder.status.inactive')
-          }
+        <Box
           sx={{
-            height: 22,
-            bgcolor: builder.document.active ? tokens.success : '#e0e0e0',
-            color: builder.document.active ? '#fff' : tokens.textMuted,
+            minHeight: tokens.headerHeight,
+            px: 0.75,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.5,
+            borderBottom: `1px solid ${tokens.border}`,
+            flexWrap: 'nowrap',
+            overflowX: 'auto',
           }}
-        />
-        <Chip
-          size="small"
-          variant="outlined"
-          label={`#${builder.document.id}`}
-          sx={{ display: { xs: 'none', sm: 'flex' }, height: 22 }}
-        />
-        <Chip
-          size="small"
-          variant="outlined"
-          label={builder.document.code}
-          sx={{ display: { xs: 'none', sm: 'flex' }, height: 22 }}
-        />
-        <Tooltip
-          title={
-            leftOpen
-              ? t('wfProcessBuilder.actions.collapseNavigation')
-              : t('wfProcessBuilder.actions.expandNavigation')
-          }
         >
-          <IconButton
+          <AccountTree sx={{ color: tokens.accent, fontSize: 16 }} />
+          <Typography
+            sx={{ fontSize: 12, fontWeight: 600, color: tokens.text, whiteSpace: 'nowrap' }}
+          >
+            {t('wfProcessBuilder.title')}
+          </Typography>
+          <Chip
             size="small"
-            aria-label={
+            color={builder.document.active ? 'success' : 'default'}
+            label={
+              builder.document.active
+                ? t('wfProcessBuilder.status.active')
+                : t('wfProcessBuilder.status.inactive')
+            }
+            sx={{
+              height: 22,
+              bgcolor: builder.document.active ? tokens.success : 'action.selected',
+              color: builder.document.active ? 'primary.contrastText' : tokens.textMuted,
+            }}
+          />
+          <Chip
+            size="small"
+            variant="outlined"
+            label={`#${builder.document.id}`}
+            sx={{ display: { xs: 'none', sm: 'flex' }, height: 22 }}
+          />
+          <Chip
+            size="small"
+            variant="outlined"
+            label={builder.document.code}
+            sx={{ display: { xs: 'none', sm: 'flex' }, height: 22 }}
+          />
+          <Tooltip
+            title={
               leftOpen
                 ? t('wfProcessBuilder.actions.collapseNavigation')
                 : t('wfProcessBuilder.actions.expandNavigation')
             }
-            onClick={() => setLeftOpen((value) => !value)}
-            sx={{
-              display: { xs: 'none', lg: 'inline-flex' },
-              color: tokens.textMuted,
-              border: `1px solid ${tokens.border}`,
-              borderRadius: `${tokens.radius}px`,
-              '&:hover, &:focus-visible': { color: tokens.accent, bgcolor: tokens.accentSoft },
-            }}
           >
-            {leftOpen ? (
-              isRtl ? (
-                <ChevronRight />
-              ) : (
+            <IconButton
+              size="small"
+              aria-label={
+                leftOpen
+                  ? t('wfProcessBuilder.actions.collapseNavigation')
+                  : t('wfProcessBuilder.actions.expandNavigation')
+              }
+              onClick={() => setLeftOpen((value) => !value)}
+              sx={{
+                display: { xs: 'none', lg: 'inline-flex' },
+                color: tokens.textMuted,
+                border: `1px solid ${tokens.border}`,
+                borderRadius: `${tokens.radius}px`,
+                '&:hover, &:focus-visible': { color: tokens.accent, bgcolor: tokens.accentSoft },
+              }}
+            >
+              {leftOpen ? (
+                isRtl ? (
+                  <ChevronRight />
+                ) : (
+                  <ChevronLeft />
+                )
+              ) : isRtl ? (
                 <ChevronLeft />
-              )
-            ) : isRtl ? (
-              <ChevronLeft />
-            ) : (
-              <ChevronRight />
-            )}
-          </IconButton>
-        </Tooltip>
-        <Tooltip
-          title={
-            rightOpen
-              ? t('wfProcessBuilder.actions.collapseSettings')
-              : t('wfProcessBuilder.actions.expandSettings')
-          }
-        >
-          <IconButton
-            size="small"
-            aria-label={
+              ) : (
+                <ChevronRight />
+              )}
+            </IconButton>
+          </Tooltip>
+          <Tooltip
+            title={
               rightOpen
                 ? t('wfProcessBuilder.actions.collapseSettings')
                 : t('wfProcessBuilder.actions.expandSettings')
             }
-            onClick={() => setRightOpen((value) => !value)}
-            sx={{
-              display: { xs: 'none', lg: 'inline-flex' },
-              color: tokens.textMuted,
-              border: `1px solid ${tokens.border}`,
-              borderRadius: `${tokens.radius}px`,
-              '&:hover, &:focus-visible': { color: tokens.accent, bgcolor: tokens.accentSoft },
-            }}
           >
-            {rightOpen ? (
-              isRtl ? (
-                <ChevronLeft />
-              ) : (
-                <ChevronRight />
-              )
-            ) : isRtl ? (
-              <ChevronRight />
-            ) : (
-              <ChevronLeft />
-            )}
-          </IconButton>
-        </Tooltip>
-        <Tooltip title={t('wfProcessBuilder.actions.openStructure')}>
-          <IconButton
-            size="small"
-            aria-label={t('wfProcessBuilder.actions.openStructure')}
-            onClick={() => setMobileNavigationOpen(true)}
-            sx={{ display: { xs: 'inline-flex', lg: 'none' }, color: tokens.accent }}
-          >
-            <MenuOpen />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title={t('wfProcessBuilder.actions.openSettings')}>
-          <IconButton
-            size="small"
-            aria-label={t('wfProcessBuilder.actions.openSettings')}
-            onClick={() => setMobileSettingsOpen(true)}
-            sx={{ display: { xs: 'inline-flex', lg: 'none' }, color: tokens.accent }}
-          >
-            <Tune />
-          </IconButton>
-        </Tooltip>
-        <Box sx={{ flex: 1, minWidth: 12 }} />
-        {loading && <Chip size="small" label={t('wfProcessBuilder.status.loading')} />}
-        {builder.dirty ? (
-          <Chip
-            size="small"
-            label={t('wfProcessBuilder.status.localChanges')}
-            sx={{ bgcolor: '#f59e0b' }}
-          />
-        ) : (
-          draft.savedAt && (
-            <Typography sx={{ fontSize: tokens.fontSize.secondary, color: tokens.textMuted }}>
-              <Box component="span" sx={{ color: '#10b981' }}>
-                ●
-              </Box>{' '}
-              {t('wfProcessBuilder.status.draftSaved', {
-                time: draft.savedAt.toLocaleTimeString(currentLanguage.code),
-              })}
-            </Typography>
-          )
-        )}
-        <Tooltip title={t('wfProcessBuilder.statistics.tooltip')}>
-          <Chip
-            size="small"
-            aria-label={t('wfProcessBuilder.statistics.label')}
-            label={`${builder.document.steps.length}S / ${activities}A / ${controls}C / ${builder.document.transitions.length}T`}
-            sx={{
-              display: { xs: 'none', sm: 'flex' },
-              height: 24,
-              borderRadius: 12,
-              bgcolor: '#eeeeee',
-            }}
-          />
-        </Tooltip>
-        <Button
-          size="small"
-          sx={{ display: { xs: 'none', sm: 'inline-flex' }, color: '#d97706' }}
-          startIcon={<RestartAlt />}
-          onClick={reset}
-        >
-          {t('wfProcessBuilder.actions.reset')}
-        </Button>
-        <Button
-          variant="contained"
-          startIcon={<Save />}
-          disabled={loading || saving}
-          onClick={() => void save()}
-          sx={{ bgcolor: tokens.success, '&:hover': { bgcolor: '#047857' } }}
-        >
-          {saving
-            ? t('wfProcessBuilder.actions.saving')
-            : builderId === 'new'
-              ? t('wfProcessBuilder.actions.create')
-              : t('wfProcessBuilder.actions.save')}
-        </Button>
-        <Button
-          variant="contained"
-          startIcon={<Download />}
-          onClick={() => setExportOpen(true)}
-          sx={{
-            bgcolor: tokens.accent,
-            borderRadius: `${tokens.radius}px`,
-            fontWeight: 700,
-            '&:hover': { bgcolor: tokens.accentHover },
-          }}
-        >
-          {t('wfProcessBuilder.actions.export')}
-        </Button>
-      </Box>
-      <Box
-        sx={{
-          flex: 1,
-          minHeight: 0,
-          display: 'grid',
-          gridTemplateColumns: {
-            xs: '1fr',
-            lg: `${leftOpen ? tokens.leftWidth : 42}px minmax(0, 1fr) ${rightOpen ? tokens.rightWidth : 42}px`,
-          },
-          gridTemplateRows: '1fr',
-          transition: 'grid-template-columns 160ms ease',
-        }}
-      >
-        <Paper
-          square
-          elevation={0}
-          sx={{
-            position: 'relative',
-            display: { xs: 'none', lg: 'block' },
-            minWidth: 0,
-            overflow: 'auto',
-            borderInlineEnd: `1px solid ${tokens.dividerStrong}`,
-          }}
-        >
-          {leftOpen && <ProcessBuilderNavigationPanel />}
-        </Paper>
-        <Box sx={{ minWidth: 0, overflow: 'auto', bgcolor: tokens.canvas }}>
-          <Tabs
-            value={builder.centerTab}
-            onChange={(_, v: number) => builder.setCenterTab(v)}
-            aria-label={t('wfProcessBuilder.structure.workspaces')}
-            variant="scrollable"
-            scrollButtons="auto"
-            allowScrollButtonsMobile
-            sx={{
-              position: 'sticky',
-              top: 0,
-              zIndex: 2,
-              minHeight: tokens.tabsHeight,
-              bgcolor: '#fff',
-              borderBottom: `1px solid ${tokens.border}`,
-              '& .MuiTab-root': {
-                minHeight: tokens.tabsHeight,
-                px: { xs: 1.5, lg: 2.25 },
-                minWidth: 'auto',
-                fontSize: tokens.fontSize.secondary,
-                fontWeight: 600,
+            <IconButton
+              size="small"
+              aria-label={
+                rightOpen
+                  ? t('wfProcessBuilder.actions.collapseSettings')
+                  : t('wfProcessBuilder.actions.expandSettings')
+              }
+              onClick={() => setRightOpen((value) => !value)}
+              sx={{
+                display: { xs: 'none', lg: 'inline-flex' },
                 color: tokens.textMuted,
-                textTransform: 'uppercase',
-                whiteSpace: 'nowrap',
-              },
-              '& .MuiSvgIcon-root': { fontSize: 16 },
-              '& .Mui-selected': { color: `${tokens.accent} !important` },
-              '& .MuiTabs-indicator': { bgcolor: tokens.accent, height: 2 },
-              '& .MuiTab-root:nth-of-type(4), & .MuiTab-root:nth-of-type(7)': {
-                borderInlineStart: `1px solid ${tokens.border}`,
-              },
-            }}
-          >
-            {workspaces.map((workspace) => (
-              <Tab
-                key={workspace.id}
-                label={workspace.label}
-                icon={workspace.icon}
-                iconPosition="start"
-              />
-            ))}
-          </Tabs>
-          <Box
-            role="tabpanel"
-            aria-label={workspaces[builder.centerTab]?.label}
-            sx={{ p: { xs: '8px', sm: '10px' } }}
-          >
-            {workspaces[builder.centerTab]?.content}
-          </Box>
-        </Box>
-        <Paper
-          square
-          elevation={0}
-          sx={{
-            position: 'relative',
-            display: { xs: 'none', lg: 'block' },
-            minWidth: 0,
-            overflowY: 'auto',
-            overflowX: 'hidden',
-            borderInlineStart: `1px solid ${tokens.dividerStrong}`,
-          }}
-        >
-          {rightOpen && <ProcessBuilderSettingsPanel />}
-        </Paper>
-      </Box>
-      <Drawer
-        anchor={getLogicalDrawerAnchor('start')}
-        open={mobileNavigationOpen}
-        onClose={() => setMobileNavigationOpen(false)}
-        aria-label={t('wfProcessBuilder.structure.drawer')}
-        slotProps={{
-          paper: {
-            sx: {
-              ...slimScrollbarSx,
-              top: 58,
-              height: 'calc(100dvh - 58px)',
-              width: 'min(88vw, 340px)',
-            },
-          },
-        }}
-      >
-        <Box
-          sx={{
-            minHeight: 48,
-            px: '16px',
-            display: 'flex',
-            alignItems: 'center',
-            borderBottom: `1px solid ${tokens.border}`,
-          }}
-        >
-          <Typography
-            component="h2"
-            sx={{ flex: 1, fontSize: tokens.fontSize.heading, fontWeight: 700 }}
-          >
-            {t('wfProcessBuilder.structure.title')}
-          </Typography>
-          <IconButton
-            aria-label={t('wfProcessBuilder.actions.closeStructure')}
-            onClick={() => setMobileNavigationOpen(false)}
-          >
-            {isRtl ? <ChevronRight /> : <ChevronLeft />}
-          </IconButton>
-        </Box>
-        <Box sx={{ overflowY: 'auto' }}>
-          <ProcessBuilderNavigationPanel />
-        </Box>
-      </Drawer>
-      <Drawer
-        anchor={getLogicalDrawerAnchor('end')}
-        open={mobileSettingsOpen}
-        onClose={() => setMobileSettingsOpen(false)}
-        aria-label={t('wfProcessBuilder.settings.drawer')}
-        slotProps={{
-          paper: {
-            sx: {
-              ...slimScrollbarSx,
-              top: 58,
-              height: 'calc(100dvh - 58px)',
-              width: 'min(92vw, 380px)',
-            },
-          },
-        }}
-      >
-        <Box
-          sx={{
-            minHeight: 48,
-            px: '16px',
-            display: 'flex',
-            alignItems: 'center',
-            borderBottom: `1px solid ${tokens.border}`,
-          }}
-        >
-          <Typography
-            component="h2"
-            sx={{ flex: 1, fontSize: tokens.fontSize.heading, fontWeight: 700 }}
-          >
-            {t('wfProcessBuilder.settings.title')}
-          </Typography>
-          <IconButton
-            aria-label={t('wfProcessBuilder.actions.closeSettings')}
-            onClick={() => setMobileSettingsOpen(false)}
-          >
-            {isRtl ? <ChevronLeft /> : <ChevronRight />}
-          </IconButton>
-        </Box>
-        <Box sx={{ overflowY: 'auto' }}>
-          <ProcessBuilderSettingsPanel />
-        </Box>
-      </Drawer>
-      <Dialog open={exportOpen} onClose={() => setExportOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>{t('wfProcessBuilder.exportDialog.title')}</DialogTitle>
-        <DialogContent dividers>
-          <Box
-            component="pre"
-            sx={{
-              m: 0,
-              p: 1.5,
-              bgcolor: 'background.default',
-              overflow: 'auto',
-              maxHeight: 420,
-              fontSize: 11,
-            }}
-          >
-            {exportOpen ? JSON.stringify(builder.document, null, 2) : null}
-          </Box>
-        </DialogContent>
-        <DialogActions>
+                border: `1px solid ${tokens.border}`,
+                borderRadius: `${tokens.radius}px`,
+                '&:hover, &:focus-visible': { color: tokens.accent, bgcolor: tokens.accentSoft },
+              }}
+            >
+              {rightOpen ? (
+                isRtl ? (
+                  <ChevronLeft />
+                ) : (
+                  <ChevronRight />
+                )
+              ) : isRtl ? (
+                <ChevronRight />
+              ) : (
+                <ChevronLeft />
+              )}
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={t('wfProcessBuilder.actions.openStructure')}>
+            <IconButton
+              size="small"
+              aria-label={t('wfProcessBuilder.actions.openStructure')}
+              onClick={() => setMobileNavigationOpen(true)}
+              sx={{ display: { xs: 'inline-flex', lg: 'none' }, color: tokens.accent }}
+            >
+              <MenuOpen />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={t('wfProcessBuilder.actions.openSettings')}>
+            <IconButton
+              size="small"
+              aria-label={t('wfProcessBuilder.actions.openSettings')}
+              onClick={() => setMobileSettingsOpen(true)}
+              sx={{ display: { xs: 'inline-flex', lg: 'none' }, color: tokens.accent }}
+            >
+              <Tune />
+            </IconButton>
+          </Tooltip>
+          <Box sx={{ flex: 1, minWidth: 12 }} />
+          {loading && <Chip size="small" label={t('wfProcessBuilder.status.loading')} />}
+          {builder.dirty ? (
+            <Chip
+              size="small"
+              label={t('wfProcessBuilder.status.localChanges')}
+              sx={{ bgcolor: tokens.warning }}
+            />
+          ) : (
+            draft.savedAt && (
+              <Typography sx={{ fontSize: tokens.fontSize.secondary, color: tokens.textMuted }}>
+                <Box component="span" sx={{ color: tokens.success }}>
+                  ●
+                </Box>{' '}
+                {t('wfProcessBuilder.status.draftSaved', {
+                  time: draft.savedAt.toLocaleTimeString(currentLanguage.code),
+                })}
+              </Typography>
+            )
+          )}
+          <Tooltip title={t('wfProcessBuilder.statistics.tooltip')}>
+            <Chip
+              size="small"
+              aria-label={t('wfProcessBuilder.statistics.label')}
+              label={`${builder.document.steps.length}S / ${activities}A / ${controls}C / ${builder.document.transitions.length}T`}
+              sx={{
+                display: { xs: 'none', sm: 'flex' },
+                height: 24,
+                borderRadius: 12,
+                bgcolor: 'action.selected',
+              }}
+            />
+          </Tooltip>
           <Button
-            startIcon={<ContentCopy />}
-            onClick={() =>
-              void navigator.clipboard.writeText(JSON.stringify(builder.document, null, 2))
-            }
+            size="small"
+            sx={{ display: { xs: 'none', sm: 'inline-flex' }, color: 'warning.dark' }}
+            startIcon={<RestartAlt />}
+            onClick={reset}
           >
-            {t('wfProcessBuilder.actions.copyJson')}
+            {t('wfProcessBuilder.actions.reset')}
           </Button>
-          <Button startIcon={<Download />} onClick={download}>
-            {t('wfProcessBuilder.actions.download')}
+          <Button
+            variant="contained"
+            startIcon={<Save />}
+            disabled={loading || saving}
+            onClick={() => void save()}
+            sx={{ bgcolor: tokens.success, '&:hover': { bgcolor: 'success.dark' } }}
+          >
+            {saving
+              ? t('wfProcessBuilder.actions.saving')
+              : builderId === 'new'
+                ? t('wfProcessBuilder.actions.create')
+                : t('wfProcessBuilder.actions.save')}
           </Button>
-          <Button variant="contained" onClick={() => setExportOpen(false)}>
-            {t('wfProcessBuilder.actions.close')}
+          <Button
+            variant="contained"
+            startIcon={<Download />}
+            onClick={() => setExportOpen(true)}
+            sx={{
+              bgcolor: tokens.accent,
+              borderRadius: `${tokens.radius}px`,
+              fontWeight: 700,
+              '&:hover': { bgcolor: tokens.accentHover },
+            }}
+          >
+            {t('wfProcessBuilder.actions.export')}
           </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        </Box>
+        <Box
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              lg: `${leftOpen ? tokens.leftWidth : 42}px minmax(0, 1fr) ${rightOpen ? tokens.rightWidth : 42}px`,
+            },
+            gridTemplateRows: '1fr',
+            transition: 'grid-template-columns 160ms ease',
+          }}
+        >
+          <Paper
+            square
+            elevation={0}
+            sx={{
+              position: 'relative',
+              display: { xs: 'none', lg: 'block' },
+              minWidth: 0,
+              overflow: 'auto',
+              borderInlineEnd: `1px solid ${tokens.dividerStrong}`,
+            }}
+          >
+            {leftOpen && <ProcessBuilderNavigationPanel />}
+          </Paper>
+          <Box sx={{ minWidth: 0, overflow: 'auto', bgcolor: tokens.canvas }}>
+            <Tabs
+              value={builder.centerTab}
+              onChange={(_, v: number) => builder.setCenterTab(v)}
+              aria-label={t('wfProcessBuilder.structure.workspaces')}
+              variant="scrollable"
+              scrollButtons="auto"
+              allowScrollButtonsMobile
+              sx={{
+                position: 'sticky',
+                top: 0,
+                zIndex: 2,
+                minHeight: tokens.tabsHeight,
+                bgcolor: 'primary.contrastText',
+                borderBottom: `1px solid ${tokens.border}`,
+                '& .MuiTab-root': {
+                  minHeight: tokens.tabsHeight,
+                  px: { xs: 1.5, lg: 2.25 },
+                  minWidth: 'auto',
+                  fontSize: tokens.fontSize.secondary,
+                  fontWeight: 600,
+                  color: tokens.textMuted,
+                  textTransform: 'uppercase',
+                  whiteSpace: 'nowrap',
+                },
+                '& .MuiSvgIcon-root': { fontSize: 16 },
+                '& .Mui-selected': { color: `${tokens.accent} !important` },
+                '& .MuiTabs-indicator': { bgcolor: tokens.accent, height: 2 },
+                '& .MuiTab-root:nth-of-type(4), & .MuiTab-root:nth-of-type(7)': {
+                  borderInlineStart: `1px solid ${tokens.border}`,
+                },
+              }}
+            >
+              {workspaces.map((workspace) => (
+                <Tab
+                  key={workspace.id}
+                  label={workspace.label}
+                  icon={workspace.icon}
+                  iconPosition="start"
+                />
+              ))}
+            </Tabs>
+            <Box
+              role="tabpanel"
+              aria-label={workspaces[builder.centerTab]?.label}
+              sx={{ p: { xs: '8px', sm: '10px' } }}
+            >
+              {workspaces[builder.centerTab]?.content}
+            </Box>
+          </Box>
+          <Paper
+            square
+            elevation={0}
+            sx={{
+              position: 'relative',
+              display: { xs: 'none', lg: 'block' },
+              minWidth: 0,
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              borderInlineStart: `1px solid ${tokens.dividerStrong}`,
+            }}
+          >
+            {rightOpen && <ProcessBuilderSettingsPanel />}
+          </Paper>
+        </Box>
+        <Drawer
+          anchor={getLogicalDrawerAnchor('start')}
+          open={mobileNavigationOpen}
+          onClose={() => setMobileNavigationOpen(false)}
+          aria-label={t('wfProcessBuilder.structure.drawer')}
+          slotProps={{
+            paper: {
+              sx: {
+                ...slimScrollbarSx,
+                top: 58,
+                height: 'calc(100dvh - 58px)',
+                width: 'min(88vw, 340px)',
+              },
+            },
+          }}
+        >
+          <Box
+            sx={{
+              minHeight: 48,
+              px: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              borderBottom: `1px solid ${tokens.border}`,
+            }}
+          >
+            <Typography
+              component="h2"
+              sx={{ flex: 1, fontSize: tokens.fontSize.heading, fontWeight: 700 }}
+            >
+              {t('wfProcessBuilder.structure.title')}
+            </Typography>
+            <IconButton
+              aria-label={t('wfProcessBuilder.actions.closeStructure')}
+              onClick={() => setMobileNavigationOpen(false)}
+            >
+              {isRtl ? <ChevronRight /> : <ChevronLeft />}
+            </IconButton>
+          </Box>
+          <Box sx={{ overflowY: 'auto' }}>
+            <ProcessBuilderNavigationPanel />
+          </Box>
+        </Drawer>
+        <Drawer
+          anchor={getLogicalDrawerAnchor('end')}
+          open={mobileSettingsOpen}
+          onClose={() => setMobileSettingsOpen(false)}
+          aria-label={t('wfProcessBuilder.settings.drawer')}
+          slotProps={{
+            paper: {
+              sx: {
+                ...slimScrollbarSx,
+                top: 58,
+                height: 'calc(100dvh - 58px)',
+                width: 'min(92vw, 380px)',
+              },
+            },
+          }}
+        >
+          <Box
+            sx={{
+              minHeight: 48,
+              px: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              borderBottom: `1px solid ${tokens.border}`,
+            }}
+          >
+            <Typography
+              component="h2"
+              sx={{ flex: 1, fontSize: tokens.fontSize.heading, fontWeight: 700 }}
+            >
+              {t('wfProcessBuilder.settings.title')}
+            </Typography>
+            <IconButton
+              aria-label={t('wfProcessBuilder.actions.closeSettings')}
+              onClick={() => setMobileSettingsOpen(false)}
+            >
+              {isRtl ? <ChevronLeft /> : <ChevronRight />}
+            </IconButton>
+          </Box>
+          <Box sx={{ overflowY: 'auto' }}>
+            <ProcessBuilderSettingsPanel />
+          </Box>
+        </Drawer>
+        <Dialog open={exportOpen} onClose={() => setExportOpen(false)} maxWidth="md" fullWidth>
+          <DialogTitle>{t('wfProcessBuilder.exportDialog.title')}</DialogTitle>
+          <DialogContent dividers>
+            <Box
+              component="pre"
+              sx={{
+                m: 0,
+                p: 1.5,
+                bgcolor: 'background.default',
+                overflow: 'auto',
+                maxHeight: 420,
+                fontSize: 11,
+              }}
+            >
+              {exportOpen ? JSON.stringify(builder.document, null, 2) : null}
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              startIcon={<ContentCopy />}
+              onClick={() =>
+                void navigator.clipboard.writeText(JSON.stringify(builder.document, null, 2))
+              }
+            >
+              {t('wfProcessBuilder.actions.copyJson')}
+            </Button>
+            <Button startIcon={<Download />} onClick={download}>
+              {t('wfProcessBuilder.actions.download')}
+            </Button>
+            <Button variant="contained" onClick={() => setExportOpen(false)}>
+              {t('wfProcessBuilder.actions.close')}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </>
   );
 }

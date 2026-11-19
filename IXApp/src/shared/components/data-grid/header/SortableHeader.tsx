@@ -12,6 +12,8 @@ import { CSS } from '@dnd-kit/utilities';
 import type { ColumnDef, SortModel, FilterModel } from '../types';
 import { FilterInput } from './FilterInput';
 import { APP_FONT_FAMILY } from '@shared/constants/fontFamilies';
+import { enterpriseSurfaces } from '@shared/constants/enterpriseSurfaces';
+import { headerAlign } from '../columnAlign';
 
 interface SortableHeaderProps<T> {
   column: ColumnDef<T>;
@@ -66,8 +68,10 @@ export function SortableHeader<T>({
         display: 'flex',
         flexDirection: 'column',
         boxSizing: 'border-box',
-        backgroundColor: '#ffffff',
-        borderInlineEnd: showColumnBorders ? `1px solid ${theme.palette.divider}` : 'none',
+        backgroundColor: 'background.paper',
+        borderInlineEnd: showColumnBorders
+          ? `1px solid ${enterpriseSurfaces(theme).gridLine}`
+          : 'none',
         width: column.width || 150,
         minWidth: column.width || 150,
         maxWidth: column.width || 150,
@@ -103,12 +107,13 @@ export function SortableHeader<T>({
         sx={{
           display: 'flex',
           alignItems: 'center',
-          p: '3px 8px',
-          borderBottom: `1px solid ${theme.palette.divider}`,
+          // Same inline padding as the body cells so headers line up with values.
+          p: '3px 6px',
+          borderBottom: `1px solid ${enterpriseSurfaces(theme).gridLine}`,
           justifyContent:
-            column.headerAlign === 'center'
+            headerAlign(column) === 'center'
               ? 'center'
-              : column.headerAlign === 'right'
+              : headerAlign(column) === 'right'
                 ? 'flex-end'
                 : 'flex-start',
           cursor: column.sortable === false ? 'default' : 'pointer',
@@ -131,9 +136,12 @@ export function SortableHeader<T>({
             fontSize: 15,
             color: 'text.secondary',
             opacity: isDragging ? 1 : 0,
-            marginInlineStart: -0.75,
-            marginInlineEnd: 0.25,
-            flexShrink: 0,
+            // Overlays the start padding so the header text lines up with the
+            // cell values below it.
+            position: 'absolute',
+            insetInlineStart: -2,
+            top: '50%',
+            transform: 'translateY(-50%)',
             pointerEvents: 'none',
           }}
         />
@@ -149,7 +157,7 @@ export function SortableHeader<T>({
             fontFamily: APP_FONT_FAMILY,
             fontSize: uiDensity.gridFontSize,
             letterSpacing: 0,
-            textAlign: column.headerAlign ?? 'start',
+            textAlign: headerAlign(column) ?? 'start',
           }}
         >
           {t(column.headerName || '')}
@@ -188,7 +196,7 @@ export function SortableHeader<T>({
           sx={{
             p: '2px 8px',
             borderBottom: `1px solid ${theme.palette.divider}`,
-            bgcolor: theme.palette.mode === 'light' ? '#ffffff' : '#2d3748',
+            bgcolor: theme.palette.background.paper,
             display: 'flex',
             alignItems: 'center',
             height: Math.max(26, headerHeight - 2),

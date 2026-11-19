@@ -27,12 +27,12 @@ export const EnterpriseQuickFilter: React.FC<EnterpriseQuickFilterProps> = ({
         width: 275,
         height: 37,
         borderRadius: '4px',
-        bgcolor: '#ffffff',
+        bgcolor: 'background.paper',
         fontFamily: APP_FONT_FAMILY,
         fontSize: 16,
       },
       '& .MuiOutlinedInput-notchedOutline': { borderColor: 'text.secondary' },
-      '& input::placeholder': { color: '#8a8886', opacity: 1 },
+      '& input::placeholder': { color: 'text.secondary', opacity: 1 },
     }}
     slotProps={{
       input: {

@@ -24,6 +24,8 @@ export interface EnterprisePalette {
   accent: string;
   /** Text of the selected record, and other emphasized accents. */
   accentStrong: string;
+  /** Column and cell lines of data grids (visible, lighter than strongBorder). */
+  gridLine: string;
   /** Scrollbar thumb of every scroll area (global default and data grids). */
   scrollbarThumb: string;
   /** Scrollbar thumb under the pointer. */
@@ -48,6 +50,7 @@ export const createEnterprisePalette = (
         selectedBar: palette.primary.main,
         accent: palette.primary.main,
         accentStrong: palette.primary.dark,
+        gridLine: '#d2d0ce',
         scrollbarThumb: '#a8a8a8',
         scrollbarThumbHover: '#8f8f8f',
       }
@@ -59,6 +62,7 @@ export const createEnterprisePalette = (
         selectedBar: palette.primary.main,
         accent: palette.primary.light,
         accentStrong: palette.primary.light,
+        gridLine: '#484644',
         scrollbarThumb: '#667085',
         scrollbarThumbHover: '#8290a3',
       };

@@ -104,11 +104,11 @@ export function ProcessBuilderPalette() {
     minHeight: '44px !important',
     px: '12px',
     justifyContent: 'flex-start',
-    borderColor: '#dfe4eb !important',
-    bgcolor: '#fff',
+    borderColor: `${tokens.border} !important`,
+    bgcolor: tokens.surface,
     boxShadow: '0 1px 2px rgb(15 23 42 / 6%)',
-    color: '#1f2937 !important',
-    '& .MuiButton-startIcon': { color: '#111827', marginInlineEnd: '10px', marginInlineStart: 0 },
+    color: `${tokens.text} !important`,
+    '& .MuiButton-startIcon': { color: tokens.text, marginInlineEnd: '10px', marginInlineStart: 0 },
     '&:hover': { bgcolor: tokens.accentSoft, borderColor: `${tokens.accentLight} !important` },
     '&:focus-visible': { boxShadow: tokens.focusRing },
   };
@@ -139,7 +139,12 @@ export function ProcessBuilderPalette() {
               ? t('wfProcessBuilder.palette.activityForm')
               : t('wfProcessBuilder.palette.requestForm')
           }
-          sx={{ height: 24, maxWidth: 190, fontSize: tokens.fontSize.caption, bgcolor: '#fff' }}
+          sx={{
+            height: 24,
+            maxWidth: 190,
+            fontSize: tokens.fontSize.caption,
+            bgcolor: tokens.surface,
+          }}
         />
       </Stack>
       <Box
@@ -159,9 +164,9 @@ export function ProcessBuilderPalette() {
         <Box
           sx={{
             p: '8px',
-            color: '#9a6700',
-            bgcolor: '#fff7db',
-            border: '1px solid #f4d06f',
+            color: 'warning.dark',
+            bgcolor: tokens.warningSoft,
+            border: `1px solid ${tokens.warning}`,
             fontSize: tokens.fontSize.caption,
           }}
         >

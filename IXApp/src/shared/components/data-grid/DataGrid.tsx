@@ -44,6 +44,7 @@ import { useNotifications } from '@shared/hooks/useNotifications';
 import { uiDensity } from '@shared/constants/uiDensity';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { enterpriseSurfaces } from '@shared/constants/enterpriseSurfaces';
+import { inferNumericColumns } from './columnAlign';
 const getDefaultRowId = <T,>(row: T) => (row as { id: string | number }).id;
 function DataGridInternal<T>(
   {
@@ -1027,9 +1028,15 @@ function DataGridInternal<T>(
     moveEditingTo,
   ]);
 
+  // Columns that do not declare a type or alignment are aligned from their
+  // values: numbers to the right, text to the left (see columnAlign).
+  const alignedColumns = useMemo(
+    () => inferNumericColumns(columns, processedRows),
+    [columns, processedRows]
+  );
   const computedColumns = useMemo(
-    () => (containerWidth > 0 ? computeFlexWidths(columns, containerWidth) : columns),
-    [columns, containerWidth]
+    () => (containerWidth > 0 ? computeFlexWidths(alignedColumns, containerWidth) : alignedColumns),
+    [alignedColumns, containerWidth]
   );
 
   // -- Export ---------------------------------------------------------------
@@ -1316,7 +1323,7 @@ function DataGridInternal<T>(
           sx={{
             height: uiDensity.gridFooterHeight,
             borderTop: `1px solid ${theme.palette.divider}`,
-            bgcolor: theme.palette.mode === 'light' ? '#f8f9fa' : '#1a202c',
+            bgcolor: theme.palette.mode === 'light' ? '#f8f9fa' : theme.palette.background.default,
             display: 'flex',
             alignItems: 'center',
             px: 1.5,

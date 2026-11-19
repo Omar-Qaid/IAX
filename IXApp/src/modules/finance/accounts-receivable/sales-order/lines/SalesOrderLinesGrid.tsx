@@ -923,7 +923,8 @@ export function SalesOrderLinesGrid({
           disabled={
             savingLine ||
             activeDraft?.id === 'new-sales-line' ||
-            !lineEditEnabled ||
+            // View mode: Add line switches the page to edit mode (D365).
+            (!lineEditEnabled && !onRequestEdit) ||
             !canEditLines ||
             order.salesStatus.toLowerCase() !== 'backorder'
           }
@@ -931,6 +932,7 @@ export function SalesOrderLinesGrid({
           onMouseDown={(event) => event.preventDefault()}
           onClick={async () => {
             if (activeDraft && !(await saveLine())) return;
+            if (!editing) onRequestEdit?.();
             setLineBaseline(null);
             setActiveField('itemNumber');
             setSelectedLineId('new-sales-line');

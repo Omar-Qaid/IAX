@@ -369,7 +369,7 @@ const SettingsTitle = ({
         zIndex: 2,
         minHeight: 34,
         py: '4px',
-        bgcolor: '#fff',
+        bgcolor: tokens.surface,
         borderBottom: `1px solid ${tokens.border}`,
         alignItems: 'center',
       }}
@@ -384,14 +384,19 @@ const SettingsTitle = ({
         <Chip
           size="small"
           label={t('wfProcessBuilder.status.newRecord')}
-          sx={{ height: 20, bgcolor: '#eeeeee' }}
+          sx={{ height: 20, bgcolor: 'action.selected' }}
         />
       )}
       {dirty && (
         <Chip
           size="small"
           label={t('wfProcessBuilder.status.unsavedChanges')}
-          sx={{ bgcolor: '#fff3cd', color: '#7a4b00', border: '1px solid #f0c36d', height: 20 }}
+          sx={{
+            bgcolor: tokens.warningSoft,
+            color: 'warning.dark',
+            border: `1px solid ${tokens.warning}`,
+            height: 20,
+          }}
         />
       )}
     </Stack>
@@ -404,7 +409,7 @@ const settingsGroupSx = {
   p: 0.75,
   border: `1px solid ${tokens.border}`,
   borderRadius: `${tokens.radius}px`,
-  bgcolor: '#f9fafb',
+  bgcolor: tokens.canvas,
 };
 
 const compactSwitchSx = {
@@ -416,7 +421,7 @@ const compactSwitchSx = {
     '&.Mui-checked': { transform: 'translateX(10px)' },
   },
   '& .MuiSwitch-thumb': { width: 10, height: 10 },
-  '& .MuiSwitch-track': { borderRadius: 7, bgcolor: '#cbd5e1', opacity: 1 },
+  '& .MuiSwitch-track': { borderRadius: 7, bgcolor: tokens.borderStrong, opacity: 1 },
   '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
     bgcolor: 'primary.main',
     opacity: 1,
@@ -435,7 +440,7 @@ const settingsSwitchGridSx = {
     '&.Mui-checked': { transform: 'translateX(10px)' },
   },
   '& .MuiSwitch-thumb': { width: 10, height: 10 },
-  '& .MuiSwitch-track': { borderRadius: 7, bgcolor: '#cbd5e1', opacity: 1 },
+  '& .MuiSwitch-track': { borderRadius: 7, bgcolor: tokens.borderStrong, opacity: 1 },
   '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
     bgcolor: 'primary.main',
     opacity: 1,
@@ -583,7 +588,7 @@ function ValidationRules({
       ])
     );
   return (
-    <Box sx={{ pt: 1.5, borderTop: '1px solid #e5e7eb' }}>
+    <Box sx={{ pt: 1.5, borderTop: `1px solid ${tokens.border}` }}>
       <Stack direction="row" sx={{ alignItems: 'center' }}>
         <Typography sx={{ flex: 1, fontSize: tokens.fontSize.body, fontWeight: 600 }}>
           {t('wfProcessBuilder.settings.validationRules')}
@@ -603,8 +608,8 @@ function ValidationRules({
                 gridTemplateColumns: 'minmax(0, 1fr) minmax(100px, .75fr)',
                 gap: 1,
                 p: 1.25,
-                border: '1px solid #dfe3ea',
-                bgcolor: '#fff',
+                border: `1px solid ${tokens.border}`,
+                bgcolor: tokens.surface,
               }}
             >
               <TextField
@@ -784,7 +789,7 @@ function TransitionRules({
           return (
             <Box
               key={transition.id}
-              sx={{ p: '10px', border: `1px solid ${tokens.border}`, bgcolor: '#fff' }}
+              sx={{ p: '10px', border: `1px solid ${tokens.border}`, bgcolor: tokens.surface }}
             >
               <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 <TextField
@@ -1120,9 +1125,9 @@ export function ProcessBuilderSettingsPanel() {
                 sx={{
                   marginInlineEnd: 1,
                   height: 22,
-                  color: '#7a4b00',
-                  bgcolor: '#fff3cd',
-                  borderColor: '#f0c36d',
+                  color: 'warning.dark',
+                  bgcolor: tokens.warningSoft,
+                  borderColor: tokens.warning,
                 }}
               />
             )}
@@ -1131,7 +1136,9 @@ export function ProcessBuilderSettingsPanel() {
             </Button>
           </Stack>
           {d.id === 'new' && (
-            <Typography sx={{ py: '8px', color: '#9a4f00', fontSize: tokens.fontSize.caption }}>
+            <Typography
+              sx={{ py: '8px', color: 'warning.dark', fontSize: tokens.fontSize.caption }}
+            >
               {t('wfProcessBuilder.workspace.saveVariablesFirst')}
             </Typography>
           )}
@@ -1139,7 +1146,7 @@ export function ProcessBuilderSettingsPanel() {
             {d.variables.map((variable) => (
               <Box
                 key={variable.id}
-                sx={{ p: '8px', border: `1px solid ${tokens.warning}`, bgcolor: '#fff' }}
+                sx={{ p: '8px', border: `1px solid ${tokens.warning}`, bgcolor: tokens.surface }}
               >
                 <Box
                   sx={{
@@ -1209,7 +1216,7 @@ export function ProcessBuilderSettingsPanel() {
                       height: 24,
                       borderRadius: '50%',
                       bgcolor: tokens.accent,
-                      color: '#fff',
+                      color: 'primary.contrastText',
                       '& .MuiChip-label': { px: 0 },
                     }}
                   />
@@ -2382,9 +2389,9 @@ export function ProcessBuilderSettingsPanel() {
                     title={summary}
                     sx={{
                       height: 22,
-                      color: '#7a4b00',
-                      bgcolor: '#fff3cd',
-                      borderColor: '#f0c36d',
+                      color: 'warning.dark',
+                      bgcolor: tokens.warningSoft,
+                      borderColor: tokens.warning,
                     }}
                   />
                 )
@@ -2407,7 +2414,12 @@ export function ProcessBuilderSettingsPanel() {
                         })
                   }
                   onClick={() => setShowAllRequestValidations((value) => !value)}
-                  sx={{ height: 22, color: '#7a4b00', bgcolor: '#fff3cd', borderColor: '#f0c36d' }}
+                  sx={{
+                    height: 22,
+                    color: 'warning.dark',
+                    bgcolor: tokens.warningSoft,
+                    borderColor: tokens.warning,
+                  }}
                 />
               )}
             </Box>
