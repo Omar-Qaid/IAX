@@ -1,3 +1,4 @@
+import { CommitAwareCrudActions } from '@shared/components/action-pane/CommitAwareCrudActions';
 import {
   createContext,
   createElement,
@@ -8,10 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { SalesOrderLineRecord } from '../api/salesOrderLinesApi';
-import {
-  EnterpriseCrudActions,
-  type EnterpriseCrudActionsProps,
-} from '@shared/components/action-pane/EnterpriseCrudActions';
+import { type EnterpriseCrudActionsProps } from '@shared/components/action-pane/EnterpriseCrudActions';
 
 function useLineState() {
   const [draftLine, setDraftLine] = useState<(SalesOrderLineRecord & { orderId: string }) | null>(
@@ -67,37 +65,18 @@ export function useSalesOrderLineState() {
   return state;
 }
 
-/** The page may leave edit mode only after its active line has been accepted. */
+/** Maps the sales line draft lifecycle to the generic page action coordinator. */
 export function SalesOrderDocumentActions(props: EnterpriseCrudActionsProps) {
   const state = useSalesOrderLineState();
-  const [committing, setCommitting] = useState(false);
-  const saveLock = useRef(false);
-  return createElement(EnterpriseCrudActions, {
+  return createElement(CommitAwareCrudActions, {
     ...props,
-    saving: props.saving || state.savingLine || committing,
-    onSave: async () => {
-      if (saveLock.current) return;
-      saveLock.current = true;
-      setCommitting(true);
-      try {
-        if (
-          state.draftLine &&
-          state.commitLineRef.current &&
-          !(await state.commitLineRef.current())
-        )
-          return;
-        props.onSave?.();
-      } finally {
-        saveLock.current = false;
-        setCommitting(false);
-      }
-    },
-    onCancel: () => {
+    saving: props.saving || state.savingLine,
+    beforeSave: () => (state.draftLine ? (state.commitLineRef.current?.() ?? true) : true),
+    onCancelDraft: () => {
       state.setDraftLine(null);
       state.setLineBaseline(null);
       state.setActiveField('');
       state.setLineError('');
-      props.onCancel?.();
     },
   });
 }

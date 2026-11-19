@@ -103,7 +103,7 @@ export function SalesOrderDetails({
             editing={Boolean(activeHeader)}
             saving={savingHeader}
             onEdit={startHeaderEdit}
-            onSave={() => void saveHeader()}
+            onSave={() => saveHeader()}
             onCancel={() => {
               if (!savingHeader) {
                 setHeaderDraft(null);

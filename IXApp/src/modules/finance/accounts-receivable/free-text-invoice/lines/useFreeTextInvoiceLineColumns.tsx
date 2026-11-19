@@ -1,3 +1,4 @@
+import { BufferedValueField } from '@shared/components/fields/BufferedValueField';
 import React from 'react';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import type { ColumnDef } from '@shared/components/data-grid/types';
@@ -112,6 +113,20 @@ export function useFreeTextInvoiceLineColumns({
         width: 110,
         type: 'number',
         editable: true,
+        renderEditCell: ({ value, onChange, disabled }) => (
+          <BufferedValueField
+            fullWidth
+            size="small"
+            variant="standard"
+            type="number"
+            value={value ?? ''}
+            disabled={disabled}
+            slotProps={{
+              htmlInput: { 'aria-label': t('fields.quantity'), style: { textAlign: 'right' } },
+            }}
+            onChange={(event) => onChange(Number(event.target.value))}
+          />
+        ),
       },
       {
         field: 'unitPrice',
@@ -119,6 +134,20 @@ export function useFreeTextInvoiceLineColumns({
         width: 120,
         type: 'number',
         editable: true,
+        renderEditCell: ({ value, onChange, disabled }) => (
+          <BufferedValueField
+            fullWidth
+            size="small"
+            variant="standard"
+            type="number"
+            value={value ?? ''}
+            disabled={disabled}
+            slotProps={{
+              htmlInput: { 'aria-label': t('fields.unitPrice'), style: { textAlign: 'right' } },
+            }}
+            onChange={(event) => onChange(Number(event.target.value))}
+          />
+        ),
       },
       {
         field: 'netAmount',

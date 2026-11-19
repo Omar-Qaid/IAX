@@ -70,6 +70,12 @@ it('loads the extracted details editor through the free-text invoice route', asy
       name: 'Setup',
     })
   ).toHaveAttribute('aria-selected', 'true');
+  const quantityCell = container.querySelector('[role="gridcell"][data-field="quantity"]');
+  expect(quantityCell).not.toBeNull();
+  fireEvent.doubleClick(quantityCell!);
+  const quantity = await screen.findByRole('spinbutton', { name: 'Quantity' });
+  fireEvent.change(quantity, { target: { value: '1.' } });
+  expect(quantity).toHaveValue('1.');
 });
 
 it('retains the invoice draft after invalid Save and accepts a corrected line', async () => {

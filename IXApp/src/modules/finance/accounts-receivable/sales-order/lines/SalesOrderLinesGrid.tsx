@@ -26,9 +26,9 @@ import { ErrorState } from '@shared/components/feedback/ErrorState';
 import { LookupGridField } from '@shared/components/lookups/LookupGridField';
 import { DataGridLookupField } from '@shared/components/lookups/DataGridLookupField';
 import { CellEditHost } from '@shared/components/data-grid/body/CellEditHost';
-import { SalesLineValueField } from './SalesLineValueField';
-import { SalesLineGridSurface } from './SalesLineGridSurface';
-import { SalesLineCell, SalesLineCellProvider } from './SalesLineCell';
+import { BufferedValueField } from '@shared/components/fields/BufferedValueField';
+import { ExternalCellEditSurface } from '@shared/components/data-grid/ExternalCellEditSurface';
+import { createCellRenderer } from '@shared/components/data-grid/createCellRenderer';
 import { useSalesOrderLineState } from './SalesOrderLineState';
 import {
   salesOrderLinesApi,
@@ -46,6 +46,7 @@ import { useCompanyStore } from '@core/company/useCompanyStore';
 import { enterpriseSurfaces } from '@shared/constants/enterpriseSurfaces';
 
 type DetailLine = SalesOrderLineRecord;
+const { Cell: LineCell, Provider: LineCellProvider } = createCellRenderer<DetailLine>();
 const EMPTY_LINES: DetailLine[] = [];
 
 const LINE_TYPE_OPTIONS = [
@@ -412,7 +413,7 @@ export function SalesOrderLinesGrid({
       columns.map((column): ColumnDef<DetailLine> => ({
         ...column,
         minWidth: column.minWidth ?? 85,
-        renderCell: (params) => <SalesLineCell column={column} params={params} />,
+        renderCell: (params) => <LineCell column={column} params={params} />,
       })),
     [columns]
   );
@@ -628,7 +629,7 @@ export function SalesOrderLinesGrid({
       ((column.field === 'quantity' && (!Number.isFinite(row.quantity) || row.quantity <= 0)) ||
         (column.field === 'unitPrice' && (!Number.isFinite(row.unitPrice) || row.unitPrice < 0)));
     return (
-      <SalesLineValueField
+      <BufferedValueField
         autoFocus
         error={invalidCell}
         variant="standard"
@@ -985,7 +986,7 @@ export function SalesOrderLinesGrid({
       {linesQuery.isError && (
         <ErrorState message={linesQuery.error.message} onRetry={() => void linesQuery.refetch()} />
       )}
-      <SalesLineGridSurface
+      <ExternalCellEditSurface
         gridRef={lineGridRef}
         resolveRowId={(id) => (id === 'new-sales-line' ? (savedNewRowIdRef.current ?? id) : id)}
         onPasteError={() =>
@@ -1004,7 +1005,7 @@ export function SalesOrderLinesGrid({
           requestAnimationFrame(() => lineGridRef.current?.focusFilter());
         }}
       >
-        <SalesLineCellProvider renderCell={renderLineCell}>
+        <LineCellProvider renderCell={renderLineCell}>
           <PatternDataGrid
             ref={lineGridRef}
             key={order.id}
@@ -1020,8 +1021,8 @@ export function SalesOrderLinesGrid({
             onRefresh={handleRefreshLines}
             storageKey="accounts-receivable.sales-order-lines.compact.v6"
           />
-        </SalesLineCellProvider>
-      </SalesLineGridSurface>
+        </LineCellProvider>
+      </ExternalCellEditSurface>
     </>
   );
 }

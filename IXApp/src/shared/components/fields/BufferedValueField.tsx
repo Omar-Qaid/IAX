@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { TextField, type TextFieldProps } from '@mui/material';
 
 /** Preserve partially typed decimals and an empty input until the user commits. */
-export function SalesLineValueField(props: TextFieldProps) {
+export function BufferedValueField(props: TextFieldProps) {
   const { value, type, onChange, onFocus, slotProps } = props;
   const [text, setText] = useState(String(value ?? ''));
   const [previousValue, setPreviousValue] = useState(value);

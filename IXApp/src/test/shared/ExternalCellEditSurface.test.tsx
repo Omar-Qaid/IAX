@@ -1,7 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { expect, it, vi } from 'vitest';
-import { SalesLineGridSurface } from '@modules/finance/accounts-receivable/sales-order/lines/SalesLineGridSurface';
+import { ExternalCellEditSurface } from '@shared/components/data-grid/ExternalCellEditSurface';
 import type { DataGridHandle } from '@shared/components/data-grid/types';
 
 function setup(commit = vi.fn().mockResolvedValue(true)) {
@@ -11,7 +11,7 @@ function setup(commit = vi.fn().mockResolvedValue(true)) {
   const onFilter = vi.fn();
   const gridRef = { current: { focusCell } as unknown as DataGridHandle };
   render(
-    <SalesLineGridSurface
+    <ExternalCellEditSurface
       gridRef={gridRef}
       commit={commit}
       onAdd={onAdd}
@@ -29,7 +29,7 @@ function setup(commit = vi.fn().mockResolvedValue(true)) {
           </div>
         ))}
       </div>
-    </SalesLineGridSurface>
+    </ExternalCellEditSurface>
   );
   return { focusCell, commit, onAdd, onRemove, onFilter };
 }

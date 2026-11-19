@@ -15,7 +15,7 @@ import { MasterDetailPage } from '@patterns/master-detail';
 import { ActionPaneBackButton } from '@shared/components/action-pane/ActionPaneBackButton';
 import { recordTableId } from '@shared/components/documents';
 import type { DetailSectionConfig } from '@patterns/list-details/types';
-import { EnterpriseCrudActions } from '@shared/components/action-pane/EnterpriseCrudActions';
+import { CommitAwareCrudActions } from '@shared/components/action-pane/CommitAwareCrudActions';
 import { localizedName } from '@shared/utilities/localizedName';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS as paths } from '../../routes/accountsReceivableRoutePaths';
 
@@ -150,7 +150,7 @@ export function FreeTextInvoiceDetails({
         }
         actionPane={
           <>
-            <EnterpriseCrudActions
+            <CommitAwareCrudActions
               editLabel={t('actions.edit')}
               newLabel={t('actions.new')}
               deleteLabel={t('actions.delete')}
@@ -170,7 +170,7 @@ export function FreeTextInvoiceDetails({
               onEdit={beginEdit}
               onNew={() => navigate(paths.newFreeTextInvoice(invoice.customerAccount))}
               onDelete={() => setConfirmation('delete')}
-              onSave={() => void save()}
+              onSave={() => save()}
               onCancel={() => {
                 grid.current?.cancelEdit();
                 changeDraft(null);

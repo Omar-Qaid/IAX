@@ -58,4 +58,3 @@ export const lineMasters: Partial<
   deliveryMode: { entity: FOUNDATION_RECORD_PREVIEWS.DELIVERY_MODE },
   deliveryTerms: { entity: FOUNDATION_RECORD_PREVIEWS.DELIVERY_TERMS },
 };
-export const salesOrderRibbonPinnedStorageKey = 'sales-order.action-pane.ribbon-pinned';

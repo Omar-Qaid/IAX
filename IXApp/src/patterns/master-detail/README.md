@@ -45,6 +45,7 @@ for the option table mapped from sales order. Tests:
 Sales orders and free-text invoices use `viewTabs={{ value, onChange }}` for the standard Lines/Header views and `onSearch` for the standard Search command. The pattern owns labels, icon placement and edit-mode locking. Pages own tab state, validation and filter visibility. Custom `tabs` remain available for documents with different views.
 
 Use existing generic fields, grids, totals and dialogs before creating a feature component. Keep feature components only when they contain feature-specific behavior, such as sales confirmation or packing-slip posting.
+
 ## Feature organization
 
 Sales order and free-text invoice follow the same responsibilities:
@@ -55,8 +56,11 @@ Sales order and free-text invoice follow the same responsibilities:
 - `api/`: requests and API contracts.
 
 Reuse the master-details pattern and shared UI directly. Add a feature component only for feature behavior; do not duplicate generic controls to make folder trees identical. The sales-order route uses the canonical `sales-order/details/SalesOrderDetails` implementation.
+
 ## Generate a new feature
 
 Use `npm run generate:master-detail -- --feature finance/module/example-order --name ExampleOrder --dry-run` to preview the standard eight-file structure; omit `--dry-run` to generate it. Existing folders are never overwritten. The generated feature uses `useMasterDetailDocument` for the common editing flow. Connect the feature API adapter, fields, permissions and route explicitly before use.
 
 `npm run audit:master-detail` checks feature structure. `npm run test:master-detail-generator` checks the generator. Both run in the standard static verification chain. See [the standard feature structure](../../../docs/patterns/MASTER_DETAILS_PAGE.md#standard-structure-for-every-new-feature).
+
+See the [sales-order extra helper review](../../../docs/patterns/MASTER_DETAILS_HELPER_REVIEW.md) for the per-file retain/extract/remove decisions and shared editor/action components used by the existing sales-order and free-text-invoice pages.

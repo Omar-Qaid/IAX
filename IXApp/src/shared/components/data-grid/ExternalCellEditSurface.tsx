@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { Box } from '@mui/material';
-import type { DataGridHandle } from '@shared/components/data-grid/types';
+import type { DataGridHandle } from './types';
 
 interface Props {
   children: React.ReactNode;
@@ -13,8 +13,8 @@ interface Props {
   onPasteError?: () => void;
 }
 
-/** Keeps keyboard and mouse navigation within the sales grid's save lifecycle. */
-export function SalesLineGridSurface({
+/** Keeps keyboard and mouse navigation within an externally controlled grid's save lifecycle. */
+export function ExternalCellEditSurface({
   children,
   gridRef,
   commit,
