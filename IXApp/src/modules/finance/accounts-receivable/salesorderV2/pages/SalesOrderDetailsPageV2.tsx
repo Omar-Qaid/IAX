@@ -1,10 +1,6 @@
 import { Alert } from '@mui/material';
 import React from 'react';
-import {
-  MasterDetailPage,
-  MasterDetailTabs,
-  type MasterDetailCommand,
-} from '@patterns/master-detail';
+import { MasterDetailPage } from '@patterns/master-detail';
 import { ActionPaneBackButton } from '@shared/components/action-pane/ActionPaneBackButton';
 import { ErrorState } from '@shared/components/feedback/ErrorState';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
@@ -135,30 +131,15 @@ export function SalesOrderDetailsPageV2(): React.ReactElement {
           'Warehouse',
           'Transportation',
           'Credit management',
-        ]
-          .map<MasterDetailCommand>((label) => ({ id: label, label, disabled: true }))
-          .concat([
-            {
-              id: 'search',
-              label: t('actions.search', 'Search'),
-              disabled: Boolean(activeHeader),
-              onClick: () => {
-                setTab('lines');
-                setLineFilterVisible((visible) => !visible);
-              },
-            },
-          ])}
-        tabs={
-          <MasterDetailTabs
-            value={tab}
-            onChange={(value) => setTab(value === 'header' ? 'header' : 'lines')}
-            ariaLabel={t('salesOrder.details', 'Sales order details')}
-            tabs={[
-              { value: 'lines', label: t('common.lines', 'Lines') },
-              { value: 'header', label: t('common.header', 'Header') },
-            ]}
-          />
-        }
+        ].map((label) => ({ id: label, label, disabled: true }))}
+        onSearch={() => {
+          setTab('lines');
+          setLineFilterVisible((visible) => !visible);
+        }}
+        viewTabs={{
+          value: tab,
+          onChange: (value) => setTab(value === 'header' ? 'header' : 'lines'),
+        }}
         sections={
           headerError
             ? [

@@ -72,6 +72,10 @@ export interface MasterDetailPageProps<T extends MasterDetailRecord = MasterDeta
   navigationLabel?: string;
   /** Tabs under the title (see `MasterDetailTabs`). */
   tabs?: ReactNode;
+  /** Standard document views; the page retains ownership of tab state and validation. */
+  viewTabs?: { value: string; onChange: (value: string) => void; ariaLabel?: string };
+  /** Standard Search command. Pages decide how to reveal their line filters. */
+  onSearch?: () => void;
   /** Edit mode: navigation, filter, options and utilities are locked, like D365. */
   editing?: boolean;
   loading?: boolean;

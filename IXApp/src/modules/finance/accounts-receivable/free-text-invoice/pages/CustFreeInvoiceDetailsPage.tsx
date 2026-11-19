@@ -14,13 +14,11 @@ import {
   MasterDetailLineDetails,
   MasterDetailLines,
   MasterDetailPage,
-  MasterDetailTabs,
   MasterDetailTotals,
 } from '@patterns/master-detail';
 import { freeTextInvoiceQueryKeys } from '../../queries/accountsReceivableQueryKeys';
 import { ActionPaneBackButton } from '@shared/components/action-pane/ActionPaneBackButton';
 import { recordTableId } from '@shared/components/documents';
-import SearchIcon from '@mui/icons-material/Search';
 import type {
   DetailFieldConfig,
   DetailSectionConfig,
@@ -1038,32 +1036,19 @@ function InvoiceEditor({
             ],
           },
         ]}
-        commands={[
-          { id: 'general', label: t('common.general'), disabled: true },
-          {
-            id: 'search',
-            label: t('common.search'),
-            icon: <SearchIcon />,
-            onClick: () => {
-              setTab('lines');
-              setFilterVisible((value) => !value);
-            },
-          },
-        ]}
+        commands={[{ id: 'general', label: t('common.general'), disabled: true }]}
+        onSearch={() => {
+          setTab('lines');
+          setFilterVisible((value) => !value);
+        }}
         values={values}
         onFieldEdit={beginEdit}
         canEditField={(name) => allowedEdit && !busy && !readOnlyFields.has(name)}
-        tabs={
-          <MasterDetailTabs
-            ariaLabel={t('freeTextInvoices.title')}
-            value={tab}
-            onChange={(value) => void switchTab(value)}
-            tabs={[
-              { value: 'lines', label: t('freeTextInvoices.linesTab', 'Lines') },
-              { value: 'header', label: t('freeTextInvoices.headerTab', 'Header') },
-            ]}
-          />
-        }
+        viewTabs={{
+          value: tab,
+          onChange: (value) => void switchTab(value),
+          ariaLabel: t('freeTextInvoices.title'),
+        }}
         sections={sections}
         recordTableName={isNew ? undefined : 'CustInvoiceTable'}
         getAuditRecordId={(record) => record.recId}

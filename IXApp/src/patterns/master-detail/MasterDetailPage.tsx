@@ -1,3 +1,5 @@
+import SearchIcon from '@mui/icons-material/Search';
+import { MasterDetailTabs } from './MasterDetailTabs';
 import React, { useMemo, useState } from 'react';
 import { usePageBreadcrumb } from '@shared/hooks/usePageBreadcrumb';
 import { Box, IconButton, Typography, useMediaQuery, useTheme } from '@mui/material';
@@ -73,6 +75,8 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
   endActions,
   navigationLabel,
   tabs,
+  viewTabs,
+  onSearch,
   editing = false,
   loading = false,
   error = null,
@@ -127,7 +131,20 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
 
   const header = (
     <DocumentHeader title={title} subtitle={subtitle} viewLabel={viewLabel} status={status}>
-      {!loading && !error && tabs}
+      {!loading &&
+        !error &&
+        (tabs ??
+          (viewTabs && (
+            <MasterDetailTabs
+              value={viewTabs.value}
+              onChange={viewTabs.onChange}
+              ariaLabel={viewTabs.ariaLabel ?? title}
+              tabs={[
+                { value: 'lines', label: t('common.lines', 'Lines') },
+                { value: 'header', label: t('common.header', 'Header') },
+              ]}
+            />
+          )))}
     </DocumentHeader>
   );
   // Field-config sections first, then the page's own content (lines etc.).
@@ -273,6 +290,17 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
                 onClick={command.onClick}
               />
             ))}
+          </ActionPaneGroup>
+        )}
+        {onSearch && (
+          <ActionPaneGroup>
+            <ActionPaneButton
+              actionId="search"
+              label={t('common.search', 'Search')}
+              icon={<SearchIcon />}
+              disabled={editing}
+              onClick={onSearch}
+            />
           </ActionPaneGroup>
         )}
         {showOptionsMenu && (

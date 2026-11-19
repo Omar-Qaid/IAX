@@ -39,3 +39,9 @@ for both existing and new records.
 See [Master-detail page](../../../docs/patterns/MASTER_DETAILS_PAGE.md)
 for the option table mapped from sales order. Tests:
 `src/test/patterns/MasterDetailPage.test.tsx`.
+
+## Shared document navigation
+
+Sales orders and free-text invoices use `viewTabs={{ value, onChange }}` for the standard Lines/Header views and `onSearch` for the standard Search command. The pattern owns labels, icon placement and edit-mode locking. Pages own tab state, validation and filter visibility. Custom `tabs` remain available for documents with different views.
+
+Use existing generic fields, grids, totals and dialogs before creating a feature component. Keep feature components only when they contain feature-specific behavior, such as sales confirmation or packing-slip posting.

@@ -1,4 +1,4 @@
-/** Enterprise page chrome shared with sales order details. */
+/** Shared enterprise setup-page layout defaults. */
 export const ENTERPRISE_LIST_DETAILS_DEFAULTS = {
   listWidth: 280,
   listResizable: true,

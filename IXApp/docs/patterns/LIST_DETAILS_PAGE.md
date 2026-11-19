@@ -21,59 +21,26 @@ Use list-details for setup pages such as customer payment terms, tax codes, tax 
 Use master-details for sales orders and other header/line documents. The module supplies fields, validation, permissions and API calls.
 
 ```tsx
-<ListDetailsPage<Document>
+<ListDetailsPage<SetupRecord>
   variant="enterprise"
-  title={`${document.number} : ${document.name}`}
+  title={t('pages.setup.title')}
   config={{
     recordTableName: 'YourExistingTable',
-    breadcrumb: { listPath: listRoute, labelKey: 'yourModule.document' },
-    subtitle: 'Document details',
-    status: (record) => record.status,
     dataSource: { type: 'controlled', records, onRecordsChange: setRecords },
     createRecord,
-    getPrimaryText: (record) => record.number,
+    getPrimaryText: (record) => record.code,
     getSecondaryText: (record) => record.name,
     getValues,
     setValues,
-    headerFields: [],
+    headerFields,
     permissions,
     validate,
-    sections: ({ record, editing, onRecordChange }) => [
-      { id: 'summary', tab: 'lines', title: 'Document header', groups: summaryGroups },
-      {
-        id: 'lines',
-        tab: 'lines',
-        title: 'Lines',
-        hideHeader: true,
-        content: (
-          <TabularDetailPanel<Line>
-            rows={record.lines}
-            columns={lineColumns}
-            addLabel="Add line"
-            removeLabel="Remove"
-            selectedIds={selectedLineIds}
-            onSelectionChange={setSelectedLineIds}
-            onAdd={() => onRecordChange(addLine(record))}
-            onRemove={() => onRecordChange(removeLines(record, selectedLineIds))}
-            onRowSave={(line) => {
-              validateLine(line); // Throw to retain the row draft and block page Save.
-              onRecordChange(replaceLine(record, line));
-            }}
-          />
-        ),
-      },
-      { id: 'line-details', tab: 'lines', title: 'Line details', groups: lineDetailGroups },
-      {
-        id: 'totals',
-        tab: 'lines',
-        title: 'Totals',
-        content: <MasterDetailTotals items={buildTotals(record)} />,
-      },
-      { id: 'general', tab: 'header', title: 'General', groups: headerGroups },
-      { id: 'setup', tab: 'header', title: 'Setup', groups: setupGroups },
+    sections: [
+      { id: 'general', title: 'General', groups: generalGroups },
+      { id: 'setup', title: 'Setup', groups: setupGroups },
     ],
   }}
 />
 ```
 
-The identifiers in this blueprint are the module's own types, field groups and business functions. No page-specific title markup, tab state, grid styling or Save/Cancel coordinator is needed. `TabularDetailPanel` participates in the page edit session automatically.
+The module supplies its own record type, field groups and validation. Nested setup grids can use TabularDetailPanel to participate in the shared edit session.

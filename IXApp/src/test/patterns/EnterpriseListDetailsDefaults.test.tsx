@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, expect, it } from 'vitest';
-import { fireEvent, render, screen } from '@test/testUtils';
+import { render, screen } from '@test/testUtils';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
 import type { EnterpriseListDetailsConfig } from '@patterns/list-details/types';
 
@@ -32,7 +32,8 @@ function Draft() {
 
 describe('enterprise setup page defaults', () => {
   it.each(['Customer payment terms', 'Tax codes', 'Tax groups', 'Exchange rates'])(
-    'renders %s without document tabs and shows every detail section', (title) => {
+    'renders %s without document tabs and shows every detail section',
+    (title) => {
       render(<ListDetailsPage variant="enterprise" title={title} config={config} />);
       expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
       expect(screen.queryByRole('tab', { name: 'Lines' })).toBeNull();

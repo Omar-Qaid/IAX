@@ -103,7 +103,10 @@ describe('MasterDetailPage', () => {
       'font-size': '11px',
       'line-height': '1.2',
     });
-    expect(screen.getByText('Lookup label')).toHaveStyle({ 'font-size': '10px', 'margin-bottom': '6px' });
+    expect(screen.getByText('Lookup label')).toHaveStyle({
+      'font-size': '10px',
+      'margin-bottom': '6px',
+    });
   });
 
   it('keeps the title and view tabs outside the constrained details scroll region', () => {
@@ -223,4 +226,20 @@ describe('MasterDetailPage', () => {
     renderPage({ recordTableName: 'SalesTable', editing: true });
     expect(screen.getByRole('button', { name: /options/i })).toBeDisabled();
   });
+});
+
+it('provides shared document views and Search and locks Search during editing', () => {
+  const onChange = vi.fn();
+  const onSearch = vi.fn();
+  renderPage({ tabs: undefined, viewTabs: { value: 'lines', onChange }, onSearch });
+  expect(screen.getByRole('tab', { name: 'Lines' })).toHaveAttribute('aria-selected', 'true');
+  fireEvent.click(screen.getByRole('tab', { name: 'Header' }));
+  expect(onChange).toHaveBeenCalledWith('header');
+  fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+  expect(onSearch).toHaveBeenCalledOnce();
+});
+
+it('disables the shared document Search command while editing', () => {
+  renderPage({ tabs: undefined, editing: true, onSearch: vi.fn() });
+  expect(screen.getByRole('button', { name: 'Search' })).toBeDisabled();
 });
