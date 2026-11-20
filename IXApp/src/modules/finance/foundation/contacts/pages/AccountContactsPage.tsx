@@ -110,23 +110,23 @@ export function AccountContactsPage() {
       columns={[
         {
           field: 'contactPersonId',
-          headerName: 'Contact ID',
+          headerName: 'accountContacts.fields.contactId',
           renderCell: ({ row }) => (
             <Button onClick={() => open(row.id)}>{row.contactPersonId}</Button>
           ),
         },
-        { field: 'name', headerName: 'Name', width: 200 },
-        { field: 'contactFor', headerName: 'Contact for' },
-        { field: 'telephone', headerName: 'Telephone' },
-        { field: 'extension', headerName: 'Extension' },
+        { field: 'name', headerName: 'fields.name', width: 200 },
+        { field: 'contactFor', headerName: 'accountContacts.fields.contactFor' },
+        { field: 'telephone', headerName: 'accountContacts.fields.telephone' },
+        { field: 'extension', headerName: 'fields.extension' },
         {
           field: 'inactive',
-          headerName: 'Inactive',
+          headerName: 'accountContacts.fields.inactive',
           valueGetter: ({ row }) => (row.inactive ? 'Yes' : 'No'),
         },
         {
           field: 'vendorPortalAccessAllowed',
-          headerName: 'Vendor collaboration access',
+          headerName: 'accountContacts.fields.vendorCollaborationAccess',
           valueGetter: ({ row }) => (row.vendorPortalAccessAllowed ? 'Yes' : 'No'),
         },
       ]}

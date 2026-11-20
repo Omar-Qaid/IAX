@@ -114,7 +114,7 @@ export function DocumentChargesPage({
     () => [
       {
         field: 'markupCode',
-        headerName: 'Charges code',
+        headerName: 'documentCharges.fields.chargesCode',
         width: 135,
         type: 'singleSelect',
         valueOptions: codeOptions,
@@ -128,7 +128,7 @@ export function DocumentChargesPage({
       },
       {
         field: 'markupCategory',
-        headerName: 'Category',
+        headerName: 'documentCharges.fields.category',
         width: 150,
         type: 'singleSelect',
         valueOptions: [
@@ -140,7 +140,7 @@ export function DocumentChargesPage({
       },
       {
         field: 'keep',
-        headerName: 'Keep',
+        headerName: 'documentCharges.fields.keep',
         width: 80,
         type: 'boolean',
         editable: true,
@@ -148,7 +148,7 @@ export function DocumentChargesPage({
       },
       {
         field: 'value',
-        headerName: 'Charges value',
+        headerName: 'documentCharges.fields.chargesValue',
         width: 150,
         type: 'number',
         align: 'right',
@@ -165,7 +165,7 @@ export function DocumentChargesPage({
       },
       {
         field: 'mcrBrokerContractFee',
-        headerName: 'Broker contract fee',
+        headerName: 'documentCharges.fields.brokerContractFee',
         width: 145,
         type: 'boolean',
         editable: true,
@@ -173,7 +173,7 @@ export function DocumentChargesPage({
       },
       {
         field: 'taxGroup',
-        headerName: 'Sales tax group',
+        headerName: 'fields.salesTaxGroup',
         width: 170,
         type: 'singleSelect',
         valueOptions: taxGroupOptions,
@@ -181,7 +181,7 @@ export function DocumentChargesPage({
       },
       {
         field: 'taxItemGroup',
-        headerName: 'Item sales tax group',
+        headerName: 'fields.itemSalesTaxGroup',
         width: 180,
         type: 'singleSelect',
         valueOptions: taxItemGroupOptions,

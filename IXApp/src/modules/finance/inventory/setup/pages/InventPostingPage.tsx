@@ -217,7 +217,7 @@ export function InventPostingPage(): React.ReactElement {
   const columns: ColumnDef<InventPostingRule>[] = [
     {
       field: 'itemCode',
-      headerName: 'Item code',
+      headerName: 'inventPosting.fields.itemCode',
       width: 145,
       renderCell: ({ row }) =>
         draft?.id === row.id
@@ -226,13 +226,13 @@ export function InventPostingPage(): React.ReactElement {
     },
     {
       field: 'itemRelation',
-      headerName: 'Item relation',
+      headerName: 'inventPosting.fields.itemRelation',
       width: 180,
       renderCell: ({ row }) => field(row, 'itemRelation', itemRelations, row.itemCode === 2),
     },
     {
       field: 'categoryRelation',
-      headerName: 'Category relation',
+      headerName: 'inventPosting.fields.categoryRelation',
       width: 170,
       renderCell: ({ row }) =>
         draft?.id === row.id
@@ -245,7 +245,7 @@ export function InventPostingPage(): React.ReactElement {
     },
     {
       field: 'custVendCode',
-      headerName: 'Account code',
+      headerName: 'inventPosting.fields.accountCode',
       width: 150,
       renderCell: ({ row }) =>
         draft?.id === row.id
@@ -254,7 +254,7 @@ export function InventPostingPage(): React.ReactElement {
     },
     {
       field: 'custVendRelation',
-      headerName: 'Account relation',
+      headerName: 'inventPosting.fields.accountRelation',
       width: 180,
       renderCell: ({ row }) =>
         field(
@@ -266,14 +266,14 @@ export function InventPostingPage(): React.ReactElement {
     },
     {
       field: 'taxGroupId',
-      headerName: 'Sales tax group',
+      headerName: 'fields.salesTaxGroup',
       width: 155,
       renderCell: ({ row }) =>
         field(row, 'taxGroupId', [{ id: '', label: '' }, ...(lookups.data?.taxGroups ?? [])]),
     },
     {
       field: 'mainAccount',
-      headerName: 'Main account',
+      headerName: 'inventPosting.fields.mainAccount',
       minWidth: 180,
       flex: 1,
       renderCell: ({ row }) =>

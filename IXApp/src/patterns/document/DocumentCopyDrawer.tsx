@@ -53,26 +53,38 @@ export interface DocumentCopyDrawerProps {
 }
 
 const sourceColumns: ColumnDef<DocumentCopySource>[] = [
-  { field: 'documentNumber', headerName: 'Document', width: 145 },
-  { field: 'account', headerName: 'Customer account', width: 145 },
-  { field: 'accountName', headerName: 'Customer name', minWidth: 220, flex: 1 },
-  { field: 'createdAt', headerName: 'Created date and time', width: 190, type: 'date' },
-  { field: 'currencyCode', headerName: 'Currency', width: 100 },
+  { field: 'documentNumber', headerName: 'documentCopy.fields.document', width: 145 },
+  { field: 'account', headerName: 'fields.customerAccount', width: 145 },
+  { field: 'accountName', headerName: 'documentCopy.fields.customerName', minWidth: 220, flex: 1 },
+  { field: 'createdAt', headerName: 'salesOrder.createdDateTime', width: 190, type: 'date' },
+  { field: 'currencyCode', headerName: 'fields.currency', width: 100 },
 ];
 
 const lineColumns: ColumnDef<DocumentCopyLine>[] = [
-  { field: 'itemId', headerName: 'Item number', width: 135 },
-  { field: 'description', headerName: 'Text', minWidth: 190, flex: 1 },
-  { field: 'site', headerName: 'Site', width: 100 },
-  { field: 'warehouse', headerName: 'Warehouse', width: 120 },
-  { field: 'quantity', headerName: 'Quantity', width: 100, type: 'number', align: 'right' },
-  { field: 'unit', headerName: 'Unit', width: 80 },
-  { field: 'unitPrice', headerName: 'Unit price', width: 110, type: 'number', align: 'right' },
-  { field: 'netAmount', headerName: 'Net amount', width: 110, type: 'number', align: 'right' },
-  { field: 'discount', headerName: 'Discount', width: 100, type: 'number', align: 'right' },
+  { field: 'itemId', headerName: 'salesOrder.itemNumber', width: 135 },
+  { field: 'description', headerName: 'salesOrder.text', minWidth: 190, flex: 1 },
+  { field: 'site', headerName: 'fields.site', width: 100 },
+  { field: 'warehouse', headerName: 'fields.warehouse', width: 120 },
+  { field: 'quantity', headerName: 'fields.quantity', width: 100, type: 'number', align: 'right' },
+  { field: 'unit', headerName: 'salesOrder.unit', width: 80 },
+  {
+    field: 'unitPrice',
+    headerName: 'fields.unitPrice',
+    width: 110,
+    type: 'number',
+    align: 'right',
+  },
+  {
+    field: 'netAmount',
+    headerName: 'salesOrder.netAmount',
+    width: 110,
+    type: 'number',
+    align: 'right',
+  },
+  { field: 'discount', headerName: 'fields.discount', width: 100, type: 'number', align: 'right' },
   {
     field: 'discountPercent',
-    headerName: 'Discount percent',
+    headerName: 'documentCopy.fields.discountPercent',
     width: 125,
     type: 'number',
     align: 'right',

@@ -501,26 +501,26 @@ export function buildSalesOrderLineTabs(scope: Scope) {
           </Box>
         );
       case 'Foreign trade':
-        return <>{lineValue('intrastatCommodity', 'Intrastat commodity')}</>;
+        return <>{lineValue('intrastatCommodity', t('salesOrder.intrastatCommodity'))}</>;
       case 'Financial dimensions':
         return (
           <>
-            {lineValue('ledgerDimension', 'Ledger dimension')}
-            {lineValue('defaultDimension', 'Default dimension')}
+            {lineValue('ledgerDimension', t('salesOrder.ledgerDimension'))}
+            {lineValue('defaultDimension', t('salesOrder.defaultDimension'))}
           </>
         );
       case 'Loads':
         return (
           <>
             {lineValue('quantity', t('fields.quantity'))}
-            {lineValue('salesDeliverNow', 'Deliver now')}
-            {lineValue('inventDeliverNow', 'Inventory deliver now')}
-            {lineValue('remainSalesPhysical', 'Remaining physical quantity')}
-            {lineValue('remainSalesFinancial', 'Remaining financial quantity')}
+            {lineValue('salesDeliverNow', t('salesOrder.salesDeliverNow'))}
+            {lineValue('inventDeliverNow', t('salesOrder.inventDeliverNow'))}
+            {lineValue('remainSalesPhysical', t('salesOrder.remainSalesPhysical'))}
+            {lineValue('remainSalesFinancial', t('salesOrder.remainSalesFinancial'))}
           </>
         );
       case 'Financial tags':
-        return <>{lineValue('financialTag', 'Financial tag')}</>;
+        return <>{lineValue('financialTag', t('salesOrder.financialTag'))}</>;
       default:
         return (
           <>

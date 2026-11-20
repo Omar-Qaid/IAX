@@ -25,14 +25,19 @@ export function TaxItemGroupLinesPanel({
     () => [
       {
         field: 'taxCode',
-        headerName: 'Sales tax code',
+        headerName: 'taxSetup.fields.salesTaxCode',
         type: 'singleSelect',
         valueOptions: codeOptions,
         width: 205,
         editable: true,
       },
-      { field: 'taxValue', headerName: 'Percentage/Amount', type: 'number', width: 175 },
-      { field: 'taxCodeName', headerName: 'Name', minWidth: 260, flex: 1 },
+      {
+        field: 'taxValue',
+        headerName: 'taxSetup.fields.percentageOrAmount',
+        type: 'number',
+        width: 175,
+      },
+      { field: 'taxCodeName', headerName: 'fields.name', minWidth: 260, flex: 1 },
     ],
     [codeOptions]
   );

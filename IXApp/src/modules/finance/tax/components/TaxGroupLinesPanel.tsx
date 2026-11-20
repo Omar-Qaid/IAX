@@ -25,7 +25,7 @@ export function TaxGroupLinesPanel({
     () => [
       {
         field: 'taxCode',
-        headerName: 'Sales tax code',
+        headerName: 'taxSetup.fields.salesTaxCode',
         type: 'singleSelect',
         valueOptions: codeOptions,
         width: 175,
@@ -33,16 +33,21 @@ export function TaxGroupLinesPanel({
       },
       {
         field: 'exemptTax',
-        headerName: 'Exempt',
+        headerName: 'taxSetup.fields.exempt',
         type: 'boolean',
         width: 90,
         editable: true,
         valueGetter: ({ row }) => row.exemptTax === 1,
       },
-      { field: 'taxExemptCode', headerName: 'Exempt code', width: 145, editable: true },
+      {
+        field: 'taxExemptCode',
+        headerName: 'taxSetup.fields.exemptCode',
+        width: 145,
+        editable: true,
+      },
       {
         field: 'intracomVat',
-        headerName: 'Exempt code (zero-rated)',
+        headerName: 'taxSetup.fields.exemptCodeZeroRated',
         type: 'boolean',
         width: 190,
         editable: true,
@@ -50,7 +55,7 @@ export function TaxGroupLinesPanel({
       },
       {
         field: 'reverseCharge_W',
-        headerName: 'Reverse charge',
+        headerName: 'taxSetup.fields.reverseCharge',
         type: 'boolean',
         width: 130,
         editable: true,
@@ -58,7 +63,7 @@ export function TaxGroupLinesPanel({
       },
       {
         field: 'useTax',
-        headerName: 'Use tax',
+        headerName: 'taxSetup.fields.useTax',
         type: 'boolean',
         width: 95,
         editable: true,
@@ -66,12 +71,12 @@ export function TaxGroupLinesPanel({
       },
       {
         field: 'taxValue',
-        headerName: 'Percentage/Amount',
+        headerName: 'taxSetup.fields.percentageOrAmount',
         type: 'number',
         width: 150,
         editable: false,
       },
-      { field: 'taxCodeName', headerName: 'Name', minWidth: 180, flex: 1, editable: false },
+      { field: 'taxCodeName', headerName: 'fields.name', minWidth: 180, flex: 1, editable: false },
     ],
     [codeOptions]
   );

@@ -4,7 +4,13 @@ import { useQuery } from '@tanstack/react-query';
 import { SimpleListPage } from '@patterns/simple-list/SimpleListPage';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { sysBackgroundJobApi, type SysJobExecutionStatus } from '../api/sysBackgroundJobApi';
-const executionStatusLabels = ['Waiting', 'Executing', 'Completed', 'Failed', 'Cancelled'];
+const EXECUTION_STATUS_KEYS = [
+  'batchJob.executionStatuses.waiting',
+  'batchJob.executionStatuses.executing',
+  'batchJob.executionStatuses.completed',
+  'batchJob.executionStatuses.failed',
+  'batchJob.executionStatuses.cancelled',
+];
 const formatDateTime = (value: string | null, locale: string) =>
   value
     ? new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(
@@ -15,7 +21,7 @@ const executionTone = (status: SysJobExecutionStatus | null) =>
   status === 2 ? 'success' : status === 3 ? 'error' : status === 1 ? 'warning' : 'default';
 
 export function BatchJobHistory({ jobId }: { jobId: number }): React.ReactElement {
-  const { i18n } = useAppTranslation();
+  const { t, i18n } = useAppTranslation();
   const executions = useQuery({
     queryKey: ['background-job-executions', jobId],
     queryFn: ({ signal }) => sysBackgroundJobApi.executions(jobId, signal),
@@ -23,7 +29,7 @@ export function BatchJobHistory({ jobId }: { jobId: number }): React.ReactElemen
   });
   return (
     <SimpleListPage
-      title="Batch job history"
+      title={t('batchJob.historyTitle')}
       dataGridProps={{
         storageKey: 'administration.batch-job-history.reference-view',
         hideSidebar: false,
@@ -44,22 +50,22 @@ export function BatchJobHistory({ jobId }: { jobId: number }): React.ReactElemen
         },
       }}
       columns={[
-        { field: 'recId', headerName: 'Execution ID', width: 110 },
-        { field: 'jobId', headerName: 'Batch job ID', width: 120 },
+        { field: 'recId', headerName: 'batchJob.fields.executionId', width: 110 },
+        { field: 'jobId', headerName: 'batchJob.fields.batchJobId', width: 120 },
         {
           field: 'caption',
-          headerName: 'Job description',
+          headerName: 'batchJob.fields.jobDescription',
           width: 230,
           valueGetter: ({ row }) => row.caption ?? row.jobCaption ?? '',
         },
-        { field: 'batchCreatedBy', headerName: 'Created by', width: 150 },
+        { field: 'batchCreatedBy', headerName: 'batchJob.fields.createdBy', width: 150 },
         {
           field: 'executedBy',
-          headerName: 'Executed by',
+          headerName: 'batchJob.fields.executedBy',
           width: 150,
           valueGetter: ({ row }) => row.executedBy ?? row.triggeredByUserId ?? '',
         },
-        { field: 'batchGroup', headerName: 'Batch group', width: 120 },
+        { field: 'batchGroup', headerName: 'batchJob.fields.batchGroup', width: 120 },
         ...(
           [
             'alertsProcessed',
@@ -83,35 +89,35 @@ export function BatchJobHistory({ jobId }: { jobId: number }): React.ReactElemen
           headerName: field.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase()),
           width: 180,
         })),
-        { field: 'attempt', headerName: 'Attempt', width: 90 },
+        { field: 'attempt', headerName: 'batchJob.fields.attempt', width: 90 },
         {
           field: 'status',
-          headerName: 'Status',
+          headerName: 'common.status',
           width: 130,
           renderCell: ({ row }) => (
             <Chip
               size="small"
-              label={executionStatusLabels[row.status]}
+              label={t(EXECUTION_STATUS_KEYS[row.status] ?? '')}
               color={executionTone(row.status)}
             />
           ),
         },
         {
           field: 'startedAt',
-          headerName: 'Started',
+          headerName: 'batchJob.fields.started',
           width: 180,
           valueGetter: ({ row }) => formatDateTime(row.startedAt, i18n.language),
         },
         {
           field: 'completedAt',
-          headerName: 'Completed',
+          headerName: 'batchJob.fields.completed',
           width: 180,
           valueGetter: ({ row }) => formatDateTime(row.completedAt, i18n.language),
         },
-        { field: 'durationMs', headerName: 'Duration (ms)', width: 120 },
+        { field: 'durationMs', headerName: 'batchJob.fields.durationMs', width: 120 },
         {
           field: 'output',
-          headerName: 'Output / error',
+          headerName: 'batchJob.fields.outputOrError',
           width: 350,
           valueGetter: ({ row }) => row.errorMessage || row.output || '—',
         },

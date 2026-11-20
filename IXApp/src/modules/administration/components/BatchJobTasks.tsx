@@ -105,19 +105,19 @@ export function BatchJobTasks({
             hideToolbar
             hideSidebar
             columns={[
-              { field: 'taskName', headerName: 'Task', width: 220 },
-              { field: 'attempt', headerName: 'Attempt', width: 90 },
+              { field: 'taskName', headerName: 'batchJob.fields.task', width: 220 },
+              { field: 'attempt', headerName: 'batchJob.fields.attempt', width: 90 },
               {
                 field: 'status',
-                headerName: 'Status',
+                headerName: 'common.status',
                 width: 120,
                 valueGetter: ({ row }) =>
                   ['Pending', 'Running', 'Completed', 'Failed', 'Cancelled'][row.status],
               },
-              { field: 'startedAt', headerName: 'Started (UTC)', width: 210 },
+              { field: 'startedAt', headerName: 'batchJob.fields.startedUtc', width: 210 },
               {
                 field: 'output',
-                headerName: 'Output / error',
+                headerName: 'batchJob.fields.outputOrError',
                 width: 400,
                 valueGetter: ({ row }) => row.errorMessage || row.output || '',
               },
@@ -136,10 +136,10 @@ export function BatchJobTasks({
         showFilterRow={showFilterRow}
         rows={rows.map((row) => ({ ...row, id: String(row.recId) }))}
         columns={[
-          { field: 'recId', headerName: 'Task ID', width: 100 },
+          { field: 'recId', headerName: 'batchJob.fields.taskId', width: 100 },
           {
             field: 'taskStatus',
-            headerName: 'Status',
+            headerName: 'common.status',
             width: 120,
             valueGetter: ({ row }) => {
               const last = history.data
@@ -152,10 +152,15 @@ export function BatchJobTasks({
                   : 'Withhold';
             },
           },
-          { field: 'name', headerName: 'Task description', width: 240, editable: true },
+          {
+            field: 'name',
+            headerName: 'batchJob.fields.taskDescription',
+            width: 240,
+            editable: true,
+          },
           {
             field: 'serviceKey',
-            headerName: 'Service key',
+            headerName: 'batchJob.fields.serviceKey',
             width: 220,
             type: 'singleSelect',
             editable: true,
@@ -168,7 +173,7 @@ export function BatchJobTasks({
           },
           {
             field: 'classDescription',
-            headerName: 'Class description',
+            headerName: 'batchJob.fields.classDescription',
             width: 180,
             valueGetter: ({ row }) =>
               services.data?.find((service) => service.serviceKey === row.serviceKey)?.name ??
@@ -176,19 +181,19 @@ export function BatchJobTasks({
           },
           {
             field: 'company',
-            headerName: 'Company accounts',
+            headerName: 'batchJob.fields.companyAccounts',
             width: 120,
             valueGetter: () => job.tenantId ?? '—',
           },
           {
             field: 'conditions',
-            headerName: 'Has conditions',
+            headerName: 'batchJob.fields.hasConditions',
             width: 120,
             valueGetter: ({ row }) => (row.dependsOnTaskId ? 'Yes' : 'No'),
           },
           {
             field: 'startedAt',
-            headerName: 'Start date/time',
+            headerName: 'batchJob.fields.startDateTime',
             width: 180,
             valueGetter: ({ row }) =>
               history.data
@@ -197,7 +202,7 @@ export function BatchJobTasks({
           },
           {
             field: 'completedAt',
-            headerName: 'End date/time',
+            headerName: 'batchJob.fields.endDateTime',
             width: 180,
             valueGetter: ({ row }) =>
               history.data
@@ -206,14 +211,14 @@ export function BatchJobTasks({
           },
           {
             field: 'executionOrder',
-            headerName: 'Order',
+            headerName: 'batchJob.fields.order',
             type: 'number',
             width: 90,
             editable: true,
           },
           {
             field: 'dependsOnTaskId',
-            headerName: 'Depends on task',
+            headerName: 'batchJob.fields.dependsOnTask',
             type: 'singleSelect',
             width: 150,
             editable: true,
@@ -224,27 +229,27 @@ export function BatchJobTasks({
           },
           {
             field: 'maxRetryCount',
-            headerName: 'Task retries',
+            headerName: 'batchJob.fields.taskRetries',
             type: 'number',
             width: 120,
             editable: true,
           },
           {
             field: 'retryDelaySeconds',
-            headerName: 'Retry delay (seconds)',
+            headerName: 'batchJob.fields.retryDelaySeconds',
             type: 'number',
             width: 170,
             editable: true,
           },
           {
             field: 'payloadJson',
-            headerName: 'Parameters JSON',
+            headerName: 'batchJob.fields.parametersJson',
             width: 240,
             editable: true,
           },
           {
             field: 'isEnabled',
-            headerName: 'Enabled',
+            headerName: 'batchJob.fields.enabled',
             type: 'boolean',
             width: 90,
             editable: true,

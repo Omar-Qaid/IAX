@@ -56,10 +56,10 @@ export function InventItemGroupPostingGrid({
     });
   };
   const columns: ColumnDef<PostingRow>[] = [
-    { field: 'accountLabel', headerName: 'Account type', width: 285 },
+    { field: 'accountLabel', headerName: 'inventPosting.fields.accountType', width: 285 },
     {
       field: 'mainAccount',
-      headerName: 'Main account',
+      headerName: 'inventPosting.fields.mainAccount',
       minWidth: 220,
       flex: 1,
       renderCell: ({ row }) =>

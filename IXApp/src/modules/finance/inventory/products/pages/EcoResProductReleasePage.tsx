@@ -22,16 +22,16 @@ import { releasedProductApi, type ReleaseCompanyRecord } from '../api/releasedPr
 import { INVENTORY_ROUTE_PATHS } from '../../routes/inventoryRoutePaths';
 
 const productColumns: ColumnDef<EcoResProductRecord>[] = [
-  { field: 'name', headerName: 'Product name', width: 240 },
-  { field: 'productNumber', headerName: 'Product number', width: 170 },
-  { field: 'nameAlias', headerName: 'Arabic name', width: 240 },
-  { field: 'productType', headerName: 'Product type', width: 130 },
-  { field: 'productSubtype', headerName: 'Product subtype', width: 140 },
+  { field: 'name', headerName: 'product.fields.productName', width: 240 },
+  { field: 'productNumber', headerName: 'product.fields.productNumber', width: 170 },
+  { field: 'nameAlias', headerName: 'fields.arabicName', width: 240 },
+  { field: 'productType', headerName: 'product.fields.productType', width: 130 },
+  { field: 'productSubtype', headerName: 'product.fields.productSubtype', width: 140 },
 ];
 const companyColumns: ColumnDef<ReleaseCompanyRecord>[] = [
-  { field: 'code', headerName: 'Company', width: 150 },
-  { field: 'name', headerName: 'Legal entity name', width: 300 },
-  { field: 'nameAlias', headerName: 'Arabic name', width: 260 },
+  { field: 'code', headerName: 'common.company', width: 150 },
+  { field: 'name', headerName: 'organization.legalEntityName', width: 300 },
+  { field: 'nameAlias', headerName: 'fields.arabicName', width: 260 },
 ];
 
 export function EcoResProductReleasePage(): React.ReactElement {

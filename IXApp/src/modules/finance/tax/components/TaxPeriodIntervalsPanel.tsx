@@ -20,7 +20,7 @@ export function TaxPeriodIntervalsPanel({
     () => [
       {
         field: 'fromDate',
-        headerName: 'From date',
+        headerName: 'taxSetup.fields.fromDate',
         type: 'date',
         width: 170,
         editable: true,
@@ -28,7 +28,7 @@ export function TaxPeriodIntervalsPanel({
       },
       {
         field: 'toDate',
-        headerName: 'To date',
+        headerName: 'taxSetup.fields.toDate',
         type: 'date',
         width: 170,
         editable: true,
@@ -36,7 +36,7 @@ export function TaxPeriodIntervalsPanel({
       },
       {
         field: 'closed',
-        headerName: 'Blocked for settlement process',
+        headerName: 'taxSetup.fields.blockedForSettlement',
         type: 'boolean',
         minWidth: 230,
         flex: 1,
