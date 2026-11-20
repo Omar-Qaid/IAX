@@ -48,7 +48,7 @@ export function SalesOrderDetailsDialogs({ scope }: { scope: DialogScope }): Rea
       <DocumentTotalsDrawer
         open={totalsOpen}
         onClose={() => setTotalsOpen(false)}
-        title="Totals"
+        title={t('salesOrder.ui.totals')}
         viewLabel={t('pages.customers.standardView')}
         sections={totalsSections}
         okLabel={t('common.ok', 'OK')}

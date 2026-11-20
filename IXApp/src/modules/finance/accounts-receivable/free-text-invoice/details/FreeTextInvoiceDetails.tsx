@@ -149,37 +149,35 @@ export function FreeTextInvoiceDetails({
           />
         }
         actionPane={
-          <>
-            <CommitAwareCrudActions
-              editLabel={t('actions.edit')}
-              newLabel={t('actions.new')}
-              deleteLabel={t('actions.delete')}
-              saveLabel={t('actions.save')}
-              cancelLabel={t('actions.cancel')}
-              editPermission={PERMISSIONS.FREE_TEXT_INVOICE_EDIT}
-              newPermission={PERMISSIONS.FREE_TEXT_INVOICE_CREATE}
-              deletePermission={PERMISSIONS.FREE_TEXT_INVOICE_DELETE}
-              savePermission={
-                isNew ? PERMISSIONS.FREE_TEXT_INVOICE_CREATE : PERMISSIONS.FREE_TEXT_INVOICE_EDIT
-              }
-              canEdit={allowedEdit && !isNew && !busy}
-              canNew={!busy}
-              canDelete={!isNew && !invoice.posted && !busy}
-              editing={editing}
-              saving={busy}
-              onEdit={beginEdit}
-              onNew={() => navigate(paths.newFreeTextInvoice(invoice.customerAccount))}
-              onDelete={() => setConfirmation('delete')}
-              onSave={() => save()}
-              onCancel={() => {
-                grid.current?.cancelEdit();
-                changeDraft(null);
-                setError('');
-                if (isNew) navigate(paths.FREE_TEXT_INVOICES);
-                else navigate(paths.freeTextInvoice(invoice.recId), { replace: true });
-              }}
-            />
-          </>
+          <CommitAwareCrudActions
+            editLabel={t('actions.edit')}
+            newLabel={t('actions.new')}
+            deleteLabel={t('actions.delete')}
+            saveLabel={t('actions.save')}
+            cancelLabel={t('actions.cancel')}
+            editPermission={PERMISSIONS.FREE_TEXT_INVOICE_EDIT}
+            newPermission={PERMISSIONS.FREE_TEXT_INVOICE_CREATE}
+            deletePermission={PERMISSIONS.FREE_TEXT_INVOICE_DELETE}
+            savePermission={
+              isNew ? PERMISSIONS.FREE_TEXT_INVOICE_CREATE : PERMISSIONS.FREE_TEXT_INVOICE_EDIT
+            }
+            canEdit={allowedEdit && !isNew && !busy}
+            canNew={!busy}
+            canDelete={!isNew && !invoice.posted && !busy}
+            editing={editing}
+            saving={busy}
+            onEdit={beginEdit}
+            onNew={() => navigate(paths.newFreeTextInvoice(invoice.customerAccount))}
+            onDelete={() => setConfirmation('delete')}
+            onSave={() => save()}
+            onCancel={() => {
+              grid.current?.cancelEdit();
+              changeDraft(null);
+              setError('');
+              if (isNew) navigate(paths.FREE_TEXT_INVOICES);
+              else navigate(paths.freeTextInvoice(invoice.recId), { replace: true });
+            }}
+          />
         }
         ribbons={[
           {
@@ -216,7 +214,14 @@ export function FreeTextInvoiceDetails({
             ],
           },
         ]}
-        commands={[{ id: 'general', label: t('common.general'), disabled: true }]}
+        commands={[
+          {
+            id: 'general',
+            label: t('common.general'),
+            disabled: true,
+            tooltip: t('common.notAvailableYet'),
+          },
+        ]}
         onSearch={() => {
           setTab('lines');
           setFilterVisible((value) => !value);

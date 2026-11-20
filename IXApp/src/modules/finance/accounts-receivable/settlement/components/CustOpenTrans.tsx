@@ -20,6 +20,7 @@ import { useAuth } from '@core/auth/useAuth';
 import { useCompanyStore } from '@core/company/useCompanyStore';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { PERMISSIONS } from '@core/permissions/permissions';
+import { UnavailableCommandButton } from '@shared/components/action-pane/UnavailableCommandButton';
 import { AppActionDrawer } from '@shared/components/dialogs/AppActionDrawer';
 import { DataGrid } from '@shared/components/data-grid/DataGrid';
 import type { ColumnDef } from '@shared/components/data-grid/types';
@@ -261,7 +262,7 @@ function SettlementDialog({
           <Button variant="contained" disabled={!postEnabled} onClick={() => void post()}>
             {tr('post')}
           </Button>
-          <Button disabled>{tr('settleRemainder')}</Button>
+          <UnavailableCommandButton label={tr('settleRemainder')} />
           <Button variant="outlined" disabled={posting} onClick={onClose}>
             {t('actions.cancel', 'Cancel')}
           </Button>
@@ -375,7 +376,7 @@ function SettlementDialog({
                         </MenuItem>
                       ))}
                     </TextField>
-                    <Button disabled>{tr('paymentSchedule')}</Button>
+                    <UnavailableCommandButton label={tr('paymentSchedule')} />
                     <Button disabled={!active || posting} onClick={() => setTab('general')}>
                       {tr('inquiry')}
                     </Button>
@@ -386,9 +387,7 @@ function SettlementDialog({
                       'functions',
                       'deductions',
                     ].map((key) => (
-                      <Button key={key} disabled>
-                        {tr(key)}
-                      </Button>
+                      <UnavailableCommandButton key={key} label={tr(key)} />
                     ))}
                     <Button disabled={disabled} onClick={() => void refresh()}>
                       {tr('refresh')}

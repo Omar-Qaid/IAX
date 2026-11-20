@@ -23,6 +23,7 @@ import {
 } from '../api/salesOrderConfirmationApi';
 import { salesOrderQueryKeys } from '../../queries/accountsReceivableQueryKeys';
 import { useCompanyStore } from '@core/company/useCompanyStore';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 
 interface Props {
   open: boolean;
@@ -51,14 +52,20 @@ const money = (value: number, currency: string) =>
   `${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
 
 const overviewColumns: ColumnDef<OverviewRow>[] = [
-  { field: 'update', headerName: 'Update', width: 110 },
-  { field: 'salesId', headerName: 'Sales order', width: 150 },
-  { field: 'customerName', headerName: 'Name', minWidth: 220, flex: 1 },
-  { field: 'currencyCode', headerName: 'Currency', width: 100 },
-  { field: 'quantity', headerName: 'Quantity', width: 110, type: 'number', align: 'right' },
+  { field: 'update', headerName: 'salesOrder.ui.update', width: 110 },
+  { field: 'salesId', headerName: 'salesOrder.ui.salesOrder', width: 150 },
+  { field: 'customerName', headerName: 'salesOrder.ui.name', minWidth: 220, flex: 1 },
+  { field: 'currencyCode', headerName: 'salesOrder.ui.currency', width: 100 },
+  {
+    field: 'quantity',
+    headerName: 'salesOrder.ui.quantity',
+    width: 110,
+    type: 'number',
+    align: 'right',
+  },
   {
     field: 'netAmount',
-    headerName: 'Net amount',
+    headerName: 'salesOrder.ui.netAmount',
     width: 130,
     type: 'number',
     align: 'right',
@@ -66,7 +73,7 @@ const overviewColumns: ColumnDef<OverviewRow>[] = [
   },
   {
     field: 'taxAmount',
-    headerName: 'Tax',
+    headerName: 'salesOrder.ui.tax',
     width: 120,
     type: 'number',
     align: 'right',
@@ -74,7 +81,7 @@ const overviewColumns: ColumnDef<OverviewRow>[] = [
   },
   {
     field: 'totalAmount',
-    headerName: 'Total',
+    headerName: 'salesOrder.ui.total',
     width: 130,
     type: 'number',
     align: 'right',
@@ -92,6 +99,7 @@ export function SalesOrderConfirmationDialog({
   onClose,
   onPosted,
 }: Props): React.ReactElement {
+  const { t } = useAppTranslation();
   const company = useCompanyStore((state) => state.currentCompany);
   const queryClient = useQueryClient();
   const [confirmationDate, setConfirmationDate] = useState(() =>
@@ -121,7 +129,7 @@ export function SalesOrderConfirmationDialog({
     return [
       {
         id: header.id,
-        update: 'Confirmation',
+        update: t('salesOrder.ui.confirmation'),
         salesId,
         customerName,
         currencyCode: header.currencyCode,
@@ -131,19 +139,30 @@ export function SalesOrderConfirmationDialog({
         totalAmount: header.confirmAmount,
       },
     ];
-  }, [customerName, previewQuery.data?.header, salesId]);
+  }, [customerName, previewQuery.data?.header, salesId, t]);
 
   const lineColumns = useMemo<ColumnDef<SalesOrderConfirmationLine>[]>(
     () => [
-      { field: 'salesId', headerName: 'Sales order', width: 150, valueGetter: () => salesId },
-      { field: 'itemId', headerName: 'Item number', width: 140 },
-      { field: 'name', headerName: 'Description', minWidth: 220, flex: 1 },
-      { field: 'inventLocationId', headerName: 'Warehouse', width: 140 },
-      { field: 'wmsLocationId', headerName: 'Location', width: 130 },
-      { field: 'qty', headerName: 'Update', width: 110, type: 'number', align: 'right' },
+      {
+        field: 'salesId',
+        headerName: 'salesOrder.ui.salesOrder',
+        width: 150,
+        valueGetter: () => salesId,
+      },
+      { field: 'itemId', headerName: 'salesOrder.ui.itemNumber', width: 140 },
+      { field: 'name', headerName: 'salesOrder.ui.description', minWidth: 220, flex: 1 },
+      { field: 'inventLocationId', headerName: 'salesOrder.ui.warehouse', width: 140 },
+      { field: 'wmsLocationId', headerName: 'salesOrder.ui.location', width: 130 },
+      {
+        field: 'qty',
+        headerName: 'salesOrder.ui.update',
+        width: 110,
+        type: 'number',
+        align: 'right',
+      },
       {
         field: 'salesPrice',
-        headerName: 'Unit price',
+        headerName: 'salesOrder.ui.unitPrice',
         width: 120,
         type: 'number',
         align: 'right',
@@ -152,7 +171,7 @@ export function SalesOrderConfirmationDialog({
       },
       {
         field: 'lineAmount',
-        headerName: 'Net amount',
+        headerName: 'salesOrder.ui.netAmount',
         width: 130,
         type: 'number',
         align: 'right',
@@ -194,13 +213,13 @@ export function SalesOrderConfirmationDialog({
     <AppActionDrawer
       open={open}
       onClose={onClose}
-      title={`${mode === 'proForma' ? 'Pro forma confirmation' : 'Confirm sales order'} · ${salesId}`}
+      title={`${mode === 'proForma' ? t('salesOrder.ui.proFormaConfirmation') : t('salesOrder.ui.confirmSalesOrder')} · ${salesId}`}
       width={1500}
       busy={posting}
       actions={
         <>
           <Button onClick={onClose} disabled={posting}>
-            Cancel
+            {t('actions.cancel')}
           </Button>
           <Button
             variant="contained"
@@ -212,7 +231,11 @@ export function SalesOrderConfirmationDialog({
               (mode === 'confirmation' && postingEnabled && (!canPost || !confirmationDate))
             }
           >
-            {posting ? 'Posting…' : mode === 'proForma' || !postingEnabled ? 'Close preview' : 'OK'}
+            {posting
+              ? t('salesOrder.ui.postingInProgress')
+              : mode === 'proForma' || !postingEnabled
+                ? t('salesOrder.ui.closePreview')
+                : t('salesOrder.ui.ok')}
           </Button>
         </>
       }
@@ -233,12 +256,12 @@ export function SalesOrderConfirmationDialog({
 
         <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography sx={{ fontWeight: 600 }}>Parameters</Typography>
+            <Typography sx={{ fontWeight: 600 }}>{t('salesOrder.ui.parameters')}</Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ pt: 0 }}>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
               <TextField
-                label="Confirmation date"
+                label={t('salesOrder.ui.confirmationDate')}
                 type="date"
                 size="small"
                 value={confirmationDate}
@@ -248,7 +271,7 @@ export function SalesOrderConfirmationDialog({
               />
               {mode === 'confirmation' && (
                 <FormControlLabel
-                  label="Posting"
+                  label={t('salesOrder.ui.posting')}
                   control={
                     <Switch
                       checked={postingEnabled}
@@ -258,14 +281,14 @@ export function SalesOrderConfirmationDialog({
                   }
                 />
               )}
-              <Typography variant="body2">Quantity: All</Typography>
+              <Typography variant="body2">{`${t('salesOrder.ui.quantity')}: ${t('common.all')}`}</Typography>
             </Box>
           </AccordionDetails>
         </Accordion>
 
         <Accordion disableGutters defaultExpanded>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography sx={{ fontWeight: 600 }}>Overview</Typography>
+            <Typography sx={{ fontWeight: 600 }}>{t('salesOrder.ui.overview')}</Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ pt: 0 }}>
             <DataGrid
@@ -290,16 +313,16 @@ export function SalesOrderConfirmationDialog({
 
         <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography sx={{ fontWeight: 600 }}>Setup</Typography>
+            <Typography sx={{ fontWeight: 600 }}>{t('salesOrder.ui.setup')}</Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ pt: 0 }}>
-            <Typography variant="body2">Quantity: All</Typography>
+            <Typography variant="body2">{`${t('salesOrder.ui.quantity')}: ${t('common.all')}`}</Typography>
           </AccordionDetails>
         </Accordion>
 
         <Accordion disableGutters defaultExpanded>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography sx={{ fontWeight: 600 }}>Lines</Typography>
+            <Typography sx={{ fontWeight: 600 }}>{t('salesOrder.ui.lines')}</Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ pt: 0 }}>
             <DataGrid

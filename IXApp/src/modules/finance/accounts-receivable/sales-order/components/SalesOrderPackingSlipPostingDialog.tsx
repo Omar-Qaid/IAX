@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { UnavailableCommandButton } from '@shared/components/action-pane/UnavailableCommandButton';
 import { AppActionDrawer } from '@shared/components/dialogs/AppActionDrawer';
 import { DataGrid } from '@shared/components/data-grid/DataGrid';
 import type { ColumnDef } from '@shared/components/data-grid/types';
@@ -28,6 +29,7 @@ import {
 } from '../api/salesOrderPackingSlipApi';
 import { salesOrderQueryKeys } from '../../queries/accountsReceivableQueryKeys';
 import { useCompanyStore } from '@core/company/useCompanyStore';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 
 interface Props {
   open: boolean;
@@ -55,13 +57,13 @@ const dateToday = () => {
 };
 
 const overviewColumns: ColumnDef<OverviewRow>[] = [
-  { field: 'update', headerName: 'Update', width: 145 },
-  { field: 'customerPackingSlip', headerName: 'Customer packing slip', width: 160 },
-  { field: 'shipmentNumber', headerName: 'Shipment number', width: 150 },
-  { field: 'salesId', headerName: 'Sales order', width: 155 },
-  { field: 'siteId', headerName: 'Site', width: 130 },
-  { field: 'customerName', headerName: 'Name', minWidth: 220, flex: 1 },
-  { field: 'currencyCode', headerName: 'Currency', width: 110 },
+  { field: 'update', headerName: 'salesOrder.ui.update', width: 145 },
+  { field: 'customerPackingSlip', headerName: 'salesOrder.ui.customerPackingSlip', width: 160 },
+  { field: 'shipmentNumber', headerName: 'salesOrder.ui.shipmentNumber', width: 150 },
+  { field: 'salesId', headerName: 'salesOrder.ui.salesOrder', width: 155 },
+  { field: 'siteId', headerName: 'salesOrder.ui.site', width: 130 },
+  { field: 'customerName', headerName: 'salesOrder.ui.name', minWidth: 220, flex: 1 },
+  { field: 'currencyCode', headerName: 'salesOrder.ui.currency', width: 110 },
 ];
 
 export function SalesOrderPackingSlipPostingDialog({
@@ -72,6 +74,7 @@ export function SalesOrderPackingSlipPostingDialog({
   onClose,
   onPosted,
 }: Props): React.ReactElement {
+  const { t } = useAppTranslation();
   const company = useCompanyStore((state) => state.currentCompany);
   const queryClient = useQueryClient();
   const [deliveryDate, setDeliveryDate] = useState(dateToday);
@@ -121,23 +124,28 @@ export function SalesOrderPackingSlipPostingDialog({
 
   const lineColumns = useMemo<ColumnDef<PackingSlipPostingLine>[]>(
     () => [
-      { field: 'salesCategory', headerName: 'Sales category', width: 170 },
-      { field: 'name', headerName: 'Text', width: 220 },
-      { field: 'salesId', headerName: 'Sales order', width: 150, valueGetter: () => salesId },
-      { field: 'inventLocationId', headerName: 'Warehouse', width: 155 },
-      { field: 'wmsLocationId', headerName: 'Location', width: 145 },
+      { field: 'salesCategory', headerName: 'salesOrder.ui.salesCategory', width: 170 },
+      { field: 'name', headerName: 'salesOrder.ui.text', width: 220 },
+      {
+        field: 'salesId',
+        headerName: 'salesOrder.ui.salesOrder',
+        width: 150,
+        valueGetter: () => salesId,
+      },
+      { field: 'inventLocationId', headerName: 'salesOrder.ui.warehouse', width: 155 },
+      { field: 'wmsLocationId', headerName: 'salesOrder.ui.location', width: 145 },
       {
         field: 'catchWeightQuantity',
-        headerName: 'CW update',
+        headerName: 'salesOrder.ui.cwUpdate',
         width: 120,
         type: 'number',
         align: 'right',
       },
-      { field: 'productNumber', headerName: 'Product number', width: 190 },
-      { field: 'itemId', headerName: 'Item number', width: 160 },
+      { field: 'productNumber', headerName: 'salesOrder.ui.productNumber', width: 190 },
+      { field: 'itemId', headerName: 'salesOrder.ui.itemNumber', width: 160 },
       {
         field: 'quantity',
-        headerName: 'Update',
+        headerName: 'salesOrder.ui.update',
         width: 125,
         align: 'right',
         renderCell: ({ row }) => (
@@ -154,7 +162,7 @@ export function SalesOrderPackingSlipPostingDialog({
                 min: 0,
                 max: row.quantity,
                 step: 'any',
-                'aria-label': `Update quantity for ${row.itemId}`,
+                'aria-label': t('salesOrder.ui.updateQuantityFor', { itemId: row.itemId }),
               },
             }}
             sx={{
@@ -166,7 +174,7 @@ export function SalesOrderPackingSlipPostingDialog({
       },
       {
         field: 'netAmount',
-        headerName: 'Net amount',
+        headerName: 'salesOrder.ui.netAmount',
         width: 135,
         type: 'number',
         align: 'right',
@@ -180,7 +188,7 @@ export function SalesOrderPackingSlipPostingDialog({
         },
       },
     ],
-    [posting, postingEnabled, quantities, salesId]
+    [posting, postingEnabled, quantities, salesId, t]
   );
 
   const selectedLines = (preview?.lines ?? [])
@@ -244,7 +252,7 @@ export function SalesOrderPackingSlipPostingDialog({
     <AppActionDrawer
       open={open}
       onClose={onClose}
-      title="Packing slip posting"
+      title={t('salesOrder.ui.packingSlipPosting')}
       width={1770}
       busy={posting}
       actions={
@@ -255,11 +263,9 @@ export function SalesOrderPackingSlipPostingDialog({
             </Alert>
           )}
           <Button onClick={onClose} disabled={posting}>
-            Cancel
+            {t('actions.cancel')}
           </Button>
-          <Button variant="outlined" disabled>
-            Batch
-          </Button>
+          <UnavailableCommandButton label={t('salesOrder.ui.batch')} />
           <Button
             variant="contained"
             onClick={() => void submit()}
@@ -271,45 +277,42 @@ export function SalesOrderPackingSlipPostingDialog({
                 (!canPost || !deliveryDate || selectedLines.length === 0 || hasInvalidQuantity))
             }
           >
-            {posting ? 'Posting…' : postingEnabled ? 'OK' : 'Close preview'}
+            {posting
+              ? t('salesOrder.ui.postingInProgress')
+              : postingEnabled
+                ? t('salesOrder.ui.ok')
+                : t('salesOrder.ui.closePreview')}
           </Button>
         </>
       }
     >
       <Stack spacing={1} sx={{ minHeight: '100%' }}>
         <Typography variant="body2" color="text.secondary">
-          Standard view
+          {t('common.standardView')}
         </Typography>
         <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-          <Button size="small" disabled>
-            Arrange
-          </Button>
-          <Button size="small" disabled>
-            Select
-          </Button>
-          <Button size="small" disabled endIcon={<ExpandMoreIcon />}>
-            Printer setup
-          </Button>
+          <UnavailableCommandButton label={t('salesOrder.ui.arrange')} />
+          <UnavailableCommandButton label={t('salesOrder.ui.select')} />
+          <UnavailableCommandButton label={t('salesOrder.ui.printerSetup')} />
         </Stack>
         {previewQuery.error instanceof Error && (
           <Alert severity="error">{previewQuery.error.message}</Alert>
         )}
-        <Alert severity="info">
-          Posting records the delivery and updates inventory. Ledger posting follows the item's
-          model group settings.
-        </Alert>
+        <Alert severity="info">{t('salesOrder.ui.packingSlipPostingHint')}</Alert>
 
         <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography sx={{ fontWeight: 600 }}>Parameters</Typography>
+            <Typography sx={{ fontWeight: 600 }}>{t('salesOrder.ui.parameters')}</Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ pt: 0 }}>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
               <FormControl size="small" sx={{ minWidth: 180 }}>
-                <InputLabel id="packing-slip-quantity-mode-label">Quantity</InputLabel>
+                <InputLabel id="packing-slip-quantity-mode-label">
+                  {t('salesOrder.ui.quantity')}
+                </InputLabel>
                 <Select
                   labelId="packing-slip-quantity-mode-label"
-                  label="Quantity"
+                  label={t('salesOrder.ui.quantity')}
                   value={quantityMode}
                   disabled={posting}
                   onChange={(event) => {
@@ -317,13 +320,13 @@ export function SalesOrderPackingSlipPostingDialog({
                     setQuantities({});
                   }}
                 >
-                  <MenuItem value="all">All</MenuItem>
-                  <MenuItem value="deliverNow">Deliver now</MenuItem>
-                  <MenuItem value="picked">Picked</MenuItem>
+                  <MenuItem value="all">{t('common.all')}</MenuItem>
+                  <MenuItem value="deliverNow">{t('salesOrder.ui.deliverNow')}</MenuItem>
+                  <MenuItem value="picked">{t('salesOrder.ui.picked')}</MenuItem>
                 </Select>
               </FormControl>
               <TextField
-                label="Date"
+                label={t('salesOrder.ui.date')}
                 type="date"
                 size="small"
                 value={deliveryDate}
@@ -332,7 +335,7 @@ export function SalesOrderPackingSlipPostingDialog({
                 slotProps={{ inputLabel: { shrink: true } }}
               />
               <FormControlLabel
-                label="Posting"
+                label={t('salesOrder.ui.posting')}
                 control={
                   <Switch
                     checked={postingEnabled}
@@ -347,25 +350,15 @@ export function SalesOrderPackingSlipPostingDialog({
 
         <Accordion disableGutters defaultExpanded>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography sx={{ fontWeight: 600 }}>Overview</Typography>
+            <Typography sx={{ fontWeight: 600 }}>{t('salesOrder.ui.overview')}</Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ pt: 0 }}>
             <Stack direction="row" spacing={1} sx={{ mb: 0.5 }}>
-              <Button size="small" disabled>
-                Add
-              </Button>
-              <Button size="small" disabled>
-                Remove
-              </Button>
-              <Button size="small" disabled>
-                Tracking information
-              </Button>
-              <Button size="small" disabled>
-                Sales tax
-              </Button>
-              <Button size="small" disabled>
-                Shipments
-              </Button>
+              <UnavailableCommandButton label={t('salesOrder.ui.add')} />
+              <UnavailableCommandButton label={t('salesOrder.ui.remove')} />
+              <UnavailableCommandButton label={t('salesOrder.ui.trackingInformation')} />
+              <UnavailableCommandButton label={t('salesOrder.ui.salesTax')} />
+              <UnavailableCommandButton label={t('salesOrder.ui.shipments')} />
             </Stack>
             <DataGrid
               rows={overviewRows}
@@ -389,37 +382,24 @@ export function SalesOrderPackingSlipPostingDialog({
 
         <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography sx={{ fontWeight: 600 }}>Setup</Typography>
+            <Typography sx={{ fontWeight: 600 }}>{t('salesOrder.ui.setup')}</Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ pt: 0 }}>
-            <Typography variant="body2">
-              Physical inventory update only. Financial inventory and invoice balances remain
-              unchanged.
-            </Typography>
+            <Typography variant="body2">{t('salesOrder.ui.packingSlipSetupHint')}</Typography>
           </AccordionDetails>
         </Accordion>
 
         <Accordion disableGutters defaultExpanded>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography sx={{ fontWeight: 600 }}>Lines</Typography>
+            <Typography sx={{ fontWeight: 600 }}>{t('salesOrder.ui.lines')}</Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ pt: 0 }}>
             <Stack direction="row" spacing={1} sx={{ mb: 0.5 }}>
-              <Button size="small" disabled>
-                Delete
-              </Button>
-              <Button size="small" disabled>
-                Sales order line
-              </Button>
-              <Button size="small" disabled>
-                Inventory
-              </Button>
-              <Button size="small" disabled>
-                Reset batch disposition code
-              </Button>
-              <Button size="small" disabled>
-                Update line
-              </Button>
+              <UnavailableCommandButton label={t('salesOrder.ui.delete')} />
+              <UnavailableCommandButton label={t('salesOrder.ui.salesOrderLine')} />
+              <UnavailableCommandButton label={t('salesOrder.ui.inventory')} />
+              <UnavailableCommandButton label={t('salesOrder.ui.resetBatchDispositionCode')} />
+              <UnavailableCommandButton label={t('salesOrder.ui.updateLine')} />
             </Stack>
             <DataGrid
               rows={preview?.lines ?? []}

@@ -16,6 +16,18 @@ import { buildSalesOrderLineTabs } from '../lines/SalesOrderLineTabs';
 import { buildSalesOrderHeaderSections } from './SalesOrderHeaderSections';
 
 /** Sales-order workflows presented using the shared master-details pattern. */
+/** Reference command tabs of the D365 sales order; each one awaits its own page. */
+const SALES_ORDER_COMMAND_IDS = [
+  'manage',
+  'pickAndPack',
+  'invoice',
+  'commerce',
+  'general',
+  'warehouse',
+  'transportation',
+  'creditManagement',
+] as const;
+
 export function SalesOrderDetails({
   detailPath = ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrder,
   listPath = ACCOUNTS_RECEIVABLE_ROUTE_PATHS.SALES_ORDERS,
@@ -122,16 +134,12 @@ export function SalesOrderDetails({
           },
           { id: 'sell', label: t('salesOrder.ui.sell', 'Sell'), groups: sellRibbonGroups },
         ]}
-        commands={[
-          'Manage',
-          'Pick and pack',
-          'Invoice',
-          'Commerce',
-          'General',
-          'Warehouse',
-          'Transportation',
-          'Credit management',
-        ].map((label) => ({ id: label, label, disabled: true }))}
+        commands={SALES_ORDER_COMMAND_IDS.map((id) => ({
+          id,
+          label: t(`salesOrder.commands.${id}`),
+          disabled: true,
+          tooltip: t('common.notAvailableYet'),
+        }))}
         onSearch={() => {
           setTab('lines');
           setLineFilterVisible((visible) => !visible);

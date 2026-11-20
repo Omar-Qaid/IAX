@@ -40,6 +40,8 @@ export interface MasterDetailCommand {
   label: string;
   icon?: ReactNode;
   disabled?: boolean;
+  /** Hover text, used to say why a command is unavailable. */
+  tooltip?: string;
   onClick?: () => void;
 }
 

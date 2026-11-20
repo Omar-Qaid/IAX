@@ -55,7 +55,18 @@ export const ActionPaneButton: React.FC<ActionPaneButtonProps> = ({
   );
 
   if (tooltip) {
-    return <Tooltip title={tooltip}>{buttonElement}</Tooltip>;
+    // A disabled button fires no pointer events, so the tooltip needs an enabled wrapper;
+    // this is the case that explains why a command is unavailable.
+    const isDisabled = disabled || loading || !onClick;
+    return (
+      <Tooltip title={tooltip}>
+        {isDisabled ? (
+          <span style={{ display: 'inline-flex' }}>{buttonElement}</span>
+        ) : (
+          buttonElement
+        )}
+      </Tooltip>
+    );
   }
 
   return buttonElement;

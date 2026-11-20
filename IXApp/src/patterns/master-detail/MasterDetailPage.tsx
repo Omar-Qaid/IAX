@@ -311,6 +311,7 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
                 actionId={command.id}
                 label={command.label}
                 icon={command.icon}
+                tooltip={command.tooltip}
                 disabled={editing || command.disabled}
                 onClick={command.onClick}
               />

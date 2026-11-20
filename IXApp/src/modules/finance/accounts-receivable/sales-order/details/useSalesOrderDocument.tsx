@@ -152,7 +152,7 @@ export function useSalesOrderDocument() {
     }
   };
 
-  const rawSalesOrderRibbonGroups: ActionPaneRibbonGroup[] = [
+  const salesOrderRibbonGroups: ActionPaneRibbonGroup[] = [
     {
       id: 'new',
       label: t('salesOrder.ui.new', 'New'),
@@ -440,17 +440,6 @@ export function useSalesOrderDocument() {
       ],
     },
   ];
-
-  const salesOrderRibbonGroups: ActionPaneRibbonGroup[] = rawSalesOrderRibbonGroups.map(
-    (group) => ({
-      ...group,
-      actions: group.actions.map((action) =>
-        action.disabled && !action.onClick && !action.items
-          ? { ...action, tooltip: action.tooltip ?? t('salesOrder.notImplemented') }
-          : action
-      ),
-    })
-  );
 
   const startHeaderEdit = () => {
     if (!order || !canEditHeader) return;

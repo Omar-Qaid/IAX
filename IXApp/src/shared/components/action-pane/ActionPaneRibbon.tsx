@@ -3,6 +3,7 @@ import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import { Box, Button, IconButton, Menu, MenuItem, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 
 export interface ActionPaneRibbonAction {
   id: string;
@@ -43,10 +44,17 @@ export function ActionPaneRibbon({
   pinLabel = 'Pin action pane',
   unpinLabel = 'Unpin action pane',
 }: ActionPaneRibbonProps): React.ReactElement {
+  const { t } = useTranslation();
   const [menu, setMenu] = React.useState<{
     anchor: HTMLElement;
     action: ActionPaneRibbonAction;
   } | null>(null);
+  // A group whose actions are all withheld (by permission, say) would otherwise render as an
+  // empty labelled column with a divider beside it.
+  const visibleGroups = React.useMemo(
+    () => groups.filter((group) => group.actions.length > 0),
+    [groups]
+  );
   return (
     <Box
       sx={{
@@ -61,7 +69,7 @@ export function ActionPaneRibbon({
         bgcolor: 'background.paper',
       }}
     >
-      {groups.map((group, groupIndex) => (
+      {visibleGroups.map((group, groupIndex) => (
         <Box
           key={group.id}
           sx={{
@@ -69,7 +77,9 @@ export function ActionPaneRibbon({
             px: 1.25,
             // The last group has no trailing divider, so no rule floats before the pin.
             borderInlineEnd: (theme) =>
-              groupIndex === groups.length - 1 ? 'none' : `1px solid ${theme.palette.divider}`,
+              groupIndex === visibleGroups.length - 1
+                ? 'none'
+                : `1px solid ${theme.palette.divider}`,
           }}
         >
           <Typography
@@ -89,38 +99,50 @@ export function ActionPaneRibbon({
             }}
           >
             {group.actions.map((action) => (
-              <Button
+              <Box
                 key={action.id}
-                disabled={action.disabled}
-                title={action.tooltip}
-                onClick={
-                  action.items
-                    ? (event) => setMenu({ anchor: event.currentTarget, action })
-                    : action.onClick
+                component="span"
+                sx={{ display: 'inline-flex' }}
+                // A disabled button fires no pointer events, so the hover text lives on the
+                // wrapper. Reference commands with no handler say so rather than looking broken.
+                title={
+                  action.tooltip ??
+                  (action.disabled && !action.onClick && !action.items
+                    ? t('common.notAvailableYet')
+                    : undefined)
                 }
-                aria-haspopup={action.items ? 'menu' : undefined}
-                aria-expanded={action.items ? menu?.action.id === action.id : undefined}
-                endIcon={action.items ? <ArrowDropDownIcon /> : undefined}
-                size="small"
-                variant="text"
-                sx={{
-                  justifyContent: 'flex-start',
-                  minWidth: 0,
-                  minHeight: 23,
-                  px: 0.5,
-                  py: 0,
-                  color: 'text.primary',
-                  fontSize: 12,
-                  fontWeight: 400,
-                  lineHeight: 1.2,
-                  textTransform: 'none',
-                  whiteSpace: 'nowrap',
-                  border: '1px solid transparent',
-                  '&:focus-visible': { borderColor: 'primary.main' },
-                }}
               >
-                {action.label}
-              </Button>
+                <Button
+                  disabled={action.disabled}
+                  onClick={
+                    action.items
+                      ? (event) => setMenu({ anchor: event.currentTarget, action })
+                      : action.onClick
+                  }
+                  aria-haspopup={action.items ? 'menu' : undefined}
+                  aria-expanded={action.items ? menu?.action.id === action.id : undefined}
+                  endIcon={action.items ? <ArrowDropDownIcon /> : undefined}
+                  size="small"
+                  variant="text"
+                  sx={{
+                    justifyContent: 'flex-start',
+                    minWidth: 0,
+                    minHeight: 23,
+                    px: 0.5,
+                    py: 0,
+                    color: 'text.primary',
+                    fontSize: 12,
+                    fontWeight: 400,
+                    lineHeight: 1.2,
+                    textTransform: 'none',
+                    whiteSpace: 'nowrap',
+                    border: '1px solid transparent',
+                    '&:focus-visible': { borderColor: 'primary.main' },
+                  }}
+                >
+                  {action.label}
+                </Button>
+              </Box>
             ))}
           </Box>
         </Box>
