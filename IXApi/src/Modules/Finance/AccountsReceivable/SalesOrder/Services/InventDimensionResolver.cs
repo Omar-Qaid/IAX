@@ -66,71 +66,81 @@ public sealed class InventDimensionResolver : IInventDimensionResolver
             dimension9TzId.ToString(CultureInfo.InvariantCulture));
         var canonicalBytes = Encoding.UTF8.GetBytes(canonical);
         var sha1 = Convert.ToHexString(SHA1.HashData(canonicalBytes));
-        var ownsTransaction = _dbContext.Context.Database.IsRelational()
-            && _dbContext.Context.Database.CurrentTransaction is null;
-        if (ownsTransaction) await _dbContext.BeginTransactionAsync(cancellationToken);
-        try
+        // The lookup-or-insert must be atomic, so it runs inside a transaction. When a caller
+        // already has one open we join it; when we open our own it has to be started inside the
+        // execution strategy's retry unit, because SqlServerRetryingExecutionStrategy rejects a
+        // user-initiated transaction opened outside it.
+        async Task<InventDim> ResolveCombinationAsync()
         {
-        if (_dbContext.Context.Database.ProviderName?.Contains("SqlServer", StringComparison.OrdinalIgnoreCase) == true)
-            await LockCombinationAsync("InventDim:" + sha1, cancellationToken);
-        var existing = await _dbContext.Context.Set<InventDim>().FirstOrDefaultAsync(item =>
-            item.DataAreaId == dataAreaId && item.InventSiteId == inventSiteId
-            && item.InventLocationId == inventLocationId && item.ConfigId == configId
-            && item.InventSizeId == sizeId && item.InventColorId == colorId
-            && item.InventStyleId == styleId && item.InventVersionId == versionId
-            && item.InventBatchId == batchId && item.InventSerialId == serialId
-            && item.InventStatusId == statusId && item.WmsLocationId == locationId
-            && item.LicensePlateId == licensePlateId && item.InventDimension10 == dimension10
-            && item.InventDimension9 == dimension9 && item.InventDimension9TzId == dimension9TzId,
-            cancellationToken);
-        if (existing != null)
-        {
-            if (ownsTransaction) await _dbContext.CommitTransactionAsync(cancellationToken);
-            return existing;
+            if (_dbContext.Context.Database.ProviderName?.Contains("SqlServer", StringComparison.OrdinalIgnoreCase) == true)
+                await LockCombinationAsync("InventDim:" + sha1, cancellationToken);
+            var existing = await _dbContext.Context.Set<InventDim>().FirstOrDefaultAsync(item =>
+                item.DataAreaId == dataAreaId && item.InventSiteId == inventSiteId
+                && item.InventLocationId == inventLocationId && item.ConfigId == configId
+                && item.InventSizeId == sizeId && item.InventColorId == colorId
+                && item.InventStyleId == styleId && item.InventVersionId == versionId
+                && item.InventBatchId == batchId && item.InventSerialId == serialId
+                && item.InventStatusId == statusId && item.WmsLocationId == locationId
+                && item.LicensePlateId == licensePlateId && item.InventDimension10 == dimension10
+                && item.InventDimension9 == dimension9 && item.InventDimension9TzId == dimension9TzId,
+                cancellationToken);
+            if (existing != null) return existing;
+
+            var inventDimId = await _numbers.NextInventDimIdAsync(cancellationToken);
+            var dimension = new InventDim
+            {
+                InventDimId = inventDimId,
+                InventSiteId = inventSiteId,
+                InventLocationId = inventLocationId,
+                ConfigId = configId,
+                InventSizeId = sizeId,
+                InventColorId = colorId,
+                InventStyleId = styleId,
+                InventVersionId = versionId,
+                InventBatchId = batchId,
+                InventSerialId = serialId,
+                InventStatusId = statusId,
+                WmsLocationId = locationId,
+                LicensePlateId = licensePlateId,
+                InventDimension10 = dimension10,
+                InventDimension9 = dimension9,
+                InventDimension9TzId = dimension9TzId,
+                Sha1HashHex = sha1,
+                // SHA-3 is only available on newer OS builds (e.g. Windows 11 24H2+). Guard with
+                // IsSupported so dimension creation does not throw PlatformNotSupportedException on
+                // hosts without SHA-3; the column is auxiliary and no lookup depends on it.
+                Sha3HashHex = SHA3_384.IsSupported
+                    ? Convert.ToHexString(SHA3_384.HashData(canonicalBytes))
+                    : string.Empty,
+                DataAreaId = dataAreaId
+            };
+            _dbContext.Context.Set<InventDim>().Add(dimension);
+            await _dbContext.CompleteAsync(cancellationToken);
+            return dimension;
         }
 
-        var inventDimId = await _numbers.NextInventDimIdAsync(cancellationToken);
-        var dimension = new InventDim
+        var ownsTransaction = _dbContext.Context.Database.IsRelational()
+            && _dbContext.Context.Database.CurrentTransaction is null;
+        if (!ownsTransaction) return await ResolveCombinationAsync();
+
+        return await _dbContext.Context.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
-            InventDimId = inventDimId,
-            InventSiteId = inventSiteId,
-            InventLocationId = inventLocationId,
-            ConfigId = configId,
-            InventSizeId = sizeId,
-            InventColorId = colorId,
-            InventStyleId = styleId,
-            InventVersionId = versionId,
-            InventBatchId = batchId,
-            InventSerialId = serialId,
-            InventStatusId = statusId,
-            WmsLocationId = locationId,
-            LicensePlateId = licensePlateId,
-            InventDimension10 = dimension10,
-            InventDimension9 = dimension9,
-            InventDimension9TzId = dimension9TzId,
-            Sha1HashHex = sha1,
-            // SHA-3 is only available on newer OS builds (e.g. Windows 11 24H2+). Guard with
-            // IsSupported so dimension creation does not throw PlatformNotSupportedException on
-            // hosts without SHA-3; the column is auxiliary and no lookup depends on it.
-            Sha3HashHex = SHA3_384.IsSupported
-                ? Convert.ToHexString(SHA3_384.HashData(canonicalBytes))
-                : string.Empty,
-            DataAreaId = dataAreaId
-        };
-        _dbContext.Context.Set<InventDim>().Add(dimension);
-        await _dbContext.CompleteAsync(cancellationToken);
-        if (ownsTransaction) await _dbContext.CommitTransactionAsync(cancellationToken);
-        return dimension;
-        }
-        catch
-        {
-            if (ownsTransaction)
+            await _dbContext.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                var dimension = await ResolveCombinationAsync();
+                await _dbContext.CommitTransactionAsync(cancellationToken);
+                return dimension;
+            }
+            catch
             {
                 await _dbContext.RollbackTransactionAsync(cancellationToken);
+                // A retry re-runs the whole delegate, so the failed attempt's tracked entities
+                // must not survive into it.
                 _dbContext.Context.ChangeTracker.Clear();
+                throw;
             }
-            throw;
-        }
+        });
     }
 
     private async Task LockCombinationAsync(string resource, CancellationToken ct)
