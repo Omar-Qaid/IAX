@@ -149,6 +149,7 @@ export function useListDetailsPage<T extends ListDetailRecord>(
     editing,
     config.interactionLocked,
     source.type,
+    setDraft,
   ]);
   useEffect(() => {
     if (source.type !== 'controlled') return;
@@ -166,7 +167,7 @@ export function useListDetailsPage<T extends ListDetailRecord>(
         controlledRecords?.[0] ??
         null
     );
-  }, [controlledError, controlledLoading, controlledRecords, editing, source.type]);
+  }, [controlledError, controlledLoading, controlledRecords, editing, setDraft, source.type]);
 
   const deferredQuery = useDeferredValue(query);
   const visibleRecords = useMemo(() => {
