@@ -98,6 +98,7 @@ export function useSalesOrderDocument() {
   const [totalsOpen, setTotalsOpen] = useState(false);
   const [confirmationsOpen, setConfirmationsOpen] = useState(false);
   const [packingSlipPostingOpen, setPackingSlipPostingOpen] = useState(false);
+  const [invoicePostingOpen, setInvoicePostingOpen] = useState(false);
   const [confirmationMode, setConfirmationMode] = useState<'confirmation' | 'proForma'>(
     'confirmation'
   );
@@ -363,6 +364,23 @@ export function useSalesOrderDocument() {
           label: t('salesOrder.ui.packingSlip', 'Packing slip'),
           disabled: !canEditHeader || Boolean(activeHeader),
           onClick: () => setPackingSlipPostingOpen(true),
+        },
+      ],
+    },
+    {
+      id: 'invoice',
+      label: t('salesOrder.ui.invoice'),
+      actions: [
+        {
+          id: 'post-invoice',
+          label: t('salesOrder.ui.invoice'),
+          disabled: !canEditHeader || Boolean(activeHeader),
+          onClick: () => setInvoicePostingOpen(true),
+        },
+        {
+          id: 'cust-invoice-journal',
+          label: t('salesOrder.ui.invoiceJournal'),
+          onClick: () => navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUST_INVOICE_JOURNAL),
         },
       ],
     },
@@ -780,6 +798,8 @@ export function useSalesOrderDocument() {
     setConfirmationsOpen,
     packingSlipPostingOpen,
     setPackingSlipPostingOpen,
+    invoicePostingOpen,
+    setInvoicePostingOpen,
     confirmationMode,
     setConfirmationMode,
     confirmNowBusy,

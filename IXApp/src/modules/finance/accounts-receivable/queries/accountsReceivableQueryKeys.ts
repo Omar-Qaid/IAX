@@ -45,6 +45,8 @@ export const salesOrderQueryKeys = {
     [...salesOrderQueryKeys.packingSlips(company, id), journalId] as const,
   packingSlipPreview: (company: string, id: string | undefined, ...params: unknown[]) =>
     [...salesOrderQueryKeys.order(company, id), 'packing-slip-preview', ...params] as const,
+  invoices: (company: string, id: string | undefined) =>
+    [...salesOrderQueryKeys.order(company, id), 'invoices'] as const,
   copySources: (company: string, id: string | undefined, ...params: unknown[]) =>
     [...salesOrderQueryKeys.order(company, id), 'copy-sources', ...params] as const,
   copyLines: (company: string, id: string | undefined, ...params: unknown[]) =>

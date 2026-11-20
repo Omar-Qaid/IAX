@@ -6,6 +6,7 @@ import { DocumentCopyDrawer } from '@patterns/document/DocumentCopyDrawer';
 import { salesOrderCopyApi } from '../api/salesOrderCopyApi';
 import { SalesOrderConfirmationDialog } from '../../sales-order-confirm/components/SalesOrderConfirmationDialog';
 import { SalesOrderPackingSlipPostingDialog } from '../components/SalesOrderPackingSlipPostingDialog';
+import { SalesOrderInvoicePostingDialog } from '../components/SalesOrderInvoicePostingDialog';
 import type { SalesOrderDocumentView } from './useSalesOrderDocument';
 import type { buildSalesOrderTotals } from './salesOrderTotals';
 
@@ -30,6 +31,8 @@ export function SalesOrderDetailsDialogs({ scope }: { scope: DialogScope }): Rea
     setConfirmationsOpen,
     packingSlipPostingOpen,
     setPackingSlipPostingOpen,
+    invoicePostingOpen,
+    setInvoicePostingOpen,
     confirmationMode,
     confirmNowError,
     setConfirmNowError,
@@ -84,9 +87,23 @@ export function SalesOrderDetailsDialogs({ scope }: { scope: DialogScope }): Rea
           await Promise.all([invalidateOrder(order.id)]);
         }}
       />
+      <SalesOrderInvoicePostingDialog
+        open={invoicePostingOpen}
+        orderId={order.id}
+        salesId={order.salesId}
+        canPost={Boolean(canEditHeader) && !activeHeader}
+        onClose={() => setInvoicePostingOpen(false)}
+        onPosted={async () => {
+          await Promise.all([invalidateOrder(order.id)]);
+        }}
+      />
       <DocumentCopyDrawer
         open={Boolean(copyMode)}
-        title={copyMode === 'fromJournal' ? 'Copy from journal' : 'Copy from all'}
+        title={
+          copyMode === 'fromJournal'
+            ? t('salesOrder.ui.copyFromJournal')
+            : t('salesOrder.ui.copyFromAll')
+        }
         sourceSectionLabel={
           copyMode === 'fromJournal'
             ? t('salesOrder.ui.confirmationJournals', 'Confirmation journals')

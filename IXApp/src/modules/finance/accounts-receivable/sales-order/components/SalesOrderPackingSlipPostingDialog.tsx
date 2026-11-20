@@ -109,7 +109,7 @@ export function SalesOrderPackingSlipPostingDialog({
         ? [
             {
               id: preview.header.id,
-              update: 'Packing slip',
+              update: t('salesOrder.ui.packingSlip'),
               customerPackingSlip: '',
               shipmentNumber: '',
               salesId,
@@ -119,7 +119,7 @@ export function SalesOrderPackingSlipPostingDialog({
             },
           ]
         : [],
-    [preview, salesId]
+    [preview, salesId, t]
   );
 
   const lineColumns = useMemo<ColumnDef<PackingSlipPostingLine>[]>(
