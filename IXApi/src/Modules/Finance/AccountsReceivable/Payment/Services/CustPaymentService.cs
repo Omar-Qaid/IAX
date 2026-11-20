@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Persistence.Repositories;
+﻿using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.Settlement;
 using IAX.IXApi.Modules.Finance.Common;
@@ -53,6 +53,21 @@ public sealed partial class CustPaymentService : BaseService<CustTrans>, ICustPa
     private IUnitOfWork unitOfWork => _unitOfWork;
     private ICompanyExecutionContext company => _company;
     private ISysNumberSequenceService numbers => _numbers;
+
+    /// <summary>
+    /// Active bank accounts of the current company, for the payment journal's bank lookup.
+    /// </summary>
+    public async Task<CustPaymentResult> ListBankAccountsAsync(CancellationToken ct)
+    {
+        var area = _company.GetDataAreaId();
+        if (string.IsNullOrWhiteSpace(area)) return new(400, null, "A company must be selected.");
+        var rows = await Db.Set<BankAccountTable>().AsNoTracking()
+            .Where(x => x.DataAreaId == area && x.BankAccountStatus == BankAccountStatus.Active)
+            .OrderBy(x => x.AccountId)
+            .Select(x => new { x.AccountId, x.Name, x.CurrencyCode })
+            .ToListAsync(ct);
+        return new(200, rows, string.Empty);
+    }
 
     public Task<CustPaymentResult> PostAsync(CustPaymentPostDto input, CancellationToken ct) =>
         Db.Database.CreateExecutionStrategy().ExecuteAsync(() => PostCoreAsync(input, ct));

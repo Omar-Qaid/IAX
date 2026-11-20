@@ -4243,5 +4243,22 @@
       "warehouse": "Warehouse"
     },
     "title": "Inventory locations"
+  },
+  "customerPayment": {
+    "amount": "Amount",
+    "bankAccount": "Bank account",
+    "hint": "Record a payment received from {{custAccount}} - {{customerName}}.",
+    "oldestFirst": "Oldest open invoices first",
+    "openTransactions": "Open transactions",
+    "openTransactionsFailed": "The open transactions could not be loaded.",
+    "paymentDate": "Payment date",
+    "post": "Post payment",
+    "postFailed": "The customer payment could not be posted.",
+    "posted": "Payment posted. Journal {{journalNum}}, voucher {{voucher}}.",
+    "postingInProgress": "Posting...",
+    "prepayment": "Prepayment",
+    "settleAutomatically": "Settle automatically",
+    "settleInvoice": "Settle invoice",
+    "title": "Customer payment journal"
   }
 }

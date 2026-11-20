@@ -72,3 +72,16 @@ export const freeTextInvoiceQueryKeys = {
   lookup: (company: string, name: string) =>
     [...freeTextInvoiceQueryKeys.lookups(company), name] as const,
 };
+
+/**
+ * Customer payment journal keys: the company's bank accounts and a customer's open
+ * transactions, which a posted payment settles against.
+ */
+export const customerPaymentQueryKeys = {
+  all: ['customerPayments'] as const,
+  company: (company: string) => [...customerPaymentQueryKeys.all, company] as const,
+  bankAccounts: (company: string) =>
+    [...customerPaymentQueryKeys.company(company), 'bank-accounts'] as const,
+  openTransactions: (company: string, accountNum: string | undefined) =>
+    [...customerPaymentQueryKeys.company(company), 'open-transactions', accountNum ?? ''] as const,
+};

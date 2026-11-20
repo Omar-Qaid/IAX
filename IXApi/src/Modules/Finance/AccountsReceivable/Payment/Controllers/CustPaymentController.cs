@@ -49,6 +49,19 @@ public sealed class CustPaymentController : BaseController<CustTrans, CustPaymen
     public override Task<ActionResult<APIResponse<bool>>> Delete(string id, CancellationToken cancellationToken = default) =>
         base.Delete(id, cancellationToken);
 
+    /// <summary>
+    /// The company's bank accounts, for choosing where a payment is received. The generic
+    /// BankAccountTable endpoint carries an empty DTO, so the payment journal reads them here.
+    /// </summary>
+    [HttpGet("bank-accounts")]
+    public async Task<IActionResult> BankAccounts(CancellationToken ct)
+    {
+        var result = await _paymentService.ListBankAccountsAsync(ct);
+        return result.StatusCode == 200
+            ? Ok(APIResponse<object>.Ok(result.Data!, string.Empty))
+            : BadRequest(APIResponse<object>.Fail(result.Message!));
+    }
+
     [HttpPost]
     [DomainPermission("AccountsReceivable", "CustomerPayments", "Post")]
     public async Task<IActionResult> Post([FromBody] CustPaymentPostDto request, CancellationToken ct)

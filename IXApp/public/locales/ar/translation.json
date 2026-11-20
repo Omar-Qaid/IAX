@@ -4243,5 +4243,22 @@
       "warehouse": "المستودع"
     },
     "title": "مواقع المخزون"
+  },
+  "customerPayment": {
+    "amount": "المبلغ",
+    "bankAccount": "الحساب البنكي",
+    "hint": "تسجيل دفعة مستلمة من {{custAccount}} - {{customerName}}.",
+    "oldestFirst": "أقدم الفواتير المفتوحة أولاً",
+    "openTransactions": "الحركات المفتوحة",
+    "openTransactionsFailed": "تعذّر تحميل الحركات المفتوحة.",
+    "paymentDate": "تاريخ الدفع",
+    "post": "ترحيل الدفعة",
+    "postFailed": "تعذّر ترحيل دفعة العميل.",
+    "posted": "تم ترحيل الدفعة. دفتر اليومية {{journalNum}}، المستند {{voucher}}.",
+    "postingInProgress": "جارٍ الترحيل...",
+    "prepayment": "دفعة مقدمة",
+    "settleAutomatically": "تسوية تلقائية",
+    "settleInvoice": "تسوية الفاتورة",
+    "title": "دفتر يومية مدفوعات العملاء"
   }
 }

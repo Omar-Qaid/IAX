@@ -3,7 +3,7 @@ import type { ActionPaneRibbonGroup } from '@shared/components/action-pane/Actio
 /** Collect actions use implemented customer-scoped screens; other reference commands stay disabled. */
 export function buildCustomerCollectRibbonGroups(
   tr: (key: string, fallback: string) => string,
-  actions: { onSettleTransactions?: () => void } = {}
+  actions: { onSettleTransactions?: () => void; onPaymentJournal?: () => void } = {}
 ): ActionPaneRibbonGroup[] {
   return [
     {
@@ -14,7 +14,8 @@ export function buildCustomerCollectRibbonGroups(
         {
           id: 'paymentJournal',
           label: tr('customerCollectRibbon.actions.paymentJournal', 'Payment journal'),
-          disabled: true,
+          disabled: !actions.onPaymentJournal,
+          onClick: actions.onPaymentJournal,
         },
         {
           id: 'collectionLetters',

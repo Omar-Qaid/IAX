@@ -12,6 +12,7 @@ import type {
 } from '@patterns/list-details/types';
 import { CustOpenTrans } from '../../settlement/components/CustOpenTrans';
 import { buildCustomerCollectRibbonGroups } from '../components/customerCollectRibbon';
+import { CustPaymentJournalDialog } from '../../payment/components/CustPaymentJournalDialog';
 import { buildCustomerSellRibbonGroups } from '../components/customerSellRibbon';
 import { buildCustomerInvoiceRibbonGroups } from '../components/customerInvoiceRibbon';
 import { SalesOrderQuickCreate } from '../../sales-order/components/SalesOrderQuickCreate';
@@ -124,6 +125,11 @@ export function CustTablePage(): React.ReactElement {
     record: CustomerRecord;
   } | null>(null);
   React.useEffect(() => setSettlementCustomer(null), [company]);
+  const [paymentCustomer, setPaymentCustomer] = React.useState<{
+    company: string;
+    record: CustomerRecord;
+  } | null>(null);
+  React.useEffect(() => setPaymentCustomer(null), [company]);
   const [newOrderCustomer, setNewOrderCustomer] = React.useState<CustomerRecord | null>(null);
   React.useEffect(() => {
     setNewOrderCustomer(null);
@@ -642,6 +648,11 @@ export function CustTablePage(): React.ReactElement {
                 if (record && record.recId > 0) setSettlementCustomer({ company, record });
               }
             : undefined,
+          onPaymentJournal: hasPermission(PERMISSIONS.CUSTOMER_PAYMENT_POST)
+            ? () => {
+                if (record && record.recId > 0) setPaymentCustomer({ company, record });
+              }
+            : undefined,
         }),
       },
     ],
@@ -746,6 +757,21 @@ export function CustTablePage(): React.ReactElement {
                 isRtl
               )}
               onClose={() => setSettlementCustomer(null)}
+            />
+          )}
+          {paymentCustomer?.company === company && (
+            <CustPaymentJournalDialog
+              open
+              custAccount={paymentCustomer.record.accountNumber}
+              customerName={localizedName(
+                {
+                  name: paymentCustomer.record.name,
+                  nameAlias: paymentCustomer.record.nameAr,
+                },
+                isRtl
+              )}
+              canPost={hasPermission(PERMISSIONS.CUSTOMER_PAYMENT_POST)}
+              onClose={() => setPaymentCustomer(null)}
             />
           )}
           <SalesOrderQuickCreate
