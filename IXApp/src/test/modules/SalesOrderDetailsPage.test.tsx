@@ -73,27 +73,30 @@ vi.mock('@modules/finance/accounts-receivable/sales-order/api/salesOrderLinesApi
   },
 }));
 
-vi.mock('@modules/finance/accounts-receivable/sales-order-confirm/api/salesOrderConfirmationApi', () => ({
-  salesOrderConfirmationApi: {
-    preview: vi.fn().mockResolvedValue({
-      header: { currencyCode: 'SAR', qty: 1, salesBalance: 100, sumTax: 15, confirmAmount: 115 },
-      lines: [
-        {
-          id: '1',
-          lineNum: 1,
-          itemId: 'ITEM-1',
-          name: 'Test item',
-          qty: 1,
-          inventLocationId: 'MAIN',
-          wmsLocationId: '',
-          salesPrice: 100,
-          lineAmount: 100,
-        },
-      ],
-    }),
-    post: vi.fn().mockResolvedValue({ id: '10' }),
-  },
-}));
+vi.mock(
+  '@modules/finance/accounts-receivable/sales-order-confirm/api/salesOrderConfirmationApi',
+  () => ({
+    salesOrderConfirmationApi: {
+      preview: vi.fn().mockResolvedValue({
+        header: { currencyCode: 'SAR', qty: 1, salesBalance: 100, sumTax: 15, confirmAmount: 115 },
+        lines: [
+          {
+            id: '1',
+            lineNum: 1,
+            itemId: 'ITEM-1',
+            name: 'Test item',
+            qty: 1,
+            inventLocationId: 'MAIN',
+            wmsLocationId: '',
+            salesPrice: 100,
+            lineAmount: 100,
+          },
+        ],
+      }),
+      post: vi.fn().mockResolvedValue({ id: '10' }),
+    },
+  })
+);
 
 vi.mock('@modules/finance/accounts-receivable/sales-order/api/salesOrderPackingSlipApi', () => ({
   salesOrderPackingSlipApi: {
@@ -156,6 +159,23 @@ it('loads a numeric route ID directly from the API', async () => {
   await waitFor(() =>
     expect(salesOrderLinesApi.totals).toHaveBeenCalledWith('1', expect.anything())
   );
+});
+
+it('enables Invoice after full delivery while keeping header editing disabled', async () => {
+  const delivered = { ...(await mockOrders())[0], salesStatus: 'Delivered' };
+  vi.mocked(salesOrderListApi.get).mockResolvedValueOnce(
+    delivered as Awaited<ReturnType<typeof salesOrderListApi.get>>
+  );
+  openOrder('1');
+  await screen.findByText('SO-LIVE-001 : Live customer');
+  const invoiceTab = screen.getByRole('button', { name: /^Invoice$/i });
+  expect(invoiceTab).toBeEnabled();
+  fireEvent.click(invoiceTab);
+  expect(screen.getAllByRole('button', { name: /^Invoice$/i }).length).toBeGreaterThan(1);
+  screen
+    .getAllByRole('button', { name: /^Invoice$/i })
+    .forEach((button) => expect(button).toBeEnabled());
+  expect(screen.getByRole('button', { name: /^Edit$/i })).toBeDisabled();
 });
 
 it('opens CustConfirmJour from Sell > Sales order confirmations', async () => {

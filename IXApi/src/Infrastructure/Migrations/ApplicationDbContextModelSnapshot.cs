@@ -18345,8 +18345,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<string>("PostedUserId")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("RecVersion")
                         .HasColumnType("int");
@@ -23283,8 +23283,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Voucher")
                         .IsRequired()

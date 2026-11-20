@@ -1,4 +1,5 @@
 ﻿using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
+using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance;
 using IAX.IXApi.Modules.Finance.Entities;
@@ -130,10 +131,24 @@ public sealed  class InventorySeeder : IAX.IXApi.Infrastructure.Persistence.Seed
             new InventJournalName { DataAreaId = Company, JournalNameId = "IJ-TRF", Description = "Inventory Transfer", JournalType = InventJournalType.Transfer, VoucherChange = JournalVoucherChange.Change, VoucherDraw = JournalVoucherDraw.Draw },
             new InventJournalName { DataAreaId = Company, JournalNameId = "IJ-CNT", Description = "Inventory Counting", JournalType = InventJournalType.Counting, VoucherChange = JournalVoucherChange.Change, VoucherDraw = JournalVoucherDraw.Draw },
         };
+        // InventJournalPostingService resolves the voucher sequence from the journal name and
+        // refuses to post without it, so the name is useless unless it is wired here.
+        var voucherSequence = await db.Set<SysNumberSequence>().IgnoreQueryFilters()
+            .FirstOrDefaultAsync(x => x.NumberSequence == "Voucher" && !x.IsDeleted, ct);
         foreach (var jn in journalNames)
         {
-            if (!await db.Set<InventJournalName>().IgnoreQueryFilters().AnyAsync(x => x.DataAreaId == Company && x.JournalNameId == jn.JournalNameId, ct))
+            var existing = await db.Set<InventJournalName>().IgnoreQueryFilters()
+                .FirstOrDefaultAsync(x => x.DataAreaId == Company && x.JournalNameId == jn.JournalNameId, ct);
+            if (existing == null)
+            {
+                jn.VoucherNumberSequenceTable = voucherSequence?.RecId ?? 0;
                 db.Add(jn);
+            }
+            else if (existing.VoucherNumberSequenceTable == 0 && voucherSequence != null)
+            {
+                // Converge rows seeded before the voucher sequence was wired; they can never post.
+                existing.VoucherNumberSequenceTable = voucherSequence.RecId;
+            }
         }
 
         // Inventory Parameters: Default for Legal Entity 'dat'
@@ -417,9 +432,23 @@ public sealed  class InventorySeeder : IAX.IXApi.Infrastructure.Persistence.Seed
     private static async Task AddPostingAsync(
         ApplicationDbContext db, InventAccountType type, long ledgerDimension, CancellationToken ct)
     {
-        if (!await db.Set<InventPosting>().IgnoreQueryFilters().AnyAsync(
-                x => x.DataAreaId == Company && x.InventAccountType == type &&
-                     x.ItemCode == TableGroupAll.All && x.CustVendCode == TableGroupAll.All, ct))
+        var existing = await db.Set<InventPosting>().IgnoreQueryFilters().FirstOrDefaultAsync(
+            x => x.DataAreaId == Company && x.InventAccountType == type &&
+                 x.ItemCode == TableGroupAll.All && x.CustVendCode == TableGroupAll.All, ct);
+        if (existing != null)
+        {
+            // A row seeded before the financial dimensions existed points at a combination with no
+            // department. The profit and loss account structure makes a department mandatory, so
+            // posting fails on it. Repoint only that case; a different account is the operator's choice.
+            var combination = await db.Set<DimensionAttributeValueCombination>().IgnoreQueryFilters()
+                .FirstOrDefaultAsync(x => x.RecId == existing.LedgerDimension, ct);
+            var needsDepartment = combination == null ||
+                (combination.MainAccountValue.Length > 0 && combination.DepartmentValue.Length == 0 &&
+                 combination.MainAccountValue[0] is '4' or '5' or '6' or '7' or '8');
+            if (needsDepartment && existing.LedgerDimension != ledgerDimension)
+                existing.LedgerDimension = ledgerDimension;
+            return;
+        }
         {
             db.Add(new InventPosting
             {

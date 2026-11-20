@@ -46,6 +46,16 @@ const toDto = ({ id: _id, ...record }: TaxAuthorityRecord): TaxAuthorityDto => (
 });
 
 export const taxAuthorityApi = {
+  async vendorOptions(signal?: AbortSignal) {
+    const response = await apiClient.get<ApiResponse<{ accountNum: string; name: string }[]>>(
+      '/v1/Vendor',
+      { signal }
+    );
+    return requireData(response.data).map((vendor) => ({
+      value: vendor.accountNum,
+      label: vendor.accountNum,
+    }));
+  },
   async list(signal?: AbortSignal): Promise<TaxAuthorityRecord[]> {
     const response = await apiClient.get<ApiResponse<TaxAuthorityDto[]>>(endpoint, { signal });
     return requireData(response.data).map(toRecord);

@@ -80,6 +80,7 @@ export const EnterpriseCrudActions: React.FC<EnterpriseCrudActionsProps> = ({
         <>
           <ActionPaneButton
             label={saveLabel}
+            editCommand
             permission={savePermission}
             icon={<SaveIcon sx={{ fontSize: 16 }} />}
             disabled={saving}
@@ -87,6 +88,7 @@ export const EnterpriseCrudActions: React.FC<EnterpriseCrudActionsProps> = ({
           />
           <ActionPaneButton
             label={cancelLabel}
+            editCommand
             icon={<CancelIcon sx={{ fontSize: 16 }} />}
             disabled={saving}
             onClick={onCancel}

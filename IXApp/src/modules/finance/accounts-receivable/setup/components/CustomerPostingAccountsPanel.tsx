@@ -4,7 +4,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { usePermission } from '@core/permissions/usePermission';
 import { PERMISSIONS } from '@core/permissions/permissions';
-import { ListGridDetailsPanel } from '@patterns/list-details-listgrid/ListDetailsListGridPage';
+import {
+  ListGridDetailsPanel,
+  useListGridEditor,
+} from '@patterns/list-details-listgrid/ListDetailsListGridPage';
 import { ListGridField } from '@patterns/list-details-listgrid/ListGridField';
 import { listGridControlSx, listGridLabelSx } from '@patterns/list-details-listgrid/fieldStyles';
 import { LookupField } from '@shared/components/lookups/LookupField';
@@ -21,11 +24,11 @@ import {
 export function CustomerPostingAccountsPanel({
   profile,
   masterEditing,
-  onEditingChange,
+  onEditingChange = () => {},
 }: {
   profile: CustomerPostingProfile;
   masterEditing: boolean;
-  onEditingChange: (editing: boolean) => void;
+  onEditingChange?: (editing: boolean) => void;
 }): React.ReactElement {
   const { t } = useAppTranslation();
   const client = useQueryClient();
@@ -43,6 +46,12 @@ export function CustomerPostingAccountsPanel({
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState('');
   const [deleting, setDeleting] = React.useState(false);
+  const operationLock = React.useRef(false);
+  const ledgerAccounts = useQuery({
+    queryKey: ['customer-posting-ledger-accounts', profile.dataAreaId],
+    queryFn: ({ signal }) => api.ledgerAccounts(signal),
+    enabled: profile.recId > 0,
+  });
   const rows = accounts.data ?? [];
   const selected = draft ?? rows.find((row) => row.id === selectedId) ?? rows[0] ?? null;
   const editing = draft != null;
@@ -74,6 +83,8 @@ export function CustomerPostingAccountsPanel({
     { field: 'num', headerName: 'customerPostingProfiles.fields.num', minWidth: 175, flex: 1 },
   ];
   const begin = (row: CustomerPostingAccount) => {
+    if (busy || editing || operationLock.current) return;
+    session?.requestEdit?.();
     setDraft({ ...row });
     setError('');
     onEditingChange(true);
@@ -84,11 +95,12 @@ export function CustomerPostingAccountsPanel({
     onEditingChange(false);
   };
   const save = async () => {
-    if (!draft || busy) return;
+    if (!draft) return true;
+    if (busy || operationLock.current) return false;
     setError('');
     if (draft.num.length > 20 || draft.collectionLetterCourse.length > 10) {
       setError(t('customerPostingProfiles.invalidLength'));
-      return;
+      return false;
     }
     const dimensions = [
       'summaryLedgerDimension',
@@ -99,8 +111,27 @@ export function CustomerPostingAccountsPanel({
     ] as const;
     if (dimensions.some((field) => !Number.isSafeInteger(draft[field]) || draft[field] < 0)) {
       setError(t('customerPostingProfiles.invalidIdentifier'));
-      return;
+      return false;
     }
+    const ledgerFields = [
+      'summaryLedgerDimension',
+      'clearingLedgerDimension',
+      'vatPrepaymentsLedgerDimension',
+      'liabilitiesForDiscountLedgerDimension',
+    ] as const;
+    if (
+      ledgerFields.some(
+        (field) =>
+          draft[field] !== 0 &&
+          !ledgerAccounts.data?.some((option) => String(option.id) === String(draft[field]))
+      )
+    ) {
+      setError(
+        t('customerPostingProfiles.selectLedger', 'Select ledger accounts from the account lookup.')
+      );
+      return false;
+    }
+    operationLock.current = true;
     setBusy(true);
     try {
       const payload = { ...draft };
@@ -111,7 +142,7 @@ export function CustomerPostingAccountsPanel({
         const reference = result.data?.find((option) => String(option.id) === payload.num);
         if (!reference) {
           setError(t('customerPostingProfiles.selectReference'));
-          return;
+          return false;
         }
         payload.num = String(reference.id);
       }
@@ -124,14 +155,23 @@ export function CustomerPostingAccountsPanel({
       );
       setSelectedId(saved.id);
       setDraft(null);
+      return true;
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : String(reason));
+      return false;
     } finally {
+      operationLock.current = false;
       setBusy(false);
     }
   };
+  const session = useListGridEditor({ saveEdit: save, cancelEdit: cancel });
+  React.useEffect(() => {
+    if (masterEditing && selected && !draft) setDraft({ ...selected });
+    // Enter the selected rule when Edit is requested from the action pane.
+  }, [masterEditing, selected?.id]);
   const remove = async () => {
-    if (!selected || busy) return;
+    if (!selected || busy || operationLock.current) return;
+    operationLock.current = true;
     setBusy(true);
     setError('');
     try {
@@ -144,6 +184,7 @@ export function CustomerPostingAccountsPanel({
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : String(reason));
     } finally {
+      operationLock.current = false;
       setBusy(false);
       setDeleting(false);
     }
@@ -161,6 +202,47 @@ export function CustomerPostingAccountsPanel({
     underlined = false
   ) => {
     if (!selected) return null;
+    if (
+      [
+        'summaryLedgerDimension',
+        'clearingLedgerDimension',
+        'vatPrepaymentsLedgerDimension',
+        'liabilitiesForDiscountLedgerDimension',
+      ].includes(name)
+    ) {
+      const id = Number(selected[name]);
+      const option = ledgerAccounts.data?.find((item) => String(item.id) === String(id));
+      if (!editing)
+        return (
+          <ListGridField
+            label={label(name)}
+            value={option?.code || (id ? String(id) : '')}
+            onEdit={canEdit && !masterEditing && !busy ? () => begin(selected) : undefined}
+          />
+        );
+      return (
+        <Box sx={{ minWidth: 0, maxWidth: 206 }}>
+          <LookupField
+            name={name}
+            label={label(name)}
+            value={id || null}
+            options={ledgerAccounts.data ?? []}
+            displayMode="select"
+            searchable
+            lazyLoading={false}
+            loading={ledgerAccounts.isFetching}
+            disabled={busy || ledgerAccounts.isError}
+            error={ledgerAccounts.isError}
+            helperText={ledgerAccounts.error?.message}
+            onChange={(value) =>
+              setDraft((current) =>
+                current ? { ...current, [name]: Number(value) || 0 } : current
+              )
+            }
+          />
+        </Box>
+      );
+    }
     if (name === 'num' && editing)
       return (
         <Box sx={{ minWidth: 0, maxWidth: 153 }}>
@@ -223,7 +305,7 @@ export function CustomerPostingAccountsPanel({
               : current
           )
         }
-        onEdit={canEdit && !editing && !busy ? () => begin(selected) : undefined}
+        onEdit={canEdit && !masterEditing && !editing && !busy ? () => begin(selected) : undefined}
       />
     );
   };
@@ -269,7 +351,7 @@ export function CustomerPostingAccountsPanel({
         }
         onRemove={canDelete && !editing ? () => setDeleting(true) : undefined}
         actions={
-          editing
+          editing && !session
             ? [
                 {
                   id: 'save',
@@ -284,7 +366,7 @@ export function CustomerPostingAccountsPanel({
                   onClick: cancel,
                 },
               ]
-            : canEdit
+            : canEdit && !editing
               ? [
                   {
                     id: 'edit',

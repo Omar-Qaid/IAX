@@ -356,6 +356,8 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             }
 
             // 7. Seed TaxTable (Sales Tax Codes)
+            // These flat-rate codes have no minimum/maximum tax limits.
+            // TaxCalcMethod.Line controls per-line calculation; TaxLimitBase must remain None.
             var taxTableSeeds = new[]
             {
                 new TaxTable
@@ -368,7 +370,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     TaxUnit = "EA",
                     TaxBase = TaxBaseType.PctPerNet,
                     TaxCalcMethod = TaxCalcMethod.Line,
-                    TaxLimitBase = TaxLimitBase.Line,
+                    TaxLimitBase = TaxLimitBase.None,
                     PrintCode = "VAT15",
                     DataAreaId = "dat"
                 },
@@ -382,7 +384,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     TaxUnit = "EA",
                     TaxBase = TaxBaseType.PctPerNet,
                     TaxCalcMethod = TaxCalcMethod.Line,
-                    TaxLimitBase = TaxLimitBase.Line,
+                    TaxLimitBase = TaxLimitBase.None,
                     PrintCode = "VAT5",
                     DataAreaId = "dat"
                 },
@@ -396,7 +398,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     TaxUnit = "EA",
                     TaxBase = TaxBaseType.PctPerNet,
                     TaxCalcMethod = TaxCalcMethod.Line,
-                    TaxLimitBase = TaxLimitBase.Line,
+                    TaxLimitBase = TaxLimitBase.None,
                     PrintCode = "VAT0",
                     DataAreaId = "dat"
                 },
@@ -410,7 +412,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     TaxUnit = "EA",
                     TaxBase = TaxBaseType.PctPerNet,
                     TaxCalcMethod = TaxCalcMethod.Line,
-                    TaxLimitBase = TaxLimitBase.Line,
+                    TaxLimitBase = TaxLimitBase.None,
                     PrintCode = "EXEMPT",
                     DataAreaId = "dat"
                 },
@@ -424,7 +426,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     TaxUnit = "EA",
                     TaxBase = TaxBaseType.PctPerNet,
                     TaxCalcMethod = TaxCalcMethod.Line,
-                    TaxLimitBase = TaxLimitBase.Line,
+                    TaxLimitBase = TaxLimitBase.None,
                     PrintCode = "SVC VAT15",
                     DataAreaId = "dat"
                 },
@@ -438,7 +440,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     TaxUnit = "EA",
                     TaxBase = TaxBaseType.PctPerNet,
                     TaxCalcMethod = TaxCalcMethod.Line,
-                    TaxLimitBase = TaxLimitBase.Line,
+                    TaxLimitBase = TaxLimitBase.None,
                     PrintCode = "VAT FA 15%",
                     DataAreaId = "dat"
                 }

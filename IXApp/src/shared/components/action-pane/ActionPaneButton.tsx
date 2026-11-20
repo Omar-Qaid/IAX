@@ -8,6 +8,7 @@ export interface ActionPaneButtonProps extends Omit<ActionDefinition, 'id'> {
   actionId?: string;
   selected?: boolean;
   controlsId?: string;
+  editCommand?: boolean;
 }
 
 export const ActionPaneButton: React.FC<ActionPaneButtonProps> = ({
@@ -21,6 +22,7 @@ export const ActionPaneButton: React.FC<ActionPaneButtonProps> = ({
   hidden = false,
   selected = false,
   controlsId,
+  editCommand,
 }) => {
   const { hasPermission } = usePermission(permission);
 
@@ -30,6 +32,7 @@ export const ActionPaneButton: React.FC<ActionPaneButtonProps> = ({
 
   const buttonElement = (
     <Button
+      data-grid-edit-command={editCommand || undefined}
       aria-label={label}
       variant="text"
       size="small"

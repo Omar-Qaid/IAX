@@ -19,6 +19,7 @@ export function SalesOrderDetailsDialogs({ scope }: { scope: DialogScope }): Rea
     t,
     invalidateOrder,
     canEditHeader,
+    canInvoice,
     activeHeader,
     saveNewDeliveryAddress,
     deliveryAddressDrawerOpen,
@@ -91,7 +92,9 @@ export function SalesOrderDetailsDialogs({ scope }: { scope: DialogScope }): Rea
         open={invoicePostingOpen}
         orderId={order.id}
         salesId={order.salesId}
-        canPost={Boolean(canEditHeader) && !activeHeader}
+        customerName={order.customerName}
+        currencyCode={order.currencyCode}
+        canPost={canInvoice && !activeHeader}
         onClose={() => setInvoicePostingOpen(false)}
         onPosted={async () => {
           await Promise.all([invalidateOrder(order.id)]);

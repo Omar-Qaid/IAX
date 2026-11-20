@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Persistence;
+﻿using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.AccountsPayable;
@@ -147,6 +147,9 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     Highest = 999999999,
                     NextRec = 1,
                     Cyclic = d.Cyclic,
+                    // Consumers select a usable sequence with `InUse != 0`, which in SQL excludes
+                    // NULL, so a sequence left unset here can never be allocated from.
+                    InUse = 1,
                     CreatedBy = createdBy,
                 });
             }
@@ -154,6 +157,15 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             if (toAdd.Count > 0)
             {
                 db.SysNumberSequences.AddRange(toAdd);
+                await db.SaveChangesAsync(ct);
+            }
+
+            // Converge sequences seeded before InUse was set. Only NULL is converged: an explicit 0
+            // is an operator decision to take a sequence out of use.
+            var unusable = await db.SysNumberSequences.Where(s => s.InUse == null).ToListAsync(ct);
+            if (unusable.Count > 0)
+            {
+                foreach (var sequence in unusable) sequence.InUse = 1;
                 await db.SaveChangesAsync(ct);
             }
 

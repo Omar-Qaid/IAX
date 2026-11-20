@@ -557,6 +557,7 @@ public sealed class SalesOrderConfirmationTests
         var lines = Assert.IsType<List<ConfirmationLineDto>>(data.GetType().GetProperty("lines")!.GetValue(data));
         Assert.Equal(900m, header.ConfirmAmount);
         Assert.Single(lines);
+        Assert.Equal("1", lines[0].Id);
         Assert.Empty(await fixture.Db.Set<CustConfirmJour>().ToListAsync());
         Assert.Empty(await fixture.Db.Set<CustConfirmTrans>().ToListAsync());
         Assert.Equal(DocumentStatus.None, (await fixture.Db.Set<SalesTable>().SingleAsync()).DocumentStatus);

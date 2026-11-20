@@ -18,6 +18,9 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable.PostingProfile
     [DomainPermission("AccountsReceivable", "PostingProfiles")]
     public class CustLedgerAccountsController : BaseController<CustLedgerAccounts, CustLedgerAccountsDto>
     {
+        [HttpGet("ledger-accounts")]
+        public async Task<IActionResult> LedgerAccounts(CancellationToken ct) =>
+            Ok(APIResponse<object>.Ok(await ((ICustLedgerAccountsService)_service).LedgerAccountsAsync(ct)));
         public CustLedgerAccountsController(ICustLedgerAccountsService service, ILogger<CustLedgerAccountsController> logger)
             : base(service, logger)
         {

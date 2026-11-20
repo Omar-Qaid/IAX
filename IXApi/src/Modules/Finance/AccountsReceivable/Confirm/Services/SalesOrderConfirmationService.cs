@@ -108,6 +108,8 @@ public sealed class SalesOrderConfirmationService : BaseService<CustConfirmJour>
         var previewLines = lines.Select(line =>
         {
             var dto = Present(CreateLine(order, line, totals, string.Empty, DateTime.UtcNow.Date));
+            // Preview journal lines are not persisted and all have RecId zero.
+            dto.Id = line.RecId.ToString();
             if (dimensions.TryGetValue(line.InventDimId, out var dimension))
             {
                 dto.InventSiteId = dimension.InventSiteId;

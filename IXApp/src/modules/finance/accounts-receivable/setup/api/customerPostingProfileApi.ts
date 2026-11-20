@@ -49,6 +49,16 @@ export const customerPostingProfileApi = createEntityApi<
   toDto: payload,
 });
 export const customerPostingAccountApi = {
+  async ledgerAccounts(signal?: AbortSignal): Promise<LookupOption[]> {
+    return requireApiData(
+      (
+        await apiClient.get<ApiResponse<LookupOption[]>>('/v1/CustLedgerAccounts/ledger-accounts', {
+          signal,
+        })
+      ).data,
+      'ledger accounts'
+    );
+  },
   ...createEntityApi<Omit<CustomerPostingAccount, 'id'>, CustomerPostingAccount>({
     endpoint: '/v1/CustLedgerAccounts',
     resourceName: 'customer posting accounts',

@@ -3,4 +3,7 @@ using IAX.IXApi.Modules.Finance.AccountsReceivable;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable.PostingProfile;
 
-public interface ICustLedgerAccountsService : IBaseService<CustLedgerAccounts> { }
+public interface ICustLedgerAccountsService : IBaseService<CustLedgerAccounts>
+{
+    Task<object> LedgerAccountsAsync(CancellationToken ct);
+}

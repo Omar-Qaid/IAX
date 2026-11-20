@@ -34,7 +34,7 @@ function setup(commit = vi.fn().mockResolvedValue(true)) {
   return { focusCell, commit, onAdd, onRemove, onFilter };
 }
 
-it('waits for a save before Tab navigation and prevents duplicate navigation while saving', async () => {
+it('waits for a save before leaving the row and prevents duplicate navigation while saving', async () => {
   let finish!: (success: boolean) => void;
   const commit = vi.fn(
     () =>
@@ -43,17 +43,19 @@ it('waits for a save before Tab navigation and prevents duplicate navigation whi
       })
   );
   const { focusCell } = setup(commit);
-  fireEvent.keyDown(screen.getByLabelText('cell-0-0'), { key: 'Tab' });
-  fireEvent.keyDown(screen.getByLabelText('cell-0-0'), { key: 'Tab' });
+  screen.getByLabelText('cell-0-1').focus();
+  fireEvent.keyDown(screen.getByLabelText('cell-0-1'), { key: 'Tab' });
+  fireEvent.keyDown(screen.getByLabelText('cell-0-1'), { key: 'Tab' });
   expect(commit).toHaveBeenCalledTimes(1);
   expect(focusCell).not.toHaveBeenCalled();
   finish(true);
-  await waitFor(() => expect(focusCell).toHaveBeenCalledWith(0, 1));
+  await waitFor(() => expect(focusCell).toHaveBeenCalledWith(1, 0));
 });
 
 it('keeps the current cell on validation or save failure', async () => {
   const { focusCell, commit } = setup(vi.fn().mockResolvedValue(false));
-  fireEvent.keyDown(screen.getByLabelText('cell-0-0'), { key: 'Enter' });
+  screen.getByLabelText('cell-0-1').focus();
+  fireEvent.keyDown(screen.getByLabelText('cell-0-1'), { key: 'Enter' });
   await waitFor(() => expect(commit).toHaveBeenCalledOnce());
   expect(focusCell).not.toHaveBeenCalled();
 });
@@ -118,6 +120,22 @@ it('copies the focused cell value while preserving native selected-text copy', (
   input.setSelectionRange(0, 3);
   expect(fireEvent.copy(input, { clipboardData: { setData } })).toBe(true);
   expect(setData).not.toHaveBeenCalled();
+});
+
+it('keeps cell navigation and opening a lookup within the row free of saves', async () => {
+  const { commit, focusCell } = setup();
+  const input = screen.getByLabelText('cell-0-0');
+  input.focus();
+  fireEvent.keyDown(input, { key: 'Tab' });
+  await waitFor(() => expect(focusCell).toHaveBeenCalledWith(0, 1));
+  expect(commit).not.toHaveBeenCalled();
+  fireEvent.mouseDown(screen.getByLabelText('cell-0-1'));
+  await waitFor(() => expect(focusCell).toHaveBeenCalledTimes(2));
+  expect(commit).not.toHaveBeenCalled();
+  input.setAttribute('role', 'combobox');
+  input.setAttribute('aria-expanded', 'true');
+  fireEvent.blur(input);
+  expect(commit).not.toHaveBeenCalled();
 });
 
 it('does not suppress a later click if the previous mouse target unmounted before clicking', async () => {

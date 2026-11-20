@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks;
+﻿using IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks;
 using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance;
 using Microsoft.Extensions.Configuration;
@@ -17,6 +17,9 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Registrations
             services.AddScoped<IModuleSeeder, FinancialDimensionSeeder>();
             services.AddScoped<IModuleSeeder, AccountStructureSeeder>();
             services.AddScoped<IModuleSeeder, CurrencyAndExchangeRateSeeder>();
+            // Every subledger posting resolves the ledger, so it is seeded with the
+            // calendar and currencies it depends on, before any module that posts.
+            services.AddScoped<IModuleSeeder, LedgerSeeder>();
             services.AddScoped<IModuleSeeder, UnitOfMeasureSeeder>();
             services.AddScoped<IModuleSeeder, InventItemGroupSeeder>();
             services.AddScoped<IModuleSeeder, CustGroupSeeder>();

@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Data;
 using System.Security.Cryptography;
 using System.Text;
@@ -185,7 +185,7 @@ public sealed partial class PackingSlipJournalService : BaseService<CustPackingS
         async Task<PackingSlipJournalResult> PostInTransactionAsync(IDbContextTransaction transaction)
         {
             await LockPostingKeyAsync($"PackingSlip:{_company.GetDataAreaId()}:{salesOrderRecId}", ct);
-            var order = await FindOrderAsync(salesOrderRecId, ct);
+            var order = await FindOrderAsync(salesOrderRecId, ct, tracked: true);
             if (order is null) return new PackingSlipJournalResult(404, null, "Sales order was not found in the selected company.");
             if (order.SalesType == SalesType.ReturnItem)
                 return new PackingSlipJournalResult(422, null,
@@ -647,9 +647,17 @@ public sealed partial class PackingSlipJournalService : BaseService<CustPackingS
         DataAreaId = source.DataAreaId,
     };
 
-    private Task<SalesTable?> FindOrderAsync(long recId, CancellationToken ct) =>
-        Db.Set<SalesTable>().AsNoTracking().SingleOrDefaultAsync(
+    /// <summary>
+    /// Loads the order. Posting mutates the header's document and sales status, so it must take a
+    /// tracked instance: changes to an untracked one are discarded by SaveChanges without error.
+    /// The read paths stay untracked.
+    /// </summary>
+    private Task<SalesTable?> FindOrderAsync(long recId, CancellationToken ct, bool tracked = false)
+    {
+        var orders = Db.Set<SalesTable>();
+        return (tracked ? orders.AsTracking() : orders.AsNoTracking()).SingleOrDefaultAsync(
             row => row.RecId == recId && row.DataAreaId == _company.GetDataAreaId(), ct);
+    }
 
     private async Task LockPostingKeyAsync(string key, CancellationToken ct)
     {

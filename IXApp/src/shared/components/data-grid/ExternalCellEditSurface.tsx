@@ -5,7 +5,8 @@ import type { DataGridHandle } from './types';
 interface Props {
   children: React.ReactNode;
   gridRef: React.RefObject<DataGridHandle | null>;
-  commit: () => Promise<boolean>;
+  commit: (nextRowId?: string | number) => Promise<boolean>;
+  saveOnRowExit?: boolean;
   onAdd: () => void;
   onRemove: () => void;
   onFilter: () => void;
@@ -18,6 +19,7 @@ export function ExternalCellEditSurface({
   children,
   gridRef,
   commit,
+  saveOnRowExit = true,
   onAdd,
   onRemove,
   onFilter,
@@ -37,9 +39,13 @@ export function ExternalCellEditSurface({
   const move = async (row: number, column: number) => {
     if (navigating.current) return;
     const address = gridRef.current?.getCellAddress?.(row, column);
+    const currentCell =
+      document.activeElement?.closest<HTMLElement>('[role="gridcell"]') ?? lastCell.current;
+    const staysInRow =
+      saveOnRowExit && currentCell != null && Number(currentCell.dataset.rowIndex) === row;
     navigating.current = true;
     try {
-      if (await commit()) {
+      if (staysInRow || (await commit(address?.rowId))) {
         if (!mounted.current) return;
         if (address && gridRef.current?.focusRecordCell) {
           await gridRef.current.focusRecordCell({
@@ -54,6 +60,20 @@ export function ExternalCellEditSurface({
   };
   return (
     <Box
+      onBlurCapture={(event) => {
+        if (!saveOnRowExit || navigating.current) return;
+        const next = event.relatedTarget as HTMLElement | null;
+        if (next?.closest('[data-grid-edit-command]')) return;
+        if (
+          next &&
+          (event.currentTarget.contains(next) ||
+            next.closest('[role="listbox"], [role="option"], [role="dialog"]'))
+        )
+          return;
+        // Opening a lookup can move focus into its portal; it is still row editing.
+        if (event.currentTarget.querySelector('[role="combobox"][aria-expanded="true"]')) return;
+        if (next) void commit();
+      }}
       onFocusCapture={(event) => {
         const cell = (event.target as HTMLElement).closest<HTMLElement>('[role="gridcell"]');
         if (cell && event.currentTarget.contains(cell)) lastCell.current = cell;

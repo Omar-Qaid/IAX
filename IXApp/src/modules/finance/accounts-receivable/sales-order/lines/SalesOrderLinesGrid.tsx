@@ -189,7 +189,10 @@ export function SalesOrderLinesGrid({
   const { hasPermission: canEditLines } = usePermission(PERMISSIONS.SALES_ORDER_UPDATE);
   const lineGridRef = useRef<DataGridHandle>(null);
   const addLineButtonRef = useRef<HTMLButtonElement>(null);
-  const commitCell = async () => {
+  const commitCell = async (nextRowId?: string | number) => {
+    if (activeDraft && nextRowId !== undefined && String(nextRowId) === activeDraft.id) return true;
+    // Site and warehouse form one dimension. Keep the site in the draft
+    // while moving to Warehouse, instead of posting an incomplete pair.
     const focusedControl = document.activeElement as HTMLElement | null;
     navigatingCellRef.current = true;
     try {
@@ -348,9 +351,7 @@ export function SalesOrderLinesGrid({
     'warehouse',
   ]);
   const handleCellBlur = () => {
-    if (activeDraft?.itemNumber && !navigatingCellRef.current) {
-      void saveLine(activeDraft);
-    }
+    // Persist on row exit or document Save, never on cell blur.
   };
   const cancelCellEdit = (row: DetailLine) => {
     navigatingCellRef.current = true;
@@ -375,7 +376,7 @@ export function SalesOrderLinesGrid({
     if (event.key === 'Enter') {
       event.preventDefault();
       event.stopPropagation();
-      void saveLine(activeDraft);
+      // The row edit surface handles Enter navigation.
     }
     if (event.key === 'Escape' && activeDraft) {
       event.preventDefault();
@@ -405,7 +406,6 @@ export function SalesOrderLinesGrid({
     if (!activeDraft) return;
     const next = { ...activeDraft, unit: unit ?? '' };
     setDraftLine(next);
-    if (next.itemNumber) void saveLine(next);
   };
   const gridColumns = useMemo(
     () =>
@@ -576,6 +576,14 @@ export function SalesOrderLinesGrid({
               const next = {
                 ...row,
                 [column.field]: String(nextValue ?? ''),
+                ...(!isSite && nextValue
+                  ? {
+                      site:
+                        dimensionsQuery.data?.warehouses.find(
+                          (warehouse) => warehouse.id === String(nextValue)
+                        )?.siteId || row.site,
+                    }
+                  : {}),
                 ...(isSite &&
                 row.warehouse &&
                 !dimensionsQuery.data?.warehouses.some(
@@ -586,7 +594,6 @@ export function SalesOrderLinesGrid({
                   : {}),
               };
               setDraftLine({ ...next, orderId: order.id });
-              if (next.itemNumber) void saveLine({ ...next, orderId: order.id });
             }}
           />
         </Box>
@@ -986,6 +993,7 @@ export function SalesOrderLinesGrid({
         <ErrorState message={linesQuery.error.message} onRetry={() => void linesQuery.refetch()} />
       )}
       <ExternalCellEditSurface
+        saveOnRowExit
         gridRef={lineGridRef}
         resolveRowId={(id) => (id === 'new-sales-line' ? (savedNewRowIdRef.current ?? id) : id)}
         onPasteError={() =>

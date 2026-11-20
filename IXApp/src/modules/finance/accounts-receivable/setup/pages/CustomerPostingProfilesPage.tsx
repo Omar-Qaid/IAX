@@ -18,11 +18,9 @@ export function CustomerPostingProfilesPage(): React.ReactElement {
 }
 function CompanyProfiles({ company }: { company: string }): React.ReactElement {
   const { t } = useAppTranslation();
-  const [lineEditing, setLineEditing] = React.useState(false);
   const [existing, setExisting] = React.useState(false);
   const label = (name: string) => t(`customerPostingProfiles.fields.${name}`);
   const config: EnterpriseListDetailsConfig<CustomerPostingProfile> = {
-    interactionLocked: lineEditing,
     onSelectionChange: (record) => setExisting(Boolean(record?.recId)),
     recordTableName: 'CustLedger',
     showAttachmentAction: false,
@@ -78,12 +76,7 @@ function CompanyProfiles({ company }: { company: string }): React.ReactElement {
         defaultExpanded: true,
         detailsPadding: '9px 10px 16px',
         content: (
-          <CustomerPostingAccountsPanel
-            key={record.id}
-            profile={record}
-            masterEditing={editing}
-            onEditingChange={setLineEditing}
-          />
+          <CustomerPostingAccountsPanel key={record.id} profile={record} masterEditing={editing} />
         ),
       },
       {

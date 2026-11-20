@@ -20,7 +20,6 @@ import { buildSalesOrderHeaderSections } from './SalesOrderHeaderSections';
 const SALES_ORDER_COMMAND_IDS = [
   'manage',
   'pickAndPack',
-  'invoice',
   'commerce',
   'general',
   'warehouse',
@@ -132,7 +131,16 @@ export function SalesOrderDetails({
             groups: salesOrderRibbonGroups,
             persistenceKey: 'ixapp.sales-order.ribbon-pinned',
           },
-          { id: 'sell', label: t('salesOrder.ui.sell', 'Sell'), groups: sellRibbonGroups },
+          {
+            id: 'sell',
+            label: t('salesOrder.ui.sell', 'Sell'),
+            groups: sellRibbonGroups.filter((group) => group.id !== 'invoice'),
+          },
+          {
+            id: 'invoice',
+            label: t('salesOrder.ui.invoice'),
+            groups: sellRibbonGroups.filter((group) => group.id === 'invoice'),
+          },
         ]}
         commands={SALES_ORDER_COMMAND_IDS.map((id) => ({
           id,

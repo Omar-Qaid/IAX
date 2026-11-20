@@ -1,5 +1,12 @@
 import React, { useMemo } from 'react';
-import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
+import { Box, Button, TextField, Typography } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import { useQuery } from '@tanstack/react-query';
+import { usePermission } from '@core/permissions/usePermission';
+import { useCompanyStore } from '@core/company/useCompanyStore';
+import { ListDetailsListGridPage } from '@patterns/list-details-listgrid/ListDetailsListGridPage';
+import { listGridLabelSx } from '@patterns/list-details-listgrid/fieldStyles';
+import { PageEditSessionContext } from '@shared/components/data-grid/PageEditSession';
 import type {
   DetailSectionConfig,
   DetailValue,
@@ -37,8 +44,37 @@ const emptyTaxAuthority = (): TaxAuthorityRecord => ({
 const textValue = (value: DetailValue): string => String(value ?? '');
 const numberValue = (value: DetailValue): number => Number(value) || 0;
 
+function AuthorityAddress({ value, onChange, editing }: { value: string; onChange: (value: string) => void; editing: boolean }) {
+  const { t } = useAppTranslation();
+  const session = React.useContext(PageEditSessionContext);
+  const input = React.useRef<HTMLTextAreaElement>(null);
+  const [focusRequested, setFocusRequested] = React.useState(false);
+  React.useEffect(() => {
+    if (editing && focusRequested) { input.current?.focus(); setFocusRequested(false); }
+  }, [editing, focusRequested]);
+  const label = t('taxAuthority.fields.address', 'Address');
+  return <Box>
+    <Button startIcon={<AddIcon />} size="small" disabled={session?.saving || (!editing && !session?.requestEdit)}
+      onClick={() => { if (!editing) session?.requestEdit?.(); setFocusRequested(true); }}
+      sx={{ mb: '16px', px: '4px', minWidth: 0, fontSize: 12 }}>
+      {t('actions.new', 'New')}
+    </Button>
+    <Box sx={{ width: 220, maxWidth: '100%' }}>
+      <Typography component="label" htmlFor="tax-authority-address" sx={listGridLabelSx}>{label}</Typography>
+      <TextField id="tax-authority-address" inputRef={input} fullWidth multiline rows={5} size="small"
+        value={value} onChange={(event) => onChange(event.target.value)}
+        disabled={session?.saving} slotProps={{ input: { readOnly: !editing }, htmlInput: { 'aria-label': label } }}
+        sx={{ '& .MuiInputBase-root': { fontSize: 12, borderRadius: '3px', minHeight: 118, alignItems: 'start', bgcolor: editing ? 'background.paper' : 'action.hover' } }} />
+    </Box>
+  </Box>;
+}
+
 export function TaxAuthorityPage(): React.ReactElement {
   const { t } = useAppTranslation();
+  const company = useCompanyStore((state) => state.currentCompany);
+  const canViewVendors = usePermission('AccountsPayable.Vendors.View').hasPermission;
+  const vendors = useQuery({ queryKey: ['tax-authority-vendors', company],
+    queryFn: ({ signal }) => taxAuthorityApi.vendorOptions(signal), enabled: canViewVendors });
   const reportLayoutOptions = useMemo(
     () =>
       [
@@ -71,6 +107,9 @@ export function TaxAuthorityPage(): React.ReactElement {
         title: t('common.general', 'General'),
         defaultExpanded: true,
         columns: 4,
+        gridTemplateColumns: 'repeat(4, minmax(0, 220px))',
+        columnGap: '50px',
+        detailsPadding: '10px',
         groups: [
           {
             id: 'vendor',
@@ -78,6 +117,9 @@ export function TaxAuthorityPage(): React.ReactElement {
               {
                 name: 'accountNum',
                 label: t('taxAuthority.fields.vendorAccount', 'Vendor account'),
+                width: 163,
+                type: 'select',
+                options: vendors.data ?? [],
               },
             ],
           },
@@ -88,6 +130,7 @@ export function TaxAuthorityPage(): React.ReactElement {
                 name: 'taxReportLayout',
                 label: t('taxAuthority.fields.reportLayout', 'Report layout'),
                 type: 'select',
+                width: 220,
                 options: reportLayoutOptions,
               },
             ],
@@ -100,6 +143,7 @@ export function TaxAuthorityPage(): React.ReactElement {
                 label: t('taxAuthority.fields.roundingForm', 'Rounding form'),
                 type: 'select',
                 options: roundOffOptions,
+                width: 163,
               },
             ],
           },
@@ -110,6 +154,7 @@ export function TaxAuthorityPage(): React.ReactElement {
                 name: 'roundOff',
                 label: t('taxAuthority.fields.roundOff', 'Round-off'),
                 type: 'number',
+                width: 105,
               },
             ],
           },
@@ -119,6 +164,7 @@ export function TaxAuthorityPage(): React.ReactElement {
         id: 'address',
         title: t('taxAuthority.sections.address', 'Address'),
         defaultExpanded: true,
+        detailsPadding: '8px 10px 10px',
         groups: [
           {
             id: 'addressValue',
@@ -137,26 +183,29 @@ export function TaxAuthorityPage(): React.ReactElement {
         title: t('taxAuthority.sections.contactInformation', 'Contact information'),
         defaultExpanded: true,
         columns: 5,
+        gridTemplateColumns: 'repeat(5, minmax(0, 220px))',
+        columnGap: '50px',
+        detailsPadding: '10px',
         groups: [
           {
             id: 'telephone',
             fields: [
-              { name: 'phone', label: t('taxAuthority.fields.telephone', 'Telephone') },
-              { name: 'extension', label: t('taxAuthority.fields.extension', 'Extension') },
+              { name: 'phone', label: t('taxAuthority.fields.telephone', 'Telephone'), width: 163 },
+              { name: 'extension', label: t('taxAuthority.fields.extension', 'Extension'), width: 105 },
             ],
           },
           {
             id: 'mobile',
             fields: [
-              { name: 'mobile', label: t('taxAuthority.fields.mobile', 'Mobile phone') },
-              { name: 'pager', label: t('taxAuthority.fields.pager', 'Pager') },
+              { name: 'mobile', label: t('taxAuthority.fields.mobile', 'Mobile phone'), width: 163 },
+              { name: 'pager', label: t('taxAuthority.fields.pager', 'Pager'), width: 163 },
             ],
           },
           {
             id: 'fax',
             fields: [
-              { name: 'fax', label: t('taxAuthority.fields.fax', 'Fax') },
-              { name: 'email', label: t('taxAuthority.fields.email', 'Email') },
+              { name: 'fax', label: t('taxAuthority.fields.fax', 'Fax'), width: 163 },
+              { name: 'email', label: t('taxAuthority.fields.email', 'Email'), width: 220 },
             ],
           },
           {
@@ -168,7 +217,7 @@ export function TaxAuthorityPage(): React.ReactElement {
           },
           {
             id: 'telex',
-            fields: [{ name: 'telex', label: t('taxAuthority.fields.telex', 'Telex number') }],
+            fields: [{ name: 'telex', label: t('taxAuthority.fields.telex', 'Telex number'), width: 163 }],
           },
         ],
       },
@@ -199,7 +248,7 @@ export function TaxAuthorityPage(): React.ReactElement {
         ],
       },
     ],
-    [reportLayoutOptions, roundOffOptions, t]
+    [reportLayoutOptions, roundOffOptions, vendors.data, t]
   );
 
   const config = useMemo<EnterpriseListDetailsConfig<TaxAuthorityRecord>>(
@@ -207,7 +256,7 @@ export function TaxAuthorityPage(): React.ReactElement {
       recordTableName: 'TaxAuthorityAddress',
       dataSource: {
         type: 'remote',
-        key: 'tax-authorities',
+        key: `tax-authorities:${company}`,
         load: taxAuthorityApi.list,
         create: taxAuthorityApi.create,
         update: taxAuthorityApi.update,
@@ -262,24 +311,30 @@ export function TaxAuthorityPage(): React.ReactElement {
       headerFields: [
         {
           id: 'taxAuthority',
+          width: 105,
           label: t('taxAuthority.fields.authority', 'Authority'),
           getValue: (x) => x.taxAuthority,
           setValue: (x, value) => ({ ...x, taxAuthority: String(value).toUpperCase() }),
         },
         {
           id: 'name',
+          width: 220,
           label: t('taxAuthority.fields.name', 'Name'),
           getValue: (x) => x.name,
           setValue: (x, value) => ({ ...x, name: String(value) }),
         },
         {
           id: 'taxAuthorityId',
+          width: 150,
           label: t('taxAuthority.fields.authorityIdentification', 'Authority identification'),
           getValue: (x) => x.taxAuthorityId,
           setValue: (x, value) => ({ ...x, taxAuthorityId: String(value).toUpperCase() }),
         },
       ],
-      sections,
+      sections: ({ record, editing, onRecordChange }) => sections.map((section) => section.id === 'address'
+        ? { ...section, groups: undefined, content: <AuthorityAddress editing={editing} value={record.address}
+            onChange={(address) => onRecordChange({ ...record, address })} /> }
+        : section),
       permissions: {
         view: PERMISSIONS.TAX_AUTHORITY_VIEW,
         create: PERMISSIONS.TAX_AUTHORITY_CREATE,
@@ -306,14 +361,13 @@ export function TaxAuthorityPage(): React.ReactElement {
             .toLowerCase()
             .includes(value.trim().toLowerCase()),
       },
-      presentation: { mode: 'list', listWidth: 244, listResizable: true },
+      presentation: { mode: 'list', listWidth: 264, listResizable: true, headerMaxWidth: 500, recordHeaderMinHeight: 124 },
     }),
-    [sections, t]
+    [sections, t, company]
   );
 
   return (
-    <ListDetailsPage
-      variant="enterprise"
+    <ListDetailsListGridPage
       title={t('taxAuthority.title', 'Sales tax authorities')}
       config={config}
     />

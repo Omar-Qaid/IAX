@@ -102,3 +102,34 @@ it('says so when every line is already invoiced', async () => {
   expect(await screen.findByText(/no line has a remaining quantity/i)).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /^ok$/i })).toBeDisabled();
 });
+
+it('proposes only the delivered quantity, and the whole remainder when the parameter says all', async () => {
+  // Ordered 10, of which 6 are delivered and 4 are still to ship.
+  vi.mocked(salesOrderLinesApi.list).mockResolvedValue([
+    {
+      id: '201',
+      lineNumber: 1,
+      itemNumber: 'ITEM-C',
+      description: 'Item C',
+      quantity: 10,
+      unit: 'ea',
+      unitPrice: 5,
+      lineTotal: 50,
+      remainSalesFinancial: 10,
+      remainSalesPhysical: 4,
+    },
+  ] as unknown as Lines);
+  renderDialog('11');
+
+  // Packing slip is the default parameter: invoice what was delivered, 10 - 4 = 6.
+  const quantity = await screen.findByLabelText(/ITEM-C/);
+  expect(quantity).toHaveValue(6);
+
+  // The parameters section starts collapsed, as it does in D365.
+  fireEvent.click(screen.getByText(/^parameters$/i));
+  const parameter = await screen.findByRole('combobox', { name: /quantity/i });
+  fireEvent.mouseDown(parameter);
+  fireEvent.click(await screen.findByRole('option', { name: /^all$/i }));
+
+  await waitFor(() => expect(screen.getByLabelText(/ITEM-C/)).toHaveValue(10));
+});

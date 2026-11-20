@@ -173,8 +173,17 @@ public sealed class SalesOrderLineService : ISalesOrderLineService
                 InventBatchId = input.BatchNumber?.Trim() ?? string.Empty,
                 InventSerialId = input.SerialNumber?.Trim() ?? string.Empty
             };
-            await _inventoryDemand.CreateAsync(order, line,
-                inventSiteId, inventLocationId, cancellationToken, dimensionTemplate);
+            try
+            {
+                await _inventoryDemand.CreateAsync(order, line,
+                    inventSiteId, inventLocationId, cancellationToken, dimensionTemplate);
+            }
+            catch (InvalidOperationException exception)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                _dbContext.Context.ChangeTracker.Clear();
+                return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, exception.Message);
+            }
             // Dimension-specific agreements cannot be selected before demand resolves InventDimId.
             if (usePriceAgreement)
             {
@@ -434,8 +443,17 @@ public sealed class SalesOrderLineService : ISalesOrderLineService
                     InventDimension9 = currentDimension?.InventDimension9 ?? default,
                     InventDimension9TzId = currentDimension?.InventDimension9TzId ?? 0
                 };
-                await _inventoryDemand.UpdateAsync(line, inventSiteId, inventLocationId,
-                    cancellationToken, batchNumber, serialNumber, dimensionTemplate);
+                try
+                {
+                    await _inventoryDemand.UpdateAsync(line, inventSiteId, inventLocationId,
+                        cancellationToken, batchNumber, serialNumber, dimensionTemplate);
+                }
+                catch (InvalidOperationException exception)
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    _dbContext.Context.ChangeTracker.Clear();
+                    return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, exception.Message);
+                }
                 responseSiteId = inventSiteId;
                 responseLocationId = inventLocationId;
             }

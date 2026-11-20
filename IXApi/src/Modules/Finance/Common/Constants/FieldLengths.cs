@@ -1,4 +1,4 @@
-using System.Reflection.Metadata;
+﻿using System.Reflection.Metadata;
 
 namespace IAX.IXApi.Modules.Finance.Common
 {
@@ -324,7 +324,9 @@ namespace IAX.IXApi.Modules.Finance.Common
         public const int JournalNameId = 10;
         public const int Source = 20;
         public const int JournalIdOrignal = 100;
-        public const int PostedUserId = 20;
+        // Holds an ASP.NET Identity user id, which is a string key: the seeded administrator's
+        // is a 36-character GUID, so posting truncated and failed at 20.
+        public const int PostedUserId = 450;
         public const int ToInventDimId = 100;
         public const int ToInventTransId = 100;
         public const int InventTransIdFather = 100;

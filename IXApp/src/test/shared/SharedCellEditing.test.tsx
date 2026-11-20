@@ -4,6 +4,8 @@ import { act, fireEvent, render, screen, waitFor } from '@test/testUtils';
 import { BufferedValueField } from '@shared/components/fields/BufferedValueField';
 import { createCellRenderer } from '@shared/components/data-grid/createCellRenderer';
 import { CommitAwareCrudActions } from '@shared/components/action-pane/CommitAwareCrudActions';
+import { DataGrid } from '@shared/components/data-grid/DataGrid';
+import type { DataGridHandle } from '@shared/components/data-grid/types';
 
 it('preserves partial decimal and empty input while accepting real upstream changes', () => {
   function Editor() {
@@ -66,6 +68,55 @@ const labels = {
   canEdit: true,
   canDelete: false,
 };
+
+it('commits the edited grid row and saves the page with one action-pane click', async () => {
+  const grid = React.createRef<DataGridHandle>();
+  let finish!: () => void;
+  const rowSave = vi.fn(
+    (_row: unknown, _isNew: boolean) =>
+      new Promise<void>((resolve) => {
+        finish = resolve;
+      })
+  );
+  const pageSave = vi.fn();
+  render(
+    <>
+      <CommitAwareCrudActions
+        {...labels}
+        beforeSave={() => grid.current!.saveEdit()}
+        onSave={pageSave}
+      />
+      <DataGrid
+        ref={grid}
+        rows={[{ id: 'row-1', amount: 1 }]}
+        columns={[{ field: 'amount', headerName: 'Amount', editable: true }]}
+        masterForm
+        onRowSave={rowSave}
+        height={200}
+        hideToolbar
+        hideFilterRow
+        hideInlineEditActions
+      />
+    </>
+  );
+  act(() => grid.current!.startEditRow('row-1'));
+  const input = document.querySelector<HTMLInputElement>('[data-field="amount"] input')!;
+  fireEvent.change(input, { target: { value: '25' } });
+  input.focus();
+  const save = document.querySelector<HTMLButtonElement>(
+    '[data-grid-edit-command][aria-label="Save"]'
+  )!;
+  fireEvent.mouseDown(save);
+  fireEvent.blur(input, { relatedTarget: save });
+  expect(rowSave).not.toHaveBeenCalled();
+  expect(save).toBeEnabled();
+  fireEvent.click(save);
+  expect(rowSave).toHaveBeenCalledOnce();
+  expect(pageSave).not.toHaveBeenCalled();
+  await act(async () => finish());
+  await waitFor(() => expect(pageSave).toHaveBeenCalledOnce());
+  expect(rowSave.mock.calls[0][0]).toEqual(expect.objectContaining({ amount: '25' }));
+});
 it('blocks page Save after a rejected line commit and clears drafts before Cancel', async () => {
   const onSave = vi.fn();
   const order: string[] = [];

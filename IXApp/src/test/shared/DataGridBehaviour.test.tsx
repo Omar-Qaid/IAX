@@ -265,6 +265,26 @@ describe('D365 line editing', () => {
     await waitFor(() => expect(editingRowId()).toBe('b'));
   });
 
+  it.each(['Tab', 'Enter'])(
+    'keeps the draft when %s moves between cells in the same row',
+    async (key) => {
+      const { ref, onRowSave } = renderEditable();
+      act(() => ref.current!.startEditRow('a'));
+      const input = document.querySelector<HTMLInputElement>(
+        '[data-row-id="a"] [data-field="code"] input'
+      )!;
+      fireEvent.change(input, { target: { value: 'A-9' } });
+      input.focus();
+      fireEvent.keyDown(input, { key });
+      await waitFor(() =>
+        expect(document.activeElement?.closest('[data-field]')).toHaveAttribute('data-field', 'qty')
+      );
+      expect(editingRowId()).toBe('a');
+      expect(onRowSave).not.toHaveBeenCalled();
+      expect(input).toHaveValue('A-9');
+    }
+  );
+
   it('deletes the selected record with Alt+F9', () => {
     const onDelete = vi.fn();
     render(

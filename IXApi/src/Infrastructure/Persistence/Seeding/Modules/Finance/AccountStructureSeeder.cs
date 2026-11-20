@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
+﻿using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Foundation.Dimensions.AccountStructure;
 using Microsoft.EntityFrameworkCore;
@@ -22,7 +22,12 @@ public sealed class AccountStructureSeeder : BaseModuleSeeder
     public override SeederCategory Category => SeederCategory.Reference;
     public override string Scope => "dat";
     public override SeederExecutionPolicy Policy => SeederExecutionPolicy.Repeatable;
-    public override IReadOnlyCollection<string> DependsOn => new[] { "Finance.Foundation.FinancialDimensions" };
+    public override IReadOnlyCollection<string> DependsOn => new[]
+    {
+        "Finance.Foundation.FinancialDimensions",
+        // A structure is assigned to the ledger as part of activation, so the ledger comes first.
+        "Finance.GeneralLedger.Ledger",
+    };
 
     private const string Area = "dat";
 
@@ -57,6 +62,13 @@ public sealed class AccountStructureSeeder : BaseModuleSeeder
         {
             if (existing.IsDeleted || existing.IsDraft == IAX.IXApi.Modules.Finance.Common.NoYes.Yes)
                 throw new InvalidOperationException($"Existing account structure '{input.Name}' is deleted or a draft; review it before seeding.");
+            // The structure stands, but its ledger assignment may not: a structure activated before
+            // the ledger existed is never assigned, and posting then fails with "No active account
+            // structure is assigned to the ledger." Converge the assignment, nothing else.
+            var (_, assignmentError) = await builder.AssignToLedgerAsync(Area, input.Name, ct);
+            if (assignmentError != null)
+                throw new InvalidOperationException(
+                    $"Account structure '{input.Name}' could not be assigned to the ledger: {assignmentError}");
             return;
         }
         if (existing == null)

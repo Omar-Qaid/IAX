@@ -2,11 +2,12 @@ import React from 'react';
 import { Box, MenuItem, TextField, Typography } from '@mui/material';
 import { EditableViewField } from '@shared/components/fields/EditableViewField';
 import { listGridControlSx, listGridLabelSx } from './fieldStyles';
+import { PageEditSessionContext } from '@shared/components/data-grid/PageEditSession';
 export function ListGridField({
   label,
   value,
   onChange,
-  editing = false,
+  editing,
   numeric = false,
   options,
   underlined = false,
@@ -24,7 +25,16 @@ export function ListGridField({
   onEdit?: () => void;
 }): React.ReactElement {
   const id = React.useId();
-  const editable = editing && !disabled;
+  const session = React.useContext(PageEditSessionContext);
+  const requestEdit =
+    !disabled && !session?.saving && (onEdit || (onChange && session?.requestEdit))
+      ? () => {
+          if (!session?.editing) session?.requestEdit?.();
+          onEdit?.();
+        }
+      : undefined;
+  const editable =
+    (editing ?? (Boolean(onChange) && session?.editing)) && !disabled && !session?.saving;
   const displayValue = options
     ? (options.find((option) => option.value === String(value))?.label ?? value)
     : value;
@@ -40,7 +50,7 @@ export function ListGridField({
           numeric={numeric}
           lookup={Boolean(options)}
           disabled={disabled}
-          onEdit={onEdit}
+          onEdit={requestEdit}
         />
       ) : (
         <TextField

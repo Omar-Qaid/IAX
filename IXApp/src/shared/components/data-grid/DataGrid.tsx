@@ -279,6 +279,9 @@ function DataGridInternal<T>(
     const saveWhenClickingOutsideRow = (event: MouseEvent) => {
       const target = event.target;
       if (!(target instanceof HTMLElement)) return;
+      // Save/Cancel coordinate the editor themselves. An earlier mousedown
+      // save would disable the command before its click is dispatched.
+      if (target.closest('[data-grid-edit-command]')) return;
       if (
         target.closest('.MuiAutocomplete-popper, .MuiPopover-root, .MuiDialog-root, .MuiModal-root')
       )
@@ -875,7 +878,7 @@ function DataGridInternal<T>(
           focusCell(r, c + (forward ? 1 : -1));
           return;
         }
-        if (e.key === 'Tab') {
+        if (e.key === 'Tab' || (e.key === 'Enter' && inEditingRow && !isTextArea)) {
           if (isListOpen) return;
           e.preventDefault();
           const last = getColCount() - 1;

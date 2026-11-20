@@ -84,6 +84,7 @@ export function useSalesOrderDocument() {
     'accounts-receivable.sales-order-lines'
   );
   const { hasPermission: canEditLines } = usePermission(PERMISSIONS.SALES_ORDER_UPDATE);
+  const { hasPermission: canPostSalesOrder } = usePermission(PERMISSIONS.SALES_ORDER_POST);
   const [lineTab, setLineTab] = useState('General');
   const [tab, setTab] = useState('lines');
   const [selectedLineId, setSelectedLineId] = useState<string>();
@@ -137,6 +138,10 @@ export function useSalesOrderDocument() {
   });
   const activeHeader = headerDraft?.id === order?.id ? headerDraft : null;
   const canEditHeader = canEditLines && order?.salesStatus.toLowerCase() === 'backorder';
+  const canInvoice =
+    canPostSalesOrder &&
+    Boolean(order) &&
+    ['backorder', 'delivered'].includes(order?.salesStatus.toLowerCase() ?? '');
   const recalculateSalesOrderDiscounts = async () => {
     if (!order || !canEditHeader || activeHeader || recalculateLock.current) return;
     recalculateLock.current = true;
@@ -374,7 +379,7 @@ export function useSalesOrderDocument() {
         {
           id: 'post-invoice',
           label: t('salesOrder.ui.invoice'),
-          disabled: !canEditHeader || Boolean(activeHeader),
+          disabled: !canInvoice || Boolean(activeHeader),
           onClick: () => setInvoicePostingOpen(true),
         },
         {
@@ -755,6 +760,7 @@ export function useSalesOrderDocument() {
     lineDetailSaveLock,
     activeHeader,
     canEditHeader,
+    canInvoice,
     recalculateSalesOrderDiscounts,
     salesOrderRibbonGroups,
     sellRibbonGroups,

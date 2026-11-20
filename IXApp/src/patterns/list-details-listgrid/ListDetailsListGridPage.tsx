@@ -7,6 +7,7 @@ import {
   type TabularDetailPanelProps,
 } from '@patterns/list-details/TabularDetailPanel';
 import type { EnterpriseListDetailsConfig, ListDetailRecord } from '@patterns/list-details/types';
+export { useListGridEditor } from './useListGridEditor';
 
 export function ListDetailsListGridPage<T extends ListDetailRecord>({
   title,
