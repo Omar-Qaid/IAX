@@ -36,6 +36,7 @@ public sealed record FreeTextInvoiceLineDto(
     decimal TaxAmount,
     decimal GrossAmount,
     long LedgerDimension,
+    string LedgerAccount,
     long DefaultDimension,
     string TaxGroup,
     string TaxItemGroup);

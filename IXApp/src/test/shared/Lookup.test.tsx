@@ -17,6 +17,26 @@ const renderWithQueryClient = (element: React.ReactElement) => {
 };
 
 describe('LookupField', () => {
+  it('keeps ledger combinations with the same account code independently selectable', async () => {
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const onChange = vi.fn();
+    const options = [
+      { id: '101', code: '50010000', name: '50010000-SALES' },
+      { id: '102', code: '50010000', name: '50010000-ADMIN' },
+    ];
+    try {
+      renderWithQueryClient(
+        <LookupField name="ledger" label="Ledger account" options={options}
+          displayMode="select" gridCell onChange={onChange} />
+      );
+      fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Ledger account' }));
+      fireEvent.click(await screen.findByText('50010000-ADMIN'));
+      expect(onChange).toHaveBeenCalledWith('102', options[1]);
+      expect(errors.mock.calls.flat().join(' ')).not.toContain('same key');
+    } finally {
+      errors.mockRestore();
+    }
+  });
   it('uses the shared outlined field layout and keeps an empty lookup label aligned', () => {
     renderWithQueryClient(
       <LookupField name="taxGroup" label="Sales tax group" options={sampleOptions} />

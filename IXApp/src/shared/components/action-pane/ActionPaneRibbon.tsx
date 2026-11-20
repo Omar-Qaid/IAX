@@ -8,11 +8,21 @@ export interface ActionPaneRibbonAction {
   id: string;
   label: string;
   disabled?: boolean;
+  /** Hover text, used to say why a reference command is unavailable. */
+  tooltip?: string;
   onClick?: () => void;
-  items?: readonly { id: string; label: string; onClick: () => void }[];
+  items?: readonly {
+    id: string;
+    label: string;
+    onClick: () => void;
+    disabled?: boolean;
+    tooltip?: string;
+  }[];
 }
 
 export interface ActionPaneRibbonGroup {
+  /** Optional compact columns within this ribbon group. */
+  columns?: number;
   id: string;
   label: string;
   actions: readonly ActionPaneRibbonAction[];
@@ -66,11 +76,21 @@ export function ActionPaneRibbon({
           >
             {group.label}
           </Typography>
-          <Box sx={{ display: 'grid', alignContent: 'start' }}>
+          <Box
+            sx={{
+              display: 'grid',
+              alignContent: 'start',
+              gridTemplateColumns: `repeat(${group.columns ?? 1}, max-content)`,
+              gridTemplateRows: `repeat(${Math.max(1, Math.ceil(group.actions.length / (group.columns ?? 1)))}, auto)`,
+              gridAutoFlow: 'column',
+              columnGap: 1.5,
+            }}
+          >
             {group.actions.map((action) => (
               <Button
                 key={action.id}
                 disabled={action.disabled}
+                title={action.tooltip}
                 onClick={
                   action.items
                     ? (event) => setMenu({ anchor: event.currentTarget, action })
@@ -108,6 +128,8 @@ export function ActionPaneRibbon({
           {menu.action.items?.map((item) => (
             <MenuItem
               key={item.id}
+              disabled={item.disabled}
+              title={item.tooltip}
               onClick={() => {
                 setMenu(null);
                 item.onClick();

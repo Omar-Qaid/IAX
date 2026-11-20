@@ -153,7 +153,7 @@ export function FilterPopover<T>({
         <Divider sx={{ mb: 1.5 }} />
 
         <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600, color: 'text.primary' }}>
-          {column.headerName}
+          {t(column.headerName || '')}
         </Typography>
 
         {/* Operator selector */}

@@ -89,8 +89,9 @@ export function CustomerGroupListPage(): React.ReactElement {
   }, [lookups]);
 
   const config: EnterpriseListConfig<CustomerGroupRecord> = {
+    recordTableName: 'CustGroup',
+    getAuditRecordId: (group) => group.recId,
     contextLabel: t('pages.customerGroups.title'),
-    viewLabel: t('pages.customerGroups.standardView'),
     searchMode: 'quick',
     searchFields: [
       { field: 'custGroupId', label: t('fields.customerGroup') },

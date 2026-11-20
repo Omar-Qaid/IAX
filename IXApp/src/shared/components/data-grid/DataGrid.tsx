@@ -1072,7 +1072,7 @@ function DataGridInternal<T>(
       return;
     }
 
-    const csv = generateCSV(processedRows, computedColumns);
+    const csv = generateCSV(processedRows, computedColumns, t);
     downloadFile(csv, 'export.csv', 'text/csv;charset=utf-8;');
   }, [
     computedColumns,
@@ -1082,6 +1082,7 @@ function DataGridInternal<T>(
     sortModel,
     filters,
     globalSearch,
+    t,
   ]);
 
   // -- Autosize -------------------------------------------------------------
@@ -1095,6 +1096,7 @@ function DataGridInternal<T>(
     setColumns,
     processedRows,
     initialColumns,
+    translateHeader: t,
   });
 
   const handleResetColumns = useCallback(() => {

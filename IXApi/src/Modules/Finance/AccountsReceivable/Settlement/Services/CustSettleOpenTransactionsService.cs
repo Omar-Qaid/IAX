@@ -69,6 +69,59 @@ public sealed class CustSettleOpenTransactionsService : BaseService<CustSettleme
         public string GetDataAreaId() => company.GetDataAreaId();
     }
 
+    public async Task<CustPaymentResult> GetOpenTransactionsAsync(string accountNum, CancellationToken ct)
+    {
+        var area = _company.GetDataAreaId();
+        if (string.IsNullOrWhiteSpace(area)) return new(400, null, "A company must be selected.");
+        if (string.IsNullOrWhiteSpace(accountNum)) return new(400, null, "A customer account is required.");
+        var account = accountNum.Trim();
+        var customer = await Db.Set<CustTable>().AsNoTracking()
+            .Where(x => x.DataAreaId == area && x.AccountNum == account)
+            .Select(x => new { x.Party, x.CurrencyCode }).SingleOrDefaultAsync(ct);
+        if (customer == null) return new(404, null, "Customer not found in the selected company.");
+        var accountingCurrency = await Db.Set<Ledger>().AsNoTracking().Where(x => x.DataAreaId == area)
+            .Select(x => x.AccountingCurrency).SingleOrDefaultAsync(ct);
+        if (string.IsNullOrWhiteSpace(accountingCurrency)) return new(422, null, "The selected company has no accounting currency configured.");
+        var customerName = await Db.Set<DirPartyTable>().AsNoTracking().Where(x => x.RecId == customer.Party)
+            .Select(x => x.Name).FirstOrDefaultAsync(ct) ?? string.Empty;
+        var rows = await (from open in Db.Set<CustTransOpen>().AsNoTracking()
+            join trans in Db.Set<CustTrans>().AsNoTracking() on open.RefRecId equals trans.RecId
+            where open.DataAreaId == area && trans.DataAreaId == area
+                && open.AccountNum == account && trans.AccountNum == account
+            join dim in Db.Set<DimensionAttributeValueSet>().Where(x => x.DataAreaId == area)
+                on trans.DefaultDimension equals dim.RecId into dimensions
+            from dimension in dimensions.DefaultIfEmpty()
+            orderby open.DueDate, open.RecId
+            select new CustOpenTransRowDto
+            {
+                RecId = open.RecId, TransRecId = trans.RecId,
+                Invoice = trans.Invoice, Voucher = trans.Voucher, Description = trans.Txt,
+                CurrencyCode = trans.CurrencyCode, TransDate = trans.TransDate, DueDate = open.DueDate,
+                CashDiscDate = open.CashDiscDate, AmountCur = open.AmountCur, AmountMst = open.AmountMst,
+                OriginalAmountCur = trans.AmountCur, OriginalAmountMst = trans.AmountMst,
+                SettledAmountMst = trans.SettleAmountMst, SettledAmountCur = trans.SettleAmountCur, PossibleCashDisc = open.PossibleCashDisc,
+                UseCashDisc = open.UseCashDisc, LastSettleDate = trans.LastSettleDate,
+                PaymentMode = trans.PaymMode, PaymentReference = trans.PaymReference,
+                PaymentTerms = trans.PaymTermId, CashDiscCode = trans.CashDiscCode,
+                Prepayment = trans.Prepayment == NoYes.Yes,
+                Worker = dimension == null ? "" : dimension.WorkerValue,
+                Department = dimension == null ? "" : dimension.DepartmentValue,
+                CostCenter = dimension == null ? "" : dimension.CostCenterValue,
+                Project = dimension == null ? "" : dimension.ProjectValue,
+                BusinessUnit = dimension == null ? "" : dimension.BusinessUnitValue
+            }).ToListAsync(ct);
+        var transactionIds = rows.Select(x => x.TransRecId).ToArray();
+        var discounts = await Db.Set<CustSettlement>().AsNoTracking()
+            .Where(x => x.DataAreaId == area && x.AccountNum == account && transactionIds.Contains(x.TransRecId))
+            .Select(x => new { x.TransRecId, x.UtilizedCashDisc }).ToListAsync(ct);
+        var taken = discounts.GroupBy(x => x.TransRecId).ToDictionary(x => x.Key, x => x.Sum(y => y.UtilizedCashDisc));
+        foreach (var row in rows) row.CashDiscTaken = taken.GetValueOrDefault(row.TransRecId);
+        var reconciled = rows.All(x => x.AmountCur == x.OriginalAmountCur - x.SettledAmountCur
+            && x.AmountMst == x.OriginalAmountMst - x.SettledAmountMst);
+        return new(200, new CustOpenTransDto(account, customerName, area, customer.CurrencyCode,
+            accountingCurrency, rows.Sum(x => x.AmountMst), reconciled, rows), string.Empty);
+    }
+
     public Task<CustPaymentResult> SettleAsync(CustSettleOpenInput input, CancellationToken ct) =>
         Db.Database.CreateExecutionStrategy().ExecuteAsync(() => SettleCoreAsync(input, ct));
 
@@ -104,6 +157,11 @@ public sealed class CustSettleOpenTransactionsService : BaseService<CustSettleme
                 return await Fail(422, $"Transaction {missing[0]} is not an open transaction of customer '{account}'.", ct);
 
             var date = (input.SettleDate ?? DateTime.UtcNow).Date;
+            if (marked.Any(x => x.Trans.TransDate.Date > date || x.Trans.LastSettleDate.Date > date))
+                return await Fail(422, "The settlement date precedes a marked transaction or its last settlement.", ct);
+            if (marked.Any(x => x.Open.AmountCur != x.Trans.AmountCur - x.Trans.SettleAmountCur
+                || x.Open.AmountMst != x.Trans.AmountMst - x.Trans.SettleAmountMst))
+                return await Fail(422, "The open balances do not reconcile with the marked customer transactions.", ct);
             var hasPrepayment = marked.Any(x => x.Trans.Prepayment == NoYes.Yes);
             if (hasPrepayment && (marked.Count != 2
                 || marked.Count(x => x.Trans.Prepayment == NoYes.Yes && x.Open.AmountCur < 0m) != 1

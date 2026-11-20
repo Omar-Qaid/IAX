@@ -191,6 +191,8 @@ export interface SimpleListPageProps<T extends { id: string } = { id: string }> 
   contentMinHeight?: number;
   containerSx?: SxProps<Theme>;
   contentSx?: SxProps<Theme>;
+  /** Optional selected-record view replacing the grid, for read-only detail tabs. */
+  detailContent?: (selectedRow: T | null) => React.ReactNode;
   /** Document/list-specific content rendered below the grid for the active row. */
   belowGridContent?: React.ReactNode | ((selectedRow: T | null) => React.ReactNode);
 }
@@ -215,9 +217,11 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
   } = props;
   const { t, currentLanguage } = useAppTranslation();
   const enterpriseConfig = useMemo<ResolvedEnterpriseListConfig<T> | undefined>(() => {
+    // Columns carry translation keys; the filter rail renders labels verbatim, so
+    // resolve them here. A plain label translates to itself.
     const searchFields = props.columns.map((column) => ({
       field: column.field as keyof T & string,
-      label: column.headerName,
+      label: column.headerName ? t(column.headerName) : '',
     }));
     const defaults: ResolvedEnterpriseListConfig<T> = {
       readOnly: true,
@@ -708,13 +712,16 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
               </Box>
             ) : null}
             <Box sx={{ flex: 1, minHeight: 0, mx: { xs: 1, sm: 2.5 } }}>
-              {feedback ?? (
-                <DataGrid
-                  ref={gridRef}
-                  {...resolvedGridProps}
-                  height={gridHeight ?? resolvedGridProps.height ?? '100%'}
-                />
-              )}
+              {feedback ??
+                (props.detailContent ? (
+                  props.detailContent(selectedRow)
+                ) : (
+                  <DataGrid
+                    ref={gridRef}
+                    {...resolvedGridProps}
+                    height={gridHeight ?? resolvedGridProps.height ?? '100%'}
+                  />
+                ))}
             </Box>
             {props.belowGridContent && (
               <Box sx={{ mx: { xs: 1, sm: 2.5 } }}>

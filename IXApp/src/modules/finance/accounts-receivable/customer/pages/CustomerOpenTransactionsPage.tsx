@@ -62,7 +62,6 @@ export function CustomerOpenTransactionsPage(): React.ReactElement {
   return (
     <SimpleListPage<Row>
       title={t('customerInquiry.openTransactions')}
-      contextLabel={accountNum}
       recordTableName="CustTrans"
       enterpriseConfig={{
         readOnly: true,
@@ -82,7 +81,9 @@ export function CustomerOpenTransactionsPage(): React.ReactElement {
       loading={query.isPending}
       error={query.isError ? query.error.message : null}
       onRetry={() => void query.refetch()}
-      dataGridProps={{ storageKey: 'customer.open-transactions', mobilePresentation: 'table' }}
+      dataGridProps={{
+        storageKey: 'accounts-receivable.customer-open-transactions.reference-view',
+      }}
       belowGridContent={
         query.data?.reconciled === false ? (
           <Alert severity="warning">{t('partyBalance.notReconciled')}</Alert>

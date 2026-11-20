@@ -297,7 +297,7 @@ export function FeaturesPanel<T>({
                       flexGrow: 1,
                     }}
                   >
-                    {col.headerName}
+                    {t(col.headerName)}
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 0.5 }}>
                     <IconButton

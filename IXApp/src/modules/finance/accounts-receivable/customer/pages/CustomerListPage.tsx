@@ -2,8 +2,8 @@ import { localizedName } from '@shared/utilities/localizedName';
 import { useCompanyStore } from '@core/company/useCompanyStore';
 import { accountContacts } from '@modules/finance/foundation/contacts/routes/contactRoutes';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Typography } from '@mui/material';
 import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
+import { ListInfoValue } from '@patterns/simple-list/ListInfoValue';
 import { StatusBadge } from '@shared/components/status/StatusBadge';
 import type { ColumnDef } from '@shared/components/data-grid/types';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
@@ -181,6 +181,15 @@ export function CustomerListPage(): React.ReactElement {
           customer && navigate(PARTY_BALANCE_ROUTE_PATHS.customerBalance(customer.accountNumber)),
       },
       {
+        id: 'order-lines',
+        label: t('custSalesLines.orderLines'),
+        permission: PERMISSIONS.SALES_ORDER_VIEW,
+        disabled: !customer,
+        onClick: () =>
+          customer &&
+          navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.custSalesLines(customer.accountNumber)),
+      },
+      {
         id: 'sales-orders',
         label: t('pages.salesOrders.title'),
         permission: PERMISSIONS.SALES_ORDER_VIEW,
@@ -214,13 +223,12 @@ export function CustomerListPage(): React.ReactElement {
           id: 'statistics',
           label: t('relatedInformation.statistics'),
           content: (
-            <Typography sx={{ fontSize: '0.75rem' }}>
-              {customer
-                ? [customer.accountNumber, customer.customerGroupId, customer.currencyCode]
-                    .filter(Boolean)
-                    .join(' · ')
-                : t('relatedInformation.selectCustomer')}
-            </Typography>
+            <ListInfoValue
+              value={[customer?.accountNumber, customer?.customerGroupId, customer?.currencyCode]
+                .filter(Boolean)
+                .join(' · ')}
+              empty={t('relatedInformation.selectCustomer')}
+            />
           ),
         },
       ],

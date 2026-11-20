@@ -15,6 +15,8 @@ public sealed record CustSettleOpenInput(
 
 public interface ICustSettleOpenTransactionsService : IBaseService<CustSettlement>
 {
+    Task<CustPaymentResult> GetOpenTransactionsAsync(string accountNum, CancellationToken ct);
+
     /// <summary>Settles marked open transactions against each other, with no payment involved.</summary>
     Task<CustPaymentResult> SettleAsync(CustSettleOpenInput input, CancellationToken ct);
 }

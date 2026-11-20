@@ -1,10 +1,11 @@
 import React from 'react';
-import { Checkbox, FormControlLabel, MenuItem, Stack, TextField } from '@mui/material';
+import { Box, Checkbox, FormControlLabel, MenuItem, Stack, TextField } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { apiClient } from '@core/api/apiClient';
 import type { ApiResponse } from '@core/api/apiResponse';
 import { useCompanyStore } from '@core/company/useCompanyStore';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { SimpleListPage } from '@patterns/simple-list/SimpleListPage';
 import type { ColumnDef } from '@shared/components/data-grid/types';
 
@@ -23,45 +24,52 @@ interface Transaction {
   department: string | null;
 }
 type Row = Transaction & { id: string };
+type ShowFilter = 'all' | 'open' | 'closed';
+
 const money = new Intl.NumberFormat(undefined, {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
 const amountColumn = (
-  field: 'amountCur' | 'balanceCur' | 'amountMst' | 'balanceMst',
-  headerName: string
+  field: 'amountCur' | 'balanceCur' | 'amountMst' | 'balanceMst'
 ): ColumnDef<Row> => ({
   field,
-  headerName,
+  headerName: `customerInquiry.${field}`,
   width: 155,
   align: 'right',
   renderCell: ({ row }) => money.format(row[field]),
 });
-const columns: ColumnDef<Row>[] = [
-  { field: 'voucher', headerName: 'Voucher', width: 150 },
+const buildColumns = (t: (key: string) => string): ColumnDef<Row>[] => [
+  { field: 'voucher', headerName: 'customerInquiry.voucher', width: 150 },
   {
     field: 'transactionType',
-    headerName: 'Transaction type',
+    headerName: 'customerInquiry.transactionType',
     valueGetter: ({ row }) =>
-      row.transactionType === 'Sales' ? 'Sales order' : row.transactionType,
+      row.transactionType === 'Sales' ? t('customerInquiry.salesOrder') : row.transactionType,
   },
-  { field: 'transDate', headerName: 'Date', valueGetter: ({ row }) => row.transDate.slice(0, 10) },
-  { field: 'invoice', headerName: 'Invoice' },
-  { field: 'description', headerName: 'Description', width: 230 },
-  amountColumn('amountCur', 'Amount in transaction currency'),
-  amountColumn('balanceCur', 'Balance'),
-  { field: 'currencyCode', headerName: 'Currency' },
-  amountColumn('amountMst', 'Amount'),
-  amountColumn('balanceMst', 'Balance'),
-  { field: 'department', headerName: 'Department' },
+  {
+    field: 'transDate',
+    headerName: 'customerInquiry.date',
+    valueGetter: ({ row }) => row.transDate.slice(0, 10),
+  },
+  { field: 'invoice', headerName: 'customerInquiry.invoice' },
+  { field: 'description', headerName: 'customerInquiry.description', width: 230 },
+  amountColumn('amountCur'),
+  amountColumn('balanceCur'),
+  { field: 'currencyCode', headerName: 'customerInquiry.currency' },
+  amountColumn('amountMst'),
+  amountColumn('balanceMst'),
+  { field: 'department', headerName: 'customerInquiry.department' },
 ];
+const showOptions: ShowFilter[] = ['all', 'open', 'closed'];
 
-export function CustTrans() {
+export function CustTrans(): React.ReactElement {
   const { accountNum } = useParams();
+  const { t } = useAppTranslation();
   const company = useCompanyStore((state) => state.currentCompany);
-  const [show, setShow] = React.useState('All');
-  const [search, setSearch] = React.useState('');
+  const [show, setShow] = React.useState<ShowFilter>('all');
   const [hideRevaluations, setHideRevaluations] = React.useState(false);
+  const columns = React.useMemo(() => buildColumns(t), [t]);
   const query = useQuery({
     queryKey: ['CustTrans', company, accountNum],
     queryFn: async ({ signal }) => {
@@ -70,7 +78,7 @@ export function CustTrans() {
         { params: { accountNum }, signal }
       );
       if (!data.success || !data.data)
-        throw new Error(data.message || 'Unable to load customer transactions');
+        throw new Error(data.message || t('customerInquiry.loadFailed'));
       return data.data;
     },
   });
@@ -78,64 +86,53 @@ export function CustTrans() {
     .filter((row) => {
       const open = row.balanceCur !== 0 || row.balanceMst !== 0;
       return (
-        (show === 'All' || (show === 'Open') === open) &&
-        (!hideRevaluations || row.transactionType !== 'ExchAdjustment') &&
-        [
-          row.voucher,
-          row.invoice,
-          row.description,
-          row.currencyCode,
-          row.transactionType,
-          row.department,
-        ]
-          .join(' ')
-          .toLowerCase()
-          .includes(search.trim().toLowerCase())
+        (show === 'all' || (show === 'open') === open) &&
+        (!hideRevaluations || row.transactionType !== 'ExchAdjustment')
       );
     })
     .map((row) => ({ ...row, id: String(row.recId) }));
   return (
     <SimpleListPage<Row>
-      recordTableName="CustTrans"
-      title={`Customer transactions | ${accountNum}`}
+      title={t('customerInquiry.customerTransactions')}
       columns={columns}
+      recordTableName="CustTrans"
+      enterpriseConfig={{
+        readOnly: true,
+        contextLabel: `${t('customerInquiry.customerTransactions')} | ${accountNum}`,
+        getAuditRecordId: (row) => row.recId,
+      }}
       dataSource={{ type: 'controlled', rows, refresh: () => void query.refetch() }}
       loading={query.isPending}
       error={query.error?.message}
       onRetry={() => void query.refetch()}
-      dataGridProps={{ storageKey: 'CustTrans', mobilePresentation: 'table' }}
+      dataGridProps={{ storageKey: 'accounts-receivable.customer-transactions.reference-view' }}
       filterBar={
-        <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap', mx: 2.5, my: 1 }}>
-          <TextField
-            size="small"
-            label="Filter"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <TextField
-            select
-            size="small"
-            label="Show"
-            value={show}
-            onChange={(e) => setShow(e.target.value)}
-          >
-            {['All', 'Open', 'Closed'].map((option) => (
-              <MenuItem key={option} value={option}>
-                {option}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField size="small" label="Date" value={new Date().toLocaleDateString()} disabled />
-          <FormControlLabel
-            label="Hide currency revaluations"
-            control={
-              <Checkbox
-                checked={hideRevaluations}
-                onChange={(e) => setHideRevaluations(e.target.checked)}
-              />
-            }
-          />
-        </Stack>
+        <Box sx={{ mx: { xs: 1, sm: 2.5 } }}>
+          <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
+            <TextField
+              select
+              size="small"
+              label={t('customerInquiry.show')}
+              value={show}
+              onChange={(event) => setShow(event.target.value as ShowFilter)}
+            >
+              {showOptions.map((option) => (
+                <MenuItem key={option} value={option}>
+                  {option === 'closed' ? t('customerInquiry.closed') : t(`common.${option}`)}
+                </MenuItem>
+              ))}
+            </TextField>
+            <FormControlLabel
+              label={t('customerInquiry.hideCurrencyRevaluations')}
+              control={
+                <Checkbox
+                  checked={hideRevaluations}
+                  onChange={(event) => setHideRevaluations(event.target.checked)}
+                />
+              }
+            />
+          </Stack>
+        </Box>
       }
     />
   );

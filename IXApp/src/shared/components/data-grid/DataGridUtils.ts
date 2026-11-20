@@ -52,7 +52,11 @@ export function toCsvField(value: unknown): string {
 /** UTF-8 BOM so Excel opens Arabic text correctly. */
 export const CSV_BOM = '﻿';
 
-export function generateCSV<T>(rows: T[], columns: ColumnDef<T>[]): string {
+export function generateCSV<T>(
+  rows: T[],
+  columns: ColumnDef<T>[],
+  translateHeader: (key: string) => string = (key) => key
+): string {
   const visibleCols = columns.filter((c) => !c.hidden);
   // Dropdown columns export the label users see, not the stored code.
   const labels = visibleCols.map((col) =>
@@ -60,7 +64,7 @@ export function generateCSV<T>(rows: T[], columns: ColumnDef<T>[]): string {
       ? new Map(normalizeValueOptions(col.valueOptions).map((o) => [o.key, o.label]))
       : null
   );
-  const header = visibleCols.map((c) => toCsvField(c.headerName)).join(',');
+  const header = visibleCols.map((c) => toCsvField(translateHeader(c.headerName))).join(',');
   const csvRows = rows.map((row) =>
     visibleCols
       .map((col, i) => {

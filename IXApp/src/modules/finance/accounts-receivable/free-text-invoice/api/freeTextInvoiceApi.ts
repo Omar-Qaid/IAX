@@ -11,6 +11,8 @@ export interface FreeTextInvoiceLine {
   taxAmount: number;
   grossAmount: number;
   ledgerDimension: number;
+  /** Main account code resolved by the server, so the grid never shows a raw RecId. */
+  ledgerAccount: string;
   defaultDimension: number;
   taxGroup: string;
   taxItemGroup: string;

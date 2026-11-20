@@ -1,7 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { vi, describe, it, expect } from 'vitest';
-import { CustConfirmJournal } from '../../modules/finance/accounts-receivable/sales-order/pages/CustConfirmJournal';
+import { CustConfirmJournal } from '../../modules/finance/accounts-receivable/sales-order-confirm/pages/CustConfirmJournal';
 
 const journalState = vi.hoisted(() => ({ empty: false }));
 

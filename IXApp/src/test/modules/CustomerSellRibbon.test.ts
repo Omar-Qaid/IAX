@@ -18,3 +18,17 @@ describe('customer Sell ribbon', () => {
     expect(buildCustomerSellRibbonGroups(tr, {})).toEqual([]);
   });
 });
+
+it('offers order lines independently of all sales orders', () => {
+  const lines = vi.fn();
+  const groups = buildCustomerSellRibbonGroups(tr, { onOrderLines: lines });
+  const items = groups[0].actions[0].items!;
+  expect(items.map((item) => item.id)).toEqual([
+    'order-lines',
+    'confirmation-journal',
+    'backorder-lines',
+  ]);
+  expect(items.slice(1).every((item) => item.disabled)).toBe(true);
+  items[0].onClick();
+  expect(lines).toHaveBeenCalledOnce();
+});

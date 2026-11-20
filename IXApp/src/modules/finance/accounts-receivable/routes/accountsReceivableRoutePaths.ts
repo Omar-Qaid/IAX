@@ -1,4 +1,10 @@
 export const ACCOUNTS_RECEIVABLE_ROUTE_PATHS = {
+  CUST_SALES_LINES: '/accounts-receivable/CustSalesLines/:accountNum',
+  custSalesLines: (accountNum: string) =>
+    `/accounts-receivable/CustSalesLines/${encodeURIComponent(accountNum)}`,
+  CUST_INVOICE_JOURNAL: '/accounts-receivable/CustInvoiceJournal',
+  customerInvoiceJournal: (accountNum: string) =>
+    `/accounts-receivable/CustInvoiceJournal?customerAccount=${encodeURIComponent(accountNum)}`,
   ROOT: '/accounts-receivable',
   CUSTOMERS: '/accounts-receivable/customers',
   CUSTOMER_DETAILS: '/accounts-receivable/customers/:customerId',

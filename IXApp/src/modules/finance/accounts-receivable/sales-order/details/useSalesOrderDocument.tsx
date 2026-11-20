@@ -18,7 +18,7 @@ import {
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { LookupField } from '@shared/components/lookups/LookupField';
 import { type SalesOrderCopyMode } from '../api/salesOrderCopyApi';
-import { salesOrderConfirmationApi } from '../api/salesOrderConfirmationApi';
+import { salesOrderConfirmationApi } from '../../sales-order-confirm/api/salesOrderConfirmationApi';
 import { salesOrderQueryKeys } from '../../queries/accountsReceivableQueryKeys';
 import { useCompanyStore } from '@core/company/useCompanyStore';
 import {
@@ -102,6 +102,9 @@ export function useSalesOrderDocument() {
     'confirmation'
   );
   const [confirmNowBusy, setConfirmNowBusy] = useState(false);
+  const confirmNowLock = useRef(false);
+  const recalculateLock = useRef(false);
+  const [recalculating, setRecalculating] = useState(false);
   const [confirmNowError, setConfirmNowError] = useState('');
   const [copyMode, setCopyMode] = useState<SalesOrderCopyMode>();
   const [copySourceId, setCopySourceId] = useState<string>();
@@ -134,12 +137,18 @@ export function useSalesOrderDocument() {
   const activeHeader = headerDraft?.id === order?.id ? headerDraft : null;
   const canEditHeader = canEditLines && order?.salesStatus.toLowerCase() === 'backorder';
   const recalculateSalesOrderDiscounts = async () => {
-    if (!order || !canEditHeader) return;
+    if (!order || !canEditHeader || activeHeader || recalculateLock.current) return;
+    recalculateLock.current = true;
+    setRecalculating(true);
+    setHeaderError('');
     try {
       await salesOrderLinesApi.recalculateDiscounts(order.id);
       await Promise.all([invalidateOrder(order.id), refetchOrder()]);
     } catch (error) {
       setHeaderError(error instanceof Error ? error.message : t('errors.generic'));
+    } finally {
+      recalculateLock.current = false;
+      setRecalculating(false);
     }
   };
 
@@ -199,7 +208,7 @@ export function useSalesOrderDocument() {
         {
           id: 'from-all',
           label: t('salesOrder.ui.fromAll', 'From all'),
-          disabled: !canEditHeader,
+          disabled: !canEditHeader || Boolean(activeHeader) || copyBusy,
           onClick: () => {
             setCopyError('');
             setCopySourceId(undefined);
@@ -209,7 +218,7 @@ export function useSalesOrderDocument() {
         {
           id: 'from-journal',
           label: t('salesOrder.ui.fromJournal', 'From journal'),
-          disabled: !canEditHeader,
+          disabled: !canEditHeader || Boolean(activeHeader) || copyBusy,
           onClick: () => {
             setCopyError('');
             setCopySourceId(undefined);
@@ -264,6 +273,7 @@ export function useSalesOrderDocument() {
         {
           id: 'maintain-charges',
           label: t('salesOrder.ui.maintainCharges', 'Maintain charges'),
+          disabled: !order || Boolean(activeHeader),
           onClick: () =>
             order && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrderCharges(order.id)),
         },
@@ -293,7 +303,7 @@ export function useSalesOrderDocument() {
         {
           id: 'total-discount',
           label: t('salesOrder.ui.recalculateDiscounts', 'Recalculate discounts'),
-          disabled: !canEditHeader,
+          disabled: !canEditHeader || Boolean(activeHeader) || recalculating,
           onClick: () => void recalculateSalesOrderDiscounts(),
         },
       ],
@@ -326,6 +336,7 @@ export function useSalesOrderDocument() {
         {
           id: 'confirmation',
           label: t('salesOrder.ui.confirmation', 'Confirmation'),
+          disabled: !canEditHeader || Boolean(activeHeader) || confirmNowBusy,
           onClick: () => {
             setConfirmationMode('confirmation');
             setConfirmationsOpen(true);
@@ -334,6 +345,7 @@ export function useSalesOrderDocument() {
         {
           id: 'pro-forma-confirmation',
           label: t('salesOrder.ui.proFormaConfirmation', 'Pro forma confirmation'),
+          disabled: !order || Boolean(activeHeader),
           onClick: () => {
             setConfirmationMode('proForma');
             setConfirmationsOpen(true);
@@ -362,13 +374,14 @@ export function useSalesOrderDocument() {
           label: t('salesOrder.ui.confirmNow', 'Confirm now'),
           disabled: !canEditHeader || Boolean(activeHeader) || confirmNowBusy,
           onClick: async () => {
-            if (!order || !canEditHeader || activeHeader || confirmNowBusy) return;
+            if (!order || !canEditHeader || activeHeader || confirmNowLock.current) return;
+            confirmNowLock.current = true;
             setConfirmNowBusy(true);
             setConfirmNowError('');
             try {
               await salesOrderConfirmationApi.post(
                 order.id,
-                new Date().toISOString().slice(0, 10),
+                new Date().toLocaleDateString('en-CA'),
                 crypto.randomUUID()
               );
               await Promise.all([invalidateOrder(order.id)]);
@@ -377,6 +390,7 @@ export function useSalesOrderDocument() {
                 cause instanceof Error ? cause.message : 'The sales order could not be confirmed.'
               );
             } finally {
+              confirmNowLock.current = false;
               setConfirmNowBusy(false);
             }
           },

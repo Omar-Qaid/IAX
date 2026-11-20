@@ -27,6 +27,89 @@ namespace IAX.IXApi.Tests;
 public sealed partial class InventoryCycleTests
 {
     [Fact]
+    public async Task CustOpenTrans_reads_open_rows_with_transaction_ids_dimensions_and_remaining_balances()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        db.Set<CustTable>().Add(new CustTable { RecId = 1, DataAreaId = "dat", AccountNum = "C-1", Party = 1, CurrencyCode = "SAR" });
+        db.Set<DirPartyTable>().Add(new DirPartyTable { RecId = 1, DataAreaId = "dat", Name = "Customer One" });
+        db.Set<Ledger>().Add(new Ledger { RecId = 1, DataAreaId = "dat", AccountingCurrency = "SAR" });
+        db.Set<DimensionAttributeValueSet>().Add(new DimensionAttributeValueSet { RecId = 1, DataAreaId = "dat", WorkerValue = "W-1", DepartmentValue = "SALES" });
+        db.Set<CustTrans>().AddRange(
+            new CustTrans { RecId = 1, DataAreaId = "dat", AccountNum = "C-1", Invoice = "INV-1", CurrencyCode = "SAR", AmountCur = 100, AmountMst = 100, SettleAmountCur = 40, SettleAmountMst = 40, DefaultDimension = 1 },
+            new CustTrans { RecId = 2, DataAreaId = "dat", AccountNum = "C-1", Voucher = "PAY-1", CurrencyCode = "SAR", AmountCur = -20, AmountMst = -20 },
+            new CustTrans { RecId = 3, DataAreaId = "dat", AccountNum = "C-2", AmountCur = 999, AmountMst = 999 },
+            new CustTrans { RecId = 4, DataAreaId = "other", AccountNum = "C-1", AmountCur = 888, AmountMst = 888 },
+            new CustTrans { RecId = 5, DataAreaId = "dat", AccountNum = "C-1", AmountCur = 50, AmountMst = 50, SettleAmountCur = 50, SettleAmountMst = 50 });
+        db.Set<CustTransOpen>().AddRange(
+            new CustTransOpen { RecId = 101, DataAreaId = "dat", AccountNum = "C-1", RefRecId = 1, AmountCur = 60, AmountMst = 60, PossibleCashDisc = 3 },
+            new CustTransOpen { RecId = 102, DataAreaId = "dat", AccountNum = "C-1", RefRecId = 2, AmountCur = -20, AmountMst = -20 },
+            new CustTransOpen { RecId = 103, DataAreaId = "dat", AccountNum = "C-2", RefRecId = 3, AmountCur = 999, AmountMst = 999 },
+            new CustTransOpen { RecId = 104, DataAreaId = "other", AccountNum = "C-1", RefRecId = 4, AmountCur = 888, AmountMst = 888 });
+        db.Set<CustSettlement>().Add(new CustSettlement { RecId = 1, DataAreaId = "dat", AccountNum = "C-1", TransRecId = 1, UtilizedCashDisc = 5 });
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        var service = new IAX.IXApi.Modules.Finance.AccountsReceivable.Settlement.CustSettleOpenTransactionsService(new TestUnitOfWork(db), new TestCompany(), Sequence());
+        var result = await service.GetOpenTransactionsAsync(" C-1 ", default);
+        Assert.Equal(200, result.StatusCode);
+        var data = Assert.IsType<IAX.IXApi.Modules.Finance.AccountsReceivable.Settlement.CustOpenTransDto>(result.Data);
+        Assert.Equal(2, data.Transactions.Count);
+        Assert.Equal(40m, data.CustomerBalanceMst);
+        Assert.True(data.Reconciled);
+        var invoice = Assert.Single(data.Transactions, x => x.Invoice == "INV-1");
+        Assert.Equal(101, invoice.RecId);
+        Assert.Equal(1, invoice.TransRecId);
+        Assert.Equal(60m, invoice.AmountCur);
+        Assert.Equal(100m, invoice.OriginalAmountCur);
+        Assert.Equal(3m, invoice.PossibleCashDisc);
+        Assert.Equal(5m, invoice.CashDiscTaken);
+        Assert.Equal("W-1", invoice.Worker);
+        Assert.Equal("SALES", invoice.Department);
+        Assert.Empty(db.ChangeTracker.Entries());
+        Assert.Equal(400, (await service.GetOpenTransactionsAsync(" ", default)).StatusCode);
+        Assert.Equal(404, (await service.GetOpenTransactionsAsync("missing", default)).StatusCode);
+    }
+
+    [Fact]
+    public async Task Customer_invoice_lines_are_read_only_customer_and_company_scoped()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        db.Set<CustTable>().Add(new CustTable { RecId = 1, DataAreaId = "dat", AccountNum = "C-1", Party = 1 });
+        db.Set<DirPartyTable>().Add(new DirPartyTable { RecId = 1, DataAreaId = "dat", Name = "Customer one" });
+        db.Set<DimensionAttributeValueSet>().Add(new DimensionAttributeValueSet { RecId = 1, DataAreaId = "dat", DepartmentValue = "SALES" });
+        db.Set<DimensionAttributeValueCombination>().Add(new DimensionAttributeValueCombination { RecId = 1, DataAreaId = "dat", MainAccountValue = "410100" });
+        db.Set<CustInvoiceJour>().AddRange(
+            new CustInvoiceJour { RecId = 1, DataAreaId = "dat", OrderAccount = "C-1", InvoiceAccount = "BILL-TO" },
+            new CustInvoiceJour { RecId = 2, DataAreaId = "dat", OrderAccount = "C-2" },
+            new CustInvoiceJour { RecId = 3, DataAreaId = "other", OrderAccount = "C-1" },
+            new CustInvoiceJour { RecId = 4, DataAreaId = "dat", OrderAccount = "C-1", Proforma = NoYes.Yes });
+        db.Set<CustInvoiceTrans>().AddRange(
+            new CustInvoiceTrans { RecId = 1, DataAreaId = "dat", ParentRecId = 1, ItemId = "ITEM", Qty = -2, LineAmount = -100, DefaultDimension = 1, LedgerDimension = 1, DiscPercent = 7.56m },
+            new CustInvoiceTrans { RecId = 2, DataAreaId = "dat", ParentRecId = 2 },
+            new CustInvoiceTrans { RecId = 3, DataAreaId = "other", ParentRecId = 3 },
+            new CustInvoiceTrans { RecId = 4, DataAreaId = "dat", ParentRecId = 4 },
+            new CustInvoiceTrans { RecId = 5, DataAreaId = "other", ParentRecId = 1 });
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        var service = new SalesInvoiceService(new TestUnitOfWork(db), new TestCompany(), Sequence());
+        var result = await service.ListCustomerLinesAsync(" C-1 ", default);
+        Assert.Equal(200, result.StatusCode);
+        var json = System.Text.Json.JsonSerializer.SerializeToElement(result.Data);
+        Assert.Equal("Customer one", json.GetProperty("CustomerName").GetString());
+        var row = Assert.Single(json.GetProperty("Lines").EnumerateArray());
+        Assert.Equal(-100m, row.GetProperty("LineAmount").GetDecimal());
+        Assert.Equal(-2m, row.GetProperty("Qty").GetDecimal());
+        Assert.Equal(7.56m, row.GetProperty("DiscPercent").GetDecimal());
+        Assert.Equal("C-1", row.GetProperty("CustomerAccount").GetString());
+        Assert.Equal("SALES", row.GetProperty("DepartmentValue").GetString());
+        Assert.Equal("410100", row.GetProperty("MainAccountValue").GetString());
+        Assert.Empty(db.ChangeTracker.Entries());
+        Assert.Equal(400, (await service.ListCustomerLinesAsync(" ", default)).StatusCode);
+        Assert.Equal(404, (await service.ListCustomerLinesAsync("missing", default)).StatusCode);
+    }
+
+    [Fact]
     public async Task Free_text_invoice_posts_services_tax_and_receivable_without_inventory()
     {
         await using var fixture = await Fixture.CreateAsync();
@@ -119,6 +202,24 @@ public sealed partial class InventoryCycleTests
         Assert.Equal(1800m, created.Invoice.TaxAmount);
         Assert.Equal(new DateTime(2026, 12, 1), created.Invoice.DueDate);
         Assert.Equal(string.Empty, created.Invoice.InvoiceId);
+        Assert.Empty(await db.Set<CustTrans>().ToListAsync());
+
+        // Editing an ordinary draft must not look for a correction with record ID zero.
+        var updated = await service.UpdateAsync(created.Invoice.RecId, new FreeTextInvoiceSaveDto
+        {
+            CustomerAccount = "C-0001", InvoiceDate = new DateTime(2026, 11, 1),
+            PostingProfile = "GEN", Description = "Updated November services",
+            Lines =
+            [
+                new() { Description = "Maintenance", Quantity = 1, UnitPrice = 10000, LedgerDimension = 2, TaxItemGroup = "SERVICE" },
+                new() { Description = "Consulting", Quantity = 4, UnitPrice = 500, LedgerDimension = 3, TaxItemGroup = "SERVICE" }
+            ]
+        }, default);
+        Assert.True(updated.StatusCode == 200, updated.Message);
+        db.ChangeTracker.Clear();
+        var reopened = await service.GetAsync(created.Invoice.RecId, default);
+        Assert.Equal("Updated November services", reopened!.Description);
+        Assert.Equal(new long[] { 2, 3 }, reopened.Lines.Select(x => x.LedgerDimension));
         Assert.Empty(await db.Set<CustTrans>().ToListAsync());
 
         var posted = await service.PostAsync(created.Invoice.RecId, default);
@@ -4835,7 +4936,7 @@ public sealed partial class InventoryCycleTests
             typeof(InventDim), typeof(InventTrans), typeof(InventTransOrigin), typeof(InventSum),
             typeof(IAX.IXApi.Modules.Finance.Entities.InventTransPosting),
             typeof(InventModelGroup), typeof(InventModelGroupItem), typeof(InventItemGroupItem),
-            typeof(InventPosting), typeof(DimensionAttributeValueCombination),
+            typeof(InventPosting), typeof(DimensionAttributeValueCombination), typeof(DimensionAttributeValueSet),
                 typeof(LedgerStructure), typeof(DimensionHierarchy), typeof(MainAccount),
             typeof(Ledger), typeof(FiscalCalendarPeriod), typeof(LedgerFiscalCalendarPeriod),
             typeof(InventSettlement), typeof(InventClosing), typeof(InventJournalTrans), typeof(InventJournalTable), typeof(InventJournalName),

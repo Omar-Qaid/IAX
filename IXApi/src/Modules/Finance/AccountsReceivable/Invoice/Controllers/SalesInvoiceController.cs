@@ -21,6 +21,27 @@ public sealed class SalesInvoiceController : BaseController<CustInvoiceJour, Cus
         _salesInvoiceService = service;
     }
 
+    [HttpGet("~/api/v1/CustInvoiceTrans/customer-lines")]
+    public async Task<IActionResult> CustomerLines([FromQuery] string accountNum, CancellationToken ct)
+    {
+        var result = await _salesInvoiceService.ListCustomerLinesAsync(accountNum, ct);
+        return result.StatusCode switch
+        {
+            200 => Ok(APIResponse<object>.Ok(result.Data!, string.Empty)),
+            404 => NotFound(APIResponse<object>.Fail(result.Message!)),
+            _ => BadRequest(APIResponse<object>.Fail(result.Message!))
+        };
+    }
+
+    [HttpGet("~/api/v1/CustInvoiceJour")]
+    public async Task<IActionResult> ListJournal(CancellationToken ct)
+    {
+        var result = await _salesInvoiceService.ListJournalAsync(ct);
+        return result.StatusCode == 200
+            ? Ok(APIResponse<object>.Ok(result.Data!, string.Empty))
+            : BadRequest(APIResponse<object>.Fail(result.Message!));
+    }
+
     [HttpPost]
     [DomainPermission("AccountsReceivable", "SalesOrders", "Post")]
     public async Task<IActionResult> Post(long salesOrderRecId, [FromBody] SalesInvoicePostDto? request, CancellationToken ct)

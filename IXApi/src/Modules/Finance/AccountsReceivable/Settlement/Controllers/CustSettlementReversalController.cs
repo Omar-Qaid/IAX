@@ -25,6 +25,10 @@ public sealed class CustSettlementReversalController : BaseController<CustSettle
         _settle = settle;
     }
 
+    [HttpGet("open-transactions")]
+    public async Task<IActionResult> OpenTransactions([FromQuery] string accountNum, CancellationToken ct) =>
+        Present(await _settle.GetOpenTransactionsAsync(accountNum, ct), "Loading open transactions failed.");
+
     /// <summary>
     /// D365's *Settle open transactions*: applies marked open transactions to each other, which is
     /// how a credit note or an on-account receipt is applied to an invoice without a new payment.

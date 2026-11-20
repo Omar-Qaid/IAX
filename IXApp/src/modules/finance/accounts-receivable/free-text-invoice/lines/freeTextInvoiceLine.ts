@@ -7,6 +7,7 @@ export const isValidInvoiceLine = (line: Line) =>
   line.quantity > 0 &&
   Number.isFinite(line.unitPrice) &&
   line.unitPrice >= 0 &&
+  Number.isSafeInteger(line.ledgerDimension) &&
   line.ledgerDimension > 0;
 export const newLine = (): Line => ({
   id: crypto.randomUUID(),

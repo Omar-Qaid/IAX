@@ -1,13 +1,14 @@
 import type { ActionPaneRibbonGroup } from '@shared/components/action-pane/ActionPaneRibbon';
 interface CustomerSellActions {
   onNewSalesOrder?: () => void;
+  onOrderLines?: () => void;
   onSalesOrders?: () => void;
   onPackingSlips?: () => void;
   onTradeAgreementJournals?: () => void;
   onPriceDiscountGroups?: () => void;
   onJournalNames?: () => void;
 }
-/** Only actions with an implemented basic ERP destination are supplied by the customer page. */
+/** Available destinations are supplied by the customer page; unavailable entries stay disabled. */
 export function buildCustomerSellRibbonGroups(
   tr: (key: string, fallback: string) => string,
   actions: CustomerSellActions
@@ -25,21 +26,54 @@ export function buildCustomerSellRibbonGroups(
         },
       ],
     });
-  if (actions.onSalesOrders || actions.onPackingSlips)
+  if (actions.onSalesOrders || actions.onOrderLines || actions.onPackingSlips)
     groups.push({
       id: 'related-information',
       label: tr('customerSellRibbon.relatedInformation', 'Related information'),
       actions: [
-        ...(actions.onSalesOrders
+        ...(actions.onSalesOrders || actions.onOrderLines
           ? [
               {
                 id: 'orders',
                 label: tr('customerSellRibbon.orders', 'Orders'),
                 items: [
+                  ...(actions.onSalesOrders
+                    ? [
+                        {
+                          id: 'sales-orders',
+                          label: tr('customerSellRibbon.allSalesOrders', 'All sales orders'),
+                          onClick: actions.onSalesOrders,
+                        },
+                      ]
+                    : []),
+                  ...(actions.onOrderLines
+                    ? [
+                        {
+                          id: 'order-lines',
+                          label: tr('custSalesLines.orderLines', 'Order lines'),
+                          onClick: actions.onOrderLines,
+                        },
+                      ]
+                    : []),
                   {
-                    id: 'sales-orders',
-                    label: tr('pages.salesOrders.title', 'Sales orders'),
-                    onClick: actions.onSalesOrders,
+                    id: 'confirmation-journal',
+                    label: tr('customerSellRibbon.confirmationJournal', 'Confirmation journal'),
+                    disabled: true,
+                    tooltip: tr(
+                      'customerSellRibbon.confirmationJournalUnavailable',
+                      'Open a sales order to view its confirmation journal.'
+                    ),
+                    onClick: () => {},
+                  },
+                  {
+                    id: 'backorder-lines',
+                    label: tr('customerSellRibbon.backorderLines', 'Backorder lines'),
+                    disabled: true,
+                    tooltip: tr(
+                      'customerSellRibbon.backorderLinesUnavailable',
+                      'Backorder lines are not available yet.'
+                    ),
+                    onClick: () => {},
                   },
                 ],
               },

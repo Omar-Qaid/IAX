@@ -84,6 +84,7 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
   onRetry,
   defaultNavigationOpen = true,
   navigationWidthStorageKey,
+  navigationVisibilityStorageKey,
   matchesSearch,
   advancedFilter,
   relatedInformation,
@@ -103,7 +104,27 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
   usePageBreadcrumb(breadcrumb, subtitle ?? title);
   // The pane overlays the content on small screens, so it starts closed there.
   const compact = useMediaQuery(useTheme().breakpoints.down('lg'), { noSsr: true });
-  const [navigationOpen, setNavigationOpen] = useState(defaultNavigationOpen && !compact);
+  const visibilityStorageKey =
+    navigationVisibilityStorageKey ??
+    (recordTableName ? 'ixapp.master-detail.' + recordTableName + '.list-visible' : undefined);
+  const [navigationOpen, setNavigationOpen] = useState(() => {
+    const initial = defaultNavigationOpen && !compact;
+    if (!visibilityStorageKey) return initial;
+    try {
+      const saved = globalThis.localStorage?.getItem(visibilityStorageKey);
+      return saved === 'true' ? !compact : saved === 'false' ? false : initial;
+    } catch {
+      return initial;
+    }
+  });
+  React.useEffect(() => {
+    if (!visibilityStorageKey) return;
+    try {
+      globalThis.localStorage?.setItem(visibilityStorageKey, String(navigationOpen));
+    } catch {
+      // Browsers can disable local storage.
+    }
+  }, [navigationOpen, visibilityStorageKey]);
   const navigationFilter = React.useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);

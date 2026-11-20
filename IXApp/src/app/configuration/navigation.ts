@@ -161,6 +161,11 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
             permission: PERMISSIONS.SALES_ORDER_VIEW,
           },
           {
+            label: 'custInvoiceJournal.title',
+            path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUST_INVOICE_JOURNAL,
+            permission: PERMISSIONS.SALES_ORDER_VIEW,
+          },
+          {
             label: 'nav.freeTextInvoices',
             path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.FREE_TEXT_INVOICES,
             permission: PERMISSIONS.FREE_TEXT_INVOICE_VIEW,

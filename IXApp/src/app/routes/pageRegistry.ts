@@ -228,11 +228,29 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'cust-sales-lines',
+    path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUST_SALES_LINES,
+    permission: PERMISSIONS.SALES_ORDER_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-receivable/invoice/pages/CustSalesLines'),
+      (module) => module.CustSalesLines
+    ),
+  },
+  {
+    id: 'cust-invoice-journal',
+    path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUST_INVOICE_JOURNAL,
+    permission: PERMISSIONS.SALES_ORDER_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-receivable/invoice/pages/CustInvoiceJournal'),
+      (module) => module.CustInvoiceJournal
+    ),
+  },
+  {
     id: 'cust-confirm-journal',
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUST_CONFIRM_JOURNAL,
     permission: PERMISSIONS.SALES_ORDER_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/accounts-receivable/sales-order/pages/CustConfirmJournal'),
+      () => import('@modules/finance/accounts-receivable/sales-order-confirm/pages/CustConfirmJournal'),
       (module) => module.CustConfirmJournal
     ),
   },

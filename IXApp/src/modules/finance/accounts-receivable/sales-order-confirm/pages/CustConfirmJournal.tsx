@@ -6,7 +6,7 @@ import { SimpleListPage } from '@patterns/simple-list/SimpleListPage';
 import type { ColumnDef } from '@shared/components/data-grid/types';
 import { ErrorState } from '@shared/components/feedback/ErrorState';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
-import { salesOrderListApi } from '../api/salesOrderListApi';
+import { salesOrderListApi } from '../../sales-order/api/salesOrderListApi';
 import {
   salesOrderConfirmationApi,
   type SalesOrderConfirmationLine,
@@ -15,6 +15,7 @@ import {
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../../routes/accountsReceivableRoutePaths';
 import { salesOrderQueryKeys } from '../../queries/accountsReceivableQueryKeys';
 import { useCompanyStore } from '@core/company/useCompanyStore';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 
 type GridRow = {
   id: string;
@@ -28,31 +29,31 @@ const date = (value: string) => (value ? new Date(value).toLocaleDateString() : 
 const overviewColumns: ColumnDef<GridRow>[] = [
   {
     field: 'salesId',
-    headerName: 'Sales order',
+    headerName: 'custConfirmJournal.columns.salesId',
     width: 180,
     valueGetter: ({ row }) => row.journal?.salesId,
   },
   {
     field: 'confirmDate',
-    headerName: 'Date',
+    headerName: 'custConfirmJournal.columns.confirmDate',
     width: 140,
     valueGetter: ({ row }) => date(row.journal?.confirmDate ?? ''),
   },
   {
     field: 'confirmId',
-    headerName: 'Confirmation',
+    headerName: 'custConfirmJournal.columns.confirmId',
     width: 180,
     valueGetter: ({ row }) => row.journal?.confirmId,
   },
   {
     field: 'currencyCode',
-    headerName: 'Currency',
+    headerName: 'custConfirmJournal.columns.currencyCode',
     width: 120,
     valueGetter: ({ row }) => row.journal?.currencyCode,
   },
   {
     field: 'confirmAmount',
-    headerName: 'Amount',
+    headerName: 'custConfirmJournal.columns.confirmAmount',
     width: 150,
     align: 'right',
     valueGetter: ({ row }) => row.journal?.confirmAmount,
@@ -62,74 +63,79 @@ const overviewColumns: ColumnDef<GridRow>[] = [
 const lineColumns: ColumnDef<GridRow>[] = [
   {
     field: 'salesId',
-    headerName: 'Sales order',
+    headerName: 'custConfirmJournal.columns.salesId',
     width: 170,
     valueGetter: ({ row }) => row.salesOrderId,
   },
-  { field: 'itemId', headerName: 'Item', width: 150, valueGetter: ({ row }) => row.line?.itemId },
+  {
+    field: 'itemId',
+    headerName: 'custConfirmJournal.columns.itemId',
+    width: 150,
+    valueGetter: ({ row }) => row.line?.itemId,
+  },
   {
     field: 'salesCategory',
-    headerName: 'Sales category',
+    headerName: 'custConfirmJournal.columns.salesCategory',
     width: 150,
     valueGetter: ({ row }) => row.line?.salesCategory || '',
   },
   {
     field: 'name',
-    headerName: 'Description',
+    headerName: 'custConfirmJournal.columns.name',
     minWidth: 220,
     flex: 1,
     valueGetter: ({ row }) => row.line?.name,
   },
   {
     field: 'inventLocationId',
-    headerName: 'Warehouse',
+    headerName: 'custConfirmJournal.columns.inventLocationId',
     width: 150,
     valueGetter: ({ row }) => row.line?.inventLocationId,
   },
   {
     field: 'wmsLocationId',
-    headerName: 'Location',
+    headerName: 'custConfirmJournal.columns.wmsLocationId',
     width: 130,
     valueGetter: ({ row }) => row.line?.wmsLocationId,
   },
   {
     field: 'pdsCwQty',
-    headerName: 'CW quantity',
+    headerName: 'custConfirmJournal.columns.pdsCwQty',
     width: 130,
     align: 'right',
     renderCell: ({ row }) => amount(row.line?.pdsCwQty),
   },
   {
     field: 'qty',
-    headerName: 'Quantity',
+    headerName: 'custConfirmJournal.columns.qty',
     width: 120,
     align: 'right',
     renderCell: ({ row }) => amount(row.line?.qty),
   },
   {
     field: 'salesPrice',
-    headerName: 'Unit price',
+    headerName: 'custConfirmJournal.columns.salesPrice',
     width: 120,
     align: 'right',
     renderCell: ({ row }) => amount(row.line?.salesPrice),
   },
   {
     field: 'discPercent',
-    headerName: 'Discount percent',
+    headerName: 'custConfirmJournal.columns.discPercent',
     width: 150,
     align: 'right',
     renderCell: ({ row }) => amount(row.line?.discPercent || row.line?.linePercent),
   },
   {
     field: 'lineDisc',
-    headerName: 'Discount',
+    headerName: 'custConfirmJournal.columns.lineDisc',
     width: 120,
     align: 'right',
     renderCell: ({ row }) => amount(row.line?.lineDisc),
   },
   {
     field: 'lineAmount',
-    headerName: 'Amount',
+    headerName: 'custConfirmJournal.columns.lineAmount',
     width: 130,
     align: 'right',
     renderCell: ({ row }) => amount(row.line?.lineAmount),
@@ -139,6 +145,7 @@ const lineColumns: ColumnDef<GridRow>[] = [
 /** Read-only view of posted CustConfirmJour and CustConfirmTrans snapshots. */
 export function CustConfirmJournal(): React.ReactElement {
   const company = useCompanyStore((state) => state.currentCompany);
+  const { t } = useAppTranslation();
   const { salesOrderId } = useParams<{ salesOrderId: string }>();
   const navigate = useNavigate();
   const [tab, setTab] = useState<'overview' | 'lines'>('overview');
@@ -172,22 +179,26 @@ export function CustConfirmJournal(): React.ReactElement {
           })),
     [tab, journals, detailQuery.data?.lines, order?.salesId]
   );
-  if (!salesOrderId) return <ErrorState message="Sales order is missing." />;
+  if (!salesOrderId) return <ErrorState message={t('custConfirmJournal.errors.orderMissing')} />;
   if (ordersQuery.isLoading || journalsQuery.isLoading) return <LoadingState />;
   if (ordersQuery.error || journalsQuery.error)
     return (
       <ErrorState
         message={
-          (ordersQuery.error || journalsQuery.error)?.message ?? 'Unable to load confirmations.'
+          (ordersQuery.error || journalsQuery.error)?.message ??
+          t('custConfirmJournal.errors.loadFailed')
         }
       />
     );
-  if (!order) return <ErrorState message="Sales order not found." />;
-  const context = 'Sales order confirmations | ' + order.salesId + ' : ' + order.customerName;
+  if (!order) return <ErrorState message={t('custConfirmJournal.errors.orderNotFound')} />;
+  const context = t('custConfirmJournal.context', {
+    salesId: order.salesId,
+    customerName: order.customerName,
+  });
   return (
     <SimpleListPage<GridRow>
       key={tab}
-      title="Sales order confirmations"
+      title={t('custConfirmJournal.title')}
       recordTableName={tab === 'overview' ? 'CustConfirmJour' : 'CustConfirmTrans'}
       dataSource={{
         type: 'controlled',
@@ -205,20 +216,16 @@ export function CustConfirmJournal(): React.ReactElement {
           <Tabs
             value={tab}
             onChange={(_, value: 'overview' | 'lines') => setTab(value)}
-            aria-label="Confirmation views"
+            aria-label={t('custConfirmJournal.views')}
           >
-            <Tab value="overview" label="Overview" />
-            <Tab value="lines" label="Lines" disabled={!activeId} />
+            <Tab value="overview" label={t('custConfirmJournal.tabs.overview')} />
+            <Tab value="lines" label={t('custConfirmJournal.tabs.lines')} disabled={!activeId} />
           </Tabs>
         </Box>
       }
       enterpriseConfig={{
         readOnly: true,
         contextLabel: context,
-        searchFields: (tab === 'overview' ? overviewColumns : lineColumns).map((column) => ({
-          field: String(column.field) as keyof GridRow & string,
-          label: column.headerName,
-        })),
         backCommand: {
           onClick: () => navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrder(order.id)),
         },
@@ -245,7 +252,10 @@ export function CustConfirmJournal(): React.ReactElement {
             setTab('lines');
           }
         },
-        storageKey: tab === 'overview' ? 'cust-confirm-jour-overview' : 'cust-confirm-trans-lines',
+        storageKey:
+          tab === 'overview'
+            ? 'accounts-receivable.sales-order-confirmations.overview'
+            : 'accounts-receivable.sales-order-confirmations.lines',
         hideFooter: true,
       }}
     />

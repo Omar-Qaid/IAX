@@ -486,6 +486,7 @@ function SelectLookup({
           if (match) choose(match);
         }}
         getOptionLabel={(option) => optionText(option)}
+        getOptionKey={(option) => String(option.id)}
         renderOption={
           gridCell
             ? (optionProps, option) => {

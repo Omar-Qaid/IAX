@@ -59,7 +59,7 @@ export function FiltersPanel<T>({
                     variant="caption"
                     sx={{ fontWeight: 700, flexGrow: 1, color: 'text.primary' }}
                   >
-                    {col?.headerName || f.field}
+                    {col?.headerName ? t(col.headerName) : f.field}
                   </Typography>
                   <IconButton
                     size="small"

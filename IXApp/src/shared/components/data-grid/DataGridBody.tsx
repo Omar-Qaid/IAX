@@ -240,9 +240,9 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>(
     (row: T) => {
       // Shares the grid export's escaping and BOM; downloadFile defers revoking the
       // object URL, which revoking synchronously after click() can cancel.
-      downloadFile(generateCSV([row], visibleColumns), 'row.csv', 'text/csv;charset=utf-8;');
+      downloadFile(generateCSV([row], visibleColumns, t), 'row.csv', 'text/csv;charset=utf-8;');
     },
-    [visibleColumns]
+    [visibleColumns, t]
   );
 
   const renderCellImpl = useCallback(

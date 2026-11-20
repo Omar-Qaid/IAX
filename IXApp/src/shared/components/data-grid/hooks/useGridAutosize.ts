@@ -5,23 +5,25 @@ interface UseGridAutosizeOptions<T> {
   setColumns: React.Dispatch<React.SetStateAction<ColumnDef<T>[]>>;
   processedRows: T[];
   initialColumns: ColumnDef<T>[];
+  translateHeader?: (key: string) => string;
 }
 
 export function useGridAutosize<T>({
   setColumns,
   processedRows,
   initialColumns,
+  translateHeader = (key) => key,
 }: UseGridAutosizeOptions<T>) {
   const [isAutosized, setIsAutosized] = useState(false);
 
   const calculateOptimalWidth = useCallback((col: ColumnDef<T>, data: T[]) => {
-    let maxLen = String(col.headerName).length;
+    let maxLen = translateHeader(String(col.headerName)).length;
     data.forEach((row) => {
       const val = col.valueGetter ? col.valueGetter({ row }) : row[col.field as keyof T];
       if (val != null) maxLen = Math.max(maxLen, String(val).length);
     });
     return Math.min(500, Math.max(col.minWidth || 80, maxLen * 8 + 32));
-  }, []);
+  }, [translateHeader]);
 
   const handleAutosizeAll = useCallback(() => {
     const sample = processedRows.slice(0, 50);

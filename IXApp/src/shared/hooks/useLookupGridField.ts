@@ -49,7 +49,18 @@ export function useLookupGridField<T extends object>({
 
   const rows = useMemo(() => {
     if (!query.data?.pages) return [];
-    return query.data.pages.flatMap((page) => page.data || []);
+    const all = query.data.pages.flatMap((page) => page.data || []);
+    // Offset paging can return a row twice when the underlying data shifts between
+    // page requests; a repeated id would collide as a React key.
+    const seen = new Set<string>();
+    return all.filter((row) => {
+      const id = (row as { id?: unknown }).id;
+      if (id == null) return true;
+      const key = String(id);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }, [query.data]);
 
   const totalRecords = useMemo(() => {

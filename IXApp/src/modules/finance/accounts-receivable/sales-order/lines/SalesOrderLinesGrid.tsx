@@ -37,7 +37,6 @@ import {
 } from '../api/salesOrderLinesApi';
 import { fetchSalesOrderUnitOptions } from '../api/salesOrderLookupPages';
 import type { SalesOrderListRecord } from '../api/salesOrderListApi';
-import { INVENTORY_RECORD_PREVIEWS } from '../../../inventory/previews/inventoryRecordPreviews';
 import { INVENTORY_ROUTE_PATHS } from '../../../inventory/routes/inventoryRoutePaths';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../../routes/accountsReceivableRoutePaths';
 import { salesLineNetAmount, synchronizeSalesLineDiscount } from './salesLineDiscount';

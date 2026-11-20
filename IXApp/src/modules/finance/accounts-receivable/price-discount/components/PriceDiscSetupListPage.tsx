@@ -30,20 +30,28 @@ type SetupRecord = (TradeAgreementJournal | PriceDiscountGroup | TradeAgreementJ
 };
 type SetupKind = 'journals' | 'groups' | 'names';
 
-const relationOptions = [
-  { value: 0, label: 'Sales price' },
-  { value: 1, label: 'Line discount' },
-  { value: 2, label: 'Multiline discount' },
-  { value: 3, label: 'Total discount' },
-];
-const groupRelationOptions = [
-  relationOptions[0],
-  ...relationOptions.slice(1, 4),
-  { value: 4, label: 'Purchase price' },
-  { value: 5, label: 'Purchase line discount' },
-  { value: 6, label: 'Purchase multiline discount' },
-  { value: 7, label: 'Purchase total discount' },
-];
+type Translate = (key: string) => string;
+
+const RELATION_KEYS = [
+  'salesPrice',
+  'lineDiscount',
+  'multilineDiscount',
+  'totalDiscount',
+  'purchasePrice',
+  'purchaseLineDiscount',
+  'purchaseMultilineDiscount',
+  'purchaseTotalDiscount',
+] as const;
+const relationValueOptions = (t: Translate, count: number) =>
+  RELATION_KEYS.slice(0, count).map((key, value) => ({
+    value,
+    label: t('priceDiscount.relations.' + key),
+  }));
+const moduleValueOptions = (t: Translate) =>
+  (['vendor', 'customer', 'item'] as const).map((key, index) => ({
+    value: index + 1,
+    label: t('priceDiscount.modules.' + key),
+  }));
 
 export function PriceDiscSetupListPage({ kind }: { kind: SetupKind }): React.ReactElement {
   const { t, currentLanguage } = useAppTranslation();
@@ -74,13 +82,13 @@ export function PriceDiscSetupListPage({ kind }: { kind: SetupKind }): React.Rea
       return [
         {
           field: 'journalNum',
-          headerName: 'Journal number',
+          headerName: 'priceDiscount.columns.journalNum',
           width: 180,
           pinned: 'left',
           editable: true,
           renderEditCell: ({ row, value, onChange, disabled }) => (
             <input
-              aria-label="Journal number"
+              aria-label={t('priceDiscount.columns.journalNum')}
               value={String(value ?? '')}
               disabled={disabled || isPostedJournal(row)}
               onChange={(event) => onChange(event.target.value)}
@@ -89,12 +97,12 @@ export function PriceDiscSetupListPage({ kind }: { kind: SetupKind }): React.Rea
         },
         {
           field: 'journalName',
-          headerName: 'Journal name',
+          headerName: 'priceDiscount.columns.journalName',
           width: 150,
           editable: true,
           renderEditCell: ({ row, value, onChange, disabled }) => (
             <input
-              aria-label="Journal name"
+              aria-label={t('priceDiscount.columns.journalName')}
               value={String(value ?? '')}
               disabled={disabled || isPostedJournal(row)}
               onChange={(event) => onChange(event.target.value)}
@@ -103,13 +111,13 @@ export function PriceDiscSetupListPage({ kind }: { kind: SetupKind }): React.Rea
         },
         {
           field: 'name',
-          headerName: 'Description',
+          headerName: 'priceDiscount.columns.name',
           minWidth: 200,
           flex: 1,
           editable: true,
           renderEditCell: ({ row, value, onChange, disabled }) => (
             <input
-              aria-label="Description"
+              aria-label={t('priceDiscount.columns.name')}
               value={String(value ?? '')}
               disabled={disabled || isPostedJournal(row)}
               onChange={(event) => onChange(event.target.value)}
@@ -118,19 +126,19 @@ export function PriceDiscSetupListPage({ kind }: { kind: SetupKind }): React.Rea
         },
         {
           field: 'defaultRelation',
-          headerName: 'Relation',
+          headerName: 'priceDiscount.columns.relation',
           width: 180,
           type: 'singleSelect',
-          valueOptions: relationOptions,
+          valueOptions: relationValueOptions(t, 4),
           editable: true,
           renderEditCell: ({ row, value, onChange, disabled }) => (
             <select
-              aria-label="Relation"
+              aria-label={t('priceDiscount.columns.relation')}
               value={Number(value ?? 0)}
               disabled={disabled || isPostedJournal(row)}
               onChange={(event) => onChange(Number(event.target.value))}
             >
-              {relationOptions.map((option) => (
+              {relationValueOptions(t, 4).map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -140,12 +148,12 @@ export function PriceDiscSetupListPage({ kind }: { kind: SetupKind }): React.Rea
         },
         {
           field: 'priceGroup',
-          headerName: 'Price group',
+          headerName: 'priceDiscount.columns.priceGroup',
           width: 140,
           editable: true,
           renderEditCell: ({ row, value, onChange, disabled }) => (
             <input
-              aria-label="Price group"
+              aria-label={t('priceDiscount.columns.priceGroup')}
               value={String(value ?? '')}
               disabled={disabled || isPostedJournal(row)}
               onChange={(event) => onChange(event.target.value)}
@@ -154,40 +162,53 @@ export function PriceDiscSetupListPage({ kind }: { kind: SetupKind }): React.Rea
         },
         {
           field: 'posted',
-          headerName: 'Posted',
+          headerName: 'priceDiscount.columns.posted',
           width: 100,
           type: 'boolean',
           valueGetter: ({ row }) => row.posted === 1,
         },
-        { field: 'postedDate', headerName: 'Posted date', width: 180, type: 'date' },
+        {
+          field: 'postedDate',
+          headerName: 'priceDiscount.columns.postedDate',
+          width: 180,
+          type: 'date',
+        },
       ];
     if (kind === 'groups')
       return [
-        { field: 'groupId', headerName: 'Group ID', width: 160, pinned: 'left', editable: true },
-        { field: 'name', headerName: 'Description', minWidth: 200, flex: 1, editable: true },
+        {
+          field: 'groupId',
+          headerName: 'priceDiscount.columns.groupId',
+          width: 160,
+          pinned: 'left',
+          editable: true,
+        },
+        {
+          field: 'name',
+          headerName: 'priceDiscount.columns.name',
+          minWidth: 200,
+          flex: 1,
+          editable: true,
+        },
         {
           field: 'module',
-          headerName: 'Module',
+          headerName: 'priceDiscount.columns.module',
           width: 150,
           type: 'singleSelect',
-          valueOptions: [
-            { value: 1, label: 'Vendor' },
-            { value: 2, label: 'Customer' },
-            { value: 3, label: 'Item' },
-          ],
+          valueOptions: moduleValueOptions(t),
           editable: true,
         },
         {
           field: 'type',
-          headerName: 'Relation',
+          headerName: 'priceDiscount.columns.relation',
           width: 180,
           type: 'singleSelect',
-          valueOptions: groupRelationOptions,
+          valueOptions: relationValueOptions(t, RELATION_KEYS.length),
           editable: true,
         },
         {
           field: 'retailPricingPriorityNumber',
-          headerName: 'Pricing priority',
+          headerName: 'priceDiscount.columns.retailPricingPriorityNumber',
           width: 160,
           type: 'number',
           editable: true,
@@ -196,30 +217,36 @@ export function PriceDiscSetupListPage({ kind }: { kind: SetupKind }): React.Rea
     return [
       {
         field: 'journalName',
-        headerName: 'Journal name',
+        headerName: 'priceDiscount.columns.journalName',
         width: 180,
         pinned: 'left',
         editable: true,
       },
-      { field: 'name', headerName: 'Description', minWidth: 220, flex: 1, editable: true },
+      {
+        field: 'name',
+        headerName: 'priceDiscount.columns.name',
+        minWidth: 220,
+        flex: 1,
+        editable: true,
+      },
       {
         field: 'defaultRelation',
-        headerName: 'Default relation',
+        headerName: 'priceDiscount.columns.defaultRelation',
         width: 180,
         type: 'singleSelect',
-        valueOptions: relationOptions,
+        valueOptions: relationValueOptions(t, 4),
         editable: true,
       },
       {
         field: 'priceDiscPriceAttributeEnable',
-        headerName: 'Price attributes enabled',
+        headerName: 'priceDiscount.columns.priceDiscPriceAttributeEnable',
         width: 190,
         type: 'boolean',
         valueGetter: ({ row }) => row.priceDiscPriceAttributeEnable === 1,
         editable: true,
         renderEditCell: ({ value, onChange, disabled }) => (
           <input
-            aria-label="Price attributes enabled"
+            aria-label={t('priceDiscount.columns.priceDiscPriceAttributeEnable')}
             type="checkbox"
             checked={value === true || Number(value) === 1}
             disabled={disabled}
@@ -228,12 +255,12 @@ export function PriceDiscSetupListPage({ kind }: { kind: SetupKind }): React.Rea
         ),
       },
     ];
-  }, [kind, isPostedJournal]);
+  }, [kind, isPostedJournal, t]);
 
   const labels =
     kind === 'journals'
       ? {
-          title: 'Trade agreement journals',
+          title: t('priceDiscount.titles.journals'),
           table: 'PriceDiscAdmTable',
           permission: [
             PERMISSIONS.TRADE_AGREEMENT_JOURNAL_VIEW,
@@ -244,7 +271,7 @@ export function PriceDiscSetupListPage({ kind }: { kind: SetupKind }): React.Rea
         }
       : kind === 'groups'
         ? {
-            title: 'Price/discount groups',
+            title: t('priceDiscount.titles.groups'),
             table: 'PriceDiscGroup',
             permission: [
               PERMISSIONS.PRICE_DISCOUNT_GROUP_VIEW,
@@ -254,7 +281,7 @@ export function PriceDiscSetupListPage({ kind }: { kind: SetupKind }): React.Rea
             ] as const,
           }
         : {
-            title: 'Trade agreement journal names',
+            title: t('priceDiscount.titles.names'),
             table: 'PriceDiscAdmName',
             permission: [
               PERMISSIONS.TRADE_AGREEMENT_JOURNAL_NAME_VIEW,
@@ -267,21 +294,20 @@ export function PriceDiscSetupListPage({ kind }: { kind: SetupKind }): React.Rea
   const searchFields: EnterpriseListSearchField<SetupRecord>[] =
     kind === 'groups'
       ? [
-          { field: 'groupId', label: 'Group ID' },
-          { field: 'name', label: 'Description' },
+          { field: 'groupId', label: t('priceDiscount.columns.groupId') },
+          { field: 'name', label: t('priceDiscount.columns.name') },
         ]
       : [
-          { field: 'journalName', label: 'Journal name' },
-          { field: 'name', label: 'Description' },
+          { field: 'journalName', label: t('priceDiscount.columns.journalName') },
+          { field: 'name', label: t('priceDiscount.columns.name') },
           ...(kind === 'journals'
-            ? [{ field: 'journalNum' as const, label: 'Journal number' }]
+            ? [{ field: 'journalNum' as const, label: t('priceDiscount.columns.journalNum') }]
             : []),
         ];
 
   const config: EnterpriseListConfig<SetupRecord> = {
     recordTableName: labels.table,
     contextLabel: labels.title,
-    viewLabel: 'Standard view',
     searchMode: 'quick',
     searchFields,
     crud: {
@@ -292,7 +318,7 @@ export function PriceDiscSetupListPage({ kind }: { kind: SetupKind }): React.Rea
         try {
           for (const row of rows) {
             if (!isNewRecord(row) && isPostedJournal(row))
-              throw new Error('Posted journals cannot be deleted.');
+              throw new Error(t('priceDiscount.postedJournalCannotBeDeleted'));
             await api.delete(row as never);
           }
           await queryClient.invalidateQueries({ queryKey });
@@ -304,7 +330,10 @@ export function PriceDiscSetupListPage({ kind }: { kind: SetupKind }): React.Rea
     },
     commands: ['setup', 'options'].map((id) => ({ id, label: t(`customerGroupCommands.${id}`) })),
     advancedFilter: {
-      fieldLabel: kind === 'groups' ? 'Group ID' : 'Journal number',
+      fieldLabel:
+        kind === 'groups'
+          ? t('priceDiscount.columns.groupId')
+          : t('priceDiscount.columns.journalNum'),
       operatorLabel: t('filters.contains'),
       getValue: (row) =>
         kind === 'groups'
@@ -323,7 +352,6 @@ export function PriceDiscSetupListPage({ kind }: { kind: SetupKind }): React.Rea
   return (
     <SimpleListPage
       title={labels.title}
-      recordTableName={labels.table}
       enterpriseConfig={config}
       dataSource={{
         type: 'controlled',
@@ -369,5 +397,3 @@ export const setupPermissions = {
   groups: PERMISSIONS.PRICE_DISCOUNT_GROUP_VIEW,
   names: PERMISSIONS.TRADE_AGREEMENT_JOURNAL_NAME_VIEW,
 };
-
-export { relationOptions };

@@ -4,7 +4,7 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { MasterDetailLines, MasterDetailLinesGrid } from '@patterns/master-detail';
 import type { FreeTextInvoiceDocument } from '../details/useFreeTextInvoiceDocument';
-import { isValidInvoiceLine, newLine, type Line } from './freeTextInvoiceLine';
+import { newLine, type Line } from './freeTextInvoiceLine';
 import { useFreeTextInvoiceLineColumns } from './useFreeTextInvoiceLineColumns';
 
 /** Invoice line actions and validation, rendered by the shared master-details grid. */
@@ -112,14 +112,8 @@ export function FreeTextInvoiceLinesGrid({
                 unitPrice: Number(row.unitPrice ?? original.unitPrice),
                 ledgerDimension: Number(row.ledgerDimension ?? original.ledgerDimension),
               };
-              if (!isValidInvoiceLine(updated)) {
-                throw new Error(
-                  t(
-                    'freeTextInvoices.requiredLines',
-                    'Select a customer and invoice date. Add at least one line with a description, ledger account, positive quantity and non-negative unit price.'
-                  )
-                );
-              }
+              // Cell commits only update the local draft. Validate the complete line
+              // on document Save so a new line can be filled in one cell at a time.
               changeDraft({
                 ...current,
                 lines: current.lines.map((line) => (line.id === row.id ? updated : line)),

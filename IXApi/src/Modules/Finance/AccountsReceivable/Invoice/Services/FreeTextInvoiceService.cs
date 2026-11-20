@@ -36,7 +36,10 @@ public sealed class FreeTextInvoiceService(
         var lines = await Db.Set<CustInvoiceLine>().AsNoTracking()
             .Where(x => x.DataAreaId == area && ids.Contains(x.ParentRecId))
             .ToListAsync(ct);
-        return headers.Select(header => Map(header, lines.Where(x => x.ParentRecId == header.RecId))).ToList();
+        var ledgerAccounts = await LedgerAccountsAsync(area, lines, ct);
+        return headers
+            .Select(header => Map(header, lines.Where(x => x.ParentRecId == header.RecId), ledgerAccounts))
+            .ToList();
     }
 
     public async Task<FreeTextInvoiceDto?> GetAsync(long recId, CancellationToken ct)
@@ -48,17 +51,17 @@ public sealed class FreeTextInvoiceService(
         var lines = await Db.Set<CustInvoiceLine>().AsNoTracking()
             .Where(x => x.DataAreaId == area && x.ParentRecId == recId)
             .ToListAsync(ct);
-        return Map(header, lines);
+        return Map(header, lines, await LedgerAccountsAsync(area, lines, ct));
     }
 
     public Task<FreeTextInvoiceResult> CreateAsync(FreeTextInvoiceSaveDto input, CancellationToken ct) =>
-        SaveAsync(null, input, ct);
+        Db.Database.CreateExecutionStrategy().ExecuteAsync(() => SaveAsync(null, input, ct));
 
     public Task<FreeTextInvoiceResult> CreateCorrectionAsync(long originalRecId, FreeTextInvoiceSaveDto input, CancellationToken ct) =>
         Db.Database.CreateExecutionStrategy().ExecuteAsync(() => SaveAsync(null, input, ct, originalRecId));
 
     public Task<FreeTextInvoiceResult> UpdateAsync(long recId, FreeTextInvoiceSaveDto input, CancellationToken ct) =>
-        SaveAsync(recId, input, ct);
+        Db.Database.CreateExecutionStrategy().ExecuteAsync(() => SaveAsync(recId, input, ct));
 
     private async Task<FreeTextInvoiceResult> SaveAsync(long? recId, FreeTextInvoiceSaveDto input, CancellationToken ct,
         long? originalRecId = null)
@@ -82,7 +85,7 @@ public sealed class FreeTextInvoiceService(
                     throw new FreeTextInvoiceInputException("A posted free text invoice cannot be changed.");
                 originalRecId = await Db.Set<CustRelatedInvoice>().Where(x => x.DataAreaId == area
                     && x.CustInvoice == header.RecId && x.InvoiceAssociationType == correctionType)
-                    .Select(x => x.ParentCustInvoice).SingleOrDefaultAsync(ct);
+                    .Select(x => (long?)x.ParentCustInvoice).SingleOrDefaultAsync(ct);
             }
             else
             {
@@ -222,7 +225,7 @@ public sealed class FreeTextInvoiceService(
             }
 
             await unitOfWork.CompleteAsync(ct);
-            var result = Map(header, savedLines);
+            var result = Map(header, savedLines, await LedgerAccountsAsync(area, savedLines, ct));
             await unitOfWork.CommitTransactionAsync(ct);
             return new(recId.HasValue ? 200 : 201, result,
                 recId.HasValue ? "Free text invoice updated." : "Free text invoice created.");
@@ -243,7 +246,10 @@ public sealed class FreeTextInvoiceService(
         }
     }
 
-    public async Task<FreeTextInvoiceResult> DeleteAsync(long recId, CancellationToken ct)
+    public Task<FreeTextInvoiceResult> DeleteAsync(long recId, CancellationToken ct) =>
+        Db.Database.CreateExecutionStrategy().ExecuteAsync(() => DeleteCoreAsync(recId, ct));
+
+    private async Task<FreeTextInvoiceResult> DeleteCoreAsync(long recId, CancellationToken ct)
     {
         var area = company.GetDataAreaId();
         await unitOfWork.BeginTransactionAsync(ct);
@@ -294,7 +300,7 @@ public sealed class FreeTextInvoiceService(
                 .ToListAsync(ct);
             if (header.Posted == NoYes.Yes)
             {
-                var previous = Map(header, lines);
+                var previous = Map(header, lines, await LedgerAccountsAsync(area, lines, ct));
                 await unitOfWork.CommitTransactionAsync(ct);
                 return new(200, previous, "Free text invoice was already posted.");
             }
@@ -305,7 +311,7 @@ public sealed class FreeTextInvoiceService(
                 await CancelOriginalAsync(area, header, correction, support, ct);
 
             await PostInvoiceAsync(area, header, lines, support, ct);
-            var result = Map(header, lines);
+            var result = Map(header, lines, await LedgerAccountsAsync(area, lines, ct));
             await unitOfWork.CommitTransactionAsync(ct);
             return new(200, result, "Free text invoice posted.");
         }
@@ -676,14 +682,29 @@ public sealed class FreeTextInvoiceService(
         return new(statusCode, null, message);
     }
 
+    private async Task<IReadOnlyDictionary<long, string>> LedgerAccountsAsync(
+        string area, IEnumerable<CustInvoiceLine> lines, CancellationToken ct)
+    {
+        var ids = lines.Select(x => x.LedgerDimension).Where(x => x != 0).Distinct().ToList();
+        if (ids.Count == 0) return new Dictionary<long, string>();
+        return await Db.Set<DimensionAttributeValueCombination>().AsNoTracking()
+            .Where(x => x.DataAreaId == area && ids.Contains(x.RecId))
+            .ToDictionaryAsync(x => x.RecId, x => x.MainAccountValue, ct);
+    }
+
     private static string Normalize(string? value, string? fallback) =>
         string.IsNullOrWhiteSpace(value) ? fallback?.Trim() ?? string.Empty : value.Trim();
 
-    private static FreeTextInvoiceDto Map(CustInvoiceTable header, IEnumerable<CustInvoiceLine> sourceLines)
+    private static FreeTextInvoiceDto Map(CustInvoiceTable header, IEnumerable<CustInvoiceLine> sourceLines,
+        IReadOnlyDictionary<long, string>? ledgerAccounts = null)
     {
         var lines = sourceLines.OrderBy(x => x.LineNum).Select(x => new FreeTextInvoiceLineDto(
             x.RecId, x.LineNum, x.Description, x.Quantity, x.UnitPrice, x.AmountCur, x.TaxAmount,
-            x.AmountCur + x.TaxAmount, x.LedgerDimension, x.DefaultDimension, x.TaxGroup, x.TaxItemGroup)).ToList();
+            x.AmountCur + x.TaxAmount, x.LedgerDimension,
+            ledgerAccounts != null && ledgerAccounts.TryGetValue(x.LedgerDimension, out var account)
+                ? account
+                : string.Empty,
+            x.DefaultDimension, x.TaxGroup, x.TaxItemGroup)).ToList();
         var net = lines.Sum(x => x.NetAmount);
         var tax = lines.Sum(x => x.TaxAmount);
         return new FreeTextInvoiceDto(header.RecId, header.InvoiceId, header.OrderAccount, header.InvoiceAccount,

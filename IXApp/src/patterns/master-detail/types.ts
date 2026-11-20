@@ -89,6 +89,8 @@ export interface MasterDetailPageProps<T extends MasterDetailRecord = MasterDeta
   defaultNavigationOpen?: boolean;
   /** Persist the pane width per page (user-resizable). */
   navigationWidthStorageKey?: string;
+  /** Persist whether the pane is open; defaults to a key derived from `recordTableName`. */
+  navigationVisibilityStorageKey?: string;
   /** Custom quick-filter match (default: title, subtitle, description). */
   matchesSearch?: (record: T, query: string) => boolean;
 

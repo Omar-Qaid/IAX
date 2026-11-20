@@ -4,7 +4,7 @@ import { LogisticsPostalAddressDrawer } from '@shared/components/logistics/Logis
 import { DocumentTotalsDrawer } from '@patterns/document/DocumentTotalsDrawer';
 import { DocumentCopyDrawer } from '@patterns/document/DocumentCopyDrawer';
 import { salesOrderCopyApi } from '../api/salesOrderCopyApi';
-import { SalesOrderConfirmationDialog } from '../components/SalesOrderConfirmationDialog';
+import { SalesOrderConfirmationDialog } from '../../sales-order-confirm/components/SalesOrderConfirmationDialog';
 import { SalesOrderPackingSlipPostingDialog } from '../components/SalesOrderPackingSlipPostingDialog';
 import type { SalesOrderDocumentView } from './useSalesOrderDocument';
 import type { buildSalesOrderTotals } from './salesOrderTotals';
@@ -115,7 +115,7 @@ export function SalesOrderDetailsDialogs({ scope }: { scope: DialogScope }): Rea
           setCopyError('');
         }}
         onCopy={async (lineIds, options) => {
-          if (!order || !copyMode || copyBusy) return;
+          if (!order || !copyMode || copyBusy || !canEditHeader || activeHeader) return;
           setCopyBusy(true);
           setCopyError('');
           try {

@@ -7,6 +7,7 @@ import type { ColumnDef } from '@shared/components/data-grid/types';
 import { ErrorState } from '@shared/components/feedback/ErrorState';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { useCompanyStore } from '@core/company/useCompanyStore';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { salesOrderListApi } from '../api/salesOrderListApi';
 import {
   salesOrderPackingSlipApi,
@@ -24,132 +25,144 @@ type GridRow = {
 };
 
 const formatDate = (value?: string) => (value ? new Date(value).toLocaleDateString() : '');
-const yesNo = (value: boolean) => (value ? 'Yes' : 'No');
+type Translate = (key: string) => string;
 
-const overviewColumns: ColumnDef<GridRow>[] = [
+const yesNo = (t: Translate, value: boolean) => (value ? t('common.yes') : t('common.no'));
+
+const buildOverviewColumns = (t: Translate): ColumnDef<GridRow>[] => [
   {
     field: 'salesId',
-    headerName: 'Sales order',
+    headerName: 'custPackingSlipJournal.columns.salesId',
     width: 160,
     valueGetter: ({ row }) => row.journal?.salesId,
   },
   {
     field: 'packingSlipId',
-    headerName: 'Packing slip',
+    headerName: 'custPackingSlipJournal.columns.packingSlipId',
     width: 175,
     valueGetter: ({ row }) => row.journal?.packingSlipId,
   },
   {
     field: 'version',
-    headerName: 'Version',
+    headerName: 'custPackingSlipJournal.columns.version',
     width: 190,
     valueGetter: ({ row }) => row.journal?.version,
   },
   {
     field: 'deliveryDate',
-    headerName: 'Ship date',
+    headerName: 'custPackingSlipJournal.columns.deliveryDate',
     width: 130,
     valueGetter: ({ row }) => formatDate(row.journal?.deliveryDate),
   },
   {
     field: 'invoiceDueDate',
-    headerName: 'Invoice issue due date',
+    headerName: 'custPackingSlipJournal.columns.invoiceDueDate',
     width: 170,
     valueGetter: ({ row }) => formatDate(row.journal?.invoiceDueDate),
   },
-  { field: 'terms', headerName: 'Terms', width: 120, valueGetter: ({ row }) => row.journal?.terms },
+  {
+    field: 'terms',
+    headerName: 'custPackingSlipJournal.columns.terms',
+    width: 120,
+    valueGetter: ({ row }) => row.journal?.terms,
+  },
   {
     field: 'modeOfDelivery',
-    headerName: 'Mode of delivery',
+    headerName: 'custPackingSlipJournal.columns.modeOfDelivery',
     width: 150,
     valueGetter: ({ row }) => row.journal?.modeOfDelivery,
   },
   {
     field: 'blindShipment',
-    headerName: 'Blind shipment',
+    headerName: 'custPackingSlipJournal.columns.blindShipment',
     width: 130,
-    valueGetter: ({ row }) => yesNo(Boolean(row.journal?.blindShipment)),
+    valueGetter: ({ row }) => yesNo(t, Boolean(row.journal?.blindShipment)),
   },
   {
     field: 'intercompanyCompanyId',
-    headerName: 'Intercompany company',
+    headerName: 'custPackingSlipJournal.columns.intercompanyCompanyId',
     width: 160,
     valueGetter: ({ row }) => row.journal?.intercompanyCompanyId,
   },
   {
     field: 'intercompanyPosted',
-    headerName: 'Intercompany posted',
+    headerName: 'custPackingSlipJournal.columns.intercompanyPosted',
     width: 150,
-    valueGetter: ({ row }) => yesNo(Boolean(row.journal?.intercompanyPosted)),
+    valueGetter: ({ row }) => yesNo(t, Boolean(row.journal?.intercompanyPosted)),
   },
   {
     field: 'printed',
-    headerName: 'Printed',
+    headerName: 'custPackingSlipJournal.columns.printed',
     width: 100,
-    valueGetter: ({ row }) => yesNo(Boolean(row.journal?.printed)),
+    valueGetter: ({ row }) => yesNo(t, Boolean(row.journal?.printed)),
   },
   {
     field: 'ownerId',
-    headerName: 'Owner (RecId)',
+    headerName: 'custPackingSlipJournal.columns.ownerId',
     width: 130,
     valueGetter: ({ row }) => row.journal?.ownerId,
   },
   {
     field: 'contractorId',
-    headerName: 'Contractor (RecId)',
+    headerName: 'custPackingSlipJournal.columns.contractorId',
     width: 145,
     valueGetter: ({ row }) => row.journal?.contractorId,
   },
 ];
 
-const lineColumns: ColumnDef<GridRow>[] = [
+const buildLineColumns = (): ColumnDef<GridRow>[] => [
   {
     field: 'salesId',
-    headerName: 'Sales order',
+    headerName: 'custPackingSlipJournal.columns.salesId',
     width: 150,
     valueGetter: ({ row }) => row.line?.salesId,
   },
   {
     field: 'originalSalesId',
-    headerName: 'Original sales order',
+    headerName: 'custPackingSlipJournal.columns.originalSalesId',
     width: 170,
     valueGetter: ({ row }) => row.line?.originalSalesId,
   },
   {
     field: 'itemId',
-    headerName: 'Item number',
+    headerName: 'custPackingSlipJournal.columns.itemId',
     width: 150,
     valueGetter: ({ row }) => row.line?.itemId,
   },
   {
     field: 'description',
-    headerName: 'Description',
+    headerName: 'custPackingSlipJournal.columns.description',
     minWidth: 230,
     flex: 1,
     valueGetter: ({ row }) => row.line?.description,
   },
-  { field: 'siteId', headerName: 'Site', width: 115, valueGetter: ({ row }) => row.line?.siteId },
+  {
+    field: 'siteId',
+    headerName: 'custPackingSlipJournal.columns.siteId',
+    width: 115,
+    valueGetter: ({ row }) => row.line?.siteId,
+  },
   {
     field: 'warehouseId',
-    headerName: 'Warehouse',
+    headerName: 'custPackingSlipJournal.columns.warehouseId',
     width: 140,
     valueGetter: ({ row }) => row.line?.warehouseId,
   },
   {
     field: 'batchNumber',
-    headerName: 'Batch number',
+    headerName: 'custPackingSlipJournal.columns.batchNumber',
     width: 145,
     valueGetter: ({ row }) => row.line?.batchNumber,
   },
   {
     field: 'serialNumber',
-    headerName: 'Serial number',
+    headerName: 'custPackingSlipJournal.columns.serialNumber',
     width: 145,
     valueGetter: ({ row }) => row.line?.serialNumber,
   },
   {
     field: 'quantity',
-    headerName: 'Quantity',
+    headerName: 'custPackingSlipJournal.columns.quantity',
     width: 120,
     type: 'number',
     align: 'right',
@@ -157,7 +170,7 @@ const lineColumns: ColumnDef<GridRow>[] = [
   },
   {
     field: 'inventQuantity',
-    headerName: 'Inventory quantity',
+    headerName: 'custPackingSlipJournal.columns.inventQuantity',
     width: 145,
     type: 'number',
     align: 'right',
@@ -165,13 +178,13 @@ const lineColumns: ColumnDef<GridRow>[] = [
   },
   {
     field: 'salesUnit',
-    headerName: 'Unit',
+    headerName: 'custPackingSlipJournal.columns.salesUnit',
     width: 90,
     valueGetter: ({ row }) => row.line?.salesUnit,
   },
   {
     field: 'amount',
-    headerName: 'Amount',
+    headerName: 'custPackingSlipJournal.columns.amount',
     width: 130,
     type: 'number',
     align: 'right',
@@ -179,67 +192,72 @@ const lineColumns: ColumnDef<GridRow>[] = [
   },
 ];
 
-const orderTrackingColumns: ColumnDef<GridRow>[] = [
+const buildOrderTrackingColumns = (t: Translate): ColumnDef<GridRow>[] => [
   {
     field: 'salesId',
-    headerName: 'Sales order',
+    headerName: 'custPackingSlipJournal.columns.salesId',
     width: 160,
     valueGetter: ({ row }) => row.line?.salesId,
   },
   {
     field: 'itemId',
-    headerName: 'Item number',
+    headerName: 'custPackingSlipJournal.columns.itemId',
     width: 150,
     valueGetter: ({ row }) => row.line?.itemId,
   },
   {
     field: 'inventoryTransactionId',
-    headerName: 'Inventory transaction',
+    headerName: 'custPackingSlipJournal.columns.inventoryTransactionId',
     width: 190,
     valueGetter: ({ row }) => row.line?.inventoryTransactionId,
   },
-  { field: 'siteId', headerName: 'Site', width: 120, valueGetter: ({ row }) => row.line?.siteId },
+  {
+    field: 'siteId',
+    headerName: 'custPackingSlipJournal.columns.siteId',
+    width: 120,
+    valueGetter: ({ row }) => row.line?.siteId,
+  },
   {
     field: 'warehouseId',
-    headerName: 'Warehouse',
+    headerName: 'custPackingSlipJournal.columns.warehouseId',
     width: 145,
     valueGetter: ({ row }) => row.line?.warehouseId,
   },
   {
     field: 'batchNumber',
-    headerName: 'Batch number',
+    headerName: 'custPackingSlipJournal.columns.batchNumber',
     width: 150,
     valueGetter: ({ row }) => row.line?.batchNumber,
   },
   {
     field: 'serialNumber',
-    headerName: 'Serial number',
+    headerName: 'custPackingSlipJournal.columns.serialNumber',
     width: 150,
     valueGetter: ({ row }) => row.line?.serialNumber,
   },
   {
     field: 'requestedShipDate',
-    headerName: 'Requested ship date',
+    headerName: 'custPackingSlipJournal.columns.requestedShipDate',
     width: 170,
     valueGetter: ({ row }) => formatDate(row.line?.requestedShipDate),
   },
   {
     field: 'confirmedShipDate',
-    headerName: 'Confirmed ship date',
+    headerName: 'custPackingSlipJournal.columns.confirmedShipDate',
     width: 170,
     valueGetter: ({ row }) => formatDate(row.line?.confirmedShipDate),
   },
   {
     field: 'fullyMatched',
-    headerName: 'Fully matched',
+    headerName: 'custPackingSlipJournal.columns.fullyMatched',
     width: 125,
-    valueGetter: ({ row }) => yesNo(Boolean(row.line?.fullyMatched)),
+    valueGetter: ({ row }) => yesNo(t, Boolean(row.line?.fullyMatched)),
   },
   {
     field: 'scrap',
-    headerName: 'Scrap',
+    headerName: 'custPackingSlipJournal.columns.scrap',
     width: 95,
-    valueGetter: ({ row }) => yesNo(Boolean(row.line?.scrap)),
+    valueGetter: ({ row }) => yesNo(t, Boolean(row.line?.scrap)),
   },
 ];
 
@@ -247,6 +265,7 @@ const orderTrackingColumns: ColumnDef<GridRow>[] = [
 export function CustPackingSlipJournal(): React.ReactElement {
   const { salesOrderId, accountNum } = useParams<{ salesOrderId?: string; accountNum?: string }>();
   const navigate = useNavigate();
+  const { t } = useAppTranslation();
   const company = useCompanyStore((state) => state.currentCompany);
   const [tab, setTab] = useState<JournalTab>('overview');
   const [selectedId, setSelectedId] = useState<string>();
@@ -298,29 +317,42 @@ export function CustPackingSlipJournal(): React.ReactElement {
     const lines = detailQuery.data?.lines ?? [];
     return lines.map((line) => ({ id: line.id, line }));
   }, [detailQuery.data?.lines, journals, tab]);
+  const columns = useMemo(
+    () =>
+      tab === 'overview'
+        ? buildOverviewColumns(t)
+        : tab === 'lines'
+          ? buildLineColumns()
+          : buildOrderTrackingColumns(t),
+    [tab, t]
+  );
 
-  if (!salesOrderId && !accountNum) return <ErrorState message="Sales order is missing." />;
+  if (!salesOrderId && !accountNum)
+    return <ErrorState message={t('custPackingSlipJournal.errors.orderMissing')} />;
   if (ordersQuery.isLoading || journalsQuery.isLoading) return <LoadingState />;
   if (ordersQuery.error || journalsQuery.error)
     return (
       <ErrorState
         message={
-          (ordersQuery.error || journalsQuery.error)?.message ?? 'Unable to load packing slips.'
+          (ordersQuery.error || journalsQuery.error)?.message ??
+          t('custPackingSlipJournal.errors.loadFailed')
         }
       />
     );
-  if (!accountNum && !order) return <ErrorState message="Sales order not found." />;
+  if (!accountNum && !order)
+    return <ErrorState message={t('custPackingSlipJournal.errors.orderNotFound')} />;
 
   const context = accountNum
-    ? `Packing slips | ${accountNum}`
-    : `Packing slip journal | ${order!.salesId} : ${order!.customerName}`;
-  const columns =
-    tab === 'overview' ? overviewColumns : tab === 'lines' ? lineColumns : orderTrackingColumns;
+    ? t('custPackingSlipJournal.contextAccount', { accountNum })
+    : t('custPackingSlipJournal.context', {
+        salesId: order!.salesId,
+        customerName: order!.customerName,
+      });
 
   return (
     <SimpleListPage<GridRow>
       key={tab}
-      title="Packing slip journal"
+      title={t('custPackingSlipJournal.title')}
       recordTableName={tab === 'overview' ? 'CustPackingSlipJour' : 'CustPackingSlipTrans'}
       dataSource={{
         type: 'controlled',
@@ -338,33 +370,26 @@ export function CustPackingSlipJournal(): React.ReactElement {
           <Tabs
             value={tab}
             onChange={(_, value: JournalTab) => setTab(value)}
-            aria-label="Packing slip journal views"
+            aria-label={t('custPackingSlipJournal.views')}
           >
-            <Tab value="overview" label="Overview" />
-            <Tab value="lines" label="Lines" disabled={!activeId} />
-            <Tab value="orderTracking" label="Order tracking" disabled={!activeId} />
+            <Tab value="overview" label={t('custPackingSlipJournal.tabs.overview')} />
+            <Tab
+              value="lines"
+              label={t('custPackingSlipJournal.tabs.lines')}
+              disabled={!activeId}
+            />
+            <Tab
+              value="orderTracking"
+              label={t('custPackingSlipJournal.tabs.orderTracking')}
+              disabled={!activeId}
+            />
           </Tabs>
         </Box>
       }
       enterpriseConfig={{
         readOnly: true,
         contextLabel: context,
-        viewLabel: 'Standard view',
-        filterLabel: 'Filter',
-        informationLabel: 'Information',
-        searchFields: columns.map((column) => ({
-          field: String(column.field) as keyof GridRow & string,
-          label: column.headerName,
-        })),
-        utilities: {
-          personalizeLabel: 'Personalize',
-          guideLabel: 'Guide',
-          notificationsLabel: 'Notifications',
-          refreshLabel: 'Refresh',
-          openWindowLabel: 'Open window',
-        },
         backCommand: {
-          label: 'Back',
           onClick: () =>
             accountNum
               ? navigate(-1)
@@ -395,10 +420,10 @@ export function CustPackingSlipJournal(): React.ReactElement {
         },
         storageKey:
           tab === 'overview'
-            ? 'cust-packing-slip-journal-overview'
+            ? 'accounts-receivable.packing-slip-journal.overview'
             : tab === 'lines'
-              ? 'cust-packing-slip-journal-lines'
-              : 'cust-packing-slip-journal-tracking',
+              ? 'accounts-receivable.packing-slip-journal.lines'
+              : 'accounts-receivable.packing-slip-journal.order-tracking',
         hideFooter: true,
       }}
     />

@@ -8,7 +8,7 @@ import { salesOrderQueryKeys } from '@modules/finance/accounts-receivable/querie
 import { AppProviders } from '@app/providers/AppProviders';
 import { salesOrderListApi } from '@modules/finance/accounts-receivable/sales-order/api/salesOrderListApi';
 import { salesOrderLinesApi } from '@modules/finance/accounts-receivable/sales-order/api/salesOrderLinesApi';
-import { salesOrderConfirmationApi } from '@modules/finance/accounts-receivable/sales-order/api/salesOrderConfirmationApi';
+import { salesOrderConfirmationApi } from '@modules/finance/accounts-receivable/sales-order-confirm/api/salesOrderConfirmationApi';
 import { salesOrderPackingSlipApi } from '@modules/finance/accounts-receivable/sales-order/api/salesOrderPackingSlipApi';
 import { SalesOrderDetailsPage } from '@modules/finance/accounts-receivable/sales-order/pages/SalesOrderDetailsPage';
 
@@ -73,7 +73,7 @@ vi.mock('@modules/finance/accounts-receivable/sales-order/api/salesOrderLinesApi
   },
 }));
 
-vi.mock('@modules/finance/accounts-receivable/sales-order/api/salesOrderConfirmationApi', () => ({
+vi.mock('@modules/finance/accounts-receivable/sales-order-confirm/api/salesOrderConfirmationApi', () => ({
   salesOrderConfirmationApi: {
     preview: vi.fn().mockResolvedValue({
       header: { currencyCode: 'SAR', qty: 1, salesBalance: 100, sumTax: 15, confirmAmount: 115 },
@@ -120,14 +120,17 @@ vi.mock('@modules/finance/accounts-receivable/sales-order/api/salesOrderPackingS
   },
 }));
 
+// The master-detail pattern derives this from recordTableName="SalesTable".
+const LIST_VISIBLE_KEY = 'ixapp.master-detail.SalesTable.list-visible';
+
 beforeEach(() => {
   vi.clearAllMocks();
-  globalThis.localStorage.setItem('ixapp.sales-order.list-visible', 'true');
+  globalThis.localStorage.setItem(LIST_VISIBLE_KEY, 'true');
 });
 
 function openOrder(id: string, listVisible?: boolean) {
   if (listVisible !== undefined)
-    globalThis.localStorage.setItem('ixapp.sales-order.list-visible', String(listVisible));
+    globalThis.localStorage.setItem(LIST_VISIBLE_KEY, String(listVisible));
   return render(
     <MemoryRouter initialEntries={[`/accounts-receivable/sales-orders/${id}`]}>
       <AppProviders>
@@ -307,7 +310,7 @@ it('toggles the record sidebar and opens the header tab', async () => {
   expect(toggle.getAttribute('aria-pressed')).toBe('false');
   fireEvent.click(toggle);
   expect(toggle.getAttribute('aria-pressed')).toBe('true');
-  expect(globalThis.localStorage.getItem('ixapp.sales-order.list-visible')).toBe('true');
+  expect(globalThis.localStorage.getItem(LIST_VISIBLE_KEY)).toBe('true');
   view.unmount();
   openOrder('1');
   expect(

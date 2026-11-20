@@ -36,6 +36,37 @@ public class SettleOpenTransactionsTests
 {
     private static readonly DateTime Date = new(2026, 10, 15);
 
+    [Theory]
+    [InlineData("transaction-date")]
+    [InlineData("last-settlement-date")]
+    [InlineData("transaction-balance")]
+    [InlineData("accounting-balance")]
+    public async Task Invalid_customer_settlement_preserves_balances_and_history(string scenario)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        SeedCustomer(db);
+        AddCustTrans(db, 1, 1000m, LedgerTransType.Sales, "INV-1");
+        AddCustTrans(db, 2, -400m, LedgerTransType.Payment, "PAY-1");
+        var invoice = db.Set<CustTrans>().Local.Single(x => x.RecId == 1);
+        var open = db.Set<CustTransOpen>().Local.Single(x => x.RefRecId == 1);
+        if (scenario == "transaction-date") invoice.TransDate = Date.AddDays(1);
+        if (scenario == "last-settlement-date") invoice.LastSettleDate = Date.AddDays(1);
+        if (scenario == "transaction-balance") open.AmountCur = 999m;
+        if (scenario == "accounting-balance") open.AmountMst = 999m;
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var result = await NewCustService(db).SettleAsync(new("C-001", Date, [1, 2]), default);
+
+        Assert.Equal(422, result.StatusCode);
+        Assert.Contains(scenario.EndsWith("date") ? "precedes" : "reconcile", result.Message);
+        Assert.Empty(await db.Set<CustSettlement>().ToListAsync());
+        Assert.Equal(2, await db.Set<CustTransOpen>().CountAsync());
+        Assert.All(await db.Set<CustTrans>().ToListAsync(), row => Assert.Equal(0m, row.SettleAmountCur));
+    }
+
     // ---------- Accounts receivable ----------
 
     [Theory]

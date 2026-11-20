@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, IconButton, Stack, TextField, Typography } from '@mui/material';
+import { Box, IconButton, Stack, TextField } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import type { DetailFieldConfig, DetailSectionConfig } from '@patterns/list-details/types';
 import { POSTAL_ADDRESS_RECORD_PREVIEW } from '@shared/components/logistics/postalAddressRecordPreview';

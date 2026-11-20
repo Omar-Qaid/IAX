@@ -195,7 +195,7 @@ export function FreeTextInvoiceDetails({
                       {
                         id: 'post',
                         label: t('freeTextInvoices.post'),
-                        disabled: busy || isNew || invoice.posted,
+                        disabled: busy || editing || isNew || invoice.posted,
                         onClick: () => setConfirmation('post'),
                       },
                     ]
@@ -208,7 +208,7 @@ export function FreeTextInvoiceDetails({
                   {
                     id: 'totals',
                     label: t('freeTextInvoices.totals'),
-                    disabled: busy || isNew,
+                    disabled: busy || editing || isNew,
                     onClick: () => setTotalsOpen(true),
                   },
                 ],

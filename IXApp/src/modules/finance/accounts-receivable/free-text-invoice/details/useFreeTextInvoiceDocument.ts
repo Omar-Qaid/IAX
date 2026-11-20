@@ -88,20 +88,7 @@ export function useFreeTextInvoiceDocument({
     queryFn: ({ signal }) => freeTextInvoiceApi.taxGroups(signal),
     enabled: editing,
   });
-  const ledgerReferences = useQuery({
-    queryKey: freeTextInvoiceQueryKeys.lookup(company, 'ledger-references'),
-    queryFn: ({ signal }) =>
-      freeTextInvoiceApi.ledgerDimensions({ pageNumber: 1, pageSize: 100, search: '', signal }),
-  });
-  const ledgerCodes = React.useMemo(() => {
-    const codes = new Map<string, string | undefined>();
-    ledgerReferences.data?.data.forEach((option) => codes.set(String(option.id), option.code));
-    return codes;
-  }, [ledgerReferences.data]);
-  const ledgerText = React.useCallback(
-    (id: number) => ledgerLabels[id] || ledgerCodes.get(String(id)),
-    [ledgerLabels, ledgerCodes]
-  );
+  const ledgerText = React.useCallback((id: number) => ledgerLabels[id], [ledgerLabels]);
   const invoices = useQuery({
     queryKey: freeTextInvoiceQueryKeys.list(company),
     queryFn: ({ signal }) => freeTextInvoiceApi.list(signal),
@@ -166,18 +153,25 @@ export function useFreeTextInvoiceDocument({
     try {
       if (grid.current && !(await grid.current.saveEdit())) return;
       const record = draftRef.current!;
-      if (
-        !record.customerAccount.trim() ||
-        !record.invoiceDate ||
-        !record.lines.length ||
-        record.lines.some((line) => !isValidInvoiceLine(line))
-      ) {
-        throw new Error(
-          t(
-            'freeTextInvoices.requiredLines',
-            'Select a customer and invoice date. Add at least one line with a description, ledger account, positive quantity and non-negative unit price.'
-          )
-        );
+      if (!record.customerAccount.trim())
+        throw new Error(t('freeTextInvoices.customerRequired', 'Select a customer account.'));
+      if (!record.invoiceDate)
+        throw new Error(t('freeTextInvoices.dateRequired', 'Enter an invoice date.'));
+      if (!record.lines.length)
+        throw new Error(t('freeTextInvoices.lineRequired', 'Add at least one invoice line.'));
+      const invalidIndex = record.lines.findIndex((line) => !isValidInvoiceLine(line));
+      if (invalidIndex >= 0) {
+        const line = record.lines[invalidIndex];
+        const field = !line.description.trim()
+          ? t('freeTextInvoices.descriptionRequired', 'Enter a description.')
+          : !Number.isSafeInteger(line.ledgerDimension) || line.ledgerDimension <= 0
+            ? t('freeTextInvoices.ledgerRequired', 'Select a ledger account from the lookup.')
+            : !Number.isFinite(line.quantity) || line.quantity <= 0
+              ? t('freeTextInvoices.quantityInvalid', 'Quantity must be greater than zero.')
+              : t('freeTextInvoices.unitPriceInvalid', 'Unit price must be zero or greater.');
+        throw new Error(t('freeTextInvoices.lineValidation', {
+          defaultValue: 'Line {{line}}: {{message}}', line: invalidIndex + 1, message: field,
+        }));
       }
       const input: FreeTextInvoiceInput = {
         customerAccount: record.customerAccount,
@@ -202,7 +196,7 @@ export function useFreeTextInvoiceDocument({
       };
       const saved = await freeTextInvoiceApi.save(input, isNew ? undefined : invoice.recId);
       cache.setQueryData(
-        ['accounts-receivable', 'free-text-invoice', company, String(saved.recId)],
+        freeTextInvoiceQueryKeys.invoice(company, String(saved.recId)),
         saved
       );
       changeDraft(null);

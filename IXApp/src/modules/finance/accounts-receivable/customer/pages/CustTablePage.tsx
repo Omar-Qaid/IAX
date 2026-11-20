@@ -10,7 +10,10 @@ import type {
   DetailValues,
   EnterpriseListDetailsConfig,
 } from '@patterns/list-details/types';
+import { CustOpenTrans } from '../../settlement/components/CustOpenTrans';
+import { buildCustomerCollectRibbonGroups } from '../components/customerCollectRibbon';
 import { buildCustomerSellRibbonGroups } from '../components/customerSellRibbon';
+import { buildCustomerInvoiceRibbonGroups } from '../components/customerInvoiceRibbon';
 import { SalesOrderQuickCreate } from '../../sales-order/components/SalesOrderQuickCreate';
 import { buildCustomerRibbonGroups } from '../components/customerRibbon';
 import { useAuth } from '@core/auth/useAuth';
@@ -116,6 +119,11 @@ export function CustTablePage(): React.ReactElement {
   };
   const { customerId } = useParams<{ customerId: string }>();
   const queryClient = useQueryClient();
+  const [settlementCustomer, setSettlementCustomer] = React.useState<{
+    company: string;
+    record: CustomerRecord;
+  } | null>(null);
+  React.useEffect(() => setSettlementCustomer(null), [company]);
   const [newOrderCustomer, setNewOrderCustomer] = React.useState<CustomerRecord | null>(null);
   React.useEffect(() => {
     setNewOrderCustomer(null);
@@ -532,37 +540,6 @@ export function CustTablePage(): React.ReactElement {
           },
         }),
       },
-      ...(hasPermission(PERMISSIONS.FREE_TEXT_INVOICE_VIEW)
-        ? [
-            {
-              id: 'invoice',
-              label: t('customerCommands.invoice'),
-              requiresSelection: true,
-              disabled: !record || record.recId <= 0,
-              ribbonPersistenceKey: 'accounts-receivable.customers.invoice-ribbon-pinned',
-              groups: [
-                {
-                  id: 'related-information',
-                  label: t('customerInquiry.relatedInformation'),
-                  actions: [
-                    {
-                      id: 'free-text-invoices',
-                      label: t('freeTextInvoices.title', 'Free text invoices'),
-                      onClick: () => {
-                        if (record)
-                          navigate(
-                            ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customerFreeTextInvoices(
-                              record.accountNumber
-                            )
-                          );
-                      },
-                    },
-                  ],
-                },
-              ],
-            },
-          ]
-        : []),
       ...(() => {
         const saved = Boolean(record && record.recId > 0);
         const groups = buildCustomerSellRibbonGroups((key, fallback) => t(key, fallback), {
@@ -577,6 +554,12 @@ export function CustTablePage(): React.ReactElement {
                   navigate(
                     ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customerSalesOrders(record.accountNumber)
                   );
+              }
+            : undefined,
+          onOrderLines: hasPermission(PERMISSIONS.SALES_ORDER_VIEW)
+            ? () => {
+                if (saved && record)
+                  navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.custSalesLines(record.accountNumber));
               }
             : undefined,
           onPackingSlips: hasPermission(PERMISSIONS.SALES_ORDER_VIEW)
@@ -610,6 +593,57 @@ export function CustTablePage(): React.ReactElement {
             ]
           : [];
       })(),
+      ...(hasPermission(PERMISSIONS.FREE_TEXT_INVOICE_VIEW)
+        ? [
+            {
+              id: 'invoice',
+              label: t('customerCommands.invoice'),
+              requiresSelection: true,
+              disabled: !record || record.recId <= 0,
+              ribbonPersistenceKey: 'accounts-receivable.customers.invoice-ribbon-pinned',
+              groups: buildCustomerInvoiceRibbonGroups((key, fallback) => t(key, fallback), {
+                onNewFreeTextInvoice: hasPermission(PERMISSIONS.FREE_TEXT_INVOICE_CREATE)
+                  ? () => {
+                      if (record && record.recId > 0)
+                        navigate(
+                          ACCOUNTS_RECEIVABLE_ROUTE_PATHS.newFreeTextInvoice(record.accountNumber)
+                        );
+                    }
+                  : undefined,
+                onFreeTextInvoices: () => {
+                  if (record)
+                    navigate(
+                      ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customerFreeTextInvoices(record.accountNumber)
+                    );
+                },
+                onInvoiceJournal: hasPermission(PERMISSIONS.SALES_ORDER_VIEW)
+                  ? () => {
+                      if (record && record.recId > 0)
+                        navigate(
+                          ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customerInvoiceJournal(
+                            record.accountNumber
+                          )
+                        );
+                    }
+                  : undefined,
+              }),
+            },
+          ]
+        : []),
+      {
+        id: 'collect',
+        label: t('customerCollectRibbon.title', 'Collect'),
+        requiresSelection: true,
+        disabled: !record || record.recId <= 0,
+        ribbonPersistenceKey: 'accounts-receivable.customers.collect-ribbon-pinned',
+        groups: buildCustomerCollectRibbonGroups((key, fallback) => t(key, fallback), {
+          onSettleTransactions: hasPermission(PERMISSIONS.CUSTOMER_PAYMENT_VIEW)
+            ? () => {
+                if (record && record.recId > 0) setSettlementCustomer({ company, record });
+              }
+            : undefined,
+        }),
+      },
     ],
     permissions: {
       view: PERMISSIONS.CUSTOMER_VIEW,
@@ -699,20 +733,36 @@ export function CustTablePage(): React.ReactElement {
       title={t('pages.customers.title')}
       config={config}
       dialogs={
-        <SalesOrderQuickCreate
-          key={company}
-          open={Boolean(newOrderCustomer)}
-          initialCustomer={newOrderCustomer ?? undefined}
-          onClose={() => setNewOrderCustomer(null)}
-          onSave={async (order) => {
-            setNewOrderCustomer(null);
-            await queryClient.invalidateQueries({
-              queryKey: salesOrderQueryKeys.list(company),
-            });
-            if (hasPermission(PERMISSIONS.SALES_ORDER_VIEW))
-              navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrder(order.id));
-          }}
-        />
+        <>
+          {settlementCustomer?.company === company && (
+            <CustOpenTrans
+              open
+              accountNum={settlementCustomer.record.accountNumber}
+              customerName={localizedName(
+                {
+                  name: settlementCustomer.record.name,
+                  nameAlias: settlementCustomer.record.nameAr,
+                },
+                isRtl
+              )}
+              onClose={() => setSettlementCustomer(null)}
+            />
+          )}
+          <SalesOrderQuickCreate
+            key={company}
+            open={Boolean(newOrderCustomer)}
+            initialCustomer={newOrderCustomer ?? undefined}
+            onClose={() => setNewOrderCustomer(null)}
+            onSave={async (order) => {
+              setNewOrderCustomer(null);
+              await queryClient.invalidateQueries({
+                queryKey: salesOrderQueryKeys.list(company),
+              });
+              if (hasPermission(PERMISSIONS.SALES_ORDER_VIEW))
+                navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrder(order.id));
+            }}
+          />
+        </>
       }
     />
   );
