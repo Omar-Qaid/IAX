@@ -141,7 +141,7 @@ routes and ribbons. No stage was exercised live - see Open items.
 | Packing slip                               | 9    | full                                                                 | yes                                 | Passed (static)    |
 | Free text invoice                          | 12   | full                                                                 | yes                                 | Passed (static)    |
 | Sales invoice posting                      | 14   | Invoice ribbon group + posting drawer, `CustInvoiceJour` page        | `SalesInvoiceController`            | Fixed and Retested |
-| Customer payment journal                   | 17   | `paymentJournal` disabled in `customerCollectRibbon.ts`              | `CustPaymentController`             | Failed - no UI     |
+| Customer payment journal                   | 17   | Payment journal drawer on the Collect ribbon                         | `CustPaymentController`             | Fixed and Retested |
 | Settlement                                 | 19   | `CustOpenTrans`                                                      | yes                                 | Passed (static)    |
 | Undo settlement (SET-07)                   | 19   | none                                                                 | `CustSettlementReversalController`  | Failed - no UI     |
 | Returns / credit notes                     | 22   | none                                                                 | `CustReturnController`              | Failed - no UI     |
