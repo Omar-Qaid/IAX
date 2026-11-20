@@ -130,25 +130,30 @@ Each spec stage mapped to the frontend surface and the backend controller behind
 Backend presence verified by reading the controllers; frontend presence by reading the
 routes and ribbons. No stage was exercised live - see Open items.
 
-| Stage                                      | Spec | Frontend                                                             | Backend                             | Status          |
-| ------------------------------------------ | ---- | -------------------------------------------------------------------- | ----------------------------------- | --------------- |
-| Document/inventory/sales status separation | 1    | `salesStatus`, `documentStatus`, `inventoryStatus` carried and shown | yes                                 | Passed (static) |
-| Quotation                                  | 4    | none                                                                 | `SalesQuotation` exists             | Failed - no UI  |
-| Sales order entry and lines                | 5    | full                                                                 | yes                                 | Passed (static) |
-| Confirmation / pro forma                   | 6    | full                                                                 | yes                                 | Passed (static) |
-| Reservation                                | 7    | none                                                                 | partial                             | Failed - no UI  |
-| Picking                                    | 8    | none                                                                 | partial                             | Failed - no UI  |
-| Packing slip                               | 9    | full                                                                 | yes                                 | Passed (static) |
-| Free text invoice                          | 12   | full                                                                 | yes                                 | Passed (static) |
-| Sales invoice posting                      | 14   | none                                                                 | `SalesInvoiceController`            | Failed - no UI  |
-| Customer payment journal                   | 17   | `paymentJournal` disabled in `customerCollectRibbon.ts`              | `CustPaymentController`             | Failed - no UI  |
-| Settlement                                 | 19   | `CustOpenTrans`                                                      | yes                                 | Passed (static) |
-| Undo settlement (SET-07)                   | 19   | none                                                                 | `CustSettlementReversalController`  | Failed - no UI  |
-| Returns / credit notes                     | 22   | none                                                                 | `CustReturnController`              | Failed - no UI  |
-| Foreign-currency revaluation               | 25   | none                                                                 | `CustCurrencyRevaluationController` | Failed - no UI  |
-| Collections / aging / write-off            | 26   | none                                                                 | `CustCollectionLetterController`    | Failed - no UI  |
+| Stage                                      | Spec | Frontend                                                             | Backend                             | Status             |
+| ------------------------------------------ | ---- | -------------------------------------------------------------------- | ----------------------------------- | ------------------ |
+| Document/inventory/sales status separation | 1    | `salesStatus`, `documentStatus`, `inventoryStatus` carried and shown | yes                                 | Passed (static)    |
+| Quotation                                  | 4    | none                                                                 | `SalesQuotation` exists             | Failed - no UI     |
+| Sales order entry and lines                | 5    | full                                                                 | yes                                 | Passed (static)    |
+| Confirmation / pro forma                   | 6    | full                                                                 | yes                                 | Passed (static)    |
+| Reservation                                | 7    | none                                                                 | partial                             | Failed - no UI     |
+| Picking                                    | 8    | none                                                                 | partial                             | Failed - no UI     |
+| Packing slip                               | 9    | full                                                                 | yes                                 | Passed (static)    |
+| Free text invoice                          | 12   | full                                                                 | yes                                 | Passed (static)    |
+| Sales invoice posting                      | 14   | Invoice ribbon group + posting drawer, `CustInvoiceJour` page        | `SalesInvoiceController`            | Fixed and Retested |
+| Customer payment journal                   | 17   | `paymentJournal` disabled in `customerCollectRibbon.ts`              | `CustPaymentController`             | Failed - no UI     |
+| Settlement                                 | 19   | `CustOpenTrans`                                                      | yes                                 | Passed (static)    |
+| Undo settlement (SET-07)                   | 19   | none                                                                 | `CustSettlementReversalController`  | Failed - no UI     |
+| Returns / credit notes                     | 22   | none                                                                 | `CustReturnController`              | Failed - no UI     |
+| Foreign-currency revaluation               | 25   | none                                                                 | `CustCurrencyRevaluationController` | Failed - no UI     |
+| Collections / aging / write-off            | 26   | none                                                                 | `CustCollectionLetterController`    | Failed - no UI     |
 
-Headline finding: **the backend can complete the O2C cycle and the frontend cannot.**
+Correction to an earlier reading of this table: the invoice stage was recorded as having no
+frontend at all. The `CustInvoiceJour` journal page existed and was registered; what was
+missing was the posting action, which this round added. The remaining "no UI" rows were
+re-checked against `pageRegistry.ts` and have no page either.
+
+Headline finding: **the backend can complete the O2C cycle and the frontend mostly cannot.**
 These are missing screens, not defects in existing code, so none were fixed in this
 pass - building them is a feature scope decision.
 
@@ -156,7 +161,7 @@ pass - building them is a feature scope decision.
 
 ## 3. Open items
 
-| Item                                  | Status     | Note                                                                                                                                                                                                                                                            |
-| ------------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `InventDimensionResolver` transaction | Not Tested | Only AR service that begins a transaction without the execution strategy. It guards on `CurrentTransaction is null`, so it is safe inside the (wrapped) line services that call it; it would throw if ever called standalone. Left unchanged — no reproduction. |
-| Live end-to-end posting flows         | Blocked    | Require an authenticated browser session; the API rejects unauthenticated calls (401).                                                                                                                                                                          |
+| Item                                  | Status             | Note                                                                                                                                                                                                                                                                                                    |
+| ------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `InventDimensionResolver` transaction | Fixed and Retested | The one AR service that began a transaction outside the execution strategy. Its owned-transaction path now runs through `CreateExecutionStrategy().ExecuteAsync`, matching the rest of the module; the join-an-existing-transaction path is unchanged. Backend tests 1348 passed, 0 failed.             |
+| Live end-to-end posting flows         | Not Tested         | Recorded as Blocked on authentication, which was wrong: `IdentitySeeder` seeds an admin user, so a token is obtainable from `POST /api/v1/auth/login`. What is actually needed is permission to start the API against the developer database, because startup runs database initialization and seeding. |
