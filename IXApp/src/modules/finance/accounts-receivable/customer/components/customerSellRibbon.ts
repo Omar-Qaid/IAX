@@ -1,6 +1,7 @@
 import type { ActionPaneRibbonGroup } from '@shared/components/action-pane/ActionPaneRibbon';
 interface CustomerSellActions {
   onNewSalesOrder?: () => void;
+  onReturnOrder?: () => void;
   onOrderLines?: () => void;
   onSalesOrders?: () => void;
   onPackingSlips?: () => void;
@@ -14,18 +15,26 @@ export function buildCustomerSellRibbonGroups(
   actions: CustomerSellActions
 ): ActionPaneRibbonGroup[] {
   const groups: ActionPaneRibbonGroup[] = [];
-  if (actions.onNewSalesOrder)
+  if (actions.onNewSalesOrder || actions.onReturnOrder) {
+    const newActions = [];
+    if (actions.onNewSalesOrder)
+      newActions.push({
+        id: 'new-sales-order',
+        label: tr('customerSellRibbon.salesOrder', 'Sales order'),
+        onClick: actions.onNewSalesOrder,
+      });
+    if (actions.onReturnOrder)
+      newActions.push({
+        id: 'new-return-order',
+        label: tr('customerSellRibbon.returnOrder', 'Return order'),
+        onClick: actions.onReturnOrder,
+      });
     groups.push({
       id: 'new',
       label: tr('customerSellRibbon.new', 'New'),
-      actions: [
-        {
-          id: 'new-sales-order',
-          label: tr('customerSellRibbon.salesOrder', 'Sales order'),
-          onClick: actions.onNewSalesOrder,
-        },
-      ],
+      actions: newActions,
     });
+  }
   if (actions.onSalesOrders || actions.onOrderLines || actions.onPackingSlips)
     groups.push({
       id: 'related-information',

@@ -144,7 +144,7 @@ routes and ribbons. No stage was exercised live - see Open items.
 | Customer payment journal                   | 17   | Payment journal drawer on the Collect ribbon                         | `CustPaymentController`             | Fixed and Retested |
 | Settlement                                 | 19   | `CustOpenTrans`                                                      | yes                                 | Passed (static)    |
 | Undo settlement (SET-07)                   | 19   | none                                                                 | `CustSettlementReversalController`  | Failed - no UI     |
-| Returns / credit notes                     | 22   | none                                                                 | `CustReturnController`              | Failed - no UI     |
+| Returns / credit notes                     | 22   | Return order drawer on the Sell ribbon, three stages                 | `CustReturnController`              | Fixed and Retested |
 | Foreign-currency revaluation               | 25   | none                                                                 | `CustCurrencyRevaluationController` | Failed - no UI     |
 | Collections / aging / write-off            | 26   | none                                                                 | `CustCollectionLetterController`    | Failed - no UI     |
 

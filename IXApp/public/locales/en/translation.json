@@ -3505,21 +3505,22 @@
   },
   "customerSellRibbon": {
     "allSalesOrders": "All sales orders",
-    "confirmationJournal": "Confirmation journal",
     "backorderLines": "Backorder lines",
-    "confirmationJournalUnavailable": "Open a sales order to view its confirmation journal.",
     "backorderLinesUnavailable": "Backorder lines are not available yet.",
+    "confirmationJournal": "Confirmation journal",
+    "confirmationJournalUnavailable": "Open a sales order to view its confirmation journal.",
+    "journalNames": "Trade agreement journal names",
+    "journals": "Trade agreement journals",
     "new": "New",
-    "salesOrder": "Sales order",
-    "relatedInformation": "Related information",
     "orders": "Orders",
     "packingSlips": "Packing slips",
-    "tradeAgreements": "Trade agreements",
-    "journals": "Trade agreement journals",
     "priceDiscountGroups": "Price/discount groups",
-    "journalNames": "Trade agreement journal names",
+    "relatedInformation": "Related information",
+    "returnOrder": "Return order",
+    "salesOrder": "Sales order",
+    "setup": "Setup",
     "setupGroup": "Set up",
-    "setup": "Setup"
+    "tradeAgreements": "Trade agreements"
   },
   "freeTextInvoices": {
     "addLine": "Add line",
@@ -4260,5 +4261,32 @@
     "settleAutomatically": "Settle automatically",
     "settleInvoice": "Settle invoice",
     "title": "Customer payment journal"
+  },
+  "returnOrder": {
+    "createOrder": "Create return order",
+    "created": "Return order {{salesId}} created.",
+    "creditNoteDate": "Credit note date",
+    "credited": "Credit note {{invoiceId}} posted for {{amount}}.",
+    "dispositionCode": "Disposition code",
+    "failed": "The return order operation failed.",
+    "hint": "Return invoiced items for {{custAccount}} - {{customerName}} and credit them.",
+    "invoice": "Invoice",
+    "noReason": "No reason code",
+    "postCreditNote": "Post credit note",
+    "postReceipt": "Post return receipt",
+    "quantityTooHigh": "A return cannot exceed the invoiced quantity of the line.",
+    "reasonCode": "Return reason code",
+    "receiptDate": "Receipt date",
+    "received": "Return received. Packing slip {{packingSlipId}}.",
+    "returnQuantity": "Return quantity",
+    "returnQuantityFor": "Return quantity for {{itemId}}",
+    "selectInvoice": "Select an invoice to see the lines that can be returned.",
+    "steps": {
+      "create": "Return order",
+      "credit": "Credit note",
+      "receive": "Receipt"
+    },
+    "title": "Return order and credit note",
+    "working": "Working..."
   }
 }

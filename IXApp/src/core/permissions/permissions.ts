@@ -1,5 +1,8 @@
 export const PERMISSIONS = {
   CUSTOMER_PAYMENT_VIEW: 'AccountsReceivable.CustomerPayments.View',
+  RETURN_ORDER_VIEW: 'AccountsReceivable.ReturnOrders.View',
+  RETURN_ORDER_CREATE: 'AccountsReceivable.ReturnOrders.Create',
+  RETURN_ORDER_POST: 'AccountsReceivable.ReturnOrders.Post',
   CUSTOMER_PAYMENT_POST: 'AccountsReceivable.CustomerPayments.Post',
   FREE_TEXT_INVOICE_VIEW: 'AccountsReceivable.Invoices.View',
   FREE_TEXT_INVOICE_CREATE: 'AccountsReceivable.Invoices.Create',

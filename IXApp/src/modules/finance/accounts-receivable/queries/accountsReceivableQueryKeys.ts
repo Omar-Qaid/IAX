@@ -85,3 +85,20 @@ export const customerPaymentQueryKeys = {
   openTransactions: (company: string, accountNum: string | undefined) =>
     [...customerPaymentQueryKeys.company(company), 'open-transactions', accountNum ?? ''] as const,
 };
+
+/**
+ * Return order keys: the customer's invoiced lines a return is raised from, the
+ * disposition and reason lookups, and a created return order's own lines.
+ */
+export const returnOrderQueryKeys = {
+  all: ['returnOrders'] as const,
+  company: (company: string) => [...returnOrderQueryKeys.all, company] as const,
+  invoicedLines: (company: string, accountNum: string | undefined) =>
+    [...returnOrderQueryKeys.company(company), 'invoiced-lines', accountNum ?? ''] as const,
+  dispositionCodes: (company: string) =>
+    [...returnOrderQueryKeys.company(company), 'disposition-codes'] as const,
+  reasonCodes: (company: string) =>
+    [...returnOrderQueryKeys.company(company), 'reason-codes'] as const,
+  returnLines: (company: string, recId: number | undefined) =>
+    [...returnOrderQueryKeys.company(company), 'return-lines', recId ?? 0] as const,
+};

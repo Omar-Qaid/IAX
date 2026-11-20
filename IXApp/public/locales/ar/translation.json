@@ -3505,21 +3505,22 @@
   },
   "customerSellRibbon": {
     "allSalesOrders": "جميع أوامر المبيعات",
-    "confirmationJournal": "دفتر يومية التأكيد",
     "backorderLines": "بنود الأوامر المتأخرة",
-    "confirmationJournalUnavailable": "افتح أمر مبيعات لعرض دفتر يومية التأكيد الخاص به.",
     "backorderLinesUnavailable": "بنود الأوامر المتأخرة غير متاحة بعد.",
+    "confirmationJournal": "دفتر يومية التأكيد",
+    "confirmationJournalUnavailable": "افتح أمر مبيعات لعرض دفتر يومية التأكيد الخاص به.",
+    "journalNames": "أسماء دفاتر الاتفاقيات التجارية",
+    "journals": "دفاتر الاتفاقيات التجارية",
     "new": "جديد",
-    "salesOrder": "أمر مبيعات",
-    "relatedInformation": "معلومات ذات صلة",
     "orders": "الأوامر",
     "packingSlips": "إيصالات التعبئة",
-    "tradeAgreements": "الاتفاقيات التجارية",
-    "journals": "دفاتر الاتفاقيات التجارية",
     "priceDiscountGroups": "مجموعات الأسعار والخصومات",
-    "journalNames": "أسماء دفاتر الاتفاقيات التجارية",
+    "relatedInformation": "معلومات ذات صلة",
+    "returnOrder": "أمر إرجاع",
+    "salesOrder": "أمر مبيعات",
+    "setup": "إعداد",
     "setupGroup": "الإعداد",
-    "setup": "إعداد"
+    "tradeAgreements": "الاتفاقيات التجارية"
   },
   "freeTextInvoices": {
     "addLine": "إضافة بند",
@@ -4260,5 +4261,32 @@
     "settleAutomatically": "تسوية تلقائية",
     "settleInvoice": "تسوية الفاتورة",
     "title": "دفتر يومية مدفوعات العملاء"
+  },
+  "returnOrder": {
+    "createOrder": "إنشاء أمر الإرجاع",
+    "created": "تم إنشاء أمر الإرجاع {{salesId}}.",
+    "creditNoteDate": "تاريخ إشعار الدائن",
+    "credited": "تم ترحيل إشعار الدائن {{invoiceId}} بمبلغ {{amount}}.",
+    "dispositionCode": "رمز التصرف",
+    "failed": "فشلت عملية أمر الإرجاع.",
+    "hint": "إرجاع أصناف مفوترة للعميل {{custAccount}} - {{customerName}} وإصدار إشعار دائن.",
+    "invoice": "الفاتورة",
+    "noReason": "بدون رمز سبب",
+    "postCreditNote": "ترحيل إشعار الدائن",
+    "postReceipt": "ترحيل استلام الإرجاع",
+    "quantityTooHigh": "لا يمكن أن تتجاوز كمية الإرجاع الكمية المفوترة للسطر.",
+    "reasonCode": "رمز سبب الإرجاع",
+    "receiptDate": "تاريخ الاستلام",
+    "received": "تم استلام الإرجاع. إشعار التسليم {{packingSlipId}}.",
+    "returnQuantity": "كمية الإرجاع",
+    "returnQuantityFor": "كمية الإرجاع للصنف {{itemId}}",
+    "selectInvoice": "اختر فاتورة لعرض السطور القابلة للإرجاع.",
+    "steps": {
+      "create": "أمر الإرجاع",
+      "credit": "إشعار الدائن",
+      "receive": "الاستلام"
+    },
+    "title": "أمر الإرجاع وإشعار الدائن",
+    "working": "جارٍ التنفيذ..."
   }
 }

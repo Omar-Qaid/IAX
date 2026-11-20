@@ -13,6 +13,7 @@ import type {
 import { CustOpenTrans } from '../../settlement/components/CustOpenTrans';
 import { buildCustomerCollectRibbonGroups } from '../components/customerCollectRibbon';
 import { CustPaymentJournalDialog } from '../../payment/components/CustPaymentJournalDialog';
+import { CustReturnOrderDialog } from '../../return-order/components/CustReturnOrderDialog';
 import { buildCustomerSellRibbonGroups } from '../components/customerSellRibbon';
 import { buildCustomerInvoiceRibbonGroups } from '../components/customerInvoiceRibbon';
 import { SalesOrderQuickCreate } from '../../sales-order/components/SalesOrderQuickCreate';
@@ -130,6 +131,11 @@ export function CustTablePage(): React.ReactElement {
     record: CustomerRecord;
   } | null>(null);
   React.useEffect(() => setPaymentCustomer(null), [company]);
+  const [returnCustomer, setReturnCustomer] = React.useState<{
+    company: string;
+    record: CustomerRecord;
+  } | null>(null);
+  React.useEffect(() => setReturnCustomer(null), [company]);
   const [newOrderCustomer, setNewOrderCustomer] = React.useState<CustomerRecord | null>(null);
   React.useEffect(() => {
     setNewOrderCustomer(null);
@@ -554,6 +560,11 @@ export function CustTablePage(): React.ReactElement {
                 if (saved && record) setNewOrderCustomer(record);
               }
             : undefined,
+          onReturnOrder: hasPermission(PERMISSIONS.RETURN_ORDER_CREATE)
+            ? () => {
+                if (saved && record) setReturnCustomer({ company, record });
+              }
+            : undefined,
           onSalesOrders: hasPermission(PERMISSIONS.SALES_ORDER_VIEW)
             ? () => {
                 if (saved && record)
@@ -772,6 +783,21 @@ export function CustTablePage(): React.ReactElement {
               )}
               canPost={hasPermission(PERMISSIONS.CUSTOMER_PAYMENT_POST)}
               onClose={() => setPaymentCustomer(null)}
+            />
+          )}
+          {returnCustomer?.company === company && (
+            <CustReturnOrderDialog
+              open
+              custAccount={returnCustomer.record.accountNumber}
+              customerName={localizedName(
+                {
+                  name: returnCustomer.record.name,
+                  nameAlias: returnCustomer.record.nameAr,
+                },
+                isRtl
+              )}
+              canPost={hasPermission(PERMISSIONS.RETURN_ORDER_POST)}
+              onClose={() => setReturnCustomer(null)}
             />
           )}
           <SalesOrderQuickCreate
