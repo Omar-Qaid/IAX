@@ -109,10 +109,11 @@ export function MasterDetailPage<T extends MasterDetailRecord = MasterDetailReco
     (recordTableName ? 'ixapp.master-detail.' + recordTableName + '.list-visible' : undefined);
   const [navigationOpen, setNavigationOpen] = useState(() => {
     const initial = defaultNavigationOpen && !compact;
-    if (!visibilityStorageKey) return initial;
+    // A page that asks for the pane to start closed (a new record, a small screen)
+    // means it; a remembered value may only close a pane, never force one open.
+    if (!initial || !visibilityStorageKey) return initial;
     try {
-      const saved = globalThis.localStorage?.getItem(visibilityStorageKey);
-      return saved === 'true' ? !compact : saved === 'false' ? false : initial;
+      return globalThis.localStorage?.getItem(visibilityStorageKey) === 'false' ? false : initial;
     } catch {
       return initial;
     }

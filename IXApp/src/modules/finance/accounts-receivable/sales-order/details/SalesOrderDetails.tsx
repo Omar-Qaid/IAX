@@ -3,6 +3,7 @@ import React from 'react';
 import { MasterDetailPage } from '@patterns/master-detail';
 import { ActionPaneBackButton } from '@shared/components/action-pane/ActionPaneBackButton';
 import { ErrorState } from '@shared/components/feedback/ErrorState';
+import { recordTableId } from '@shared/components/documents/recordTableIds';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../../routes/accountsReceivableRoutePaths';
 import { SalesOrderDetailsDialogs } from './SalesOrderDetailsDialogs';
@@ -157,6 +158,11 @@ export function SalesOrderDetails({
         canEditField={(name) => !readOnlyHeaderFields.has(name)}
         recordTableName="SalesTable"
         getAuditRecordId={(record) => record.recId}
+        attachments={
+          activeHeader
+            ? undefined
+            : { refTableId: recordTableId('SalesTable'), refRecId: order.recId }
+        }
         advancedFilter={{
           title: t('filters.title'),
           fields: [

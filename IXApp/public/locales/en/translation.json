@@ -225,7 +225,9 @@
     "itemNumber": "Item number",
     "productName": "Product name",
     "unit": "Unit",
-    "netAmount": "Net amount"
+    "netAmount": "Net amount",
+    "confirmCancelRemaining": "Cancel the remaining quantity for {{salesId}}?",
+    "notImplemented": "This command is not available yet."
   },
   "accessibility": {
     "skipToContent": "Skip to main content",

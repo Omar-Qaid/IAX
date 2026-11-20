@@ -152,7 +152,7 @@ export function useSalesOrderDocument() {
     }
   };
 
-  const salesOrderRibbonGroups: ActionPaneRibbonGroup[] = [
+  const rawSalesOrderRibbonGroups: ActionPaneRibbonGroup[] = [
     {
       id: 'new',
       label: t('salesOrder.ui.new', 'New'),
@@ -179,7 +179,8 @@ export function useSalesOrderDocument() {
           disabled: !canEditHeader || Boolean(activeHeader) || cancelingOrder,
           onClick: async () => {
             if (!order || !canEditHeader || activeHeader || cancelOrderLock.current) return;
-            if (!window.confirm(`Cancel the remaining quantity for ${order.salesId}?`)) return;
+            if (!window.confirm(t('salesOrder.confirmCancelRemaining', { salesId: order.salesId })))
+              return;
             cancelOrderLock.current = true;
             setCancelingOrder(true);
             setHeaderError('');
@@ -439,6 +440,17 @@ export function useSalesOrderDocument() {
       ],
     },
   ];
+
+  const salesOrderRibbonGroups: ActionPaneRibbonGroup[] = rawSalesOrderRibbonGroups.map(
+    (group) => ({
+      ...group,
+      actions: group.actions.map((action) =>
+        action.disabled && !action.onClick && !action.items
+          ? { ...action, tooltip: action.tooltip ?? t('salesOrder.notImplemented') }
+          : action
+      ),
+    })
+  );
 
   const startHeaderEdit = () => {
     if (!order || !canEditHeader) return;

@@ -6,12 +6,13 @@ import { PATTERN_GRID_DEFAULTS } from './patternGridDefaults';
 import { PageEditSessionContext } from './PageEditSession';
 
 /** Common invoice-style grid and custom editor layout for page patterns. */
-export function PatternDataGrid<T>(
-  props: DataGridProps<T> & { ref?: React.Ref<DataGridHandle> }
-): React.ReactElement {
+export function PatternDataGrid<T>({
+  ref,
+  ...props
+}: DataGridProps<T> & { ref?: React.Ref<DataGridHandle> }): React.ReactElement {
   const session = React.useContext(PageEditSessionContext);
   const gridRef = React.useRef<DataGridHandle>(null);
-  React.useImperativeHandle(props.ref, () => gridRef.current!);
+  React.useImperativeHandle(ref, () => gridRef.current!);
   const editable = Boolean(props.onRowSave || props.masterForm || props.onCellEditRequest);
   const registerEditor = session?.registerEditor;
   React.useEffect(() => {
@@ -21,12 +22,14 @@ export function PatternDataGrid<T>(
       cancelEdit: () => gridRef.current?.cancelEdit(),
     });
   }, [registerEditor, editable]);
+  const sessionRequestEdit = session?.requestEdit;
+  const onCellEditRequest = props.onCellEditRequest;
   const requestEdit = React.useCallback(
     (row: T, field: string) => {
-      session?.requestEdit?.();
-      props.onCellEditRequest?.(row, field);
+      sessionRequestEdit?.();
+      onCellEditRequest?.(row, field);
     },
-    [session?.requestEdit, props.onCellEditRequest]
+    [sessionRequestEdit, onCellEditRequest]
   );
   const rowHeight = props.rowHeight ?? PATTERN_GRID_DEFAULTS.rowHeight;
   const columns = React.useMemo(

@@ -225,7 +225,9 @@
     "itemNumber": "رقم الصنف",
     "productName": "اسم المنتج",
     "unit": "الوحدة",
-    "netAmount": "صافي المبلغ"
+    "netAmount": "صافي المبلغ",
+    "confirmCancelRemaining": "هل تريد إلغاء الكمية المتبقية لأمر البيع {{salesId}}؟",
+    "notImplemented": "هذا الأمر غير متاح بعد."
   },
   "accessibility": {
     "skipToContent": "الانتقال إلى المحتوى الرئيسي",

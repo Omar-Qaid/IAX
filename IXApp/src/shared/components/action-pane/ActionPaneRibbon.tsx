@@ -61,13 +61,15 @@ export function ActionPaneRibbon({
         bgcolor: 'background.paper',
       }}
     >
-      {groups.map((group) => (
+      {groups.map((group, groupIndex) => (
         <Box
           key={group.id}
           sx={{
             minWidth: 106,
             px: 1.25,
-            borderInlineEnd: (theme) => `1px solid ${theme.palette.divider}`,
+            // The last group has no trailing divider, so no rule floats before the pin.
+            borderInlineEnd: (theme) =>
+              groupIndex === groups.length - 1 ? 'none' : `1px solid ${theme.palette.divider}`,
           }}
         >
           <Typography

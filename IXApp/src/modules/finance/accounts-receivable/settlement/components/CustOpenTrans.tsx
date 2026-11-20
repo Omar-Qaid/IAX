@@ -101,7 +101,8 @@ function SettlementDialog({
   );
   const active = visible.find((row) => row.id === activeId) ?? visible[0] ?? null;
   const latest = chosen.reduce(
-    (value, row) => [value, dateValue(row.transDate), dateValue(row.lastSettleDate)].sort().at(-1) ?? '',
+    (value, row) =>
+      [value, dateValue(row.transDate), dateValue(row.lastSettleDate)].sort().at(-1) ?? '',
     ''
   );
   const settleDate = dateMode === 'latest' ? latest : dateMode === 'today' ? today() : userDate;
@@ -445,7 +446,7 @@ function SettlementDialog({
                       <Box>
                         <Typography variant="overline">{tr('invoice')}</Typography>
                         <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap', mt: 1 }}>
-                          {field(tr('date'), dateValue(active.transDate))}
+                          {field(tr('fields.transDate'), dateValue(active.transDate))}
                           {field(tr('company'), query.data?.dataAreaId ?? '')}
                           {field(tr('fields.voucher'), active.voucher)}
                           {field(tr('fields.description'), active.description)}

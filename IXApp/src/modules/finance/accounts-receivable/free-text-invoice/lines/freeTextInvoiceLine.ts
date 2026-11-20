@@ -20,6 +20,7 @@ export const newLine = (): Line => ({
   taxAmount: 0,
   grossAmount: 0,
   ledgerDimension: 0,
+  ledgerAccount: '',
   defaultDimension: 0,
   taxGroup: '',
   taxItemGroup: '',
