@@ -1,4 +1,4 @@
-# AR QA checklist — Settlement, Sales Order, Free Text Invoice
+﻿# AR QA checklist — Settlement, Sales Order, Free Text Invoice
 
 Statuses: Not Tested · Failed · Fixed and Retested · Passed · Blocked · Not Applicable
 
@@ -61,6 +61,30 @@ Verification levels used below:
 
 ---
 
+## 1d. Fourth pass — translation coverage, page by page
+
+Audited every `t()` reference in `IXApp/src` against both locale files with
+`audit_keys.py` / `audit_raw.py` (plural suffixes and `defaultValue:` honoured, so
+working call sites were not "fixed").
+
+| Module         | Page/Action                                            | Scenario                              | Expected Result | Actual Result                                                                                                                                                                                                                     | Status             | Fix/Evidence                                                                                 |
+| -------------- | ------------------------------------------------------ | ------------------------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------- |
+| Administration | Batch job tasks / history grids                        | Read the grid headers in Arabic       | Arabic headers  | 32 `headerName` values were literal English, so `t()` fell back to the literal                                                                                                                                                    | Fixed and Retested | Keyed under `batchJob.fields.*`; history status chips keyed via `EXECUTION_STATUS_KEYS`      |
+| Patterns       | Document copy drawer                                   | Open "Copy from all" in Arabic        | Arabic headers  | 15 literal headers                                                                                                                                                                                                                | Fixed and Retested | Reused `fields.*` / `salesOrder.*`; added `documentCopy.fields.*` only where nothing existed |
+| Tax            | Tax group / item group / period interval panels        | Read line grids in Arabic             | Arabic headers  | 14 literal headers                                                                                                                                                                                                                | Fixed and Retested | `taxSetup.fields.*`                                                                          |
+| Inventory      | Product release, inventory posting, item group posting | Read grids in Arabic                  | Arabic headers  | 17 literal headers                                                                                                                                                                                                                | Fixed and Retested | `product.fields.*`, `inventPosting.fields.*`, `common.company`                               |
+| Foundation     | Account contacts, document charges                     | Read grids in Arabic                  | Arabic headers  | 14 literal headers                                                                                                                                                                                                                | Fixed and Retested | `accountContacts.fields.*`, `documentCharges.fields.*`                                       |
+| All modules    | Keys with no entry and no fallback                     | Render the page in either language    | Translated text | 13 keys printed the raw key on screen (`common.personalize`, `filters.operator`, `fields.unit`, `organizationStructure.hierarchy`, ...) - broken in **both** languages                                                            | Fixed and Retested | Defined in en + ar                                                                           |
+| All modules    | Keys that existed only as inline English fallbacks     | Switch to Arabic                      | Arabic text     | 339 references resolved to their inline English second argument. Whole modules affected: released products (77), sales order (38), tax codes (37), tax authority (27), item model groups (24), tax groups (21), quick create (18) | Fixed and Retested | All 339 defined in both locales with standard D365 Arabic terminology                        |
+| Sales Order    | Line details tab                                       | Read the line detail labels in Arabic | Arabic labels   | 8 literal labels, including `remainSalesPhysical` / `remainSalesFinancial` - the fields the O2C cycle is tracked by                                                                                                               | Fixed and Retested | `salesOrder.*` keys                                                                          |
+
+Closing state: **en 3455 keys, ar 3455, 0 one-side-only, 0 raw-key renders, 0
+fallback-dependent references** (before this pass, 372 referenced keys had no entry
+at all). `tsc -b` exit 0; eslint 0 errors; prettier clean; 164/164 test files,
+746/746 tests, 0 failures.
+
+---
+
 ## 2. Sales Order — action inventory
 
 Ribbon state extracted from `details/useSalesOrderDocument.tsx` and cross-checked against the
@@ -97,6 +121,36 @@ supplied screenshot. Enabled/disabled states **match the screenshot exactly**.
 | Recap                                    | Functions     | no    | Not Applicable — not implemented, disabled |
 | Order holds                              | Functions     | no    | Not Applicable — not implemented, disabled |
 | Notes                                    | Attachments   | no    | Not Applicable — not implemented, disabled |
+
+---
+
+## 2b. Order-to-Cash conformance against the reference spec
+
+Each spec stage mapped to the frontend surface and the backend controller behind it.
+Backend presence verified by reading the controllers; frontend presence by reading the
+routes and ribbons. No stage was exercised live - see Open items.
+
+| Stage                                      | Spec | Frontend                                                             | Backend                             | Status          |
+| ------------------------------------------ | ---- | -------------------------------------------------------------------- | ----------------------------------- | --------------- |
+| Document/inventory/sales status separation | 1    | `salesStatus`, `documentStatus`, `inventoryStatus` carried and shown | yes                                 | Passed (static) |
+| Quotation                                  | 4    | none                                                                 | `SalesQuotation` exists             | Failed - no UI  |
+| Sales order entry and lines                | 5    | full                                                                 | yes                                 | Passed (static) |
+| Confirmation / pro forma                   | 6    | full                                                                 | yes                                 | Passed (static) |
+| Reservation                                | 7    | none                                                                 | partial                             | Failed - no UI  |
+| Picking                                    | 8    | none                                                                 | partial                             | Failed - no UI  |
+| Packing slip                               | 9    | full                                                                 | yes                                 | Passed (static) |
+| Free text invoice                          | 12   | full                                                                 | yes                                 | Passed (static) |
+| Sales invoice posting                      | 14   | none                                                                 | `SalesInvoiceController`            | Failed - no UI  |
+| Customer payment journal                   | 17   | `paymentJournal` disabled in `customerCollectRibbon.ts`              | `CustPaymentController`             | Failed - no UI  |
+| Settlement                                 | 19   | `CustOpenTrans`                                                      | yes                                 | Passed (static) |
+| Undo settlement (SET-07)                   | 19   | none                                                                 | `CustSettlementReversalController`  | Failed - no UI  |
+| Returns / credit notes                     | 22   | none                                                                 | `CustReturnController`              | Failed - no UI  |
+| Foreign-currency revaluation               | 25   | none                                                                 | `CustCurrencyRevaluationController` | Failed - no UI  |
+| Collections / aging / write-off            | 26   | none                                                                 | `CustCollectionLetterController`    | Failed - no UI  |
+
+Headline finding: **the backend can complete the O2C cycle and the frontend cannot.**
+These are missing screens, not defects in existing code, so none were fixed in this
+pass - building them is a feature scope decision.
 
 ---
 
