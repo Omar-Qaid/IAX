@@ -52,7 +52,12 @@ export function CustInvoiceJournal(): React.ReactElement {
   });
   const columns: ColumnDef<Row>[] = [
     { field: 'invoiceId', headerName: t('custInvoiceJournal.invoice'), width: 130 },
-    { field: 'invoiceAccount', headerName: t('custInvoiceJournal.invoiceAccount'), width: 140 },
+    {
+      preview: { entity: 'customer' },
+      field: 'invoiceAccount',
+      headerName: t('custInvoiceJournal.invoiceAccount'),
+      width: 140,
+    },
     { field: 'invoicingName', headerName: t('custInvoiceJournal.name'), width: 230 },
     { field: 'salesId', headerName: t('custInvoiceJournal.salesOrder'), width: 140 },
     { field: 'workerId', headerName: t('custInvoiceJournal.workerId'), width: 120 },
@@ -73,7 +78,12 @@ export function CustInvoiceJournal(): React.ReactElement {
       valueGetter: ({ row }) => row.invoiceDate?.slice(0, 10),
     },
     { field: 'ledgerVoucher', headerName: t('custInvoiceJournal.voucher'), width: 170 },
-    { field: 'currencyCode', headerName: t('custInvoiceJournal.currency'), width: 100 },
+    {
+      preview: { entity: 'currency' },
+      field: 'currencyCode',
+      headerName: t('custInvoiceJournal.currency'),
+      width: 100,
+    },
     {
       field: 'invoiceAmount',
       headerName: t('custInvoiceJournal.amount'),
@@ -116,7 +126,9 @@ export function CustInvoiceJournal(): React.ReactElement {
     navigate(
       `${ROUTE_PATHS.GENERAL_LEDGER.VOUCHER_TRANSACTIONS}?voucher=${encodeURIComponent(
         selected?.ledgerVoucher ?? ''
-      )}&reference=${encodeURIComponent(selected?.invoiceId ?? '')}`
+      )}&reference=${encodeURIComponent(
+        selected ? `${selected.invoiceId} : ${selected.invoiceAccount}` : ''
+      )}`
     );
   const invoiceRibbonGroups: ActionPaneRibbonGroup[] = [
     {

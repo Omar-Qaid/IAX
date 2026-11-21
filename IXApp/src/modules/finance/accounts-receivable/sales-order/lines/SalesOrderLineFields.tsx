@@ -43,8 +43,8 @@ export function buildSalesOrderLineFields(scope: Scope) {
     type: 'text' | 'number' | 'date' = 'text'
   ) => {
     if (!displayedLine) return null;
-    if (!activeHeader || name === 'itemNumber')
-      return field(label, String(displayedLine[name] ?? ''), name !== 'itemNumber');
+    if (name === 'itemNumber') return lineMasterValue(name, label, displayedLine[name]);
+    if (!activeHeader) return field(label, String(displayedLine[name] ?? ''), true);
     return (
       <TextField
         key={name}

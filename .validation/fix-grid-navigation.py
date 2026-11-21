@@ -1,0 +1,3 @@
+from pathlib import Path
+p=Path('IXApp/src/shared/components/data-grid/DataGrid.tsx');s=p.read_text(); start=s.index('  // -- Inline editing (masterForm mode only)');end=s.index('  const previousMasterForm',start);block=s[start:end];s=s[:start]+s[end:];pos=s.index('  const initialColumns = useMemo(');s=s[:pos]+block+s[pos:];s=s.replace('    masterForm = false,','    masterForm = false,\n    navigationDisabled = false,');s=s.replace('            if (!href || label == null', '            if (navigationDisabled || editingRowId != null) return label;\n            if (!href || label == null');s=s.replace('[rawInitialColumns, inRouter]','[rawInitialColumns, inRouter, navigationDisabled, editingRowId]');
+with p.open('r+',newline='') as f:f.write(s);f.truncate()

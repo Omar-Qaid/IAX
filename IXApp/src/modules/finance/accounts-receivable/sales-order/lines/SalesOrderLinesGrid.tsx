@@ -1014,6 +1014,7 @@ export function SalesOrderLinesGrid({
       >
         <LineCellProvider renderCell={renderLineCell}>
           <PatternDataGrid
+            navigationDisabled={editing}
             ref={lineGridRef}
             key={order.id}
             rows={gridRows}

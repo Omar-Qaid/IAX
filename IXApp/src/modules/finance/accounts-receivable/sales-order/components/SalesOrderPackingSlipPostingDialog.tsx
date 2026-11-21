@@ -63,9 +63,20 @@ const overviewColumns: ColumnDef<OverviewRow>[] = [
   { field: 'customerPackingSlip', headerName: 'salesOrder.ui.customerPackingSlip', width: 84 },
   { field: 'shipmentNumber', headerName: 'salesOrder.ui.shipmentNumber', width: 150, hidden: true },
   { field: 'salesId', headerName: 'salesOrder.ui.salesOrder', width: 134 },
-  { field: 'siteId', headerName: 'salesOrder.ui.site', width: 134, preview: { entity: 'inventSite' } },
+  {
+    field: 'siteId',
+    headerName: 'salesOrder.ui.site',
+    width: 134,
+    preview: { entity: 'inventSite' },
+  },
   { field: 'customerName', headerName: 'salesOrder.ui.name', width: 185 },
-  { field: 'currencyCode', headerName: 'salesOrder.ui.currency', minWidth: 110, flex: 1, preview: { entity: 'currency' } },
+  {
+    field: 'currencyCode',
+    headerName: 'salesOrder.ui.currency',
+    minWidth: 110,
+    flex: 1,
+    preview: { entity: 'currency' },
+  },
 ];
 
 export function SalesOrderPackingSlipPostingDialog({
@@ -134,9 +145,24 @@ export function SalesOrderPackingSlipPostingDialog({
         width: 134,
         valueGetter: () => salesId,
       },
-      { field: 'inventSiteId', headerName: 'salesOrder.ui.site', width: 134, preview: { entity: 'inventSite' } },
-      { field: 'inventLocationId', headerName: 'salesOrder.ui.warehouse', width: 134, preview: { entity: 'inventLocation' } },
-      { field: 'batchNumber', headerName: 'salesOrder.ui.batchNumber', width: 134, renderCell: () => '' },
+      {
+        field: 'inventSiteId',
+        headerName: 'salesOrder.ui.site',
+        width: 134,
+        preview: { entity: 'inventSite' },
+      },
+      {
+        field: 'inventLocationId',
+        headerName: 'salesOrder.ui.warehouse',
+        width: 134,
+        preview: { entity: 'inventLocation' },
+      },
+      {
+        field: 'batchNumber',
+        headerName: 'salesOrder.ui.batchNumber',
+        width: 134,
+        renderCell: () => '',
+      },
       { field: 'wmsLocationId', headerName: 'salesOrder.ui.location', width: 145, hidden: true },
       {
         field: 'catchWeightQuantity',
@@ -146,8 +172,18 @@ export function SalesOrderPackingSlipPostingDialog({
         hidden: true,
         align: 'right',
       },
-      { field: 'productNumber', headerName: 'salesOrder.ui.productNumber', width: 190, hidden: true },
-      { field: 'itemId', headerName: 'salesOrder.ui.itemNumber', width: 178 },
+      {
+        field: 'productNumber',
+        headerName: 'salesOrder.ui.productNumber',
+        width: 190,
+        hidden: true,
+      },
+      {
+        preview: { entity: 'releasedProduct' },
+        field: 'itemId',
+        headerName: 'salesOrder.ui.itemNumber',
+        width: 178,
+      },
       {
         field: 'quantity',
         headerName: 'salesOrder.ui.update',
@@ -192,10 +228,30 @@ export function SalesOrderPackingSlipPostingDialog({
           });
         },
       },
-      { field: 'close', headerName: t('salesOrder.ui.close', 'Close'), width: 84, renderCell: () => '' },
-      { field: 'scrap', headerName: t('salesOrder.ui.scrap', 'Scrap'), width: 84, renderCell: () => '' },
-      { field: 'modeOfDelivery', headerName: t('salesOrder.ui.modeOfDelivery', 'Mode of delivery'), width: 134, renderCell: () => '' },
-      { field: 'deliveryName', headerName: t('salesOrder.ui.deliveryName', 'Delivery name'), width: 185, renderCell: () => '' },
+      {
+        field: 'close',
+        headerName: t('salesOrder.ui.close', 'Close'),
+        width: 84,
+        renderCell: () => '',
+      },
+      {
+        field: 'scrap',
+        headerName: t('salesOrder.ui.scrap', 'Scrap'),
+        width: 84,
+        renderCell: () => '',
+      },
+      {
+        field: 'modeOfDelivery',
+        headerName: t('salesOrder.ui.modeOfDelivery', 'Mode of delivery'),
+        width: 134,
+        renderCell: () => '',
+      },
+      {
+        field: 'deliveryName',
+        headerName: t('salesOrder.ui.deliveryName', 'Delivery name'),
+        width: 185,
+        renderCell: () => '',
+      },
     ],
     [posting, postingEnabled, quantities, salesId, t]
   );
@@ -297,18 +353,48 @@ export function SalesOrderPackingSlipPostingDialog({
         </>
       }
     >
-      <Stack spacing={0} sx={{ minHeight: '100%',
-        '& .MuiAccordion-root': { bgcolor: 'background.paper', boxShadow: 'none', border: 0, borderRadius: '0 !important', m: '0 !important', '&:before': { display: 'none' } },
-        '& .MuiAccordionSummary-root': { minHeight: '42px !important', px: 1, borderBottom: '1px solid', borderColor: 'divider' },
-        '& .MuiAccordionSummary-content': { my: '0 !important' },
-        '& .MuiAccordionSummary-content .MuiTypography-root': { fontSize: 13, fontWeight: 500 },
-        '& .MuiAccordionSummary-expandIconWrapper': { border: '1px solid', borderColor: 'divider', borderRadius: '3px', width: 23, height: 25, alignItems: 'center', justifyContent: 'center' },
-        '& .MuiAccordionSummary-expandIconWrapper svg': { fontSize: 16 },
-        '& .MuiAccordionDetails-root': { p: '0 8px 20px' },
-        '& .MuiButton-root': { fontSize: 11, minWidth: 0, px: .5, py: .25, textTransform: 'none' },
-        '& [role="columnheader"]': { fontSize: 10 },
-        '& [role="gridcell"]': { fontSize: 11 },
-      }}>
+      <Stack
+        spacing={0}
+        sx={{
+          minHeight: '100%',
+          '& .MuiAccordion-root': {
+            bgcolor: 'background.paper',
+            boxShadow: 'none',
+            border: 0,
+            borderRadius: '0 !important',
+            m: '0 !important',
+            '&:before': { display: 'none' },
+          },
+          '& .MuiAccordionSummary-root': {
+            minHeight: '42px !important',
+            px: 1,
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+          },
+          '& .MuiAccordionSummary-content': { my: '0 !important' },
+          '& .MuiAccordionSummary-content .MuiTypography-root': { fontSize: 13, fontWeight: 500 },
+          '& .MuiAccordionSummary-expandIconWrapper': {
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: '3px',
+            width: 23,
+            height: 25,
+            alignItems: 'center',
+            justifyContent: 'center',
+          },
+          '& .MuiAccordionSummary-expandIconWrapper svg': { fontSize: 16 },
+          '& .MuiAccordionDetails-root': { p: '0 8px 20px' },
+          '& .MuiButton-root': {
+            fontSize: 11,
+            minWidth: 0,
+            px: 0.5,
+            py: 0.25,
+            textTransform: 'none',
+          },
+          '& [role="columnheader"]': { fontSize: 10 },
+          '& [role="gridcell"]': { fontSize: 11 },
+        }}
+      >
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center', minHeight: 46, pb: 1 }}>
           <UnavailableCommandButton label={t('salesOrder.ui.arrange')} />
           <UnavailableCommandButton label={t('salesOrder.ui.select')} />
@@ -321,7 +407,13 @@ export function SalesOrderPackingSlipPostingDialog({
         <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography sx={{ flex: 1 }}>{t('salesOrder.ui.parameters')}</Typography>
-            <Typography sx={{ mr: 2, fontSize: '10px !important', color: 'primary.main' }}>{quantityMode === 'picked' ? t('salesOrder.ui.picked') : quantityMode === 'deliverNow' ? t('salesOrder.ui.deliverNow') : t('common.all')}</Typography>
+            <Typography sx={{ mr: 2, fontSize: '10px !important', color: 'primary.main' }}>
+              {quantityMode === 'picked'
+                ? t('salesOrder.ui.picked')
+                : quantityMode === 'deliverNow'
+                  ? t('salesOrder.ui.deliverNow')
+                  : t('common.all')}
+            </Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ pt: 0 }}>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
@@ -374,7 +466,10 @@ export function SalesOrderPackingSlipPostingDialog({
           <AccordionDetails sx={{ pt: 0 }}>
             <Stack direction="row" spacing={1} sx={{ mb: 0.5 }}>
               <UnavailableCommandButton label={t('salesOrder.ui.add')} startIcon={<AddIcon />} />
-              <UnavailableCommandButton label={t('salesOrder.ui.remove')} startIcon={<DeleteOutlineIcon />} />
+              <UnavailableCommandButton
+                label={t('salesOrder.ui.remove')}
+                startIcon={<DeleteOutlineIcon />}
+              />
               <UnavailableCommandButton label={t('salesOrder.ui.trackingInformation')} />
               <UnavailableCommandButton label={t('salesOrder.ui.salesTax')} />
             </Stack>
@@ -441,12 +536,24 @@ export function SalesOrderPackingSlipPostingDialog({
           </AccordionDetails>
         </Accordion>
         <Accordion disableGutters>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}><Typography>{t('salesOrder.ui.lineDetails', 'Line details')}</Typography></AccordionSummary>
-          <AccordionDetails><Typography sx={{ fontSize: 12 }}>{preview?.lines[0]?.name ?? t('common.noData', 'No data')}</Typography></AccordionDetails>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography>{t('salesOrder.ui.lineDetails', 'Line details')}</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Typography sx={{ fontSize: 12 }}>
+              {preview?.lines[0]?.name ?? t('common.noData', 'No data')}
+            </Typography>
+          </AccordionDetails>
         </Accordion>
         <Accordion disableGutters>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}><Typography>{t('salesOrder.ui.salesOrders', 'Sales orders')}</Typography></AccordionSummary>
-          <AccordionDetails><Typography sx={{ fontSize: 12 }}>{salesId} · {preview?.header.customerName}</Typography></AccordionDetails>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography>{t('salesOrder.ui.salesOrders', 'Sales orders')}</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Typography sx={{ fontSize: 12 }}>
+              {salesId} · {preview?.header.customerName}
+            </Typography>
+          </AccordionDetails>
         </Accordion>
       </Stack>
     </AppActionDrawer>

@@ -61,7 +61,11 @@ const buildColumns = (t: (key: string) => string): ColumnDef<Row>[] => [
   { field: 'description', headerName: 'customerInquiry.description', width: 230 },
   amountColumn('amountCur'),
   amountColumn('balanceCur'),
-  { field: 'currencyCode', headerName: 'customerInquiry.currency' },
+  {
+    preview: { entity: 'currency' },
+    field: 'currencyCode',
+    headerName: 'customerInquiry.currency',
+  },
   amountColumn('amountMst'),
   amountColumn('balanceMst'),
   { field: 'department', headerName: 'customerInquiry.department' },
@@ -124,7 +128,9 @@ export function CustTrans(): React.ReactElement {
           navigate(
             `${ROUTE_PATHS.GENERAL_LEDGER.VOUCHER_TRANSACTIONS}?voucher=${encodeURIComponent(
               selected?.voucher ?? ''
-            )}&reference=${encodeURIComponent(selected?.invoice ?? accountNum ?? '')}`
+            )}&reference=${encodeURIComponent(
+              selected?.invoice ? `${selected.invoice} : ${accountNum ?? ''}` : (accountNum ?? '')
+            )}`
           )
         }
       />

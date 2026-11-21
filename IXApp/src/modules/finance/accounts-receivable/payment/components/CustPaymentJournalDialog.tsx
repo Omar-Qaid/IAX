@@ -1,3 +1,4 @@
+import { RecordPreview } from '@shared/components/record-preview';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
@@ -98,7 +99,12 @@ export function CustPaymentJournalDialog({
       { field: 'invoice', headerName: 'custOpenTrans.fields.invoice', width: 150 },
       { field: 'transDate', headerName: 'custOpenTrans.fields.transDate', width: 120 },
       { field: 'dueDate', headerName: 'custOpenTrans.fields.dueDate', width: 120 },
-      { field: 'currencyCode', headerName: 'custOpenTrans.fields.currencyCode', width: 100 },
+      {
+        preview: { entity: 'currency' },
+        field: 'currencyCode',
+        headerName: 'custOpenTrans.fields.currencyCode',
+        width: 100,
+      },
       {
         field: 'amountCur',
         headerName: 'custOpenTrans.fields.amountCur',
@@ -187,22 +193,31 @@ export function CustPaymentJournalDialog({
           {t('customerPayment.hint', { custAccount, customerName })}
         </Typography>
         <Stack direction="row" spacing={1.5} useFlexGap sx={{ flexWrap: 'wrap' }}>
-          <FormControl size="small" sx={{ minWidth: 260 }}>
-            <InputLabel id="cust-payment-bank">{t('customerPayment.bankAccount')}</InputLabel>
-            <Select
-              labelId="cust-payment-bank"
-              label={t('customerPayment.bankAccount')}
-              value={bankAccountId}
-              disabled={posting || bankQuery.isLoading}
-              onChange={(event) => setBankAccountId(event.target.value)}
-            >
-              {(bankQuery.data ?? []).map((bank) => (
-                <MenuItem key={bank.accountId} value={bank.accountId}>
-                  {bank.accountId} — {bank.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <RecordPreview
+            entity="referenceOption"
+            recordKey={bankAccountId}
+            option={{
+              code: bankAccountId,
+              name: bankQuery.data?.find((bank) => bank.accountId === bankAccountId)?.name,
+            }}
+          >
+            <FormControl size="small" sx={{ minWidth: 260 }}>
+              <InputLabel id="cust-payment-bank">{t('customerPayment.bankAccount')}</InputLabel>
+              <Select
+                labelId="cust-payment-bank"
+                label={t('customerPayment.bankAccount')}
+                value={bankAccountId}
+                disabled={posting || bankQuery.isLoading}
+                onChange={(event) => setBankAccountId(event.target.value)}
+              >
+                {(bankQuery.data ?? []).map((bank) => (
+                  <MenuItem key={bank.accountId} value={bank.accountId}>
+                    {bank.accountId} — {bank.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </RecordPreview>
           <TextField
             label={t('customerPayment.amount')}
             type="number"

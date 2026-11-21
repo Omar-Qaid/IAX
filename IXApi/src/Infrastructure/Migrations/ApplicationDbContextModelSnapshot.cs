@@ -24217,6 +24217,12 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<int>("AccountCategoryRef")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("ActiveFrom")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ActiveTo")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("CloseType")
                         .HasColumnType("int");
 
@@ -24343,11 +24349,19 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<int>("Suspended")
+                        .HasColumnType("int");
+
                     b.Property<int>("Type")
                         .HasColumnType("int");
 
                     b.Property<long>("UnitOfMeasure")
                         .HasColumnType("bigint");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)");
 
                     b.Property<int>("ValidateCurrency")
                         .HasColumnType("int");

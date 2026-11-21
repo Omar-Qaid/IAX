@@ -383,6 +383,7 @@ export function SalesOrderQuickCreate({
           },
           {
             name: 'deliveryMode',
+            previewEntity: 'dlvMode',
             label: t('fields.deliveryMode'),
             type: 'select',
             valueGetter: (values) => values.deliveryMode || customerFor(values)?.dlvModeId || '',
@@ -390,6 +391,7 @@ export function SalesOrderQuickCreate({
           },
           {
             name: 'deliveryTerms',
+            previewEntity: 'dlvTerm',
             label: t('customerQuickCreate.fields.deliveryTerms'),
             type: 'select',
             options: deliveryLookupsQuery.data?.deliveryTerms ?? [],
@@ -402,6 +404,7 @@ export function SalesOrderQuickCreate({
         fields: [
           {
             name: 'addressCountryRegionId',
+            previewEntity: 'referenceOption',
             label: t('logistics.countryRegion'),
             type: 'select',
             required: true,
@@ -422,6 +425,7 @@ export function SalesOrderQuickCreate({
           },
           {
             name: 'addressState',
+            previewEntity: 'referenceOption',
             label: t('logistics.state'),
             type: 'select',
             width: 190,
@@ -437,6 +441,7 @@ export function SalesOrderQuickCreate({
           },
           {
             name: 'addressCity',
+            previewEntity: 'referenceOption',
             label: t('logistics.city'),
             type: 'select',
             width: 190,
@@ -449,6 +454,7 @@ export function SalesOrderQuickCreate({
             // LogisticsPostalAddressController exposes no postal-code lookup, so the options stay
             // empty until one exists; the control matches the rest of the address block.
             name: 'addressZipCode',
+            previewEntity: 'referenceOption',
             label: t('logistics.zipCode'),
             type: 'select',
             width: 140,

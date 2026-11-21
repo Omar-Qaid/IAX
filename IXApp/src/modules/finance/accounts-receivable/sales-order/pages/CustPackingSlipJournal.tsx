@@ -124,6 +124,7 @@ const buildLineColumns = (): ColumnDef<GridRow>[] => [
     valueGetter: ({ row }) => row.line?.originalSalesId,
   },
   {
+    preview: { entity: 'releasedProduct' },
     field: 'itemId',
     headerName: 'custPackingSlipJournal.columns.itemId',
     width: 150,
@@ -137,6 +138,7 @@ const buildLineColumns = (): ColumnDef<GridRow>[] => [
     valueGetter: ({ row }) => row.line?.description,
   },
   {
+    preview: { entity: 'inventSite' },
     field: 'siteId',
     headerName: 'custPackingSlipJournal.columns.siteId',
     width: 115,
@@ -177,6 +179,7 @@ const buildLineColumns = (): ColumnDef<GridRow>[] => [
     valueGetter: ({ row }) => row.line?.inventQuantity,
   },
   {
+    preview: { entity: 'unitOfMeasure' },
     field: 'salesUnit',
     headerName: 'custPackingSlipJournal.columns.salesUnit',
     width: 90,
@@ -200,6 +203,7 @@ const buildOrderTrackingColumns = (t: Translate): ColumnDef<GridRow>[] => [
     valueGetter: ({ row }) => row.line?.salesId,
   },
   {
+    preview: { entity: 'releasedProduct' },
     field: 'itemId',
     headerName: 'custPackingSlipJournal.columns.itemId',
     width: 150,
@@ -212,6 +216,7 @@ const buildOrderTrackingColumns = (t: Translate): ColumnDef<GridRow>[] => [
     valueGetter: ({ row }) => row.line?.inventoryTransactionId,
   },
   {
+    preview: { entity: 'inventSite' },
     field: 'siteId',
     headerName: 'custPackingSlipJournal.columns.siteId',
     width: 120,

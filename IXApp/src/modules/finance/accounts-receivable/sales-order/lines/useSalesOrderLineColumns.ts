@@ -12,6 +12,7 @@ const SALES_ORDER_LINE_COLUMNS: ColumnDef<DetailLine>[] = [
     type: 'number',
   },
   {
+    preview: { entity: 'releasedProduct' },
     field: 'itemNumber',
     headerName: 'salesOrder.itemNumber',
     width: 160,
@@ -26,7 +27,12 @@ const SALES_ORDER_LINE_COLUMNS: ColumnDef<DetailLine>[] = [
     align: 'right',
     headerAlign: 'right',
   },
-  { field: 'unit', headerName: 'salesOrder.unit', width: 100 },
+  {
+    preview: { entity: 'unitOfMeasure' },
+    field: 'unit',
+    headerName: 'salesOrder.unit',
+    width: 100,
+  },
   {
     field: 'unitPrice',
     headerName: 'fields.unitPrice',

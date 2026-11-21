@@ -156,6 +156,8 @@ export interface DataGridProps<T> {
 
   // ── Master-form inline editing ────────────────────────────────────────────
   masterForm?: boolean;
+  /** Disable master/detail links while the owning page is editing custom cells. */
+  navigationDisabled?: boolean;
   /** Temporarily lock editors without changing the owning page's edit mode. */
   editDisabled?: boolean;
   onRowSave?: (row: Partial<T>, isNew: boolean) => Promise<void> | void;

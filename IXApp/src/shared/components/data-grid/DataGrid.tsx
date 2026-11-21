@@ -19,7 +19,6 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import ViewSidebarOutlinedIcon from '@mui/icons-material/ViewSidebarOutlined';
-import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined';
 import { getRecordPreview } from '@shared/components/record-preview/recordPreviewRegistry';
 import { Link as RouterLink, useInRouterContext } from 'react-router-dom';
 import type { ColumnDef, DataGridProps, DataGridHandle, GridCellAddress } from './types';
@@ -47,6 +46,7 @@ import { uiDensity } from '@shared/constants/uiDensity';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { enterpriseSurfaces } from '@shared/constants/enterpriseSurfaces';
 import { inferNumericColumns } from './columnAlign';
+import { PageEditSessionContext } from './PageEditSession';
 const getDefaultRowId = <T,>(row: T) => (row as { id: string | number }).id;
 function DataGridInternal<T>(
   {
@@ -80,6 +80,7 @@ function DataGridInternal<T>(
     onServerImport,
     onDownloadTemplate,
     masterForm = false,
+    navigationDisabled = false,
     editDisabled = false,
     onRowSave,
     onNewRow,
@@ -106,6 +107,7 @@ function DataGridInternal<T>(
 ) {
   const { t } = useAppTranslation();
   const inRouter = useInRouterContext();
+  const pageEditing = React.useContext(PageEditSessionContext)?.editing ?? false;
   const { notifyError } = useNotifications();
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const gridRootRef = useRef<HTMLDivElement | null>(null);
@@ -114,10 +116,25 @@ function DataGridInternal<T>(
   const pendingScrollTopRef = useRef<number | null>(null);
   const saveInFlightRef = useRef<Promise<boolean> | null>(null);
   const focusedCellRef = useRef({ r: 0, c: 0 });
+  // -- Inline editing (masterForm mode only) --------------------------------
+  const {
+    editingRowId,
+    editValues,
+    isDirty,
+    saving,
+    startEdit,
+    startAdd,
+    updateField,
+    setSaving,
+    cancelEdit,
+  } = useInlineEdit<T>();
   const initialColumns = useMemo(
     () =>
       rawInitialColumns.map<ColumnDef<T>>((column) => {
-        const masterRoute = inRouter && column.preview ? getRecordPreview(column.preview.entity)?.masterRoute : undefined;
+        const masterRoute =
+          inRouter && column.preview
+            ? getRecordPreview(column.preview.entity)?.masterRoute
+            : undefined;
         if (!column.getDetailHref && !masterRoute) return column;
         return {
           ...column,
@@ -129,6 +146,7 @@ function DataGridInternal<T>(
                   (column.valueGetter ? column.valueGetter({ row: params.row }) : params.value) ??
                     ''
                 );
+            if (navigationDisabled || pageEditing || editingRowId != null) return label;
             if (!href || label == null || label === '') return label;
             return (
               <Link
@@ -147,13 +165,12 @@ function DataGridInternal<T>(
                 }}
               >
                 {label}
-                <OpenInNewOutlinedIcon aria-hidden="true" sx={{ fontSize: 12, ml: '3px', verticalAlign: 'middle' }} />
               </Link>
             );
           },
         };
       }),
-    [rawInitialColumns, inRouter]
+    [rawInitialColumns, inRouter, navigationDisabled, pageEditing, editingRowId]
   );
   const [focusedRowId, setFocusedRowId] = useState<string | null>(null);
   const focusRequestRef = useRef(0);
@@ -174,18 +191,6 @@ function DataGridInternal<T>(
   // -- Persistence ----------------------------------------------------------
   const { initialState, persist, clear } = useGridPersistence<T>(storageKey, initialColumns);
 
-  // -- Inline editing (masterForm mode only) --------------------------------
-  const {
-    editingRowId,
-    editValues,
-    isDirty,
-    saving,
-    startEdit,
-    startAdd,
-    updateField,
-    setSaving,
-    cancelEdit,
-  } = useInlineEdit<T>();
   const previousMasterForm = useRef(masterForm);
 
   const handleInlineEdit = useCallback(

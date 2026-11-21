@@ -1,0 +1,318 @@
+{
+  "pageCount": 92,
+  "fieldCount": 664,
+  "unlinked": [
+    {
+      "file": "src/modules/administration/pages/ApplicationSettingsPage.tsx",
+      "name": "currency",
+      "line": 61,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": "'text'"
+    },
+    {
+      "file": "src/modules/administration/pages/SysBackgroundJobGroupPage.tsx",
+      "name": "maxConcurrency",
+      "line": 41,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": "'number'"
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/customer/pages/CustomerListPage.tsx",
+      "name": "invoiceAccount",
+      "line": 66,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/customer/pages/CustomerListPage.tsx",
+      "name": "currencyCode",
+      "line": 78,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/customer/pages/CustomerListPage.tsx",
+      "name": "taxGroupId",
+      "line": 85,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/customer/pages/CustomerListPage.tsx",
+      "name": "paymTermId",
+      "line": 91,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/customer/pages/CustomerListPage.tsx",
+      "name": "currencyCode",
+      "line": 165,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/customer/pages/CustomerOpenTransactionsPage.tsx",
+      "name": "currencyCode",
+      "line": 51,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/customer-group/pages/CustomerGroupListPage.tsx",
+      "name": "custGroupId",
+      "line": 47,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/customer-group/pages/CustomerGroupListPage.tsx",
+      "name": "paymTermId",
+      "line": 55,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": "'singleSelect'"
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/customer-group/pages/CustomerGroupListPage.tsx",
+      "name": "taxGroupId",
+      "line": 63,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": "'singleSelect'"
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/customer-group/pages/CustomerGroupListPage.tsx",
+      "name": "accountingCurrencyExchangeRateType",
+      "line": 78,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/customer-group/pages/CustomerGroupListPage.tsx",
+      "name": "reportingCurrencyExchangeRateType",
+      "line": 83,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/customer-group/pages/CustomerGroupListPage.tsx",
+      "name": "custGroupId",
+      "line": 97,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/customer-group/pages/CustomerGroupListPage.tsx",
+      "name": "paymTermId",
+      "line": 99,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/customer-group/pages/CustomerGroupListPage.tsx",
+      "name": "taxGroupId",
+      "line": 100,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/free-text-invoice/pages/CustFreeInvoiceListPage.tsx",
+      "name": "invoiceAccount",
+      "line": 111,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/free-text-invoice/pages/CustFreeInvoiceListPage.tsx",
+      "name": "currencyCode",
+      "line": 117,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/free-text-invoice/pages/CustFreeInvoiceListPage.tsx",
+      "name": "invoiceAccount",
+      "line": 192,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/free-text-invoice/pages/CustFreeInvoiceListPage.tsx",
+      "name": "currencyCode",
+      "line": 193,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/sales-order/pages/SalesOrderListPage.tsx",
+      "name": "invoiceAccount",
+      "line": 47,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/sales-order/pages/SalesOrderListPage.tsx",
+      "name": "currencyCode",
+      "line": 59,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/sales-order/pages/SalesOrderListPage.tsx",
+      "name": "currencyCode",
+      "line": 115,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/setup/pages/CustParametersPage.tsx",
+      "name": "mandatoryTaxGroup",
+      "line": 146,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": "'boolean'"
+    },
+    {
+      "file": "src/modules/finance/foundation/charges/components/DocumentChargesPage.tsx",
+      "name": "currencyCode",
+      "line": 159,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": "'singleSelect'"
+    },
+    {
+      "file": "src/modules/finance/foundation/charges/components/DocumentChargesPage.tsx",
+      "name": "taxGroup",
+      "line": 175,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": "'singleSelect'"
+    },
+    {
+      "file": "src/modules/finance/foundation/charges/components/DocumentChargesPage.tsx",
+      "name": "taxItemGroup",
+      "line": 183,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": "'singleSelect'"
+    },
+    {
+      "file": "src/modules/finance/foundation/charges/components/DocumentChargesPage.tsx",
+      "name": "currencyCode",
+      "line": 203,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/foundation/charges/components/DocumentChargesPage.tsx",
+      "name": "taxGroup",
+      "line": 204,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/foundation/charges/components/DocumentChargesPage.tsx",
+      "name": "taxItemGroup",
+      "line": 205,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/foundation/exchange-rate/pages/ExchangeRatePage.tsx",
+      "name": "fromCurrency",
+      "line": 59,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/foundation/exchange-rate/pages/ExchangeRatePage.tsx",
+      "name": "toCurrency",
+      "line": 65,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/inventory/inquiries/pages/InventTransPage.tsx",
+      "name": "currencyCode",
+      "line": 120,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/inventory/setup/pages/InventParametersPage.tsx",
+      "name": "mandatoryItemTaxGroup",
+      "line": 85,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": "'boolean'"
+    },
+    {
+      "file": "src/modules/finance/inventory/setup/pages/InventPostingPage.tsx",
+      "name": "taxGroupId",
+      "line": 267,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": null
+    },
+    {
+      "file": "src/modules/finance/inventory/warehouses/pages/InventLocationPage.tsx",
+      "name": "inventLocationType",
+      "line": 272,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": "'select'"
+    },
+    {
+      "file": "src/modules/finance/inventory/warehouses/pages/InventLocationPage.tsx",
+      "name": "inventLocationLevel",
+      "line": 307,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": "'number'"
+    },
+    {
+      "file": "src/modules/finance/tax/pages/TaxGroupPage.tsx",
+      "name": "taxGroupSetup",
+      "line": 113,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": "'select'"
+    },
+    {
+      "file": "src/modules/finance/tax/pages/TaxGroupPage.tsx",
+      "name": "taxGroupRounding",
+      "line": 150,
+      "masterRoute": null,
+      "previewEntity": null,
+      "type": "'select'"
+    }
+  ]
+}

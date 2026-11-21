@@ -1,4 +1,5 @@
 import React from 'react';
+import { getRecordPreview } from '@shared/components/record-preview';
 import { TextField } from '@mui/material';
 import { FieldPresentationProvider } from '@shared/components/fields/FieldPresentationContext';
 import { LookupField } from '@shared/components/lookups/LookupField';
@@ -74,6 +75,8 @@ export function buildFreeTextInvoiceHeaderFields(scope: FreeTextInvoiceDocument)
             <FieldPresentationProvider viewMode={false}>
               <LookupField
                 name={name}
+                masterRoute={getRecordPreview(previewEntity)?.masterRoute}
+                previewEntity={previewEntity}
                 label={label}
                 value={String(display[name] ?? '')}
                 options={options}
@@ -87,7 +90,7 @@ export function buildFreeTextInvoiceHeaderFields(scope: FreeTextInvoiceDocument)
             </FieldPresentationProvider>
           ),
         }
-      : { name, label, previewEntity };
+      : { name, label, previewEntity, masterRoute: getRecordPreview(previewEntity)?.masterRoute };
   const optionRows = (rows?: { value: string; label: string }[]) =>
     (rows ?? []).map((row) => ({ id: row.value, code: row.value, name: row.label }));
   const chooseCustomer = (account: string) => {
@@ -147,7 +150,11 @@ export function buildFreeTextInvoiceHeaderFields(scope: FreeTextInvoiceDocument)
       optionRows(lookups.data?.paymentMethods),
       AR_PREVIEWS.PAYMENT_METHOD
     ),
-    postingProfile: textField('postingProfile', t('freeTextInvoices.postingProfile')),
+    postingProfile: {
+      ...textField('postingProfile', t('freeTextInvoices.postingProfile')),
+      masterRoute: getRecordPreview(AR_PREVIEWS.POSTING_PROFILE)?.masterRoute,
+      previewEntity: AR_PREVIEWS.POSTING_PROFILE,
+    },
   };
   return { readOnlyFields, values, fields };
 }

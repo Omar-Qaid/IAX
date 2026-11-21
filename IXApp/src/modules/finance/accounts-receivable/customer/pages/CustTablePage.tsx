@@ -39,7 +39,6 @@ const includingSelected = (
     ? [{ value: selected, label: selected }, ...options]
     : options;
 
-
 const emptyCustomer = (): CustomerRecord => ({
   id: `new-${crypto.randomUUID()}`,
   recId: 0,
@@ -237,12 +236,14 @@ export function CustTablePage(): React.ReactElement {
           fields: [
             {
               name: 'countryRegionId',
+              previewEntity: 'referenceOption',
               label: t('customerQuickCreate.fields.country'),
               type: 'select',
               options: choices(lookups?.countryRegions, record.countryRegionId),
             },
             {
               name: 'dlvModeId',
+              previewEntity: 'dlvMode',
               label: t('customerQuickCreate.fields.deliveryMode'),
               type: 'select',
               options: choices(lookups?.deliveryModes, record.dlvModeId),
@@ -309,6 +310,7 @@ export function CustTablePage(): React.ReactElement {
           fields: [
             {
               name: 'salesPoolId',
+              previewEntity: 'referenceOption',
               label: 'Sales order pool',
               type: 'select',
               options: choices(lookups?.salesPools, record.salesPoolId ?? ''),

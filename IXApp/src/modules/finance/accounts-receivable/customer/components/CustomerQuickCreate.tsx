@@ -115,6 +115,7 @@ export function CustomerQuickCreate({
           },
           {
             name: 'deliveryMode',
+            previewEntity: 'dlvMode',
             label: t('customerQuickCreate.fields.deliveryMode'),
             type: 'select',
             options: lookup?.deliveryModes ?? [],
@@ -127,6 +128,7 @@ export function CustomerQuickCreate({
         fields: [
           {
             name: 'country',
+            previewEntity: 'referenceOption',
             label: t('customerQuickCreate.fields.country'),
             type: 'select',
             required: true,

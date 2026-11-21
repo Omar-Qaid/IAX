@@ -38,7 +38,6 @@ export const headerMasterRoutes: Partial<Record<keyof SalesOrderListRecord, stri
   taxGroupId: TAX_ROUTE_PATHS.TAX_GROUPS,
   paymentTerms: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_TERMS,
   paymentMethod: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_METHODS,
-  chargesGroup: FOUNDATION_ROUTE_PATHS.CHARGES_CODES,
 };
 // Masters with a registered preview but no master form route.
 export const headerPreviewEntities: Partial<Record<keyof SalesOrderListRecord, string>> = {
@@ -49,6 +48,7 @@ export const headerPreviewEntities: Partial<Record<keyof SalesOrderListRecord, s
 export const lineMasters: Partial<
   Record<keyof DetailLine, { masterRoute?: string; entity?: string }>
 > = {
+  itemNumber: { masterRoute: INVENTORY_ROUTE_PATHS.RELEASED_PRODUCTS },
   site: { masterRoute: INVENTORY_ROUTE_PATHS.SITES },
   warehouse: { masterRoute: INVENTORY_ROUTE_PATHS.WAREHOUSES },
   unit: { masterRoute: INVENTORY_ROUTE_PATHS.UNITS_OF_MEASURE },

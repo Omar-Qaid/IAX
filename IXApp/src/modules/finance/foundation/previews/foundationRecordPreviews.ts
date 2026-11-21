@@ -1,5 +1,10 @@
 import { TAX_ROUTE_PATHS } from '@modules/finance/tax/routes/taxRoutePaths';
-import { pagedRecordLoader, registerRecordPreview } from '@shared/components/record-preview';
+import {
+  listRecordLoader,
+  pagedRecordLoader,
+  registerRecordPreview,
+} from '@shared/components/record-preview';
+import { markupTransApi } from '../charges/api/markupTransApi';
 import { FOUNDATION_ROUTE_PATHS } from '../routes/foundationRoutePaths';
 
 /** Record preview entities (D365 hover cards) owned by Foundation. */
@@ -14,31 +19,74 @@ export const FOUNDATION_RECORD_PREVIEWS = {
   TAX_CODE: 'taxCode',
   DELIVERY_MODE: 'dlvMode',
   DELIVERY_TERMS: 'dlvTerm',
+  REFERENCE_OPTION: 'referenceOption',
+  SALES_CHARGE_CODE: 'salesChargeCode',
 } as const;
 
-registerRecordPreview<{ code: string; name: string }>(FOUNDATION_RECORD_PREVIEWS.TAX_LEDGER_DIMENSION, {
+registerRecordPreview<{ code: string; name: string }>(FOUNDATION_RECORD_PREVIEWS.REFERENCE_OPTION, {
   fromOption: (option) => ({ code: option.code, name: option.name ?? '' }),
   fields: [
-    { labelKey: 'fields.mainAccount', defaultLabel: 'Main account', value: 'code', lookup: true },
+    { labelKey: 'fields.code', defaultLabel: 'Code', value: 'code', lookup: true },
     { labelKey: 'fields.description', defaultLabel: 'Description', value: 'name' },
   ],
 });
 
-registerRecordPreview<{ taxAccountGroup: string; name: string }>(FOUNDATION_RECORD_PREVIEWS.TAX_ACCOUNT_GROUP, {
-  masterRoute: TAX_ROUTE_PATHS.TAX_ACCOUNT_GROUPS,
-  load: pagedRecordLoader('/v1/TaxLedgerAccountGroup', 'TaxAccountGroup'),
-  fromOption: (option) => ({ taxAccountGroup: option.code, name: option.name ?? '' }),
+registerRecordPreview(FOUNDATION_RECORD_PREVIEWS.SALES_CHARGE_CODE, {
+  masterRoute: FOUNDATION_ROUTE_PATHS.CHARGES_CODES,
+  load: listRecordLoader(
+    (signal) => markupTransApi.codes('sales', signal),
+    (record) => record.markupCode
+  ),
   fields: [
-    { labelKey: 'taxAccountGroup.fields.code', defaultLabel: 'Ledger posting group', value: 'taxAccountGroup', lookup: true },
-    { labelKey: 'fields.description', defaultLabel: 'Description', value: 'name' },
+    {
+      labelKey: 'documentCharges.fields.chargesCode',
+      defaultLabel: 'Charges code',
+      value: 'markupCode',
+      lookup: true,
+    },
+    { labelKey: 'fields.description', defaultLabel: 'Description', value: 'txt' },
   ],
 });
+
+registerRecordPreview<{ code: string; name: string }>(
+  FOUNDATION_RECORD_PREVIEWS.TAX_LEDGER_DIMENSION,
+  {
+    fromOption: (option) => ({ code: option.code, name: option.name ?? '' }),
+    fields: [
+      { labelKey: 'fields.mainAccount', defaultLabel: 'Main account', value: 'code', lookup: true },
+      { labelKey: 'fields.description', defaultLabel: 'Description', value: 'name' },
+    ],
+  }
+);
+
+registerRecordPreview<{ taxAccountGroup: string; name: string }>(
+  FOUNDATION_RECORD_PREVIEWS.TAX_ACCOUNT_GROUP,
+  {
+    masterRoute: TAX_ROUTE_PATHS.TAX_ACCOUNT_GROUPS,
+    load: pagedRecordLoader('/v1/TaxLedgerAccountGroup', 'TaxAccountGroup'),
+    fromOption: (option) => ({ taxAccountGroup: option.code, name: option.name ?? '' }),
+    fields: [
+      {
+        labelKey: 'taxAccountGroup.fields.code',
+        defaultLabel: 'Ledger posting group',
+        value: 'taxAccountGroup',
+        lookup: true,
+      },
+      { labelKey: 'fields.description', defaultLabel: 'Description', value: 'name' },
+    ],
+  }
+);
 registerRecordPreview<{ taxPeriod: string; name: string }>(FOUNDATION_RECORD_PREVIEWS.TAX_PERIOD, {
   masterRoute: TAX_ROUTE_PATHS.TAX_PERIODS,
   load: pagedRecordLoader('/v1/TaxPeriodHead', 'TaxPeriod'),
   fromOption: (option) => ({ taxPeriod: option.code, name: option.name ?? '' }),
   fields: [
-    { labelKey: 'taxTable.fields.settlementPeriod', defaultLabel: 'Settlement period', value: 'taxPeriod', lookup: true },
+    {
+      labelKey: 'taxTable.fields.settlementPeriod',
+      defaultLabel: 'Settlement period',
+      value: 'taxPeriod',
+      lookup: true,
+    },
     { labelKey: 'fields.description', defaultLabel: 'Description', value: 'name' },
   ],
 });
@@ -47,7 +95,12 @@ registerRecordPreview<{ taxCode: string; taxName: string }>(FOUNDATION_RECORD_PR
   load: pagedRecordLoader('/v1/TaxTable', 'TaxCode'),
   fromOption: (option) => ({ taxCode: option.code, taxName: option.name ?? '' }),
   fields: [
-    { labelKey: 'taxTable.fields.code', defaultLabel: 'Sales tax code', value: 'taxCode', lookup: true },
+    {
+      labelKey: 'taxTable.fields.code',
+      defaultLabel: 'Sales tax code',
+      value: 'taxCode',
+      lookup: true,
+    },
     { labelKey: 'fields.description', defaultLabel: 'Description', value: 'taxName' },
   ],
 });

@@ -1,6 +1,6 @@
 import React from 'react';
 import CheckIcon from '@mui/icons-material/Check';
-import { Alert, Box, Stack, Tab, Tabs, Typography } from '@mui/material';
+import { Alert, Box, Button, Stack, Tab, Tabs, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ROUTE_PATHS } from '@app/routes/routePaths';
@@ -154,8 +154,11 @@ export function LedgerTransVoucher(): React.ReactElement {
     { label: t('ledgerTransVoucher.postingType'), value: (row) => row.postingType },
   ];
   const rows = (query.data ?? []).map((row) => ({ ...row, id: String(row.recId) }));
-  const contextLabel = voucher
-    ? `${t('ledgerTransVoucher.title')} | ${reference ? `${reference} : ` : ''}${voucher}`
+  // "Voucher transactions | INV-26-00006334 : C-0000002": the record the voucher came from,
+  // falling back to the voucher itself when the caller names no record.
+  const subject = reference || voucher;
+  const contextLabel = subject
+    ? `${t('ledgerTransVoucher.title')} | ${subject}`
     : t('ledgerTransVoucher.title');
 
   return (
@@ -217,6 +220,21 @@ export function LedgerTransVoucher(): React.ReactElement {
             <Tab value="overview" label={t('ledgerTransVoucher.overview')} />
             <Tab value="general" label={t('ledgerTransVoucher.general')} />
           </Tabs>
+          <Stack direction="row" sx={{ gap: 1.5, mt: 0.5 }}>
+            {['editZakatTransactions', 'view'].map((command) => (
+              // A disabled button fires no pointer events, so the hover text lives on the wrapper.
+              <Box
+                key={command}
+                component="span"
+                sx={{ display: 'inline-flex' }}
+                title={t('common.notAvailableYet')}
+              >
+                <Button size="small" disabled sx={{ textTransform: 'none', minWidth: 0, px: 0.5 }}>
+                  {t(`ledgerTransVoucher.actions.${command}`)}
+                </Button>
+              </Box>
+            ))}
+          </Stack>
         </Box>
       }
       detailContent={

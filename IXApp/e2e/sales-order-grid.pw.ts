@@ -179,11 +179,17 @@ for (const language of ['en', 'ar']) {
     await page.goto('/accounts-receivable/sales-orders/1');
     const grid = page.getByRole('grid');
     await expect(grid).toHaveAttribute('aria-rowcount', '1500', { timeout: 30000 });
+    await expect(grid.locator('[data-row-id="1"] [data-field="itemNumber"] a')).toHaveAttribute(
+      'href',
+      '/inventory/released-products'
+    );
+    await expect(grid.locator('[data-row-id="1"] [data-field="itemNumber"] a svg')).toHaveCount(0);
     await page
       .getByText(language === 'ar' ? 'تعديل' : 'Edit', { exact: true })
       .first()
       .click();
     await expect(grid.locator('[data-row-id="1"]')).toBeVisible();
+    await expect(grid.locator('a')).toHaveCount(0);
     expect(await grid.locator('[data-row-id]').count()).toBeLessThan(50);
     const quantityCell = grid.locator('[data-row-id="1"] [data-field="quantity"]');
     await quantityCell.click();
@@ -292,6 +298,7 @@ for (const language of ['en', 'ar']) {
       await expect(itemLookup).toBeFocused();
       await itemLookup.click();
       await page.getByText('ITEM-NEW', { exact: true }).click();
+      await expect(page).toHaveURL(/\/accounts-receivable\/sales-orders\/1$/);
       const addedQuantity = grid.locator('[data-row-id="new-sales-line"]').getByRole('spinbutton');
       await expect(addedQuantity).toBeFocused();
       await addedQuantity.fill('4.25');

@@ -139,7 +139,12 @@ function CustomerLines({
       width: 140,
       valueGetter: ({ row }) => date(row.invoiceDate),
     },
-    { field: 'itemId', headerName: label('itemId'), width: 170 },
+    {
+      preview: { entity: 'releasedProduct' },
+      field: 'itemId',
+      headerName: label('itemId'),
+      width: 170,
+    },
     ...(['qty', 'salesPrice', 'linePercent', 'lineDisc', 'lineAmount'] as const).map((field) => ({
       field,
       headerName: label(field),
@@ -147,7 +152,12 @@ function CustomerLines({
       align: 'right' as const,
       renderCell: ({ row }: { row: Row }) => number.format(row[field]),
     })),
-    { field: 'customerAccount', headerName: label('customerAccount'), width: 170 },
+    {
+      preview: { entity: 'customer' },
+      field: 'customerAccount',
+      headerName: label('customerAccount'),
+      width: 170,
+    },
   ];
   return (
     <SimpleListPage<Row>

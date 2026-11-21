@@ -4492,7 +4492,8 @@
       "reversedTracing": "Reversed tracing",
       "relatedVouchers": "Related vouchers",
       "allRelatedVouchers": "All related vouchers",
-      "viewReversalFailures": "View reversal failures"
+      "viewReversalFailures": "View reversal failures",
+      "view": "View"
     }
   }
 }

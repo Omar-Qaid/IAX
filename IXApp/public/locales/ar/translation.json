@@ -4492,7 +4492,8 @@
       "reversedTracing": "تتبع المعكوس",
       "relatedVouchers": "الإيصالات ذات الصلة",
       "allRelatedVouchers": "كل الإيصالات ذات الصلة",
-      "viewReversalFailures": "عرض حالات فشل العكس"
+      "viewReversalFailures": "عرض حالات فشل العكس",
+      "view": "عرض"
     }
   }
 }

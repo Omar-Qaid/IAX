@@ -46,6 +46,7 @@ const overviewColumns: ColumnDef<GridRow>[] = [
     valueGetter: ({ row }) => row.journal?.confirmId,
   },
   {
+    preview: { entity: 'currency' },
     field: 'currencyCode',
     headerName: 'custConfirmJournal.columns.currencyCode',
     width: 120,
@@ -68,6 +69,7 @@ const lineColumns: ColumnDef<GridRow>[] = [
     valueGetter: ({ row }) => row.salesOrderId,
   },
   {
+    preview: { entity: 'releasedProduct' },
     field: 'itemId',
     headerName: 'custConfirmJournal.columns.itemId',
     width: 150,
@@ -87,6 +89,7 @@ const lineColumns: ColumnDef<GridRow>[] = [
     valueGetter: ({ row }) => row.line?.name,
   },
   {
+    preview: { entity: 'inventLocation' },
     field: 'inventLocationId',
     headerName: 'custConfirmJournal.columns.inventLocationId',
     width: 150,

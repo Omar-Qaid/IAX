@@ -57,6 +57,7 @@ export function MasterDetailLinesGrid<T>({
       {...handlers}
       ref={ref}
       masterForm={editing && canEdit}
+      navigationDisabled={editing}
       editDisabled={busy}
       onCellEditRequest={allowEditRequest ? requestEdit : undefined}
     />

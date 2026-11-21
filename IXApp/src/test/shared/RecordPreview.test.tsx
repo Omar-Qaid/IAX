@@ -213,6 +213,68 @@ describe('where it appears', () => {
     await waitFor(() => expect(card).toHaveTextContent('Contractors'));
   });
 
+  it('keeps master grid values as text links without an Open details icon', async () => {
+    render(
+      <MemoryRouter>
+        <AppProviders>
+          <DataGrid
+            rows={[{ id: '1', group: 'CONTR' }]}
+            columns={[
+              { field: 'group', headerName: 'Customer group', preview: { entity: 'testGroup' } },
+            ]}
+            height={200}
+            hideToolbar
+          />
+        </AppProviders>
+      </MemoryRouter>
+    );
+    const link = screen.getByRole('link', { name: 'CONTR' });
+    expect(link).toHaveAttribute('href', '/test/customer-groups');
+    expect(link.querySelector('svg')).toBeNull();
+    fireEvent.focus(link);
+    await waitFor(async () =>
+      expect(await screen.findByRole('tooltip')).toHaveTextContent('Contractors')
+    );
+  });
+
+  it('disables master navigation around custom editors until view mode returns', () => {
+    const show = (editing: boolean) => (
+      <MemoryRouter>
+        <AppProviders>
+          <DataGrid
+            rows={[{ id: '1', group: 'CONTR' }]}
+            navigationDisabled={editing}
+            columns={[
+              {
+                field: 'group',
+                headerName: 'Customer group',
+                preview: { entity: 'testGroup' },
+                renderCell: ({ value }) =>
+                  editing ? (
+                    <input aria-label="Group editor" defaultValue={String(value)} />
+                  ) : (
+                    String(value)
+                  ),
+              },
+            ]}
+            height={200}
+            hideToolbar
+          />
+        </AppProviders>
+      </MemoryRouter>
+    );
+    const { rerender } = render(show(false));
+    expect(screen.getByRole('link', { name: 'CONTR' })).toBeInTheDocument();
+    rerender(show(true));
+    expect(screen.queryByRole('link')).toBeNull();
+    const editor = screen.getByRole('textbox', { name: 'Group editor' });
+    expect(editor.closest('a')).toBeNull();
+    fireEvent.change(editor, { target: { value: 'LOCAL' } });
+    expect(editor).toHaveValue('LOCAL');
+    rerender(show(false));
+    expect(screen.getByRole('link', { name: 'CONTR' })).toBeInTheDocument();
+  });
+
   it('previews a form lookup by its masterRoute, with no per-field setup', async () => {
     render(
       <AppProviders>

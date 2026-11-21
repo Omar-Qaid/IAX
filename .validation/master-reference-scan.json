@@ -628,140 +628,140 @@
       "fields": [
         {
           "name": "accountNumber",
-          "line": 41,
+          "line": 46,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "name",
-          "line": 48,
+          "line": 53,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "nameAr",
-          "line": 54,
+          "line": 59,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "invoiceAccount",
-          "line": 61,
+          "line": 66,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "customerGroupId",
-          "line": 67,
+          "line": 72,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "currencyCode",
-          "line": 73,
+          "line": 78,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "phone",
-          "line": 79,
+          "line": 84,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "taxGroupId",
-          "line": 80,
+          "line": 85,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "paymTermId",
-          "line": 86,
+          "line": 91,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "status",
-          "line": 92,
+          "line": 97,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "phone",
-          "line": 118,
+          "line": 123,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "accountNumber",
-          "line": 119,
+          "line": 124,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "name",
-          "line": 120,
+          "line": 125,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "nameAr",
-          "line": 121,
+          "line": 126,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "accountNumber",
-          "line": 206,
+          "line": 161,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "name",
-          "line": 207,
+          "line": 162,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "nameAr",
-          "line": 208,
+          "line": 163,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "customerGroupId",
-          "line": 209,
+          "line": 164,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "currencyCode",
-          "line": 210,
+          "line": 165,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "phone",
-          "line": 211,
+          "line": 166,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
@@ -827,154 +827,154 @@
       "fields": [
         {
           "name": "accountNumber",
-          "line": 177,
+          "line": 170,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'display'"
         },
         {
           "name": "custCategory",
-          "line": 178,
+          "line": 171,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "name",
-          "line": 190,
+          "line": 183,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "nameAr",
-          "line": 191,
+          "line": 184,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "customerGroupId",
-          "line": 197,
+          "line": 190,
           "masterRoute": "ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_GROUPS",
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "currencyCode",
-          "line": 204,
+          "line": 197,
           "masterRoute": "FOUNDATION_ROUTE_PATHS.CURRENCIES",
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "vatNum",
-          "line": 217,
+          "line": 210,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "taxGroupId",
-          "line": 218,
+          "line": 211,
           "masterRoute": "TAX_ROUTE_PATHS.TAX_GROUPS",
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "paymTermId",
-          "line": 225,
+          "line": 218,
           "masterRoute": "ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_TERMS",
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "paymModeId",
-          "line": 232,
+          "line": 225,
           "masterRoute": "ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_METHODS",
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "countryRegionId",
-          "line": 245,
+          "line": 238,
           "masterRoute": null,
-          "previewEntity": null,
+          "previewEntity": "'referenceOption'",
           "type": "'select'"
         },
         {
           "name": "dlvModeId",
-          "line": 251,
+          "line": 244,
           "masterRoute": null,
-          "previewEntity": null,
+          "previewEntity": "'dlvMode'",
           "type": "'select'"
         },
         {
           "name": "memo",
-          "line": 263,
+          "line": 256,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "inventSiteId",
-          "line": 282,
+          "line": 275,
           "masterRoute": "INVENTORY_ROUTE_PATHS.SITES",
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "inventLocationId",
-          "line": 295,
+          "line": 288,
           "masterRoute": "INVENTORY_ROUTE_PATHS.WAREHOUSES",
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "salesPoolId",
-          "line": 317,
+          "line": 310,
           "masterRoute": null,
-          "previewEntity": null,
+          "previewEntity": "'referenceOption'",
           "type": "'select'"
         },
         {
           "name": "invoiceAccount",
-          "line": 323,
+          "line": 316,
           "masterRoute": "ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMERS",
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "paymTermId",
-          "line": 349,
+          "line": 342,
           "masterRoute": "ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_TERMS",
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "paymModeId",
-          "line": 356,
+          "line": 349,
           "masterRoute": "ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_METHODS",
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "blockFloorLimitUseInChannel",
-          "line": 368,
+          "line": 361,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'boolean'"
         },
         {
           "name": "prepaymentValue",
-          "line": 378,
+          "line": 371,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
         },
         {
           "name": "status",
-          "line": 414,
+          "line": 407,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'display'"
@@ -1580,8 +1580,8 @@
         {
           "name": "oneTimeCustomerAccount",
           "line": 167,
-          "masterRoute": null,
-          "previewEntity": null,
+          "masterRoute": "'/accounts-receivable/customers'",
+          "previewEntity": "'customer'",
           "type": "'select'"
         },
         {
@@ -1704,91 +1704,91 @@
         },
         {
           "name": "txt",
-          "line": 123,
+          "line": 124,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "markupCategory",
-          "line": 129,
+          "line": 130,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'singleSelect'"
         },
         {
           "name": "keep",
-          "line": 141,
+          "line": 142,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'boolean'"
         },
         {
           "name": "value",
-          "line": 149,
+          "line": 150,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
         },
         {
           "name": "currencyCode",
-          "line": 158,
+          "line": 159,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'singleSelect'"
         },
         {
           "name": "mcrBrokerContractFee",
-          "line": 166,
+          "line": 167,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'boolean'"
         },
         {
           "name": "taxGroup",
-          "line": 174,
+          "line": 175,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'singleSelect'"
         },
         {
           "name": "taxItemGroup",
-          "line": 182,
+          "line": 183,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'singleSelect'"
         },
         {
           "name": "markupCode",
-          "line": 200,
-          "masterRoute": null,
-          "previewEntity": null,
-          "type": null
-        },
-        {
-          "name": "txt",
           "line": 201,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
-          "name": "currencyCode",
+          "name": "txt",
           "line": 202,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
-          "name": "taxGroup",
+          "name": "currencyCode",
           "line": 203,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
-          "name": "taxItemGroup",
+          "name": "taxGroup",
           "line": 204,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "taxItemGroup",
+          "line": 205,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
@@ -2626,336 +2626,336 @@
       "fields": [
         {
           "name": "productType",
-          "line": 278,
+          "line": 279,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'display'"
         },
         {
           "name": "productSubtype",
-          "line": 283,
+          "line": 284,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'display'"
         },
         {
           "name": "itemNumber",
-          "line": 288,
+          "line": 289,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'display'"
         },
         {
           "name": "name",
-          "line": 299,
+          "line": 300,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'display'"
         },
         {
           "name": "nameAliasLocalized",
-          "line": 304,
+          "line": 305,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'display'"
         },
         {
           "name": "modelGroupId",
-          "line": 315,
+          "line": 316,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "purchaseUnit",
-          "line": 335,
+          "line": 336,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "purchaseToInventoryFactor",
-          "line": 341,
+          "line": 342,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
         },
         {
           "name": "purchasePrice",
-          "line": 355,
+          "line": 356,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
         },
         {
           "name": "purchasePriceQuantity",
-          "line": 360,
+          "line": 361,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
         },
         {
           "name": "purchaseTaxItemGroupId",
-          "line": 365,
-          "masterRoute": null,
+          "line": 366,
+          "masterRoute": "MASTER_TAX_ROUTES.TAX_ITEM_GROUPS",
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "salesUnit",
-          "line": 388,
+          "line": 389,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "salesToInventoryFactor",
-          "line": 394,
+          "line": 395,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
         },
         {
           "name": "salesPrice",
-          "line": 408,
+          "line": 409,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
         },
         {
           "name": "salesPriceQuantity",
-          "line": 413,
+          "line": 414,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
         },
         {
           "name": "salesTaxItemGroupId",
-          "line": 418,
-          "masterRoute": null,
+          "line": 419,
+          "masterRoute": "MASTER_TAX_ROUTES.TAX_ITEM_GROUPS",
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "productType",
-          "line": 441,
+          "line": 442,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'display'"
         },
         {
           "name": "productSubtype",
-          "line": 446,
+          "line": 447,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'display'"
         },
         {
           "name": "inventoryUnit",
-          "line": 451,
+          "line": 452,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "costPrice",
-          "line": 471,
+          "line": 472,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'display'"
         },
         {
           "name": "itemGroupId",
-          "line": 483,
+          "line": 484,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "storageDimensionGroupId",
-          "line": 495,
+          "line": 496,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "trackingDimensionGroupId",
-          "line": 501,
+          "line": 502,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "defaultOrderType",
-          "line": 521,
+          "line": 522,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "purchaseDefaultSiteId",
-          "line": 537,
+          "line": 538,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "purchaseDefaultWarehouseId",
-          "line": 543,
+          "line": 544,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "purchaseMinimumQuantity",
-          "line": 549,
+          "line": 550,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
         },
         {
           "name": "purchaseMaximumQuantity",
-          "line": 554,
+          "line": 555,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
         },
         {
           "name": "purchaseMultipleQuantity",
-          "line": 559,
+          "line": 560,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
         },
         {
           "name": "purchaseStandardQuantity",
-          "line": 564,
+          "line": 565,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
         },
         {
           "name": "purchaseLeadTimeDays",
-          "line": 569,
+          "line": 570,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
         },
         {
           "name": "purchaseStopped",
-          "line": 574,
+          "line": 575,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'boolean'"
         },
         {
           "name": "salesDefaultSiteId",
-          "line": 585,
+          "line": 586,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "salesDefaultWarehouseId",
-          "line": 591,
+          "line": 592,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "salesMinimumQuantity",
-          "line": 597,
+          "line": 598,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
         },
         {
           "name": "salesMaximumQuantity",
-          "line": 602,
+          "line": 603,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
         },
         {
           "name": "salesMultipleQuantity",
-          "line": 607,
+          "line": 608,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
         },
         {
           "name": "salesStandardQuantity",
-          "line": 612,
+          "line": 613,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
         },
         {
           "name": "salesLeadTimeDays",
-          "line": 617,
+          "line": 618,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
         },
         {
           "name": "salesStopped",
-          "line": 622,
+          "line": 623,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'boolean'"
         },
         {
           "name": "inventoryDefaultSiteId",
-          "line": 633,
+          "line": 634,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "inventoryDefaultWarehouseId",
-          "line": 639,
+          "line": 640,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "inventoryMinimumQuantity",
-          "line": 645,
+          "line": 646,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
         },
         {
           "name": "inventoryMaximumQuantity",
-          "line": 650,
+          "line": 651,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
         },
         {
           "name": "inventoryMultipleQuantity",
-          "line": 655,
+          "line": 656,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
         },
         {
           "name": "inventoryStandardQuantity",
-          "line": 660,
+          "line": 661,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
         },
         {
           "name": "inventoryLeadTimeDays",
-          "line": 665,
+          "line": 666,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
         },
         {
           "name": "inventoryStopped",
-          "line": 670,
+          "line": 671,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'boolean'"
@@ -3110,63 +3110,63 @@
       "fields": [
         {
           "name": "defaultUnitId",
-          "line": 50,
+          "line": 51,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "multiSiteDefaultInventSiteId",
-          "line": 59,
-          "masterRoute": null,
+          "line": 60,
+          "masterRoute": "MASTER_INVENTORY_ROUTES.SITES",
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "multiSiteDefaultInventLocationId",
-          "line": 68,
-          "masterRoute": null,
+          "line": 69,
+          "masterRoute": "MASTER_INVENTORY_ROUTES.WAREHOUSES",
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "reserveOnOrdered",
-          "line": 78,
+          "line": 79,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'boolean'"
         },
         {
           "name": "mandatoryItemTaxGroup",
-          "line": 84,
+          "line": 85,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'boolean'"
         },
         {
           "name": "movementJournalNameId",
-          "line": 98,
+          "line": 99,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "lossProfitJournalNameId",
-          "line": 104,
+          "line": 105,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "transferJournalNameId",
-          "line": 110,
+          "line": 111,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "countJournalNameId",
-          "line": 116,
+          "line": 117,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'select'"
@@ -3583,35 +3583,35 @@
       "fields": [
         {
           "name": "inventLocationId",
-          "line": 79,
-          "masterRoute": null,
+          "line": 80,
+          "masterRoute": "MASTER_INVENTORY_ROUTES.WAREHOUSES",
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "inputLocation",
-          "line": 88,
+          "line": 89,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "checkText",
-          "line": 92,
+          "line": 93,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "locationType",
-          "line": 93,
+          "line": 94,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
         },
         {
           "name": "sortCode",
-          "line": 98,
+          "line": 99,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
@@ -4125,161 +4125,161 @@
       "fields": [
         {
           "name": "memo",
-          "line": 150,
+          "line": 151,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "arabicName",
-          "line": 157,
+          "line": 158,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "inHierarchy",
-          "line": 158,
+          "line": 159,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'boolean'"
         },
         {
           "name": "useForFinancialConsolidation",
-          "line": 163,
+          "line": 164,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'boolean'"
         },
         {
           "name": "useForFinancialElimination",
-          "line": 174,
+          "line": 175,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'boolean'"
         },
         {
           "name": "fullName",
-          "line": 179,
-          "masterRoute": null,
-          "previewEntity": null,
-          "type": null
-        },
-        {
-          "name": "localizedRegion",
           "line": 180,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
-          "name": "taxLicenseNum",
-          "line": 187,
+          "name": "localizedRegion",
+          "line": 181,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
-          "name": "federalTaxId",
+          "name": "taxLicenseNum",
           "line": 188,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
+          "name": "federalTaxId",
+          "line": 189,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
           "name": "languageId",
-          "line": 196,
+          "line": 197,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "timeZone",
-          "line": 205,
+          "line": 206,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'select'"
         },
         {
           "name": "currencyCode",
-          "line": 260,
-          "masterRoute": null,
+          "line": 261,
+          "masterRoute": "MASTER_FOUNDATION_ROUTES.CURRENCIES",
           "previewEntity": null,
           "type": null
         },
         {
           "name": "bankAccount",
-          "line": 264,
+          "line": 265,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "calendar",
-          "line": 269,
+          "line": 270,
           "masterRoute": null,
           "previewEntity": null,
           "type": "'number'"
         },
         {
           "name": "description",
-          "line": 552,
-          "masterRoute": null,
-          "previewEntity": null,
-          "type": null
-        },
-        {
-          "name": "address",
           "line": 553,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
-          "name": "roles",
+          "name": "address",
           "line": 554,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
+          "name": "roles",
+          "line": 555,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
           "name": "primary",
-          "line": 560,
+          "line": 561,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
           "name": "description",
-          "line": 660,
-          "masterRoute": null,
-          "previewEntity": null,
-          "type": null
-        },
-        {
-          "name": "type",
           "line": 661,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
-          "name": "number",
+          "name": "type",
           "line": 662,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
-          "name": "extension",
+          "name": "number",
           "line": 663,
           "masterRoute": null,
           "previewEntity": null,
           "type": null
         },
         {
-          "name": "primary",
+          "name": "extension",
           "line": 664,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "primary",
+          "line": 665,
           "masterRoute": null,
           "previewEntity": null,
           "type": null

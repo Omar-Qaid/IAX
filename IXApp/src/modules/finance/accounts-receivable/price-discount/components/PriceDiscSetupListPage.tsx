@@ -97,6 +97,7 @@ export function PriceDiscSetupListPage({ kind }: { kind: SetupKind }): React.Rea
         },
         {
           field: 'journalName',
+          preview: { entity: 'tradeAgreementJournalName' },
           headerName: 'priceDiscount.columns.journalName',
           width: 150,
           editable: true,

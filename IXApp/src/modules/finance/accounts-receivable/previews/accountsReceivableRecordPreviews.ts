@@ -1,4 +1,6 @@
 import { queryClient } from '@core/api/queryClient';
+import { customerPostingAccountApi } from '../setup/api/customerPostingProfileApi';
+import { GENERAL_LEDGER_ROUTE_PATHS } from '../../general-ledger/routes/generalLedgerRoutePaths';
 import { localizedName } from '@shared/utilities/localizedName';
 import {
   RECORD_PREVIEW_STALE_TIME_MS,
@@ -19,7 +21,54 @@ export const ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS = {
   CUSTOMER_GROUP: 'customerGroup',
   PAYMENT_TERMS: 'paymentTerms',
   PAYMENT_METHOD: 'customerPaymentMethod',
+  POSTING_PROFILE: 'customerPostingProfile',
+  TRADE_JOURNAL_NAME: 'tradeAgreementJournalName',
+  LEDGER_DIMENSION: 'customerLedgerDimension',
 } as const;
+
+registerRecordPreview(ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.LEDGER_DIMENSION, {
+  masterRoute: GENERAL_LEDGER_ROUTE_PATHS.MAIN_ACCOUNTS,
+  load: listRecordLoader(customerPostingAccountApi.ledgerAccounts, (record) => String(record.id)),
+  fields: [
+    { labelKey: 'fields.mainAccount', defaultLabel: 'Main account', value: 'code', lookup: true },
+    { labelKey: 'fields.description', defaultLabel: 'Description', value: 'name' },
+  ],
+});
+
+registerRecordPreview<{ postingProfile: string; name: string }>(
+  ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.POSTING_PROFILE,
+  {
+    masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_POSTING_PROFILES,
+    load: pagedRecordLoader('/v1/CustLedger', 'PostingProfile'),
+    fromOption: (option) => ({ postingProfile: option.code, name: option.name ?? '' }),
+    fields: [
+      {
+        labelKey: 'freeTextInvoices.postingProfile',
+        defaultLabel: 'Posting profile',
+        value: 'postingProfile',
+        lookup: true,
+      },
+      { labelKey: 'fields.description', defaultLabel: 'Description', value: 'name' },
+    ],
+  }
+);
+
+registerRecordPreview<{ journalName: string; name: string }>(
+  ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS.TRADE_JOURNAL_NAME,
+  {
+    masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.TRADE_AGREEMENT_JOURNAL_NAMES,
+    load: pagedRecordLoader('/v1/PriceDiscAdmName', 'JournalName'),
+    fields: [
+      {
+        labelKey: 'priceDiscount.columns.journalName',
+        defaultLabel: 'Journal name',
+        value: 'journalName',
+        lookup: true,
+      },
+      { labelKey: 'fields.description', defaultLabel: 'Description', value: 'name' },
+    ],
+  }
+);
 
 // Server DTO fields shown by the cards (the paged loader returns raw DTOs).
 interface CustGroupPreview {

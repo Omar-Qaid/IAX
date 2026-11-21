@@ -154,7 +154,12 @@ export function SalesOrderInvoicePostingDialog({
       },
       { field: 'salesId', headerName: 'salesOrder.ui.salesOrder', width: 160 },
       { field: 'customerName', headerName: 'salesOrder.ui.name', minWidth: 220, flex: 1 },
-      { field: 'currencyCode', headerName: 'salesOrder.ui.currency', width: 110 },
+      {
+        preview: { entity: 'currency' },
+        field: 'currencyCode',
+        headerName: 'salesOrder.ui.currency',
+        width: 110,
+      },
     ],
     [customerPackingSlip, posting, t]
   );
@@ -176,10 +181,25 @@ export function SalesOrderInvoicePostingDialog({
         width: 150,
         valueGetter: () => salesId,
       },
-      { field: 'site', headerName: 'salesOrder.ui.site', width: 100 },
-      { field: 'warehouse', headerName: 'salesOrder.ui.warehouse', width: 120 },
+      {
+        preview: { entity: 'inventSite' },
+        field: 'site',
+        headerName: 'salesOrder.ui.site',
+        width: 100,
+      },
+      {
+        preview: { entity: 'inventLocation' },
+        field: 'warehouse',
+        headerName: 'salesOrder.ui.warehouse',
+        width: 120,
+      },
       { field: 'batchNumber', headerName: 'salesOrder.ui.batchNumber', width: 140 },
-      { field: 'itemNumber', headerName: 'salesOrder.ui.itemNumber', width: 160 },
+      {
+        preview: { entity: 'releasedProduct' },
+        field: 'itemNumber',
+        headerName: 'salesOrder.ui.itemNumber',
+        width: 160,
+      },
       {
         field: 'quantity',
         headerName: 'salesOrder.ui.update',

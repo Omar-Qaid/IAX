@@ -55,7 +55,12 @@ const overviewColumns: ColumnDef<OverviewRow>[] = [
   { field: 'update', headerName: 'salesOrder.ui.update', width: 110 },
   { field: 'salesId', headerName: 'salesOrder.ui.salesOrder', width: 150 },
   { field: 'customerName', headerName: 'salesOrder.ui.name', minWidth: 220, flex: 1 },
-  { field: 'currencyCode', headerName: 'salesOrder.ui.currency', width: 100 },
+  {
+    preview: { entity: 'currency' },
+    field: 'currencyCode',
+    headerName: 'salesOrder.ui.currency',
+    width: 100,
+  },
   {
     field: 'quantity',
     headerName: 'salesOrder.ui.quantity',
@@ -149,9 +154,19 @@ export function SalesOrderConfirmationDialog({
         width: 150,
         valueGetter: () => salesId,
       },
-      { field: 'itemId', headerName: 'salesOrder.ui.itemNumber', width: 140 },
+      {
+        preview: { entity: 'releasedProduct' },
+        field: 'itemId',
+        headerName: 'salesOrder.ui.itemNumber',
+        width: 140,
+      },
       { field: 'name', headerName: 'salesOrder.ui.description', minWidth: 220, flex: 1 },
-      { field: 'inventLocationId', headerName: 'salesOrder.ui.warehouse', width: 140 },
+      {
+        preview: { entity: 'inventLocation' },
+        field: 'inventLocationId',
+        headerName: 'salesOrder.ui.warehouse',
+        width: 140,
+      },
       { field: 'wmsLocationId', headerName: 'salesOrder.ui.location', width: 130 },
       {
         field: 'qty',

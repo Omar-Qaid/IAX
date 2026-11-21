@@ -166,6 +166,8 @@ export function CustParametersPage(): React.ReactElement {
           },
           {
             name: 'oneTimeCustomerAccount',
+            masterRoute: '/accounts-receivable/customers',
+            previewEntity: 'customer',
             label: t('customerParameters.fields.oneTimeCustomerAccount'),
             type: 'select',
             options: [{ value: '', label: '' }],

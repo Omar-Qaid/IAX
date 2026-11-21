@@ -116,9 +116,19 @@ export function CustReturnOrderDialog({
 
   const columns = useMemo<ColumnDef<CustSalesLine>[]>(
     () => [
-      { field: 'itemId', headerName: 'custSalesLines.fields.itemId', width: 160 },
+      {
+        preview: { entity: 'releasedProduct' },
+        field: 'itemId',
+        headerName: 'custSalesLines.fields.itemId',
+        width: 160,
+      },
       { field: 'name', headerName: 'salesOrder.ui.text', minWidth: 200, flex: 1 },
-      { field: 'salesUnit', headerName: 'fields.unit', width: 90 },
+      {
+        preview: { entity: 'unitOfMeasure' },
+        field: 'salesUnit',
+        headerName: 'fields.unit',
+        width: 90,
+      },
       {
         field: 'qty',
         headerName: 'custSalesLines.fields.qty',

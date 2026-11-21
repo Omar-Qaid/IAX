@@ -30,6 +30,7 @@ export function useFreeTextInvoiceLineColumns({
       { field: 'description', headerName: 'fields.description', width: 250, editable: true },
       {
         field: 'ledgerDimension',
+        preview: { entity: 'customerLedgerDimension' },
         headerName: 'freeTextInvoices.ledgerAccount',
         width: 210,
         editable: true,
@@ -40,6 +41,7 @@ export function useFreeTextInvoiceLineColumns({
         renderEditCell: ({ row, value, onChange, disabled }) => (
           <DataGridLookupField
             name="ledgerDimension"
+            previewEntity="customerLedgerDimension"
             label={t('freeTextInvoices.ledgerAccount')}
             value={Number(value) || null}
             options={
@@ -85,6 +87,11 @@ export function useFreeTextInvoiceLineColumns({
         renderEditCell: ({ value, onChange, disabled }) => (
           <DataGridLookupField
             name={field}
+            previewEntity={
+              field === 'taxGroup'
+                ? FOUNDATION_PREVIEWS.SALES_TAX_GROUP
+                : FOUNDATION_PREVIEWS.ITEM_SALES_TAX_GROUP
+            }
             label={
               field === 'taxGroup' ? t('fields.salesTaxGroup') : t('freeTextInvoices.itemTaxGroup')
             }

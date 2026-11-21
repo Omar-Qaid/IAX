@@ -178,13 +178,7 @@ function SettlementDialog({
         />
       ),
     },
-    ...(
-      [
-        'invoice',
-        'dueDate',
-        'cashDiscDate',
-      ] as const
-    ).map((name) => ({
+    ...(['invoice', 'dueDate', 'cashDiscDate'] as const).map((name) => ({
       field: name,
       headerName: `custOpenTrans.fields.${name}`,
       width: name === 'invoice' ? 180 : 140,
@@ -198,7 +192,12 @@ function SettlementDialog({
       align: 'right' as const,
       renderCell: ({ row }: { row: Row }) => money(row[name]),
     })),
-    { field: 'currencyCode', headerName: 'custOpenTrans.fields.currencyCode', width: 100 },
+    {
+      preview: { entity: 'currency' },
+      field: 'currencyCode',
+      headerName: 'custOpenTrans.fields.currencyCode',
+      width: 100,
+    },
     { field: 'voucher', headerName: 'custOpenTrans.fields.voucher', width: 180 },
   ];
   const refresh = async () => {

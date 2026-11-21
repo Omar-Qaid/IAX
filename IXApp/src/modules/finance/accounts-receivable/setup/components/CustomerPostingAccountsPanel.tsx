@@ -1,4 +1,15 @@
 import React from 'react';
+import { Link as RouterLink } from 'react-router-dom';
+import { Link } from '@mui/material';
+import { LookupDisplayField } from '@shared/components/lookups/LookupDisplayField';
+import { RecordPreview } from '@shared/components/record-preview';
+import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS as paths } from '../../routes/accountsReceivableRoutePaths';
+import { GENERAL_LEDGER_ROUTE_PATHS } from '../../../general-ledger/routes/generalLedgerRoutePaths';
+
+const referenceRoute = (code: number) =>
+  code === 0 ? paths.CUSTOMERS : code === 1 ? paths.CUSTOMER_GROUPS : undefined;
+const referenceEntity = (code: number) =>
+  code === 0 ? 'customer' : code === 1 ? 'customerGroup' : undefined;
 import { Alert, Box, Button, CircularProgress, Typography } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
@@ -80,7 +91,29 @@ export function CustomerPostingAccountsPanel({
         options.find((option) => option.value === String(row.accountCode))?.label ??
         row.accountCode,
     },
-    { field: 'num', headerName: 'customerPostingProfiles.fields.num', minWidth: 175, flex: 1 },
+    {
+      field: 'num',
+      headerName: 'customerPostingProfiles.fields.num',
+      minWidth: 175,
+      flex: 1,
+      renderCell: ({ row }) =>
+        !editing && !masterEditing && row.num && referenceRoute(row.accountCode) ? (
+          <RecordPreview entity={referenceEntity(row.accountCode)} recordKey={row.num}>
+            <Link
+              component={RouterLink}
+              to={referenceRoute(row.accountCode)!}
+              underline="hover"
+              onClick={(event) => event.stopPropagation()}
+              onDoubleClick={(event) => event.stopPropagation()}
+              onKeyDown={(event) => event.stopPropagation()}
+            >
+              {row.num}
+            </Link>
+          </RecordPreview>
+        ) : (
+          row.num
+        ),
+    },
   ];
   const begin = (row: CustomerPostingAccount) => {
     if (busy || editing || operationLock.current) return;
@@ -214,8 +247,11 @@ export function CustomerPostingAccountsPanel({
       const option = ledgerAccounts.data?.find((item) => String(item.id) === String(id));
       if (!editing)
         return (
-          <ListGridField
+          <LookupDisplayField
             label={label(name)}
+            masterRoute={GENERAL_LEDGER_ROUTE_PATHS.MAIN_ACCOUNTS}
+            previewEntity="customerLedgerDimension"
+            previewKey={id || null}
             value={option?.code || (id ? String(id) : '')}
             onEdit={canEdit && !masterEditing && !busy ? () => begin(selected) : undefined}
           />
@@ -224,6 +260,8 @@ export function CustomerPostingAccountsPanel({
         <Box sx={{ minWidth: 0, maxWidth: 206 }}>
           <LookupField
             name={name}
+            masterRoute={GENERAL_LEDGER_ROUTE_PATHS.MAIN_ACCOUNTS}
+            previewEntity="customerLedgerDimension"
             label={label(name)}
             value={id || null}
             options={ledgerAccounts.data ?? []}
@@ -243,6 +281,16 @@ export function CustomerPostingAccountsPanel({
         </Box>
       );
     }
+    if (name === 'num' && !editing && code !== 2)
+      return (
+        <LookupDisplayField
+          label={label(name)}
+          value={selected.num}
+          masterRoute={referenceRoute(code)}
+          previewEntity={referenceEntity(code)}
+          onEdit={canEdit && !masterEditing && !busy ? () => begin(selected) : undefined}
+        />
+      );
     if (name === 'num' && editing)
       return (
         <Box sx={{ minWidth: 0, maxWidth: 153 }}>
@@ -259,6 +307,8 @@ export function CustomerPostingAccountsPanel({
             <LookupField
               key={code}
               name="num"
+              masterRoute={referenceRoute(code)}
+              previewEntity={referenceEntity(code)}
               label={label('num')}
               value={code === 2 ? '' : selected.num}
               options={code === 2 ? [] : (references.data ?? [])}
