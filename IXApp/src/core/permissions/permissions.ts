@@ -1,4 +1,8 @@
 export const PERMISSIONS = {
+  LEDGER_JOURNAL_VIEW: 'GeneralLedger.Journals.View',
+  LEDGER_JOURNAL_CREATE: 'GeneralLedger.Journals.Create',
+  LEDGER_JOURNAL_EDIT: 'GeneralLedger.Journals.Edit',
+  LEDGER_JOURNAL_DELETE: 'GeneralLedger.Journals.Delete',
   CUSTOMER_PAYMENT_VIEW: 'AccountsReceivable.CustomerPayments.View',
   MAIN_ACCOUNT_VIEW: 'GeneralLedger.Accounts.View',
   LEDGER_JOURNAL_ENTRY_VIEW: 'GeneralLedger.JournalEntries.View',

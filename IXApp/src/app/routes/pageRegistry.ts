@@ -22,6 +22,24 @@ const lazyPage = <TModule extends object>(
 ) => lazy(async () => ({ default: select(await importer()) }));
 
 export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
+  {
+    id: 'LedgerJournalListCustPaym',
+    path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.LEDGER_JOURNAL_LIST_CUST_PAYM,
+    permission: PERMISSIONS.LEDGER_JOURNAL_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-receivable/payment/pages/LedgerJournalListCustPaym'),
+      (module) => module.LedgerJournalListCustPaym
+    ),
+  },
+  {
+    id: 'LedgerJournalTransCustPaym',
+    path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.LEDGER_JOURNAL_TRANS_CUST_PAYM,
+    permission: PERMISSIONS.LEDGER_JOURNAL_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-receivable/payment/pages/LedgerJournalTransCustPaym'),
+      (module) => module.LedgerJournalTransCustPaym
+    ),
+  },
   ...[
     {
       id: 'CustFreeInvoiceNewPage',

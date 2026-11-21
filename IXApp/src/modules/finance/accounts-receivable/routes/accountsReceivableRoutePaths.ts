@@ -1,4 +1,8 @@
 export const ACCOUNTS_RECEIVABLE_ROUTE_PATHS = {
+  LEDGER_JOURNAL_LIST_CUST_PAYM: '/accounts-receivable/LedgerJournalListCustPaym',
+  LEDGER_JOURNAL_TRANS_CUST_PAYM: '/accounts-receivable/LedgerJournalTransCustPaym/:journalId',
+  ledgerJournalTransCustPaym: (journalId: string | number) =>
+    `/accounts-receivable/LedgerJournalTransCustPaym/${encodeURIComponent(journalId)}`,
   CUST_SALES_LINES: '/accounts-receivable/CustSalesLines/:accountNum',
   custSalesLines: (accountNum: string) =>
     `/accounts-receivable/CustSalesLines/${encodeURIComponent(accountNum)}`,

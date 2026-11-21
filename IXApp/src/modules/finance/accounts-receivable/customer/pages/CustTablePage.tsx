@@ -10,7 +10,6 @@ import type {
   EnterpriseListDetailsConfig,
 } from '@patterns/list-details/types';
 import { CustOpenTrans } from '../../settlement/components/CustOpenTrans';
-import { CustPaymentJournalDialog } from '../../payment/components/CustPaymentJournalDialog';
 import { CustReturnOrderDialog } from '../../return-order/components/CustReturnOrderDialog';
 import { SalesOrderQuickCreate } from '../../sales-order/components/SalesOrderQuickCreate';
 import { buildCustomerCommands } from '../components/customerCommands';
@@ -118,11 +117,6 @@ export function CustTablePage(): React.ReactElement {
     record: CustomerRecord;
   } | null>(null);
   React.useEffect(() => setSettlementCustomer(null), [company]);
-  const [paymentCustomer, setPaymentCustomer] = React.useState<{
-    company: string;
-    record: CustomerRecord;
-  } | null>(null);
-  React.useEffect(() => setPaymentCustomer(null), [company]);
   const [returnCustomer, setReturnCustomer] = React.useState<{
     company: string;
     record: CustomerRecord;
@@ -514,7 +508,7 @@ export function CustTablePage(): React.ReactElement {
         onNewSalesOrder: setNewOrderCustomer,
         onReturnOrder: (customer) => setReturnCustomer({ company, record: customer }),
         onSettleTransactions: (customer) => setSettlementCustomer({ company, record: customer }),
-        onPaymentJournal: (customer) => setPaymentCustomer({ company, record: customer }),
+        onPaymentJournal: () => navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.LEDGER_JOURNAL_LIST_CUST_PAYM),
       }),
     permissions: {
       view: PERMISSIONS.CUSTOMER_VIEW,
@@ -617,21 +611,6 @@ export function CustTablePage(): React.ReactElement {
                 isRtl
               )}
               onClose={() => setSettlementCustomer(null)}
-            />
-          )}
-          {paymentCustomer?.company === company && (
-            <CustPaymentJournalDialog
-              open
-              custAccount={paymentCustomer.record.accountNumber}
-              customerName={localizedName(
-                {
-                  name: paymentCustomer.record.name,
-                  nameAlias: paymentCustomer.record.nameAr,
-                },
-                isRtl
-              )}
-              canPost={hasPermission(PERMISSIONS.CUSTOMER_PAYMENT_POST)}
-              onClose={() => setPaymentCustomer(null)}
             />
           )}
           {returnCustomer?.company === company && (

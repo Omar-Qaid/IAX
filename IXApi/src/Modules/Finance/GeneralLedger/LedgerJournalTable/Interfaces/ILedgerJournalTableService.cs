@@ -5,6 +5,7 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
 {
     public interface ILedgerJournalTableService : IBaseService<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable>
     {
+        Task<IReadOnlyList<LedgerJournalOffsetAccountDto>> OffsetAccountsAsync(CancellationToken ct);
         Task<IReadOnlyList<string>?> CheckVoucherBalancesAsync(long recId, CancellationToken ct);
         Task<LedgerJournalSetupCheckDto?> CheckSetupAsync(long recId, CancellationToken ct);
 

@@ -20,6 +20,26 @@ namespace IAX.IXApi.Tests;
 public class LedgerJournalPostingTests
 {
     [Fact]
+    public async Task Offset_lookup_returns_company_scoped_ledger_and_bank_dimension_ids()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        SeedSubledgers(db);
+        db.AddRange(
+            new DimensionAttributeValueCombination { RecId = 10, DataAreaId = "dat", DisplayValue = "BANK-1" },
+            new DimensionAttributeValueCombination { RecId = 11, DataAreaId = "dat", DisplayValue = "C-001" },
+            new DimensionAttributeValueCombination { RecId = 12, DataAreaId = "other", MainAccount = 1, DisplayValue = "OTHER" },
+            new DimensionAttributeValueCombination { RecId = 13, DataAreaId = "dat", MainAccount = 1, DisplayValue = "DELETED", IsDeleted = true });
+        await db.SaveChangesAsync();
+        var rows = await new LedgerJournalTableService(new TestUnitOfWork(db), new TestUser()).OffsetAccountsAsync(default);
+        Assert.Contains(rows, row => row.Id == 1 && row.AccountType == 0);
+        Assert.Contains(rows, row => row.Id == 10 && row.AccountType == 5 && row.Code == "BANK-1");
+        Assert.DoesNotContain(rows, row => row.Id is 11 or 12 or 13);
+    }
+
+    [Fact]
     public async Task Validation_groups_a_blank_line_with_the_single_entered_voucher()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");

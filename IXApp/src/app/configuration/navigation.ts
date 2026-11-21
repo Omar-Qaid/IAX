@@ -136,6 +136,17 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
     matchPath: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.ROOT,
     sections: [
       {
+        id: 'payments',
+        title: 'Payments',
+        links: [
+          {
+            label: 'Customer payment journal',
+            path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.LEDGER_JOURNAL_LIST_CUST_PAYM,
+            permission: PERMISSIONS.LEDGER_JOURNAL_VIEW,
+          },
+        ],
+      },
+      {
         id: 'customers',
         title: 'nav.customers',
         links: [

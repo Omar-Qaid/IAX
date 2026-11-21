@@ -194,7 +194,7 @@ export function buildCustomerCommands(
               }
             : undefined,
         onPaymentJournal:
-          onPaymentJournal && hasPermission(PERMISSIONS.CUSTOMER_PAYMENT_POST)
+          onPaymentJournal && hasPermission(PERMISSIONS.LEDGER_JOURNAL_VIEW)
             ? () => {
                 if (record && record.recId > 0) onPaymentJournal?.(record);
               }

@@ -15,6 +15,11 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
         private readonly ILedgerJournalTableService _journalService;
         private readonly ILedgerJournalReversalService _reversalService;
 
+        [HttpGet("offset-accounts")]
+        public async Task<IActionResult> OffsetAccounts(CancellationToken ct) =>
+            Ok(IAX.IXApi.Shared.Application.Contracts.APIResponse<object>.Ok(
+                await _journalService.OffsetAccountsAsync(ct)));
+
         [HttpGet("{recId:long}/setup-check")]
         public async Task<IActionResult> CheckSetup(long recId, CancellationToken ct)
         {
@@ -52,7 +57,7 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
         {
             var (result, error) = await _journalService.SimulateAsync(recId, ct);
             if (result != null) return Ok(result);
-            return error == null ? NotFound() : UnprocessableEntity(new { error });
+            return error == null ? NotFound() : UnprocessableEntity(new { error, message = error });
         }
 
         [HttpPost("{recId:long}/post")]
@@ -61,7 +66,7 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
         {
             var (result, error) = await _journalService.PostAsync(recId, ct);
             if (result != null) return Ok(result);
-            return error == null ? NotFound() : UnprocessableEntity(new { error });
+            return error == null ? NotFound() : UnprocessableEntity(new { error, message = error });
         }
 
         [HttpPost("{recId:long}/reverse")]

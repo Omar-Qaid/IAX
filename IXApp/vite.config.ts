@@ -5,6 +5,51 @@ import path from 'path';
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  // Every runtime dependency is pre-bundled at start-up. A dependency first reached
+  // from a lazily loaded page (a grid lookup, an export, a viewer) would otherwise be
+  // optimized mid-session, and Vite answers that with a full page reload -- which in a
+  // half-edited form shows the browser's "Leave site?" prompt and drops the edits.
+  optimizeDeps: {
+    // Crawl every source file at start-up, not only what the visited routes import.
+    // Deep imports such as @mui/icons-material/<Icon> are otherwise discovered the
+    // first time a page needs one, and that discovery costs a full page reload.
+    entries: ['index.html', 'src/**/*.{ts,tsx}', '!src/test/**', '!src/**/*.test.{ts,tsx}'],
+    include: [
+      '@dnd-kit/core',
+      '@dnd-kit/sortable',
+      '@dnd-kit/utilities',
+      '@emotion/cache',
+      '@emotion/react',
+      '@emotion/styled',
+      '@hookform/resolvers',
+      '@mui/icons-material',
+      '@mui/lab',
+      '@mui/material',
+      '@tanstack/react-query',
+      '@tanstack/react-virtual',
+      'axios',
+      'clsx',
+      'date-fns',
+      'exceljs',
+      'html2canvas',
+      'i18next',
+      'i18next-browser-languagedetector',
+      'jsbarcode',
+      'jspdf',
+      'mammoth',
+      'qrcode.react',
+      'react',
+      'react-dom',
+      'react-hook-form',
+      'react-i18next',
+      'react-router-dom',
+      'stylis',
+      'stylis-plugin-rtl',
+      'utif',
+      'zod',
+      'zustand',
+    ],
+  },
   resolve: {
     alias: {
       '@app': path.resolve(__dirname, './src/app'),

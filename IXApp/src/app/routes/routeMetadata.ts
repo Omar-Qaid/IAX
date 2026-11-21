@@ -36,6 +36,18 @@ const navigationMetadata: RouteMetadata[] = Object.values(AVAILABLE_MODULE_NAV_C
 );
 
 export const ROUTE_METADATA: RouteMetadata[] = [
+  {
+    path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.LEDGER_JOURNAL_TRANS_CUST_PAYM,
+    breadcrumbs: [
+      home,
+      { labelKey: 'nav.accountsReceivable', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMERS },
+      {
+        labelKey: 'Customer payment journal',
+        path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.LEDGER_JOURNAL_LIST_CUST_PAYM,
+      },
+      { labelKey: 'Lines' },
+    ],
+  },
   ...[
     {
       path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.FREE_TEXT_INVOICE_NEW,

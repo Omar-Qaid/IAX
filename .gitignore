@@ -92,3 +92,6 @@ Thumbs.db
 
 # Compiled contact test output.
 .validation/contact-test-bin/
+
+# Local Vite dependency cache.
+/.vite/

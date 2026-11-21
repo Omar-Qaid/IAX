@@ -153,11 +153,56 @@ function DataGridInternal<T>(
                 component={RouterLink}
                 to={href}
                 underline="hover"
-                onClick={(event) => event.stopPropagation()}
+                onClickCapture={(event) => {
+                  const target = event.target as Element;
+                  // Cancel the anchor default even if an editor stops bubbling.
+                  if (
+                    !event.currentTarget.contains(target) ||
+                    (target !== event.currentTarget &&
+                      target.closest(
+                        'button, input, select, textarea, [role="button"], [role="combobox"], [contenteditable="true"]'
+                      ))
+                  ) {
+                    event.preventDefault();
+                    return;
+                  }
+                  // Custom renderers can fill the cell. Only their visible text
+                  // should activate details; retain keyboard activation (detail 0).
+                  if (event.detail > 0) {
+                    const walker = document.createTreeWalker(
+                      event.currentTarget,
+                      NodeFilter.SHOW_TEXT
+                    );
+                    const range = document.createRange();
+                    let hitText = false;
+                    while (walker.nextNode()) {
+                      if (!walker.currentNode.textContent?.trim()) continue;
+                      range.selectNodeContents(walker.currentNode);
+                      hitText = Array.from(range.getClientRects()).some(
+                        (rect) =>
+                          event.clientX >= rect.left &&
+                          event.clientX <= rect.right &&
+                          event.clientY >= rect.top &&
+                          event.clientY <= rect.bottom
+                      );
+                      if (hitText) break;
+                    }
+                    if (!hitText) event.preventDefault();
+                  }
+                }}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  // A popup the cell owns (a lookup, say) renders in a portal, so its
+                  // clicks bubble through the React tree into this link although they
+                  // happened outside it. Only a click on the link itself navigates.
+                  if (!event.currentTarget.contains(event.target as Node)) event.preventDefault();
+                }}
                 onDoubleClick={(event) => event.stopPropagation()}
                 onKeyDown={(event) => event.stopPropagation()}
                 sx={{
                   font: 'inherit',
+                  width: 'fit-content',
+                  flex: '0 1 auto',
                   maxWidth: '100%',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',

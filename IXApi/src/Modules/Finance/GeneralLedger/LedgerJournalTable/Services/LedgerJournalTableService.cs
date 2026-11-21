@@ -13,6 +13,25 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
     {
         private readonly ISysNumberSequenceService? _numbers;
 
+        public async Task<IReadOnlyList<LedgerJournalOffsetAccountDto>> OffsetAccountsAsync(CancellationToken ct)
+        {
+            var area = _currentUser.GetDataAreaId();
+            if (string.IsNullOrWhiteSpace(area)) return [];
+            var db = _unitOfWork.Context;
+            var dimensions = db.Set<DimensionAttributeValueCombination>().AsNoTracking()
+                .Where(x => x.DataAreaId == area && !x.IsDeleted);
+            var ledger = await dimensions.Where(x => x.MainAccount != 0)
+                .Select(x => new LedgerJournalOffsetAccountDto(x.RecId, x.DisplayValue, x.MainAccountValue, 0))
+                .ToListAsync(ct);
+            var banks = await (from dimension in dimensions
+                join bank in db.Set<BankAccountTable>().AsNoTracking().Where(x => x.DataAreaId == area && !x.IsDeleted)
+                    on dimension.DisplayValue equals bank.AccountId
+                where dimension.MainAccount == 0 && dimension.MainAccountValue == ""
+                select new LedgerJournalOffsetAccountDto(dimension.RecId, bank.AccountId, bank.Name, 5))
+                .ToListAsync(ct);
+            return ledger.Concat(banks).OrderBy(x => x.Code).ToList();
+        }
+
         protected override async Task OnBeforeAddAsync(IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable entity, CancellationToken ct)
         {
             if (!string.IsNullOrWhiteSpace(entity.OriginalJournalNum) || !string.IsNullOrWhiteSpace(entity.OriginalCompany))

@@ -499,6 +499,12 @@ export function LookupGrid<T extends object>({
             <Paper
               ref={popupRef}
               elevation={8}
+              // The popup is a portal inside the field's own cell, so without this its
+              // clicks reach the cell's handlers (row selection, the record link).
+              // Key events still bubble: the field's handler drives arrows and Enter.
+              onClick={(event) => event.stopPropagation()}
+              onDoubleClick={(event) => event.stopPropagation()}
+              onMouseDown={(event) => event.stopPropagation()}
               style={{ top: pos.top, left: pos.left, width: pos.width }}
               sx={{
                 position: 'fixed',
