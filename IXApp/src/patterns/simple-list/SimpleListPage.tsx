@@ -13,6 +13,9 @@ import {
 import { ActionPane } from '@shared/components/action-pane/ActionPane';
 import { ActionPaneGroup } from '@shared/components/action-pane/ActionPaneGroup';
 import { ActionPaneButton } from '@shared/components/action-pane/ActionPaneButton';
+import { ActionPaneRibbonTrigger } from '@shared/components/action-pane/ActionPaneRibbonTrigger';
+import type { ActionPaneRibbonGroup } from '@shared/components/action-pane/ActionPaneRibbon';
+import { useAuth } from '@core/auth/useAuth';
 import { OptionsMenu } from '@shared/components/action-pane/OptionsMenu';
 import { EnterpriseCrudActions } from '@shared/components/action-pane/EnterpriseCrudActions';
 import { EnterpriseCommandUtilities } from '@shared/components/action-pane/EnterpriseCommandUtilities';
@@ -51,6 +54,9 @@ export interface EnterpriseListCommand {
   permission?: string;
   disabled?: boolean;
   onClick?: () => void;
+  requiresSelection?: boolean;
+  groups?: readonly ActionPaneRibbonGroup[];
+  ribbonPersistenceKey?: string;
 }
 
 export interface EnterpriseListCrudConfig<T> {
@@ -216,6 +222,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
     contentSx,
   } = props;
   const { t, currentLanguage } = useAppTranslation();
+  const { hasPermission } = useAuth();
   const enterpriseConfig = useMemo<ResolvedEnterpriseListConfig<T> | undefined>(() => {
     // Columns carry translation keys; the filter rail renders labels verbatim, so
     // resolve them here. A plain label translates to itself.
@@ -516,15 +523,32 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
         )}
         {(config.commands || config.getCommands) && (
           <ActionPaneGroup>
-            {(config.getCommands?.(selectedRow) ?? config.commands ?? []).map((command) => (
-              <ActionPaneButton
-                key={command.id}
-                label={command.label}
-                permission={command.permission}
-                disabled={isEditing || command.disabled}
-                onClick={command.onClick}
-              />
-            ))}
+            {(config.getCommands?.(selectedRow) ?? config.commands ?? [])
+              .filter((command) => !command.permission || hasPermission(command.permission))
+              .map((command) =>
+                command.groups?.length ? (
+                  <ActionPaneRibbonTrigger
+                    key={command.id}
+                    id={command.id}
+                    label={command.label}
+                    groups={command.groups}
+                    persistenceKey={command.ribbonPersistenceKey}
+                    disabled={
+                      isEditing || command.disabled || (command.requiresSelection && !selectedRow)
+                    }
+                  />
+                ) : (
+                  <ActionPaneButton
+                    key={command.id}
+                    label={command.label}
+                    permission={command.permission}
+                    disabled={
+                      isEditing || command.disabled || (command.requiresSelection && !selectedRow)
+                    }
+                    onClick={command.onClick}
+                  />
+                )
+              )}
           </ActionPaneGroup>
         )}
         {config.showSearchCommand !== false && (

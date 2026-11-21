@@ -3487,6 +3487,8 @@
     "openTransactions": "الحركات المفتوحة"
   },
   "customerInquiry": {
+    "journals": "دفاتر اليومية",
+    "invoiceJournal": "دفتر يومية الفواتير",
     "openTransactions": "حركات العميل المفتوحة",
     "date": "التاريخ",
     "voucher": "الإيصال",

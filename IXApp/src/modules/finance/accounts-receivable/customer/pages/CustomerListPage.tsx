@@ -1,6 +1,9 @@
+import { buildCustomerCommands } from '../components/customerCommands';
+import { useAuth } from '@core/auth/useAuth';
+import { SalesOrderQuickCreate } from '../../sales-order/components/SalesOrderQuickCreate';
+import { salesOrderQueryKeys } from '../../queries/accountsReceivableQueryKeys';
 import { localizedName } from '@shared/utilities/localizedName';
 import { useCompanyStore } from '@core/company/useCompanyStore';
-import { accountContacts } from '@modules/finance/foundation/contacts/routes/contactRoutes';
 import React, { useEffect, useMemo, useState } from 'react';
 import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
 import { ListInfoValue } from '@patterns/simple-list/ListInfoValue';
@@ -13,7 +16,6 @@ import { customerQuickCreateApi, type CustomerRecord } from '../api/customerQuic
 import { useNavigate } from 'react-router-dom';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../../routes/accountsReceivableRoutePaths';
 import { PERMISSIONS } from '@core/permissions/permissions';
-import { PARTY_BALANCE_ROUTE_PATHS } from '@modules/finance/party-balances/routes/partyBalanceRoutePaths';
 import { useNotifications } from '@shared/hooks/useNotifications';
 import { FOUNDATION_RECORD_PREVIEWS } from '../../../foundation/previews/foundationRecordPreviews';
 import { ACCOUNTS_RECEIVABLE_RECORD_PREVIEWS } from '../../previews/accountsReceivableRecordPreviews';
@@ -22,6 +24,9 @@ export function CustomerListPage(): React.ReactElement {
   const company = useCompanyStore((state) => state.currentCompany);
   const { t, currentLanguage, isRtl } = useAppTranslation();
   const navigate = useNavigate();
+  const { hasPermission } = useAuth();
+  const [newOrderCustomer, setNewOrderCustomer] = useState<CustomerRecord | null>(null);
+  useEffect(() => setNewOrderCustomer(null), [company]);
   const queryClient = useQueryClient();
   const { notifyError, notifySuccess } = useNotifications();
   const customerQuery = useQuery({
@@ -139,66 +144,16 @@ export function CustomerListPage(): React.ReactElement {
         }
       },
     },
-    getCommands: (customer) => [
-      {
-        id: 'customer',
-        label: t('customerCommands.customer'),
-        disabled: !customer,
-        onClick: () => customer && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customer(customer.id)),
-      },
-      {
-        id: 'view-contacts',
-        label: t('contactPerson.view', 'View contacts'),
-        permission: PERMISSIONS.CONTACT_VIEW,
-        disabled: !customer,
-        onClick: () => customer && navigate(accountContacts('customer', customer.accountNumber)),
-      },
-      {
-        id: 'transactions',
-        label: t('customerRibbon.groups.transactions', 'Transactions'),
-        permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW,
-        disabled: !customer,
-        onClick: () =>
-          customer && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.custTrans(customer.accountNumber)),
-      },
-      {
-        id: 'open-transactions',
-        label: t('partyBalance.openTransactions'),
-        permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW,
-        disabled: !customer,
-        onClick: () =>
-          customer &&
-          navigate(
-            ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customerOpenTransactions(customer.accountNumber)
-          ),
-      },
-      {
-        id: 'balance',
-        label: t('partyBalance.balance'),
-        permission: PERMISSIONS.CUSTOMER_TRANSACTION_VIEW,
-        disabled: !customer,
-        onClick: () =>
-          customer && navigate(PARTY_BALANCE_ROUTE_PATHS.customerBalance(customer.accountNumber)),
-      },
-      {
-        id: 'order-lines',
-        label: t('custSalesLines.orderLines'),
-        permission: PERMISSIONS.SALES_ORDER_VIEW,
-        disabled: !customer,
-        onClick: () =>
-          customer &&
-          navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.custSalesLines(customer.accountNumber)),
-      },
-      {
-        id: 'sales-orders',
-        label: t('pages.salesOrders.title'),
-        permission: PERMISSIONS.SALES_ORDER_VIEW,
-        disabled: !customer,
-        onClick: () =>
-          customer &&
-          navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customerSalesOrders(customer.accountNumber)),
-      },
-    ],
+    getCommands: (customer) =>
+      buildCustomerCommands(customer, {
+        t: (key, fallback) => t(key, fallback ?? key),
+        hasPermission,
+        navigate,
+        onContacts: (record) => {
+          if (record) navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.customer(record.id));
+        },
+        onNewSalesOrder: setNewOrderCustomer,
+      }),
     advancedFilter: {
       fieldLabel: t('filters.customerAccount'),
       operatorLabel: t('filters.contains'),
@@ -250,20 +205,34 @@ export function CustomerListPage(): React.ReactElement {
       onRetry={() => customerQuery.refetch()}
       dataGridProps={{ storageKey: 'accounts-receivable.customers.reference-view' }}
       dialogs={
-        quickCreateOpen && (
-          <CustomerQuickCreate
-            open={quickCreateOpen}
-            nextAccount="—"
-            onClose={() => setQuickCreateOpen(false)}
-            onSave={async (customer, openAfterSave) => {
-              await queryClient.invalidateQueries({
-                queryKey: ['accounts-receivable', 'customers'],
-              });
-              setQuickCreateOpen(false);
-              if (openAfterSave) setCustomerToOpen(customer.id);
+        <>
+          <SalesOrderQuickCreate
+            key={company}
+            open={Boolean(newOrderCustomer)}
+            initialCustomer={newOrderCustomer ?? undefined}
+            onClose={() => setNewOrderCustomer(null)}
+            onSave={async (order) => {
+              setNewOrderCustomer(null);
+              await queryClient.invalidateQueries({ queryKey: salesOrderQueryKeys.list(company) });
+              if (hasPermission(PERMISSIONS.SALES_ORDER_VIEW))
+                navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrder(order.id));
             }}
           />
-        )
+          {quickCreateOpen && (
+            <CustomerQuickCreate
+              open={quickCreateOpen}
+              nextAccount="—"
+              onClose={() => setQuickCreateOpen(false)}
+              onSave={async (customer, openAfterSave) => {
+                await queryClient.invalidateQueries({
+                  queryKey: ['accounts-receivable', 'customers'],
+                });
+                setQuickCreateOpen(false);
+                if (openAfterSave) setCustomerToOpen(customer.id);
+              }}
+            />
+          )}
+        </>
       }
     />
   );

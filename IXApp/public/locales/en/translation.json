@@ -3487,6 +3487,8 @@
     "openTransactions": "Open transactions"
   },
   "customerInquiry": {
+    "journals": "Journals",
+    "invoiceJournal": "Invoice journal",
     "openTransactions": "Open customer transactions",
     "date": "Date",
     "voucher": "Voucher",
