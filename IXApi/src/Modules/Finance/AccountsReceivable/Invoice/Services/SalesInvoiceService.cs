@@ -138,15 +138,29 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
     {
         var area = _company.GetDataAreaId();
         if (string.IsNullOrWhiteSpace(area)) return new(400, null, "A company must be selected.");
-        var rows = await Db.Set<CustInvoiceJour>().AsNoTracking()
-            .Where(x => x.DataAreaId == area && x.Proforma == NoYes.No)
-            .OrderByDescending(x => x.InvoiceDate).ThenByDescending(x => x.RecId)
-            .Select(x => new
-            {
-                x.RecId, x.InvoiceId, x.InvoiceAccount, x.InvoicingName, x.SalesId,
-                x.InvoiceDate, x.LedgerVoucher, x.CurrencyCode, x.InvoiceAmount,
-                x.IntercompanyCompanyId, x.IntercompanyPosted, x.EInvoiceLineSpecific
-            }).ToListAsync(ct);
+        var rows = await (from invoice in Db.Set<CustInvoiceJour>().AsNoTracking()
+                          where invoice.DataAreaId == area && invoice.Proforma == NoYes.No
+                          join order in Db.Set<SalesTable>().AsNoTracking().Where(x => x.DataAreaId == area)
+                              on invoice.SalesId equals order.SalesId into orders
+                          from order in orders.DefaultIfEmpty()
+                          join worker in Db.Set<IAX.IXApi.Modules.Finance.Foundation.HcmWorkers.HcmWorker>().AsNoTracking()
+                              on invoice.WorkerSalesTaker equals worker.RecId into workers
+                          from worker in workers.DefaultIfEmpty()
+                          join party in Db.Set<DirPartyTable>().AsNoTracking()
+                              on worker.Person equals party.RecId into parties
+                          from party in parties.DefaultIfEmpty()
+                          orderby invoice.InvoiceDate descending, invoice.RecId descending
+                          select new
+                          {
+                              invoice.RecId, invoice.InvoiceId, invoice.InvoiceAccount, invoice.InvoicingName,
+                              invoice.SalesId,
+                              WorkerId = worker == null ? string.Empty : worker.PersonnelNumber,
+                              WorkerName = party == null ? string.Empty : party.Name,
+                              ProjId = order == null ? string.Empty : order.ProjId,
+                              invoice.InvoiceDate, invoice.LedgerVoucher, invoice.CurrencyCode, invoice.InvoiceAmount,
+                              SalesTaxAmount = invoice.SumTax,
+                              invoice.IntercompanyCompanyId, invoice.IntercompanyPosted, invoice.EInvoiceLineSpecific
+                          }).ToListAsync(ct);
         return new(200, rows, string.Empty);
     }
 

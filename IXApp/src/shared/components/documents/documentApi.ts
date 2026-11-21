@@ -88,6 +88,19 @@ export const documentApi = {
     );
     return requireData(response.data);
   },
+  /** Of the given records of one table, those that hold at least one document. */
+  async recordsWithDocuments(
+    refTableId: number,
+    refRecIds: number[],
+    signal?: AbortSignal
+  ): Promise<number[]> {
+    if (refRecIds.length === 0) return [];
+    const response = await apiClient.get<ApiResponse<number[]>>(
+      `${endpoint}/record/${refTableId}/with-documents`,
+      { signal, params: { refRecIds: refRecIds.join(',') } }
+    );
+    return requireData(response.data);
+  },
   async create(
     refTableId: number,
     refRecId: number,

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using IAX.IXApi.Modules.Finance.Common;
@@ -67,6 +67,22 @@ namespace IAX.IXApi.Modules.Finance.Entities
         public FieldControl ValidateCurrency { get; set; }
         public FieldControl ValidatePosting { get; set; }
         public FieldControl ValidateUser { get; set; }
+
+        // The user the account's postings are validated against.
+        [Required]
+        [StringLength(FieldLengths.UserId)]
+        public string UserId { get; set; } = string.Empty;
+
+        // ==========================================================
+        // Availability
+        // ==========================================================
+        // Basic Properties
+        // The account is available for posting between these dates; no date is no limit.
+        public DateTime? ActiveFrom { get; set; }
+        public DateTime? ActiveTo { get; set; }
+
+        // Enum Properties
+        public NoYes Suspended { get; set; }
 
         // ==========================================================
         // Year-End Closing & Period Transitions

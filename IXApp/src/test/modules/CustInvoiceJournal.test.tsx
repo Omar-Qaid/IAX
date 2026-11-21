@@ -11,7 +11,7 @@ const renderJournal = (route = '/accounts-receivable/CustInvoiceJournal') =>
     </MemoryRouter>
   );
 
-const state = vi.hoisted(() => ({ permitted: true, props: null as any, query: null as any }));
+const state = vi.hoisted(() => ({ permitted: true, props: null as any, queries: [] as any[] }));
 vi.mock('@patterns/simple-list/SimpleListPage', () => ({
   SimpleListPage: (props: unknown) => {
     state.props = props;
@@ -27,7 +27,7 @@ vi.mock('@core/localization/useAppTranslation', () => ({
 }));
 vi.mock('@tanstack/react-query', () => ({
   useQuery: (options: unknown) => {
-    state.query = options;
+    state.queries.push(options);
     return {
       data: [{ recId: 42, invoiceId: 'INV-42', invoiceAmount: -291.24 }],
       isFetching: false,
@@ -40,6 +40,7 @@ afterEach(() => {
   cleanup();
   state.permitted = true;
   state.props = null;
+  state.queries.length = 0;
 });
 it('keeps posted invoices read-only and preserves credit amounts and record identity', () => {
   renderJournal();
@@ -51,12 +52,12 @@ it('keeps posted invoices read-only and preserves credit amounts and record iden
   expect(state.props.enterpriseConfig.getAuditRecordId(row)).toBe(42);
   const column = state.props.columns.find((item: any) => item.field === 'invoiceAmount');
   expect(column.renderCell({ row })).toBe('-291.24');
-  expect(state.query.queryKey).toEqual(['cust-invoice-journal', 'USMF']);
+  expect(state.queries[0].queryKey).toEqual(['cust-invoice-journal', 'USMF']);
 });
 it('does not fetch or render journal data without view permission', () => {
   state.permitted = false;
   renderJournal();
-  expect(state.query.enabled).toBe(false);
+  expect(state.queries.every((query: any) => query.enabled === false)).toBe(true);
   expect(state.props).toBeNull();
 });
 

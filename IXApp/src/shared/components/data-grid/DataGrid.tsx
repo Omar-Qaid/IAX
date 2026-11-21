@@ -19,7 +19,9 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import ViewSidebarOutlinedIcon from '@mui/icons-material/ViewSidebarOutlined';
-import { Link as RouterLink } from 'react-router-dom';
+import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined';
+import { getRecordPreview } from '@shared/components/record-preview/recordPreviewRegistry';
+import { Link as RouterLink, useInRouterContext } from 'react-router-dom';
 import type { ColumnDef, DataGridProps, DataGridHandle, GridCellAddress } from './types';
 import { DataGridToolbar } from './DataGridToolbar';
 import { DataGridHeader } from './DataGridHeader';
@@ -91,7 +93,7 @@ function DataGridInternal<T>(
     onExecute,
     onPrint,
     onCloseForm,
-    hideFilterRow = false,
+    hideFilterRow = true,
     hideColumnMenu = false,
     hideToolbar = false,
     selectedIds: controlledSelectedIds,
@@ -103,6 +105,7 @@ function DataGridInternal<T>(
   ref: React.Ref<DataGridHandle>
 ) {
   const { t } = useAppTranslation();
+  const inRouter = useInRouterContext();
   const { notifyError } = useNotifications();
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const gridRootRef = useRef<HTMLDivElement | null>(null);
@@ -114,11 +117,12 @@ function DataGridInternal<T>(
   const initialColumns = useMemo(
     () =>
       rawInitialColumns.map<ColumnDef<T>>((column) => {
-        if (!column.getDetailHref) return column;
+        const masterRoute = inRouter && column.preview ? getRecordPreview(column.preview.entity)?.masterRoute : undefined;
+        if (!column.getDetailHref && !masterRoute) return column;
         return {
           ...column,
           renderCell: (params) => {
-            const href = column.getDetailHref?.(params.row);
+            const href = column.getDetailHref ? column.getDetailHref(params.row) : masterRoute;
             const label = column.renderCell
               ? column.renderCell(params)
               : String(
@@ -143,12 +147,13 @@ function DataGridInternal<T>(
                 }}
               >
                 {label}
+                <OpenInNewOutlinedIcon aria-hidden="true" sx={{ fontSize: 12, ml: '3px', verticalAlign: 'middle' }} />
               </Link>
             );
           },
         };
       }),
-    [rawInitialColumns]
+    [rawInitialColumns, inRouter]
   );
   const [focusedRowId, setFocusedRowId] = useState<string | null>(null);
   const focusRequestRef = useRef(0);

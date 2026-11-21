@@ -283,6 +283,9 @@ public sealed class FoundationServiceStageTests
                 }
                 return;
             }
+            // This legacy table enforces its company/code business key in the service.
+            if (clone is TaxLedgerAccountGroup taxPostingGroup)
+                taxPostingGroup.TaxAccountGroup = "T" + Guid.NewGuid().ToString("N")[..7];
             if (clone is ExchangeRateCurrencyPair pair)
                 pair.ExchangeRateType = (await sp.GetRequiredService<IExchangeRateTypeService>().AddAsync(new ExchangeRateType { Name = "FT-CLONE", Description = "CRUD fixture" })).RecId;
             if (clone is LogisticsPostalAddress postal)

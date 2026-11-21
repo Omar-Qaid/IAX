@@ -14,6 +14,8 @@ export interface SetupFieldOption {
 }
 
 export interface SetupFieldConfig {
+  masterRoute?: string;
+  previewEntity?: string;
   name: string;
   label: string;
   type: 'boolean' | 'select' | 'number' | 'text';

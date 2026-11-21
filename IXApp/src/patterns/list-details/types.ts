@@ -15,6 +15,12 @@ export interface DetailFieldConfig {
   name: string;
   label: string;
   type?: 'text' | 'number' | 'date' | 'boolean' | 'select' | 'display';
+  /**
+   * How a boolean is presented. D365 uses a checkbox for a flag that reads as a
+   * statement ("Suspended") and a switch for one that reads as a setting.
+   * Defaults to a switch.
+   */
+  booleanVariant?: 'switch' | 'checkbox';
   options?: DetailFieldOption[];
   masterRoute?: string;
   /** Registered record-preview entity, for masters without a master route. */
@@ -40,11 +46,33 @@ export interface DetailFieldConfig {
 export interface DetailFieldGroup {
   id: string;
   title?: string;
+  /** Section tab this group belongs to; a group without one shows on every tab. */
+  tab?: string;
   fields: DetailFieldConfig[];
   columns?: number;
   column?: string | number;
   width?: number | string;
 }
+/** A command on a section's own strip, as D365 places above a section's fields. */
+export interface DetailSectionCommand {
+  id: string;
+  label: string;
+  icon?: ReactNode;
+  onClick?: () => void;
+  /** Entries of a split command; a command with items opens a menu. */
+  items?: Array<{ id: string; label: string; onClick?: () => void; disabled?: boolean }>;
+  disabled?: boolean;
+  /** Hover text; a command with no handler explains itself when none is given. */
+  tooltip?: string;
+}
+
+/** One sub-tab of a section, as D365 splits a section's fields into tabbed panels. */
+export interface DetailSectionTab {
+  id: string;
+  label: string;
+  disabled?: boolean;
+}
+
 export interface DetailSectionConfig {
   /** Omit for sections shared by both document views. */
   tab?: string;
@@ -57,6 +85,16 @@ export interface DetailSectionConfig {
   groups?: DetailFieldGroup[];
   content?: ReactNode;
   link?: ReactNode;
+  /** Commands shown directly under the section heading. */
+  commands?: DetailSectionCommand[];
+  /**
+   * Sub-tabs under the section heading. Groups carrying a matching `tab` show on
+   * that tab; groups without one show on every tab. The section keeps its own
+   * selection unless `activeTabId` is given, which makes it controlled.
+   */
+  tabs?: DetailSectionTab[];
+  activeTabId?: string;
+  onTabChange?: (tabId: string) => void;
   defaultExpanded?: boolean;
   columns?: number;
   gridTemplateColumns?: string;
@@ -225,6 +263,20 @@ export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
   relatedInformation?: {
     title?: string;
     sections: (record: T | null) => RelatedInformationSection[];
+  };
+  /**
+   * Record-at-a-time navigation under the list, which D365 offers on a details
+   * form. With no handlers it steps the selection through the visible records,
+   * which is what nearly every page wants; a feature that pages its own data
+   * source supplies its own instead.
+   */
+  listPager?: {
+    onPrevious?: () => void;
+    onNext?: () => void;
+    previousDisabled?: boolean;
+    nextDisabled?: boolean;
+    previousLabel?: string;
+    nextLabel?: string;
   };
   advancedFilterOpenOnLoad?: boolean;
   informationOpenOnLoad?: boolean;

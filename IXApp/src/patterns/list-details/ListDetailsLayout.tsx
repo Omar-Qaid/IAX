@@ -1,8 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Box,
+  Button,
+  Checkbox,
   Drawer,
   IconButton,
+  Menu,
+  MenuItem,
   Switch,
   TextField,
   Typography,
@@ -10,10 +14,17 @@ import {
   useTheme,
   type Theme,
 } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { DocumentFieldLabel } from '@shared/components/fields/DocumentFieldLabel';
 import { FastTab } from '@shared/components/fast-tabs/FastTab';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import type { DetailSectionConfig, DetailValue, DetailValues } from './types';
+import type {
+  DetailSectionCommand,
+  DetailSectionConfig,
+  DetailSectionTab,
+  DetailValue,
+  DetailValues,
+} from './types';
 import { d365 } from '@shared/constants/enterpriseUiTokens';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { getLogicalDrawerAnchor } from '@shared/hooks/useLogicalDrawerAnchor';
@@ -44,6 +55,127 @@ export interface ListDetailsLayoutProps {
   listPaneVisible?: boolean;
   onListPaneClose?: () => void;
   listWidthStorageKey?: string;
+  /** Rendered under the list, for record-at-a-time navigation. */
+  listFooter?: React.ReactNode;
+}
+
+/**
+ * A section's sub-tabs, as D365 presents one section's fields in tabbed panels.
+ * The strip is uncontrolled unless the section supplies `activeTabId`; `children`
+ * receives the active tab so the section renders only the groups that belong to it.
+ */
+function SectionTabs({
+  tabs,
+  activeTabId,
+  onTabChange,
+  children,
+}: {
+  tabs: DetailSectionTab[];
+  activeTabId?: string;
+  onTabChange?: (tabId: string) => void;
+  children: (activeTabId: string | null) => React.ReactNode;
+}): React.ReactElement {
+  const [internalTabId, setInternalTabId] = useState(tabs[0]?.id ?? null);
+  const active = activeTabId ?? internalTabId;
+  // A section without sub-tabs renders its groups exactly as before.
+  if (tabs.length === 0) return <>{children(null)}</>;
+  return (
+    <>
+      <Box role="tablist" sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 1.25 }}>
+        {tabs.map((tab) => {
+          const selected = tab.id === active;
+          return (
+            <Button
+              key={tab.id}
+              role="tab"
+              aria-selected={selected}
+              disabled={tab.disabled}
+              onClick={() => {
+                setInternalTabId(tab.id);
+                onTabChange?.(tab.id);
+              }}
+              size="small"
+              sx={{
+                textTransform: 'none',
+                minWidth: 0,
+                px: 0.5,
+                fontSize: d365.labelFontSize,
+                fontWeight: selected ? 600 : 400,
+                color: selected ? 'text.primary' : 'text.secondary',
+                borderBottom: 2,
+                borderRadius: 0,
+                borderColor: selected ? 'primary.main' : 'transparent',
+              }}
+            >
+              {tab.label}
+            </Button>
+          );
+        })}
+      </Box>
+      {children(active)}
+    </>
+  );
+}
+
+/**
+ * A section's own command strip. A command with items opens a menu; one with no
+ * handler is disabled and says why, the same contract the action pane uses.
+ */
+function SectionCommandStrip({
+  commands,
+  unavailableLabel,
+}: {
+  commands: DetailSectionCommand[];
+  unavailableLabel: string;
+}): React.ReactElement {
+  const [menu, setMenu] = useState<{ anchor: HTMLElement; command: DetailSectionCommand } | null>(
+    null
+  );
+  return (
+    <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1.5, mb: 1 }}>
+      {commands.map((command) => {
+        const inert = command.disabled || (!command.onClick && !command.items?.length);
+        return (
+          <Box
+            key={command.id}
+            component="span"
+            sx={{ display: 'inline-flex' }}
+            // A disabled button fires no pointer events, so the hover text lives on the wrapper.
+            title={command.tooltip ?? (inert ? unavailableLabel : undefined)}
+          >
+            <Button
+              size="small"
+              disabled={inert}
+              startIcon={command.icon}
+              endIcon={command.items?.length ? <ExpandMoreIcon /> : undefined}
+              onClick={(event) =>
+                command.items?.length
+                  ? setMenu({ anchor: event.currentTarget, command })
+                  : command.onClick?.()
+              }
+              sx={{ textTransform: 'none', minWidth: 0, px: 0.5, fontSize: d365.labelFontSize }}
+            >
+              {command.label}
+            </Button>
+          </Box>
+        );
+      })}
+      <Menu anchorEl={menu?.anchor} open={Boolean(menu)} onClose={() => setMenu(null)}>
+        {(menu?.command.items ?? []).map((item) => (
+          <MenuItem
+            key={item.id}
+            disabled={item.disabled || !item.onClick}
+            onClick={() => {
+              item.onClick?.();
+              setMenu(null);
+            }}
+          >
+            {item.label}
+          </MenuItem>
+        ))}
+      </Menu>
+    </Box>
+  );
 }
 
 export function ListDetailsLayout({
@@ -66,6 +198,7 @@ export function ListDetailsLayout({
   listPaneVisible = true,
   onListPaneClose,
   listWidthStorageKey,
+  listFooter,
 }: ListDetailsLayoutProps): React.ReactElement {
   const { t } = useAppTranslation();
   const theme = useTheme();
@@ -173,6 +306,7 @@ export function ListDetailsLayout({
           }}
         >
           {listPane}
+          {listFooter}
         </Drawer>
       )}
       {listPaneVisible && (
@@ -180,7 +314,7 @@ export function ListDetailsLayout({
           sx={{
             width: currentListWidth,
             flexShrink: 0,
-            display: { xs: 'none', md: 'block' },
+            display: { xs: 'none', md: 'flex' },
             bgcolor: 'background.paper',
             border: 1,
             borderColor: 'divider',
@@ -189,9 +323,11 @@ export function ListDetailsLayout({
             boxShadow: '0 1px 4px rgba(0,0,0,.14)',
             willChange: resizing ? 'width' : 'auto',
             transition: resizing ? 'none' : 'width 160ms ease-out',
+            flexDirection: 'column',
           }}
         >
-          {listPane}
+          <Box sx={{ minHeight: 0, flex: 1, overflow: 'hidden' }}>{listPane}</Box>
+          {listFooter}
         </Box>
       )}
       {listPaneVisible && listResizable && (
@@ -341,351 +477,381 @@ export function ListDetailsLayout({
                   )
                 }
               >
+                {section.commands?.length ? (
+                  <SectionCommandStrip
+                    commands={section.commands}
+                    unavailableLabel={t('common.notAvailableYet')}
+                  />
+                ) : null}
                 {section.link && <Box sx={{ mb: 1 }}>{section.link}</Box>}
                 {section.content ?? (
-                  <Box
-                    sx={{
-                      display: 'grid',
-                      gridTemplateColumns: {
-                        xs: 'minmax(0, 1fr)',
-                        sm: 'repeat(2, minmax(0, 1fr))',
-                        lg: 'repeat(auto-fit, minmax(180px, 1fr))',
-                        xl:
-                          section.gridTemplateColumns ??
-                          `repeat(${section.columns ?? Math.min(5, section.groups?.length ?? 1)}, minmax(120px,1fr))`,
-                      },
-                      justifyContent: section.gridTemplateColumns ? 'start' : 'space-between',
-                      columnGap: section.columnGap ?? 3,
-                      rowGap: 1,
-                    }}
+                  <SectionTabs
+                    tabs={section.tabs ?? []}
+                    activeTabId={section.activeTabId}
+                    onTabChange={section.onTabChange}
                   >
-                    {(section.groups ?? []).map((group) => (
-                      <Box
-                        key={group.id}
-                        role={group.title ? 'group' : undefined}
-                        aria-label={group.title || undefined}
-                        sx={{
-                          minWidth: 0,
-                          maxWidth: '100%',
-                          width: { xs: '100%', xl: group.width },
-                          gridColumn: { xs: 'auto', xl: group.column },
-                        }}
-                      >
-                        {(group.title || section.groups?.some((candidate) => candidate.title)) && (
-                          <Typography
-                            aria-hidden={!group.title}
-                            sx={{
-                              mb: 1.25,
-                              fontSize: d365.labelFontSize,
-                              fontWeight: 700,
-                              lineHeight: 1.5,
-                              textTransform: 'uppercase',
-                              visibility: group.title ? 'visible' : 'hidden',
-                            }}
-                          >
-                            {group.title || '\u00a0'}
-                          </Typography>
-                        )}
+                    {(activeTabId) => (
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: {
+                          xs: 'minmax(0, 1fr)',
+                          sm: 'repeat(2, minmax(0, 1fr))',
+                          lg: 'repeat(auto-fit, minmax(180px, 1fr))',
+                          xl:
+                            section.gridTemplateColumns ??
+                            `repeat(${section.columns ?? Math.min(5, section.groups?.length ?? 1)}, minmax(120px,1fr))`,
+                        },
+                        justifyContent: section.gridTemplateColumns ? 'start' : 'space-between',
+                        columnGap: section.columnGap ?? 3,
+                        rowGap: 1,
+                      }}
+                    >
+                      {(section.groups ?? [])
+                        .filter((group) => !group.tab || group.tab === activeTabId)
+                        .map((group) => (
                         <Box
+                          key={group.id}
+                          role={group.title ? 'group' : undefined}
+                          aria-label={group.title || undefined}
                           sx={{
-                            display: 'grid',
-                            gridTemplateColumns: group.columns
-                              ? {
-                                  xs: 'minmax(0, 1fr)',
-                                  sm: `repeat(${Math.min(2, group.columns)}, minmax(0, 1fr))`,
-                                  lg: `repeat(${group.columns}, minmax(0, 1fr))`,
-                                }
-                              : '1fr',
-                            columnGap: 2,
-                            rowGap: '10px',
+                            minWidth: 0,
+                            maxWidth: '100%',
+                            width: { xs: '100%', xl: group.width },
+                            gridColumn: { xs: 'auto', xl: group.column },
                           }}
                         >
-                          {group.fields.map((field) => {
-                            const value = values[field.name];
-                            // A section can own its edit state (document pages with their own Save/Cancel).
-                            const fieldEditing = section.editing ?? editing;
-                            const editable =
-                              fieldEditing && !field.disabled && field.type !== 'display';
-                            const sectionTitle =
-                              field.sectionTitle ??
-                              (legalEntity && field.name === 'timeZone' ? 'TIME ZONE' : undefined);
-                            const fieldLabel =
-                              legalEntity && field.name === 'timeZone' ? 'Time zone' : field.label;
-                            const editField =
-                              !fieldEditing &&
-                              !field.disabled &&
-                              field.type !== 'display' &&
-                              (!canEditField || canEditField(field.name)) &&
-                              onFieldEdit
-                                ? () => onFieldEdit(field.name)
-                                : undefined;
-                            return (
-                              <Box
-                                key={field.name}
-                                sx={{
-                                  minWidth: 0,
-                                  maxWidth: '100%',
-                                  width: { xs: '100%', lg: field.width ?? '100%' },
-                                  gridColumn: { xs: 'auto', lg: field.column },
-                                  gridRow: { xs: 'auto', lg: field.row },
-                                }}
-                              >
-                                {sectionTitle && (
-                                  <Typography
-                                    sx={{
-                                      mt: '10px',
-                                      mb: '8px',
-                                      fontFamily: d365.fontFamily,
-                                      fontSize: 12,
-                                      lineHeight: 1.2,
-                                      fontWeight: 700,
-                                      textTransform: 'uppercase',
-                                      color: 'text.primary',
-                                    }}
-                                  >
-                                    {sectionTitle}
-                                  </Typography>
-                                )}
-                                {(!field.renderOwnLabel ||
-                                  (!fieldEditing && field.render && field.type === 'select')) && (
-                                  <DocumentFieldLabel
-                                    title={fieldLabel}
-                                    lookup={Boolean(
-                                      field.masterRoute ||
-                                      field.previewEntity ||
-                                      field.type === 'select'
-                                    )}
-                                  >
-                                    {/* Open details on master fields in view mode only (D365). */}
-                                    {(field.type === 'select' || field.masterRoute) &&
-                                    !fieldEditing ? (
-                                      <LookupNavigationLabel
-                                        label={fieldLabel}
-                                        masterRoute={field.masterRoute}
-                                      />
-                                    ) : (
-                                      fieldLabel
-                                    )}
-                                  </DocumentFieldLabel>
-                                )}
-                                {/* D365 record preview for master-data fields (resolved by masterRoute). */}
-                                <RecordPreview
-                                  masterRoute={field.masterRoute}
-                                  entity={field.previewEntity}
-                                  recordKey={
-                                    typeof value === 'string' || typeof value === 'number'
-                                      ? value
-                                      : null
+                          {(group.title || section.groups?.some((candidate) => candidate.title)) && (
+                            <Typography
+                              aria-hidden={!group.title}
+                              sx={{
+                                mb: 1.25,
+                                fontSize: d365.labelFontSize,
+                                fontWeight: 700,
+                                lineHeight: 1.5,
+                                textTransform: 'uppercase',
+                                visibility: group.title ? 'visible' : 'hidden',
+                              }}
+                            >
+                              {group.title || '\u00a0'}
+                            </Typography>
+                          )}
+                          <Box
+                            sx={{
+                              display: 'grid',
+                              gridTemplateColumns: group.columns
+                                ? {
+                                    xs: 'minmax(0, 1fr)',
+                                    sm: `repeat(${Math.min(2, group.columns)}, minmax(0, 1fr))`,
+                                    lg: `repeat(${group.columns}, minmax(0, 1fr))`,
                                   }
-                                  option={(() => {
-                                    const match = field.options?.find(
-                                      (option) => option.value === String(value ?? '')
-                                    );
-                                    return match
-                                      ? { code: String(match.value), name: String(match.label) }
-                                      : null;
-                                  })()}
+                                : '1fr',
+                              columnGap: 2,
+                              rowGap: '10px',
+                            }}
+                          >
+                            {group.fields.map((field) => {
+                              const value = values[field.name];
+                              // A section can own its edit state (document pages with their own Save/Cancel).
+                              const fieldEditing = section.editing ?? editing;
+                              const editable =
+                                fieldEditing && !field.disabled && field.type !== 'display';
+                              const sectionTitle =
+                                field.sectionTitle ??
+                                (legalEntity && field.name === 'timeZone' ? 'TIME ZONE' : undefined);
+                              const fieldLabel =
+                                legalEntity && field.name === 'timeZone' ? 'Time zone' : field.label;
+                              const editField =
+                                !fieldEditing &&
+                                !field.disabled &&
+                                field.type !== 'display' &&
+                                (!canEditField || canEditField(field.name)) &&
+                                onFieldEdit
+                                  ? () => onFieldEdit(field.name)
+                                  : undefined;
+                              return (
+                                <Box
+                                  key={field.name}
+                                  sx={{
+                                    minWidth: 0,
+                                    maxWidth: '100%',
+                                    width: { xs: '100%', lg: field.width ?? '100%' },
+                                    gridColumn: { xs: 'auto', lg: field.column },
+                                    gridRow: { xs: 'auto', lg: field.row },
+                                  }}
                                 >
-                                  {!fieldEditing && field.render && field.type === 'select' ? (
-                                    <EditableViewField
-                                      value={
-                                        field.formatValue?.(value) ??
-                                        field.options?.find(
-                                          (option) => option.value === String(value)
-                                        )?.label ??
-                                        String(value ?? '')
-                                      }
-                                      lookup
-                                      label={fieldLabel}
-                                      onEdit={editField}
-                                      disabled={field.disabled}
-                                    />
-                                  ) : field.render ? (
-                                    <FieldPresentationProvider
-                                      viewMode={!fieldEditing}
-                                      masterRoute={field.masterRoute}
+                                  {sectionTitle && (
+                                    <Typography
+                                      sx={{
+                                        mt: '10px',
+                                        mb: '8px',
+                                        fontFamily: d365.fontFamily,
+                                        fontSize: 12,
+                                        lineHeight: 1.2,
+                                        fontWeight: 700,
+                                        textTransform: 'uppercase',
+                                        color: 'text.primary',
+                                      }}
                                     >
-                                      <Box
-                                        sx={{
-                                          position: 'relative',
-                                          '&:hover .field-edit-action, &:focus-within .field-edit-action':
-                                            { opacity: 1 },
-                                        }}
-                                      >
-                                        {field.render({
-                                          value,
-                                          editing: fieldEditing,
-                                          disabled: !editable,
-                                          onChange: (nextValue) => onChange(field.name, nextValue),
-                                        })}
-                                        {editField && (
-                                          <IconButton
-                                            className="field-edit-action"
-                                            size="small"
-                                            aria-label={`Edit ${fieldLabel}`}
-                                            onClick={editField}
-                                            sx={{
-                                              position: 'absolute',
-                                              insetInlineEnd: 0,
-                                              bottom: 0,
-                                              opacity: 0,
-                                              color: 'primary.main',
-                                              p: 0.25,
-                                            }}
-                                          >
-                                            <EditOutlinedIcon sx={{ fontSize: 13 }} />
-                                          </IconButton>
-                                        )}
-                                      </Box>
-                                    </FieldPresentationProvider>
-                                  ) : field.type === 'boolean' ? (
-                                    !fieldEditing ? (
+                                      {sectionTitle}
+                                    </Typography>
+                                  )}
+                                  {(!field.renderOwnLabel ||
+                                    (!fieldEditing && field.render && field.type === 'select')) && (
+                                    <DocumentFieldLabel
+                                      title={fieldLabel}
+                                      lookup={Boolean(
+                                        field.masterRoute ||
+                                        field.previewEntity ||
+                                        field.type === 'select'
+                                      )}
+                                    >
+                                      {/* Open details on master fields in view mode only (D365). */}
+                                      {(field.type === 'select' || field.masterRoute) &&
+                                      !fieldEditing ? (
+                                        <LookupNavigationLabel
+                                          label={fieldLabel}
+                                          masterRoute={field.masterRoute}
+                                        />
+                                      ) : (
+                                        fieldLabel
+                                      )}
+                                    </DocumentFieldLabel>
+                                  )}
+                                  {/* D365 record preview for master-data fields (resolved by masterRoute). */}
+                                  <RecordPreview
+                                    masterRoute={field.masterRoute}
+                                    entity={field.previewEntity}
+                                    recordKey={
+                                      typeof value === 'string' || typeof value === 'number'
+                                        ? value
+                                        : null
+                                    }
+                                    option={(() => {
+                                      const match = field.options?.find(
+                                        (option) => option.value === String(value ?? '')
+                                      );
+                                      return match
+                                        ? { code: String(match.value), name: String(match.label) }
+                                        : null;
+                                    })()}
+                                  >
+                                    {!fieldEditing && field.render && field.type === 'select' ? (
                                       <EditableViewField
-                                        value={value ? yesLabel : noLabel}
+                                        value={
+                                          field.formatValue?.(value) ??
+                                          field.options?.find(
+                                            (option) => option.value === String(value)
+                                          )?.label ??
+                                          String(value ?? '')
+                                        }
+                                        lookup
                                         label={fieldLabel}
                                         onEdit={editField}
                                         disabled={field.disabled}
                                       />
-                                    ) : (
-                                      <Box
-                                        sx={{
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          height: d365.fieldControlHeight,
-                                        }}
+                                    ) : field.render ? (
+                                      <FieldPresentationProvider
+                                        viewMode={!fieldEditing}
+                                        masterRoute={field.masterRoute}
                                       >
-                                        <Switch
-                                          size="small"
-                                          checked={Boolean(value)}
-                                          disabled={!editable}
-                                          onChange={(_, checked) => onChange(field.name, checked)}
-                                          sx={legalEntity ? legalEntitySwitchSx : d365SwitchSx}
-                                        />
-                                        <Typography
+                                        <Box
                                           sx={{
-                                            marginInlineStart: legalEntity ? '6px' : 0,
-                                            fontFamily: d365.fontFamily,
-                                            fontSize: d365.fontSize,
+                                            position: 'relative',
+                                            '&:hover .field-edit-action, &:focus-within .field-edit-action':
+                                              { opacity: 1 },
                                           }}
                                         >
-                                          {value ? yesLabel : noLabel}
-                                        </Typography>
+                                          {field.render({
+                                            value,
+                                            editing: fieldEditing,
+                                            disabled: !editable,
+                                            onChange: (nextValue) => onChange(field.name, nextValue),
+                                          })}
+                                          {editField && (
+                                            <IconButton
+                                              className="field-edit-action"
+                                              size="small"
+                                              aria-label={`Edit ${fieldLabel}`}
+                                              onClick={editField}
+                                              sx={{
+                                                position: 'absolute',
+                                                insetInlineEnd: 0,
+                                                bottom: 0,
+                                                opacity: 0,
+                                                color: 'primary.main',
+                                                p: 0.25,
+                                              }}
+                                            >
+                                              <EditOutlinedIcon sx={{ fontSize: 13 }} />
+                                            </IconButton>
+                                          )}
+                                        </Box>
+                                      </FieldPresentationProvider>
+                                    ) : field.type === 'boolean' ? (
+                                      !fieldEditing ? (
+                                        <EditableViewField
+                                          value={value ? yesLabel : noLabel}
+                                          label={fieldLabel}
+                                          onEdit={editField}
+                                          disabled={field.disabled}
+                                        />
+                                      ) : (
+                                        <Box
+                                          sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            height: d365.fieldControlHeight,
+                                          }}
+                                        >
+                                          {field.booleanVariant === 'checkbox' ? (
+                                            <Checkbox
+                                              size="small"
+                                              checked={Boolean(value)}
+                                              disabled={!editable}
+                                              onChange={(_, checked) =>
+                                                onChange(field.name, checked)
+                                              }
+                                              sx={{ p: 0, marginInlineEnd: '6px' }}
+                                            />
+                                          ) : (
+                                            <Switch
+                                              size="small"
+                                              checked={Boolean(value)}
+                                              disabled={!editable}
+                                              onChange={(_, checked) =>
+                                                onChange(field.name, checked)
+                                              }
+                                              sx={legalEntity ? legalEntitySwitchSx : d365SwitchSx}
+                                            />
+                                          )}
+                                          <Typography
+                                            sx={{
+                                              marginInlineStart: legalEntity ? '6px' : 0,
+                                              fontFamily: d365.fontFamily,
+                                              fontSize: d365.fontSize,
+                                            }}
+                                          >
+                                            {value ? yesLabel : noLabel}
+                                          </Typography>
+                                        </Box>
+                                      )
+                                    ) : editable && field.type === 'select' ? (
+                                      <Box sx={legalEntity ? legalEntityFieldSx : editFieldSx}>
+                                        <LookupField
+                                          name={field.name}
+                                          label={fieldLabel}
+                                          externalLabel
+                                          value={String(value ?? '')}
+                                          variant={legalEntity ? 'standard' : 'outlined'}
+                                          options={(field.options ?? []).map((option) => ({
+                                            id: option.value,
+                                            code: option.value,
+                                            name: option.label,
+                                          }))}
+                                          queryKey={[
+                                            'list-details-lookup',
+                                            field.name,
+                                            field.options,
+                                          ]}
+                                          fetchPage={async ({ pageNumber, pageSize, search }) => {
+                                            const matches = (field.options ?? []).filter((option) =>
+                                              `${option.value} ${option.label}`
+                                                .toLocaleLowerCase()
+                                                .includes(search.trim().toLocaleLowerCase())
+                                            );
+                                            return {
+                                              data: matches
+                                                .slice(
+                                                  (pageNumber - 1) * pageSize,
+                                                  pageNumber * pageSize
+                                                )
+                                                .map((option) => ({
+                                                  id: option.value,
+                                                  code: option.value,
+                                                  name: option.label,
+                                                })),
+                                              pageNumber,
+                                              totalPages: Math.max(
+                                                1,
+                                                Math.ceil(matches.length / pageSize)
+                                              ),
+                                              totalRecords: matches.length,
+                                            };
+                                          }}
+                                          sideMode="server"
+                                          searchable
+                                          lazyLoading
+                                          pageSize={50}
+                                          onChange={(selected) =>
+                                            onChange(field.name, String(selected ?? ''))
+                                          }
+                                        />
                                       </Box>
-                                    )
-                                  ) : editable && field.type === 'select' ? (
-                                    <Box sx={legalEntity ? legalEntityFieldSx : editFieldSx}>
-                                      <LookupField
-                                        name={field.name}
-                                        label={fieldLabel}
-                                        externalLabel
-                                        value={String(value ?? '')}
+                                    ) : editable ? (
+                                      <TextField
                                         variant={legalEntity ? 'standard' : 'outlined'}
-                                        options={(field.options ?? []).map((option) => ({
-                                          id: option.value,
-                                          code: option.value,
-                                          name: option.label,
-                                        }))}
-                                        queryKey={[
-                                          'list-details-lookup',
-                                          field.name,
-                                          field.options,
-                                        ]}
-                                        fetchPage={async ({ pageNumber, pageSize, search }) => {
-                                          const matches = (field.options ?? []).filter((option) =>
-                                            `${option.value} ${option.label}`
-                                              .toLocaleLowerCase()
-                                              .includes(search.trim().toLocaleLowerCase())
-                                          );
-                                          return {
-                                            data: matches
-                                              .slice(
-                                                (pageNumber - 1) * pageSize,
-                                                pageNumber * pageSize
-                                              )
-                                              .map((option) => ({
-                                                id: option.value,
-                                                code: option.value,
-                                                name: option.label,
-                                              })),
-                                            pageNumber,
-                                            totalPages: Math.max(
-                                              1,
-                                              Math.ceil(matches.length / pageSize)
-                                            ),
-                                            totalRecords: matches.length,
-                                          };
-                                        }}
-                                        sideMode="server"
-                                        searchable
-                                        lazyLoading
-                                        pageSize={50}
-                                        onChange={(selected) =>
-                                          onChange(field.name, String(selected ?? ''))
+                                        type={
+                                          field.type === 'number'
+                                            ? 'number'
+                                            : field.type === 'date'
+                                              ? 'date'
+                                              : 'text'
+                                        }
+                                        multiline={field.multiline}
+                                        rows={field.multiline ? (field.rows ?? 4) : undefined}
+                                        slotProps={{ htmlInput: { 'aria-label': fieldLabel } }}
+                                        value={value ?? ''}
+                                        onChange={(event) =>
+                                          onChange(
+                                            field.name,
+                                            field.type === 'number'
+                                              ? Number(event.target.value)
+                                              : event.target.value
+                                          )
+                                        }
+                                        sx={
+                                          legalEntity
+                                            ? field.multiline
+                                              ? legalEntityMultilineSx
+                                              : legalEntityFieldSx
+                                            : field.multiline
+                                              ? multilineFieldSx
+                                              : editFieldSx
                                         }
                                       />
-                                    </Box>
-                                  ) : editable ? (
-                                    <TextField
-                                      variant={legalEntity ? 'standard' : 'outlined'}
-                                      type={
-                                        field.type === 'number'
-                                          ? 'number'
-                                          : field.type === 'date'
-                                            ? 'date'
-                                            : 'text'
-                                      }
-                                      multiline={field.multiline}
-                                      rows={field.multiline ? (field.rows ?? 4) : undefined}
-                                      slotProps={{ htmlInput: { 'aria-label': fieldLabel } }}
-                                      value={value ?? ''}
-                                      onChange={(event) =>
-                                        onChange(
-                                          field.name,
-                                          field.type === 'number'
-                                            ? Number(event.target.value)
-                                            : event.target.value
-                                        )
-                                      }
-                                      sx={
-                                        legalEntity
-                                          ? field.multiline
-                                            ? legalEntityMultilineSx
-                                            : legalEntityFieldSx
-                                          : field.multiline
-                                            ? multilineFieldSx
-                                            : editFieldSx
-                                      }
-                                    />
-                                  ) : (
-                                    <EditableViewField
-                                      value={
-                                        field.type === 'select'
-                                          ? (field.options?.find(
-                                              (option) => option.value === String(value)
-                                            )?.label ?? value)
-                                          : value
-                                      }
-                                      numeric={field.type === 'number'}
-                                      disabled={field.disabled}
-                                      lookup={
-                                        field.type === 'select' ||
-                                        Boolean(field.masterRoute?.trim()) ||
-                                        Boolean(field.previewEntity) ||
-                                        Boolean(field.linkStyle) ||
-                                        (legalEntity && field.name === 'languageId')
-                                      }
-                                      label={fieldLabel}
-                                      onEdit={editField}
-                                    />
-                                  )}
-                                </RecordPreview>
-                              </Box>
-                            );
-                          })}
+                                    ) : (
+                                      <EditableViewField
+                                        value={
+                                          field.type === 'select'
+                                            ? (field.options?.find(
+                                                (option) => option.value === String(value)
+                                              )?.label ?? value)
+                                            : value
+                                        }
+                                        numeric={field.type === 'number'}
+                                        disabled={field.disabled}
+                                        lookup={
+                                          field.type === 'select' ||
+                                          Boolean(field.masterRoute?.trim()) ||
+                                          Boolean(field.previewEntity) ||
+                                          Boolean(field.linkStyle) ||
+                                          (legalEntity && field.name === 'languageId')
+                                        }
+                                        label={fieldLabel}
+                                        onEdit={editField}
+                                      />
+                                    )}
+                                  </RecordPreview>
+                                </Box>
+                              );
+                            })}
+                          </Box>
                         </Box>
-                      </Box>
-                    ))}
-                  </Box>
+                      ))}
+                    </Box>
+                    )}
+                  </SectionTabs>
                 )}
               </FastTab>
             );

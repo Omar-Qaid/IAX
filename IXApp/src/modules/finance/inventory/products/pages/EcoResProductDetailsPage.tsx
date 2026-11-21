@@ -1,3 +1,4 @@
+import { TAX_ROUTE_PATHS as MASTER_TAX_ROUTES } from '@modules/finance/tax/routes/taxRoutePaths';
 ﻿import React, { useMemo, useState } from 'react';
 import { Alert, Snackbar } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
@@ -362,7 +363,7 @@ export function EcoResProductDetailsPage(): React.ReactElement {
                   label: t('releasedProduct.fields.priceQuantity', 'Price quantity'),
                   type: 'number',
                 },
-                {
+                { masterRoute: MASTER_TAX_ROUTES.TAX_ITEM_GROUPS, 
                   name: 'purchaseTaxItemGroupId',
                   label: t(
                     'releasedProduct.fields.purchaseTaxItemGroup',
@@ -415,7 +416,7 @@ export function EcoResProductDetailsPage(): React.ReactElement {
                   label: t('releasedProduct.fields.priceQuantity', 'Price quantity'),
                   type: 'number',
                 },
-                {
+                { masterRoute: MASTER_TAX_ROUTES.TAX_ITEM_GROUPS, 
                   name: 'salesTaxItemGroupId',
                   label: t(
                     'releasedProduct.fields.salesTaxItemGroup',

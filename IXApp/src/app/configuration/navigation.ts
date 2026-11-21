@@ -232,6 +232,11 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
             permission: PERMISSIONS.TAX_AUTHORITY_VIEW,
           },
           {
+            label: 'nav.taxLedgerPostingGroups',
+            path: ROUTE_PATHS.TAX.TAX_ACCOUNT_GROUPS,
+            permission: PERMISSIONS.TAX_ACCOUNT_GROUP_VIEW,
+          },
+          {
             label: 'nav.salesTaxSettlementPeriods',
             path: ROUTE_PATHS.TAX.TAX_PERIODS,
             permission: PERMISSIONS.TAX_PERIOD_VIEW,
@@ -285,6 +290,17 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
             label: 'nav.chargesCodes',
             path: ROUTE_PATHS.FOUNDATION.CHARGES_CODES,
             permission: PERMISSIONS.MARKUP_TABLE_VIEW,
+          },
+        ],
+      },
+      {
+        id: 'inquiries',
+        title: 'nav.inquiriesAndReports',
+        links: [
+          {
+            label: 'ledgerTransVoucher.title',
+            path: ROUTE_PATHS.GENERAL_LEDGER.VOUCHER_TRANSACTIONS,
+            permission: PERMISSIONS.LEDGER_JOURNAL_ENTRY_VIEW,
           },
         ],
       },

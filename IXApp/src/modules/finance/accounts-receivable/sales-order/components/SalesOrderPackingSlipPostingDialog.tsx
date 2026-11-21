@@ -17,6 +17,8 @@ import {
   Typography,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { UnavailableCommandButton } from '@shared/components/action-pane/UnavailableCommandButton';
 import { AppActionDrawer } from '@shared/components/dialogs/AppActionDrawer';
@@ -57,13 +59,13 @@ const dateToday = () => {
 };
 
 const overviewColumns: ColumnDef<OverviewRow>[] = [
-  { field: 'update', headerName: 'salesOrder.ui.update', width: 145 },
-  { field: 'customerPackingSlip', headerName: 'salesOrder.ui.customerPackingSlip', width: 160 },
-  { field: 'shipmentNumber', headerName: 'salesOrder.ui.shipmentNumber', width: 150 },
-  { field: 'salesId', headerName: 'salesOrder.ui.salesOrder', width: 155 },
-  { field: 'siteId', headerName: 'salesOrder.ui.site', width: 130 },
-  { field: 'customerName', headerName: 'salesOrder.ui.name', minWidth: 220, flex: 1 },
-  { field: 'currencyCode', headerName: 'salesOrder.ui.currency', width: 110 },
+  { field: 'update', headerName: 'salesOrder.ui.update', width: 134 },
+  { field: 'customerPackingSlip', headerName: 'salesOrder.ui.customerPackingSlip', width: 84 },
+  { field: 'shipmentNumber', headerName: 'salesOrder.ui.shipmentNumber', width: 150, hidden: true },
+  { field: 'salesId', headerName: 'salesOrder.ui.salesOrder', width: 134 },
+  { field: 'siteId', headerName: 'salesOrder.ui.site', width: 134, preview: { entity: 'inventSite' } },
+  { field: 'customerName', headerName: 'salesOrder.ui.name', width: 185 },
+  { field: 'currencyCode', headerName: 'salesOrder.ui.currency', minWidth: 110, flex: 1, preview: { entity: 'currency' } },
 ];
 
 export function SalesOrderPackingSlipPostingDialog({
@@ -124,29 +126,32 @@ export function SalesOrderPackingSlipPostingDialog({
 
   const lineColumns = useMemo<ColumnDef<PackingSlipPostingLine>[]>(
     () => [
-      { field: 'salesCategory', headerName: 'salesOrder.ui.salesCategory', width: 170 },
-      { field: 'name', headerName: 'salesOrder.ui.text', width: 220 },
+      { field: 'salesCategory', headerName: 'salesOrder.ui.salesCategory', width: 185 },
+      { field: 'name', headerName: 'salesOrder.ui.text', width: 185 },
       {
         field: 'salesId',
         headerName: 'salesOrder.ui.salesOrder',
-        width: 150,
+        width: 134,
         valueGetter: () => salesId,
       },
-      { field: 'inventLocationId', headerName: 'salesOrder.ui.warehouse', width: 155 },
-      { field: 'wmsLocationId', headerName: 'salesOrder.ui.location', width: 145 },
+      { field: 'inventSiteId', headerName: 'salesOrder.ui.site', width: 134, preview: { entity: 'inventSite' } },
+      { field: 'inventLocationId', headerName: 'salesOrder.ui.warehouse', width: 134, preview: { entity: 'inventLocation' } },
+      { field: 'batchNumber', headerName: 'salesOrder.ui.batchNumber', width: 134, renderCell: () => '' },
+      { field: 'wmsLocationId', headerName: 'salesOrder.ui.location', width: 145, hidden: true },
       {
         field: 'catchWeightQuantity',
         headerName: 'salesOrder.ui.cwUpdate',
         width: 120,
         type: 'number',
+        hidden: true,
         align: 'right',
       },
-      { field: 'productNumber', headerName: 'salesOrder.ui.productNumber', width: 190 },
-      { field: 'itemId', headerName: 'salesOrder.ui.itemNumber', width: 160 },
+      { field: 'productNumber', headerName: 'salesOrder.ui.productNumber', width: 190, hidden: true },
+      { field: 'itemId', headerName: 'salesOrder.ui.itemNumber', width: 178 },
       {
         field: 'quantity',
         headerName: 'salesOrder.ui.update',
-        width: 125,
+        width: 65,
         align: 'right',
         renderCell: ({ row }) => (
           <TextField
@@ -175,7 +180,7 @@ export function SalesOrderPackingSlipPostingDialog({
       {
         field: 'netAmount',
         headerName: 'salesOrder.ui.netAmount',
-        width: 135,
+        width: 85,
         type: 'number',
         align: 'right',
         renderCell: ({ row }) => {
@@ -187,6 +192,10 @@ export function SalesOrderPackingSlipPostingDialog({
           });
         },
       },
+      { field: 'close', headerName: t('salesOrder.ui.close', 'Close'), width: 84, renderCell: () => '' },
+      { field: 'scrap', headerName: t('salesOrder.ui.scrap', 'Scrap'), width: 84, renderCell: () => '' },
+      { field: 'modeOfDelivery', headerName: t('salesOrder.ui.modeOfDelivery', 'Mode of delivery'), width: 134, renderCell: () => '' },
+      { field: 'deliveryName', headerName: t('salesOrder.ui.deliveryName', 'Delivery name'), width: 185, renderCell: () => '' },
     ],
     [posting, postingEnabled, quantities, salesId, t]
   );
@@ -253,7 +262,9 @@ export function SalesOrderPackingSlipPostingDialog({
       open={open}
       onClose={onClose}
       title={t('salesOrder.ui.packingSlipPosting')}
-      width={1770}
+      width={1793}
+      appearance="posting"
+      viewLabel={t('common.standardView')}
       busy={posting}
       actions={
         <>
@@ -262,10 +273,6 @@ export function SalesOrderPackingSlipPostingDialog({
               {error}
             </Alert>
           )}
-          <Button onClick={onClose} disabled={posting}>
-            {t('actions.cancel')}
-          </Button>
-          <UnavailableCommandButton label={t('salesOrder.ui.batch')} />
           <Button
             variant="contained"
             onClick={() => void submit()}
@@ -283,14 +290,26 @@ export function SalesOrderPackingSlipPostingDialog({
                 ? t('salesOrder.ui.ok')
                 : t('salesOrder.ui.closePreview')}
           </Button>
+          <Button variant="outlined" color="inherit" onClick={onClose} disabled={posting}>
+            {t('actions.cancel')}
+          </Button>
+          <UnavailableCommandButton label={t('salesOrder.ui.batch')} />
         </>
       }
     >
-      <Stack spacing={1} sx={{ minHeight: '100%' }}>
-        <Typography variant="body2" color="text.secondary">
-          {t('common.standardView')}
-        </Typography>
-        <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
+      <Stack spacing={0} sx={{ minHeight: '100%',
+        '& .MuiAccordion-root': { bgcolor: 'background.paper', boxShadow: 'none', border: 0, borderRadius: '0 !important', m: '0 !important', '&:before': { display: 'none' } },
+        '& .MuiAccordionSummary-root': { minHeight: '42px !important', px: 1, borderBottom: '1px solid', borderColor: 'divider' },
+        '& .MuiAccordionSummary-content': { my: '0 !important' },
+        '& .MuiAccordionSummary-content .MuiTypography-root': { fontSize: 13, fontWeight: 500 },
+        '& .MuiAccordionSummary-expandIconWrapper': { border: '1px solid', borderColor: 'divider', borderRadius: '3px', width: 23, height: 25, alignItems: 'center', justifyContent: 'center' },
+        '& .MuiAccordionSummary-expandIconWrapper svg': { fontSize: 16 },
+        '& .MuiAccordionDetails-root': { p: '0 8px 20px' },
+        '& .MuiButton-root': { fontSize: 11, minWidth: 0, px: .5, py: .25, textTransform: 'none' },
+        '& [role="columnheader"]': { fontSize: 10 },
+        '& [role="gridcell"]': { fontSize: 11 },
+      }}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', minHeight: 46, pb: 1 }}>
           <UnavailableCommandButton label={t('salesOrder.ui.arrange')} />
           <UnavailableCommandButton label={t('salesOrder.ui.select')} />
           <UnavailableCommandButton label={t('salesOrder.ui.printerSetup')} />
@@ -298,11 +317,11 @@ export function SalesOrderPackingSlipPostingDialog({
         {previewQuery.error instanceof Error && (
           <Alert severity="error">{previewQuery.error.message}</Alert>
         )}
-        <Alert severity="info">{t('salesOrder.ui.packingSlipPostingHint')}</Alert>
 
         <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography sx={{ fontWeight: 600 }}>{t('salesOrder.ui.parameters')}</Typography>
+            <Typography sx={{ flex: 1 }}>{t('salesOrder.ui.parameters')}</Typography>
+            <Typography sx={{ mr: 2, fontSize: '10px !important', color: 'primary.main' }}>{quantityMode === 'picked' ? t('salesOrder.ui.picked') : quantityMode === 'deliverNow' ? t('salesOrder.ui.deliverNow') : t('common.all')}</Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ pt: 0 }}>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
@@ -354,11 +373,10 @@ export function SalesOrderPackingSlipPostingDialog({
           </AccordionSummary>
           <AccordionDetails sx={{ pt: 0 }}>
             <Stack direction="row" spacing={1} sx={{ mb: 0.5 }}>
-              <UnavailableCommandButton label={t('salesOrder.ui.add')} />
-              <UnavailableCommandButton label={t('salesOrder.ui.remove')} />
+              <UnavailableCommandButton label={t('salesOrder.ui.add')} startIcon={<AddIcon />} />
+              <UnavailableCommandButton label={t('salesOrder.ui.remove')} startIcon={<DeleteOutlineIcon />} />
               <UnavailableCommandButton label={t('salesOrder.ui.trackingInformation')} />
               <UnavailableCommandButton label={t('salesOrder.ui.salesTax')} />
-              <UnavailableCommandButton label={t('salesOrder.ui.shipments')} />
             </Stack>
             <DataGrid
               rows={overviewRows}
@@ -366,13 +384,14 @@ export function SalesOrderPackingSlipPostingDialog({
               getRowId={(row) => row.id}
               loading={previewQuery.isLoading}
               selectionMode="single"
-              checkboxSelection
+              checkboxSelection={false}
               selectedIds={overviewRows.length ? [overviewRows[0].id] : []}
-              height={164}
-              rowHeight={32}
-              headerHeight={32}
+              height={139}
+              rowHeight={28}
+              headerHeight={27}
               showCellBorders
               hideToolbar
+              hideFilterRow
               hideFooter
               hideColumnMenu
               hideSidebar
@@ -407,18 +426,27 @@ export function SalesOrderPackingSlipPostingDialog({
               getRowId={(line) => line.id}
               loading={previewQuery.isLoading}
               selectionMode="single"
-              checkboxSelection
+              checkboxSelection={false}
               selectedIds={preview?.lines[0] ? [preview.lines[0].id] : []}
-              height={260}
-              rowHeight={34}
-              headerHeight={32}
+              height={206}
+              rowHeight={28}
+              headerHeight={27}
               showCellBorders
               hideToolbar
+              hideFilterRow
               hideFooter
               hideColumnMenu
               hideSidebar
             />
           </AccordionDetails>
+        </Accordion>
+        <Accordion disableGutters>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}><Typography>{t('salesOrder.ui.lineDetails', 'Line details')}</Typography></AccordionSummary>
+          <AccordionDetails><Typography sx={{ fontSize: 12 }}>{preview?.lines[0]?.name ?? t('common.noData', 'No data')}</Typography></AccordionDetails>
+        </Accordion>
+        <Accordion disableGutters>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}><Typography>{t('salesOrder.ui.salesOrders', 'Sales orders')}</Typography></AccordionSummary>
+          <AccordionDetails><Typography sx={{ fontSize: 12 }}>{salesId} · {preview?.header.customerName}</Typography></AccordionDetails>
         </Accordion>
       </Stack>
     </AppActionDrawer>

@@ -1,0 +1,5082 @@
+{
+  "pageCount": 92,
+  "fieldCount": 664,
+  "pages": [
+    {
+      "file": "src/modules/administration/pages/ApplicationSettingsPage.tsx",
+      "fields": [
+        {
+          "name": "appName",
+          "line": 43,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'text'"
+        },
+        {
+          "name": "defaultLanguage",
+          "line": 49,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'text'"
+        },
+        {
+          "name": "timeZone",
+          "line": 55,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'text'"
+        },
+        {
+          "name": "currency",
+          "line": 61,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'text'"
+        },
+        {
+          "name": "dateFormat",
+          "line": 67,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'text'"
+        },
+        {
+          "name": "decimalPlaces",
+          "line": 73,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "paginationSize",
+          "line": 86,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "maxUploadSize",
+          "line": 94,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "enableAuditLog",
+          "line": 101,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "theme",
+          "line": 113,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'text'"
+        },
+        {
+          "name": "language",
+          "line": 114,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'text'"
+        },
+        {
+          "name": "pageSize",
+          "line": 115,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "dashboardLayout",
+          "line": 116,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'text'"
+        },
+        {
+          "name": "notificationEnabled",
+          "line": 117,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/administration/pages/BatchJobActivePeriodPage.tsx",
+      "fields": [
+        {
+          "name": "periodId",
+          "line": 22,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 29,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "fromTimeUtc",
+          "line": 30,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "toTimeUtc",
+          "line": 37,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "fromTimeLocal",
+          "line": 44,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "toTimeLocal",
+          "line": 51,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "timeZoneFollowed",
+          "line": 58,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "isActive",
+          "line": 65,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "periodId",
+          "line": 81,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 82,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/administration/pages/BatchJobHistoryPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/administration/pages/SysBackgroundJobGroupPage.tsx",
+      "fields": [
+        {
+          "name": "groupCode",
+          "line": 20,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "description",
+          "line": 27,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "schedulingPriority",
+          "line": 34,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "maxConcurrency",
+          "line": 41,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "isActive",
+          "line": 48,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "groupCode",
+          "line": 64,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "description",
+          "line": 65,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/administration/pages/SysBackgroundJobPage.tsx",
+      "fields": [
+        {
+          "name": "caption",
+          "line": 172,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'text'"
+        },
+        {
+          "name": "actualStartText",
+          "line": 173,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'display'"
+        },
+        {
+          "name": "executingBy",
+          "line": 179,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'display'"
+        },
+        {
+          "name": "hasAlert",
+          "line": 180,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "recurrenceCount",
+          "line": 181,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "statusText",
+          "line": 187,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'display'"
+        },
+        {
+          "name": "scheduledStartDateTime",
+          "line": 188,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "dataAreaId",
+          "line": 209,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'display'"
+        },
+        {
+          "name": "progress",
+          "line": 210,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "recurrenceText",
+          "line": 211,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'display'"
+        },
+        {
+          "name": "endDateTimeText",
+          "line": 218,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'display'"
+        },
+        {
+          "name": "createdBy",
+          "line": 219,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'display'"
+        },
+        {
+          "name": "monitoringCategory",
+          "line": 220,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "logLevel",
+          "line": 229,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "critical",
+          "line": 238,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "activePeriod",
+          "line": 239,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "batchGroup",
+          "line": 262,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "description",
+          "line": 298,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'text' as const"
+        },
+        {
+          "name": "jobKey",
+          "line": 299,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select' as const"
+        },
+        {
+          "name": "scheduleType",
+          "line": 305,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select' as const"
+        },
+        {
+          "name": "managed",
+          "line": 311,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean' as const"
+        },
+        {
+          "name": "emitBusinessEvent",
+          "line": 312,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean' as const"
+        },
+        {
+          "name": "recurrenceData",
+          "line": 341,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'text'"
+        },
+        {
+          "name": "startDateTimeTzId",
+          "line": 342,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "startDate",
+          "line": 343,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "startTime",
+          "line": 357,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "isEnabled",
+          "line": 358,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "schedulingPriority",
+          "line": 359,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "preventOverlap",
+          "line": 368,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "maxRetryCount",
+          "line": 369,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "retryDelaySeconds",
+          "line": 370,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "timeoutSeconds",
+          "line": 371,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "payloadJson",
+          "line": 384,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'text'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/administration/pages/SysNumberSequencePage.tsx",
+      "fields": [
+        {
+          "name": "numberSequenceScope",
+          "line": 297,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "inUse",
+          "line": 322,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "manual",
+          "line": 327,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "blocked",
+          "line": 328,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "continuous",
+          "line": 333,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "lowest",
+          "line": 338,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "highest",
+          "line": 344,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "nextRec",
+          "line": 350,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "allowChangeDown",
+          "line": 357,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "allowChangeUp",
+          "line": 362,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "cyclic",
+          "line": 367,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "noIncrement",
+          "line": 368,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "cleanAtAccess",
+          "line": 393,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "cleanInterval",
+          "line": 398,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "latestCleanDateTime",
+          "line": 409,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'display'"
+        },
+        {
+          "name": "latestCleanDateTimeTzId",
+          "line": 415,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "fetchAhead",
+          "line": 440,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "fetchAheadQty",
+          "line": 445,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "allocatedNext",
+          "line": 457,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "allocatedLargest",
+          "line": 463,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/dashboard/pages/DashboardPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/customer/pages/CustomerListPage.tsx",
+      "fields": [
+        {
+          "name": "accountNumber",
+          "line": 41,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 48,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "nameAr",
+          "line": 54,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "invoiceAccount",
+          "line": 61,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "customerGroupId",
+          "line": 67,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "currencyCode",
+          "line": 73,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "phone",
+          "line": 79,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "taxGroupId",
+          "line": 80,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "paymTermId",
+          "line": 86,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "status",
+          "line": 92,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "phone",
+          "line": 118,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "accountNumber",
+          "line": 119,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 120,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "nameAr",
+          "line": 121,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "accountNumber",
+          "line": 206,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 207,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "nameAr",
+          "line": 208,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "customerGroupId",
+          "line": 209,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "currencyCode",
+          "line": 210,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "phone",
+          "line": 211,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/customer/pages/CustomerOpenTransactionsPage.tsx",
+      "fields": [
+        {
+          "name": "transDate",
+          "line": 37,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "voucher",
+          "line": 43,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "invoice",
+          "line": 44,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "dueDate",
+          "line": 45,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "currencyCode",
+          "line": 51,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "invoice",
+          "line": 70,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "voucher",
+          "line": 71,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/customer/pages/CustTablePage.tsx",
+      "fields": [
+        {
+          "name": "accountNumber",
+          "line": 177,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'display'"
+        },
+        {
+          "name": "custCategory",
+          "line": 178,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "name",
+          "line": 190,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "nameAr",
+          "line": 191,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "customerGroupId",
+          "line": 197,
+          "masterRoute": "ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_GROUPS",
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "currencyCode",
+          "line": 204,
+          "masterRoute": "FOUNDATION_ROUTE_PATHS.CURRENCIES",
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "vatNum",
+          "line": 217,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "taxGroupId",
+          "line": 218,
+          "masterRoute": "TAX_ROUTE_PATHS.TAX_GROUPS",
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "paymTermId",
+          "line": 225,
+          "masterRoute": "ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_TERMS",
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "paymModeId",
+          "line": 232,
+          "masterRoute": "ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_METHODS",
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "countryRegionId",
+          "line": 245,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "dlvModeId",
+          "line": 251,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "memo",
+          "line": 263,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "inventSiteId",
+          "line": 282,
+          "masterRoute": "INVENTORY_ROUTE_PATHS.SITES",
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "inventLocationId",
+          "line": 295,
+          "masterRoute": "INVENTORY_ROUTE_PATHS.WAREHOUSES",
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "salesPoolId",
+          "line": 317,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "invoiceAccount",
+          "line": 323,
+          "masterRoute": "ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMERS",
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "paymTermId",
+          "line": 349,
+          "masterRoute": "ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_TERMS",
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "paymModeId",
+          "line": 356,
+          "masterRoute": "ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_METHODS",
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "blockFloorLimitUseInChannel",
+          "line": 368,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "prepaymentValue",
+          "line": 378,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "status",
+          "line": 414,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'display'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/customer-group/pages/CustomerGroupListPage.tsx",
+      "fields": [
+        {
+          "name": "custGroupId",
+          "line": 47,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 54,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "paymTermId",
+          "line": 55,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'singleSelect'"
+        },
+        {
+          "name": "taxGroupId",
+          "line": 63,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'singleSelect'"
+        },
+        {
+          "name": "priceIncludeSalesTax",
+          "line": 71,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "accountingCurrencyExchangeRateType",
+          "line": 78,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "reportingCurrencyExchangeRateType",
+          "line": 83,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "custGroupId",
+          "line": 97,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 98,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "paymTermId",
+          "line": 99,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "taxGroupId",
+          "line": 100,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/free-text-invoice/pages/CustFreeInvoiceDetailsPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/free-text-invoice/pages/CustFreeInvoiceListPage.tsx",
+      "fields": [
+        {
+          "name": "invoiceId",
+          "line": 96,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "customerAccount",
+          "line": 104,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "customerName",
+          "line": 110,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "invoiceAccount",
+          "line": 111,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "currencyCode",
+          "line": 117,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "invoiceDate",
+          "line": 123,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'date'"
+        },
+        {
+          "name": "description",
+          "line": 131,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "invoiceAmount",
+          "line": 132,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "posted",
+          "line": 140,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "invoiceId",
+          "line": 153,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "customerAccount",
+          "line": 154,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "customerName",
+          "line": 155,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "invoiceId",
+          "line": 189,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "customerAccount",
+          "line": 190,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "customerName",
+          "line": 191,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "invoiceAccount",
+          "line": 192,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "currencyCode",
+          "line": 193,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "description",
+          "line": 194,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/price-discount/components/PriceDiscSetupListPage.tsx",
+      "fields": [
+        {
+          "name": "journalNum",
+          "line": 83,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "journalName",
+          "line": 98,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 112,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "defaultRelation",
+          "line": 127,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'singleSelect'"
+        },
+        {
+          "name": "priceGroup",
+          "line": 149,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "posted",
+          "line": 163,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "postedDate",
+          "line": 170,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'date'"
+        },
+        {
+          "name": "groupId",
+          "line": 179,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 186,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "module",
+          "line": 193,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'singleSelect'"
+        },
+        {
+          "name": "type",
+          "line": 201,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'singleSelect'"
+        },
+        {
+          "name": "retailPricingPriorityNumber",
+          "line": 209,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "journalName",
+          "line": 218,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 225,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "defaultRelation",
+          "line": 232,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'singleSelect'"
+        },
+        {
+          "name": "priceDiscPriceAttributeEnable",
+          "line": 240,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "groupId",
+          "line": 297,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 298,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "journalName",
+          "line": 301,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 302,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/price-discount/pages/PriceDiscountGroupPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/price-discount/pages/TradeAgreementJournalNamePage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/price-discount/pages/TradeAgreementJournalPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/sales-order/pages/SalesOrderChargesPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/sales-order/pages/SalesOrderDetailsPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/sales-order/pages/SalesOrderListPage.tsx",
+      "fields": [
+        {
+          "name": "salesId",
+          "line": 33,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "customerAccount",
+          "line": 40,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "customerName",
+          "line": 46,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "invoiceAccount",
+          "line": 47,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "customerGroup",
+          "line": 53,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "currencyCode",
+          "line": 59,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "deliveryDate",
+          "line": 65,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'date'"
+        },
+        {
+          "name": "orderTotal",
+          "line": 66,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "salesStatus",
+          "line": 73,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "salesId",
+          "line": 94,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "customerAccount",
+          "line": 95,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "customerName",
+          "line": 96,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "salesId",
+          "line": 111,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "customerAccount",
+          "line": 112,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "customerName",
+          "line": 113,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "customerGroup",
+          "line": 114,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "currencyCode",
+          "line": 115,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "salesStatus",
+          "line": 116,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/setup/components/CustomerPaymentSetupPage.tsx",
+      "fields": [
+        {
+          "name": "months",
+          "line": 103,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number' as const"
+        },
+        {
+          "name": "days",
+          "line": 110,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/setup/pages/CustomerPostingProfilesPage.tsx",
+      "fields": [
+        {
+          "name": "close",
+          "line": 96,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'display'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/setup/pages/CustParametersPage.tsx",
+      "fields": [
+        {
+          "name": "roleException",
+          "line": 112,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'text' as const"
+        },
+        {
+          "name": "invoiceTaxExemptRequirement",
+          "line": 135,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "minimumReimbursement",
+          "line": 141,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "mandatoryTaxGroup",
+          "line": 146,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "defaultTransactionFilter",
+          "line": 151,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "assignResponsibleEmployee",
+          "line": 157,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "preventRegistrationCopy",
+          "line": 162,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "oneTimeCustomerAccount",
+          "line": 167,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "taxExemptRequirement",
+          "line": 173,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "suppressDepreciation",
+          "line": 179,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "orderType",
+          "line": 190,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "salesOrderPool",
+          "line": 196,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "salesOrigin",
+          "line": 202,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "autoBatchReservation",
+          "line": 208,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "invoiceTimeZone",
+          "line": 213,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "freeTextInvoiceTimeZone",
+          "line": 219,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "validityPeriod",
+          "line": 225,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "reservation",
+          "line": 230,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "enterprisePortalOrigin",
+          "line": 236,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "salesDocumentTimeZone",
+          "line": 242,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "packingSlipTimeZone",
+          "line": 248,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "deferDirectDelivery",
+          "line": 254,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/setup/pages/CustPaymModePage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/finance/accounts-receivable/setup/pages/CustPaymTermPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/finance/foundation/charges/components/DocumentChargesPage.tsx",
+      "fields": [
+        {
+          "name": "markupCode",
+          "line": 115,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'singleSelect'"
+        },
+        {
+          "name": "txt",
+          "line": 123,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "markupCategory",
+          "line": 129,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'singleSelect'"
+        },
+        {
+          "name": "keep",
+          "line": 141,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "value",
+          "line": 149,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "currencyCode",
+          "line": 158,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'singleSelect'"
+        },
+        {
+          "name": "mcrBrokerContractFee",
+          "line": 166,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "taxGroup",
+          "line": 174,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'singleSelect'"
+        },
+        {
+          "name": "taxItemGroup",
+          "line": 182,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'singleSelect'"
+        },
+        {
+          "name": "markupCode",
+          "line": 200,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "txt",
+          "line": 201,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "currencyCode",
+          "line": 202,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "taxGroup",
+          "line": 203,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "taxItemGroup",
+          "line": 204,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/foundation/charges/pages/MarkupTablePage.tsx",
+      "fields": [
+        {
+          "name": "customerLedgerDimension",
+          "line": 186,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "maxAmount",
+          "line": 194,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "vendorLedgerDimension",
+          "line": 204,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "taxRateType",
+          "line": 236,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "taxWithholdItemGroup",
+          "line": 237,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/foundation/contacts/pages/AccountContactsPage.tsx",
+      "fields": [
+        {
+          "name": "name",
+          "line": 65,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "contactPersonId",
+          "line": 111,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 118,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "contactFor",
+          "line": 119,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "telephone",
+          "line": 120,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "extension",
+          "line": 121,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "inactive",
+          "line": 122,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "vendorPortalAccessAllowed",
+          "line": 127,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/foundation/contacts/pages/ContactPersonPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/finance/foundation/currency/pages/CurrencyPage.tsx",
+      "fields": [
+        {
+          "name": "roundingPrecision",
+          "line": 58,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "roundOffSales",
+          "line": 69,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "roundOffTypeSales",
+          "line": 74,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "roundOffPurch",
+          "line": 86,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "roundOffTypePurch",
+          "line": 91,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "roundOffPrice",
+          "line": 103,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "roundOffTypePrice",
+          "line": 108,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "ltmRoundOffLineAmount",
+          "line": 120,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "ltmRoundOffTypeLineAmount",
+          "line": 125,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/foundation/exchange-rate/pages/ExchangeRatePage.tsx",
+      "fields": [
+        {
+          "name": "fromCurrency",
+          "line": 59,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "toCurrency",
+          "line": 65,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "conversionFactor",
+          "line": 66,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "startDate",
+          "line": 78,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "exchangeRate",
+          "line": 84,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "exchangeValue",
+          "line": 85,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/foundation/exchange-rate/pages/ExchangeRateTypePage.tsx",
+      "fields": [
+        {
+          "name": "type",
+          "line": 17,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 24,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "type",
+          "line": 33,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 34,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/inventory/dimension-groups/pages/EcoResStorageDimensionGroupPage.tsx",
+      "fields": [
+        {
+          "name": "name",
+          "line": 90,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "active",
+          "line": 96,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/inventory/dimension-groups/pages/EcoResTrackingDimensionGroupPage.tsx",
+      "fields": [
+        {
+          "name": "name",
+          "line": 86,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "active",
+          "line": 92,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/inventory/inquiries/pages/InventOnHandPage.tsx",
+      "fields": [
+        {
+          "name": "itemNumber",
+          "line": 42,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "productName",
+          "line": 48,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "inventoryUnit",
+          "line": 53,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "site",
+          "line": 58,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "warehouse",
+          "line": 59,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "inventoryStatusId",
+          "line": 64,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "inventoryStatusBlocked",
+          "line": 69,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "physicalInventory",
+          "line": 75,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "physicalReserved",
+          "line": 82,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "availablePhysical",
+          "line": 89,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "orderedReceipts",
+          "line": 96,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "orderedIssues",
+          "line": 103,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "availableOrdered",
+          "line": 110,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "postedValue",
+          "line": 117,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "physicalValue",
+          "line": 124,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "itemNumber",
+          "line": 142,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "productName",
+          "line": 143,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "site",
+          "line": 144,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "warehouse",
+          "line": 145,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/inventory/inquiries/pages/InventTransPage.tsx",
+      "fields": [
+        {
+          "name": "itemNumber",
+          "line": 68,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "physicalDate",
+          "line": 74,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'date'"
+        },
+        {
+          "name": "financialDate",
+          "line": 80,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'date'"
+        },
+        {
+          "name": "reference",
+          "line": 86,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "referenceNumber",
+          "line": 87,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "receiptStatus",
+          "line": 88,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "issueStatus",
+          "line": 89,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "quantity",
+          "line": 90,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "unitPrice",
+          "line": 97,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "unitCost",
+          "line": 104,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "costAmount",
+          "line": 111,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "site",
+          "line": 118,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "warehouse",
+          "line": 119,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "currencyCode",
+          "line": 120,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "itemNumber",
+          "line": 134,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "referenceNumber",
+          "line": 135,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "inventTransId",
+          "line": 136,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/inventory/item-groups/pages/InventItemGroupPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/finance/inventory/item-groups/pages/InventModelGroupPage.tsx",
+      "fields": [
+        {
+          "name": "stockedProduct",
+          "line": 214,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "inventModel",
+          "line": 220,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "inclPhysicalValueInCost",
+          "line": 233,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "standardCost",
+          "line": 242,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "includePhysicalValueForAverage",
+          "line": 248,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "postOnHandPhysical",
+          "line": 263,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "postOnHandFinancial",
+          "line": 271,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "postPhysicalRevenue",
+          "line": 286,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "postPhysicalPurchase",
+          "line": 294,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "negativePhysical",
+          "line": 316,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "negativeFinancial",
+          "line": 325,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "mandatoryRegister",
+          "line": 340,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "mandatoryReceive",
+          "line": 346,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "mandatoryPick",
+          "line": 352,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "mandatoryDeduct",
+          "line": 358,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "reserveByDate",
+          "line": 364,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "reserveReversed",
+          "line": 376,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/inventory/journals/pages/InventJournalNamePage.tsx",
+      "fields": [
+        {
+          "name": "journalType",
+          "line": 83,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "voucherNumberSequenceTable",
+          "line": 97,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "detailSummary",
+          "line": 120,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "deletePostedLines",
+          "line": 127,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "reservation",
+          "line": 136,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/inventory/journals/pages/InventJournalPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/finance/inventory/products/pages/EcoResDistinctProductDetailsPage.tsx",
+      "fields": [
+        {
+          "name": "nameAlias",
+          "line": 102,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "searchName",
+          "line": 103,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "description",
+          "line": 104,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "productType",
+          "line": 116,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'display'"
+        },
+        {
+          "name": "productSubtype",
+          "line": 121,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'display'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/inventory/products/pages/EcoResDistinctProductListPage.tsx",
+      "fields": [
+        {
+          "name": "productNumber",
+          "line": 22,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 29,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "nameAlias",
+          "line": 36,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "productType",
+          "line": 42,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "productSubtype",
+          "line": 47,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "productNumber",
+          "line": 59,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 60,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "nameAlias",
+          "line": 61,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/inventory/products/pages/EcoResProductDetailsPage.tsx",
+      "fields": [
+        {
+          "name": "productType",
+          "line": 278,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'display'"
+        },
+        {
+          "name": "productSubtype",
+          "line": 283,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'display'"
+        },
+        {
+          "name": "itemNumber",
+          "line": 288,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'display'"
+        },
+        {
+          "name": "name",
+          "line": 299,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'display'"
+        },
+        {
+          "name": "nameAliasLocalized",
+          "line": 304,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'display'"
+        },
+        {
+          "name": "modelGroupId",
+          "line": 315,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "purchaseUnit",
+          "line": 335,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "purchaseToInventoryFactor",
+          "line": 341,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "purchasePrice",
+          "line": 355,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "purchasePriceQuantity",
+          "line": 360,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "purchaseTaxItemGroupId",
+          "line": 365,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "salesUnit",
+          "line": 388,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "salesToInventoryFactor",
+          "line": 394,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "salesPrice",
+          "line": 408,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "salesPriceQuantity",
+          "line": 413,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "salesTaxItemGroupId",
+          "line": 418,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "productType",
+          "line": 441,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'display'"
+        },
+        {
+          "name": "productSubtype",
+          "line": 446,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'display'"
+        },
+        {
+          "name": "inventoryUnit",
+          "line": 451,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "costPrice",
+          "line": 471,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'display'"
+        },
+        {
+          "name": "itemGroupId",
+          "line": 483,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "storageDimensionGroupId",
+          "line": 495,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "trackingDimensionGroupId",
+          "line": 501,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "defaultOrderType",
+          "line": 521,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "purchaseDefaultSiteId",
+          "line": 537,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "purchaseDefaultWarehouseId",
+          "line": 543,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "purchaseMinimumQuantity",
+          "line": 549,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "purchaseMaximumQuantity",
+          "line": 554,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "purchaseMultipleQuantity",
+          "line": 559,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "purchaseStandardQuantity",
+          "line": 564,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "purchaseLeadTimeDays",
+          "line": 569,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "purchaseStopped",
+          "line": 574,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "salesDefaultSiteId",
+          "line": 585,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "salesDefaultWarehouseId",
+          "line": 591,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "salesMinimumQuantity",
+          "line": 597,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "salesMaximumQuantity",
+          "line": 602,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "salesMultipleQuantity",
+          "line": 607,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "salesStandardQuantity",
+          "line": 612,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "salesLeadTimeDays",
+          "line": 617,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "salesStopped",
+          "line": 622,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "inventoryDefaultSiteId",
+          "line": 633,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "inventoryDefaultWarehouseId",
+          "line": 639,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "inventoryMinimumQuantity",
+          "line": 645,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "inventoryMaximumQuantity",
+          "line": 650,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "inventoryMultipleQuantity",
+          "line": 655,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "inventoryStandardQuantity",
+          "line": 660,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "inventoryLeadTimeDays",
+          "line": 665,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "inventoryStopped",
+          "line": 670,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/inventory/products/pages/EcoResProductListPage.tsx",
+      "fields": [
+        {
+          "name": "itemNumber",
+          "line": 27,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 34,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "nameAliasLocalized",
+          "line": 41,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "productType",
+          "line": 48,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "productSubtype",
+          "line": 49,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "salesPrice",
+          "line": 50,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "purchasePrice",
+          "line": 63,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "costPrice",
+          "line": 76,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "itemNumber",
+          "line": 97,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 98,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "nameAliasLocalized",
+          "line": 99,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/inventory/products/pages/EcoResProductReleasePage.tsx",
+      "fields": [
+        {
+          "name": "name",
+          "line": 25,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "productNumber",
+          "line": 26,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "nameAlias",
+          "line": 27,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "productType",
+          "line": 28,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "productSubtype",
+          "line": 29,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "code",
+          "line": 32,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 33,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "nameAlias",
+          "line": 34,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/inventory/setup/pages/InventParametersPage.tsx",
+      "fields": [
+        {
+          "name": "defaultUnitId",
+          "line": 50,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "multiSiteDefaultInventSiteId",
+          "line": 59,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "multiSiteDefaultInventLocationId",
+          "line": 68,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "reserveOnOrdered",
+          "line": 78,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "mandatoryItemTaxGroup",
+          "line": 84,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "movementJournalNameId",
+          "line": 98,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "lossProfitJournalNameId",
+          "line": 104,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "transferJournalNameId",
+          "line": 110,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "countJournalNameId",
+          "line": 116,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/inventory/setup/pages/InventPostingPage.tsx",
+      "fields": [
+        {
+          "name": "itemCode",
+          "line": 218,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "itemRelation",
+          "line": 227,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "categoryRelation",
+          "line": 233,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "custVendCode",
+          "line": 246,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "custVendRelation",
+          "line": 255,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "taxGroupId",
+          "line": 267,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "mainAccount",
+          "line": 274,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/inventory/units-of-measure/pages/UnitOfMeasurePage.tsx",
+      "fields": [
+        {
+          "name": "unitOfMeasureClass",
+          "line": 68,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "systemOfUnits",
+          "line": 83,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "decimalPrecision",
+          "line": 92,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/inventory/warehouses/pages/InventLocationPage.tsx",
+      "fields": [
+        {
+          "name": "inventLocationType",
+          "line": 272,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "manual",
+          "line": 296,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "reqRefill",
+          "line": 301,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "inventLocationLevel",
+          "line": 307,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "wmsLocationIdDefaultReceipt",
+          "line": 321,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "wmsLocationIdDefaultIssue",
+          "line": 322,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "defaultStatusId",
+          "line": 323,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "defaultProductionInputLocation",
+          "line": 329,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "defaultProductionFinishGoodsLocation",
+          "line": 333,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "defaultKanbanFinishedGoodsLocation",
+          "line": 337,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "defaultReturnCreditOnlyLocation",
+          "line": 346,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "wmsAisleNameActive",
+          "line": 361,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "wmsRackNameActive",
+          "line": 362,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "wmsRackFormat",
+          "line": 363,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "wmsLevelNameActive",
+          "line": 364,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "wmsLevelFormat",
+          "line": 365,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "wmsPositionNameActive",
+          "line": 366,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "wmsPositionFormat",
+          "line": 367,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "uniqueCheckDigits",
+          "line": 368,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "fshStore",
+          "line": 416,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "consolidateShipAtRtw",
+          "line": 417,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "retailInventNegPhysical",
+          "line": 422,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "retailInventNegFinancial",
+          "line": 427,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "whsEnabled",
+          "line": 445,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "printBolBeforeShipConfirm",
+          "line": 450,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "autoUpdateShipment",
+          "line": 455,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "prodReserveOnlyWhse",
+          "line": 456,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "reserveAtLoadPost",
+          "line": 466,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "warehouseAutoReleaseReservation",
+          "line": 471,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "cycleCountAllowPalletMove",
+          "line": 482,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "uniqueCheckDigits",
+          "line": 487,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "decrementLoadLine",
+          "line": 488,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "defaultStatusId",
+          "line": 489,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "allowMarkingReservationRemoval",
+          "line": 496,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "removeInventBlockingOnStatusChange",
+          "line": 501,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "allowLaborStandards",
+          "line": 506,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "enableQualityManagement",
+          "line": 507,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "whsProdOrderBackflushMustUseReservedQty",
+          "line": 518,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "enableExternalWarehouse",
+          "line": 523,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "maxPickingRouteTime",
+          "line": 540,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "pickingLineTime",
+          "line": 545,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/inventory/warehouses/pages/InventSitePage.tsx",
+      "fields": [
+        {
+          "name": "timeZone",
+          "line": 122,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "isReceivingWarehouseOverrideAllowed",
+          "line": 133,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "defaultDimension",
+          "line": 161,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "defaultInventStatusId",
+          "line": 184,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/inventory/warehouses/pages/WMSLocationPage.tsx",
+      "fields": [
+        {
+          "name": "inventLocationId",
+          "line": 79,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "inputLocation",
+          "line": 88,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "checkText",
+          "line": 92,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "locationType",
+          "line": 93,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "sortCode",
+          "line": 98,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/party-balances/pages/PartyBalancePage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/finance/tax/pages/TaxAccountGroupPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/finance/tax/pages/TaxAuthorityPage.tsx",
+      "fields": [
+        {
+          "name": "accountNum",
+          "line": 117,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "taxReportLayout",
+          "line": 129,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "roundOffType",
+          "line": 141,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "roundOff",
+          "line": 153,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "address",
+          "line": 172,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "phone",
+          "line": 193,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "extension",
+          "line": 194,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "mobile",
+          "line": 200,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "pager",
+          "line": 201,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "fax",
+          "line": 207,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "email",
+          "line": 208,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "sms",
+          "line": 214,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "url",
+          "line": 215,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "telex",
+          "line": 220,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "useDefaultLayout",
+          "line": 231,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "separateTaxSummary",
+          "line": 236,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "printBlankPage",
+          "line": 241,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/tax/pages/TaxGroupPage.tsx",
+      "fields": [
+        {
+          "name": "taxGroupSetup",
+          "line": 113,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "source",
+          "line": 119,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "taxReverseOnCashDisc",
+          "line": 136,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "taxGroupRounding",
+          "line": 150,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "taxPrintDetail",
+          "line": 166,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "euTrade_W",
+          "line": 198,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "mandatorySalesDate_W",
+          "line": 203,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "fillSalesDate_W",
+          "line": 213,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "fillVatDueDate_W",
+          "line": 218,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "fillVatDueDateBasedOn",
+          "line": 228,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "fillVatDueDatePeriod",
+          "line": 234,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "fillVatDueDatePeriodNumber",
+          "line": 250,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/tax/pages/TaxItemGroupPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/finance/tax/pages/TaxPeriodPage.tsx",
+      "fields": [
+        {
+          "name": "taxAuthority",
+          "line": 121,
+          "masterRoute": "TAX_ROUTE_PATHS.TAX_AUTHORITIES",
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "paymentCode",
+          "line": 133,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "periodUnit",
+          "line": 142,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "qtyUnit",
+          "line": 153,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "useBatch",
+          "line": 163,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "activePeriodForBatchJobs",
+          "line": 176,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "notGenerateOffsetTaxTrans",
+          "line": 181,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/finance/tax/pages/TaxTablePage.tsx",
+      "fields": [
+        {
+          "name": "taxAccountGroup",
+          "line": 250,
+          "masterRoute": "TAX_ROUTE_PATHS.TAX_ACCOUNT_GROUPS",
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "paymentTaxCode",
+          "line": 272,
+          "masterRoute": "TAX_ROUTE_PATHS.TAX_CODES",
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "taxJurisdictionCode",
+          "line": 283,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "printCode",
+          "line": 294,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "taxOnTax",
+          "line": 340,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "taxUnit",
+          "line": 349,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/identity/pages/LoginPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/organization/components/HcmReferencePage.tsx",
+      "fields": [
+        {
+          "name": "code",
+          "line": 36,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 37,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "nameAlias",
+          "line": 38,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "description",
+          "line": 45,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "code",
+          "line": 62,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 63,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "nameAlias",
+          "line": 64,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/organization/pages/HcmDepartmentPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/organization/pages/HcmNationalityPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/organization/pages/HcmOccupationPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/organization/pages/HcmPositionPage.tsx",
+      "fields": [
+        {
+          "name": "nameAlias",
+          "line": 96,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "organizationUnitId",
+          "line": 102,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "roleId",
+          "line": 119,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "validFrom",
+          "line": 142,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'date'"
+        },
+        {
+          "name": "validTo",
+          "line": 143,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'date'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/organization/pages/HcmShowroomPage.tsx",
+      "fields": [
+        {
+          "name": "nameAlias",
+          "line": 92,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "description",
+          "line": 93,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "isActive",
+          "line": 94,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/organization/pages/HcmWorkerPage.tsx",
+      "fields": [
+        {
+          "name": "nameAlias",
+          "line": 134,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "birthDate",
+          "line": 147,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'date'"
+        },
+        {
+          "name": "managerWorkerId",
+          "line": 154,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "hireDate",
+          "line": 210,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'date'"
+        },
+        {
+          "name": "isActive",
+          "line": 211,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/organization/pages/LegalEntityPage.tsx",
+      "fields": [
+        {
+          "name": "memo",
+          "line": 150,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "arabicName",
+          "line": 157,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "inHierarchy",
+          "line": 158,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "useForFinancialConsolidation",
+          "line": 163,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "useForFinancialElimination",
+          "line": 174,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "fullName",
+          "line": 179,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "localizedRegion",
+          "line": 180,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "taxLicenseNum",
+          "line": 187,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "federalTaxId",
+          "line": 188,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "languageId",
+          "line": 196,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "timeZone",
+          "line": 205,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "currencyCode",
+          "line": 260,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "bankAccount",
+          "line": 264,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "calendar",
+          "line": 269,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "description",
+          "line": 552,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "address",
+          "line": 553,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "roles",
+          "line": 554,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "primary",
+          "line": 560,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "description",
+          "line": 660,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "type",
+          "line": 661,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "number",
+          "line": 662,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "extension",
+          "line": 663,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "primary",
+          "line": 664,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/organization/pages/OrganizationHierarchyNodePage.tsx",
+      "fields": [
+        {
+          "name": "organizationUnitId",
+          "line": 286,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "parentNodeId",
+          "line": 312,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "validFrom",
+          "line": 337,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'date'"
+        },
+        {
+          "name": "validTo",
+          "line": 342,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'date'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/organization/pages/OrganizationHierarchyPage.tsx",
+      "fields": [
+        {
+          "name": "code",
+          "line": 33,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 34,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "nameAlias",
+          "line": 42,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "purpose",
+          "line": 49,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "rootOrganizationUnitId",
+          "line": 55,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "validFrom",
+          "line": 104,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'date'"
+        },
+        {
+          "name": "validTo",
+          "line": 111,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'date'"
+        },
+        {
+          "name": "code",
+          "line": 125,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 126,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "nameAlias",
+          "line": 127,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "purpose",
+          "line": 128,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/organization/pages/OrganizationPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/organization/pages/OrganizationRolePage.tsx",
+      "fields": [
+        {
+          "name": "code",
+          "line": 26,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 33,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "nameAlias",
+          "line": 41,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "code",
+          "line": 56,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 57,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "nameAlias",
+          "line": 58,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/organization/pages/OrganizationUnitsPage.tsx",
+      "fields": [
+        {
+          "name": "type",
+          "line": 161,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "parentOrganizationUnitId",
+          "line": 167,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "validFrom",
+          "line": 247,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'date'"
+        },
+        {
+          "name": "validTo",
+          "line": 252,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'date'"
+        },
+        {
+          "name": "nameAlias",
+          "line": 257,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/organization/pages/ReportingHierarchyPage.tsx",
+      "fields": [
+        {
+          "name": "subordinatePositionId",
+          "line": 176,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'singleSelect'"
+        },
+        {
+          "name": "managerPositionId",
+          "line": 185,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'singleSelect'"
+        },
+        {
+          "name": "validFrom",
+          "line": 194,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'date'"
+        },
+        {
+          "name": "validTo",
+          "line": 201,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'date'"
+        },
+        {
+          "name": "isPrimary",
+          "line": 208,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/process-builder/pages/ProcessBuilderPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/workflow/components/WorkflowSetupListPage.tsx",
+      "fields": [
+        {
+          "name": "code",
+          "line": 148,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "sortOrder",
+          "line": 199,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "code",
+          "line": 218,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 219,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "nameAlias",
+          "line": 220,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/workflow/pages/WfActivitiesPage.tsx",
+      "fields": [
+        {
+          "name": "stepId",
+          "line": 117,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "activityTypeId",
+          "line": 141,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "performerId",
+          "line": 167,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "score",
+          "line": 193,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "sysNotificationTemplateId",
+          "line": 200,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "isSystemNotificationEnabled",
+          "line": 205,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "isEmailNotificationEnabled",
+          "line": 210,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "isSmsNotificationEnabled",
+          "line": 215,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "isWhatsAppNotificationEnabled",
+          "line": 220,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "mandatoryDocuments",
+          "line": 231,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "canViewPreviousDocuments",
+          "line": 236,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "canViewPreviousSteps",
+          "line": 241,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "isAutoPassEnabled",
+          "line": 246,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "autoPassAfterHours",
+          "line": 251,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "extendedProperties",
+          "line": 256,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/workflow/pages/WfActivityTypesPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/workflow/pages/WFCategoryPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/workflow/pages/WfControlsPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/workflow/pages/WfDataTypesPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/workflow/pages/WfGenericReportPage.tsx",
+      "fields": [
+        {
+          "name": "date",
+          "line": 538,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "showroom",
+          "line": 539,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "seller",
+          "line": 540,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "paymentMethod",
+          "line": 541,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "requests",
+          "line": 542,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "amount",
+          "line": 543,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "showroom",
+          "line": 564,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "seller",
+          "line": 565,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "paymentMethod",
+          "line": 566,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/workflow/pages/WfMailPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/workflow/pages/WfPerformersPage.tsx",
+      "fields": [
+        {
+          "name": "performerTypeId",
+          "line": 197,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "description",
+          "line": 216,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "sortOrder",
+          "line": 217,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "isActive",
+          "line": 218,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "isApplicant",
+          "line": 227,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean' as const"
+        },
+        {
+          "name": "isEmployee",
+          "line": 232,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean' as const"
+        },
+        {
+          "name": "isManager1",
+          "line": 237,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean' as const"
+        },
+        {
+          "name": "isManager2",
+          "line": 242,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean' as const"
+        },
+        {
+          "name": "isManager3",
+          "line": 247,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean' as const"
+        },
+        {
+          "name": "isManager4",
+          "line": 252,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean' as const"
+        },
+        {
+          "name": "relatedField",
+          "line": 267,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "sqlTable",
+          "line": 298,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "sqlWhere",
+          "line": 311,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/workflow/pages/WfPrioritiesPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/workflow/pages/WFProcessPage.tsx",
+      "fields": [
+        {
+          "name": "categoryId",
+          "line": 133,
+          "masterRoute": "WORKFLOW_ROUTE_PATHS.CATEGORIES",
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "priorityId",
+          "line": 162,
+          "masterRoute": "WORKFLOW_ROUTE_PATHS.PRIORITIES",
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "processTypeId",
+          "line": 183,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'select'"
+        },
+        {
+          "name": "score",
+          "line": 210,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "sortOrder",
+          "line": 211,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "isRepeatable",
+          "line": 212,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "repeatIntervalHours",
+          "line": 213,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "mandatoryDocuments",
+          "line": 218,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "isSystemDefined",
+          "line": 223,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/workflow/pages/WfRequestFromPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/workflow/pages/WfRequestSubmissionPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/workflow/pages/WFStepsPage.tsx",
+      "fields": [
+        {
+          "name": "processId",
+          "line": 56,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "sortOrder",
+          "line": 80,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "score",
+          "line": 87,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        },
+        {
+          "name": "mustCompleteAll",
+          "line": 88,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "isSystemDefined",
+          "line": 93,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/workflow/pages/WFVariablesPage.tsx",
+      "fields": [
+        {
+          "name": "processId",
+          "line": 70,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "dataTypeId",
+          "line": 94,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "sortOrder",
+          "line": 110,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'number'"
+        }
+      ]
+    },
+    {
+      "file": "src/modules/workflow/report-designer/pages/ReportDesignerListPage.tsx",
+      "fields": [
+        {
+          "name": "code",
+          "line": 177,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "name",
+          "line": 178,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "status",
+          "line": 185,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "latestVersionNo",
+          "line": 203,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "isDefault",
+          "line": 204,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": "'boolean'"
+        },
+        {
+          "name": "language",
+          "line": 210,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        },
+        {
+          "name": "orientation",
+          "line": 211,
+          "masterRoute": null,
+          "previewEntity": null,
+          "type": null
+        }
+      ]
+    },
+    {
+      "file": "src/modules/workflow/report-viewer/pages/WorkflowMailReportViewerPage.tsx",
+      "fields": []
+    },
+    {
+      "file": "src/modules/workflow/report-viewer/pages/WorkflowOfficialFormViewerPage.tsx",
+      "fields": []
+    }
+  ]
+}

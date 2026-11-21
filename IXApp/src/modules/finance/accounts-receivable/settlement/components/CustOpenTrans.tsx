@@ -181,10 +181,6 @@ function SettlementDialog({
     ...(
       [
         'invoice',
-        'worker',
-        'department',
-        'costCenter',
-        'project',
         'dueDate',
         'cashDiscDate',
       ] as const
@@ -253,7 +249,9 @@ function SettlementDialog({
       open
       onClose={onClose}
       busy={posting}
-      width={1760}
+      width={1793}
+      appearance="posting"
+      viewLabel={tr('standardView')}
       title={t('custOpenTrans.title', {
         name: query.data?.customerName || customerName || accountNum,
       })}
@@ -275,7 +273,6 @@ function SettlementDialog({
         <Alert severity="error">{tr('accountRequired')}</Alert>
       ) : (
         <>
-          <Typography variant="caption">{tr('standardView')}</Typography>
           <Stack direction="row" sx={{ gap: 2, flexWrap: 'wrap', my: 2 }}>
             <TextField
               select

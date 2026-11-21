@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Identity;
+﻿using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Finance.Common;
@@ -22,7 +22,9 @@ public class CustTransService : BaseService<CustTrans>, ICustTransService
                 select new CustTransInquiryRow(row.RecId, row.Voucher, row.TransType.ToString(),
                     row.TransDate, row.Invoice, row.Txt, row.AmountCur, row.AmountCur - row.SettleAmountCur,
                     row.CurrencyCode, row.AmountMst, row.AmountMst - row.SettleAmountMst,
-                    dimension == null ? null : dimension.DepartmentValue)).ToListAsync(ct);
+                    dimension == null ? null : dimension.DepartmentValue,
+                    dimension == null ? null : dimension.CostCenterValue,
+                    dimension == null ? null : dimension.WorkerValue)).ToListAsync(ct);
     }
 
     public Task<PartyOpenBalanceCurrencyDto?> GetBalanceCurrencyAsync(string accountNum, CancellationToken ct) =>

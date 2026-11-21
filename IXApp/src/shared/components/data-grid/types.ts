@@ -176,6 +176,7 @@ export interface DataGridProps<T> {
    * the row and focuses the clicked cell.
    */
   onCellEditRequest?: (row: T, field: string) => void;
+  /** Hidden by default. Set false to display the per-column filter inputs. */
   hideFilterRow?: boolean;
   hideColumnMenu?: boolean;
   hideToolbar?: boolean;

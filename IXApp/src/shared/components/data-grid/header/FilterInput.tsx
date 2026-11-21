@@ -112,6 +112,7 @@ export function FilterInput<T>({
 
   return (
     <AppTextField
+      variant="standard"
       placeholder={t('grid.filter_placeholder')}
       fullWidth
       type={inputType}
@@ -127,6 +128,7 @@ export function FilterInput<T>({
           'data-grid-filter-field': field,
         },
         input: {
+          disableUnderline: true,
           endAdornment: onFilterIconClick ? (
             <IconButton
               aria-label={t('grid.open_column_filter', { column: t(column.headerName) })}
@@ -146,27 +148,33 @@ export function FilterInput<T>({
             height: 22,
             bgcolor: 'transparent',
             borderRadius: 1,
+            border: 0,
+            outline: 'none',
             transition: 'background-color 120ms ease, box-shadow 120ms ease',
             '& input': {
               padding: '1px 7px',
+              outline: 'none',
+              border: 0,
+              boxShadow: 'none',
             },
+            '& input:focus, & input:focus-visible': { outline: 'none', boxShadow: 'none' },
             '& input::placeholder': {
               fontSize: '0.7rem',
               opacity: 0.5,
             },
             '& fieldset': {
-              border: '1px solid transparent',
-              transition: 'border-color 120ms ease',
+              border: 0,
             },
-            '&:hover fieldset': { borderColor: 'divider' },
+            '&:hover fieldset': { border: 0 },
             '&:hover': { bgcolor: 'action.hover' },
             '&.Mui-focused fieldset': {
-              border: '1px solid',
-              borderColor: 'primary.main',
-              borderRadius: 1,
+              border: 0,
             },
             '&.Mui-focused': {
               bgcolor: 'background.paper',
+            },
+            '&:has(input:focus-visible)': {
+              boxShadow: (theme) => `inset 0 -1px 0 ${theme.palette.primary.main}`,
             },
           },
         },

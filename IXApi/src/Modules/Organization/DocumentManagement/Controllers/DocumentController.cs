@@ -42,6 +42,19 @@ public sealed class DocumentController : ControllerBase
         return Ok(APIResponse<DocumentPageDto>.Ok(page));
     }
 
+    /// <summary>Which of the given records hold a document, for an attachment column on a list.</summary>
+    [HttpGet("record/{refTableId:int}/with-documents")]
+    public async Task<ActionResult<APIResponse<IReadOnlyList<long>>>> GetRecordsWithDocuments(
+        int refTableId,
+        [FromQuery] string? refRecIds,
+        CancellationToken cancellationToken = default)
+    {
+        var ids = (refRecIds ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(value => long.TryParse(value, out var id) ? id : 0).Where(id => id > 0).ToList();
+        var records = await _service.GetRecordsWithDocumentsAsync(refTableId, ids, cancellationToken);
+        return Ok(APIResponse<IReadOnlyList<long>>.Ok(records));
+    }
+
     [HttpGet("{id:long}")]
     public async Task<ActionResult<APIResponse<DocumentDto>>> Get(long id, CancellationToken cancellationToken)
     {

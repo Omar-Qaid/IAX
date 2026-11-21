@@ -1,5 +1,10 @@
 export const PERMISSIONS = {
   CUSTOMER_PAYMENT_VIEW: 'AccountsReceivable.CustomerPayments.View',
+  MAIN_ACCOUNT_VIEW: 'GeneralLedger.Accounts.View',
+  LEDGER_JOURNAL_ENTRY_VIEW: 'GeneralLedger.JournalEntries.View',
+  MAIN_ACCOUNT_CREATE: 'GeneralLedger.Accounts.Create',
+  MAIN_ACCOUNT_EDIT: 'GeneralLedger.Accounts.Edit',
+  MAIN_ACCOUNT_DELETE: 'GeneralLedger.Accounts.Delete',
   RETURN_ORDER_VIEW: 'AccountsReceivable.ReturnOrders.View',
   RETURN_ORDER_CREATE: 'AccountsReceivable.ReturnOrders.Create',
   RETURN_ORDER_POST: 'AccountsReceivable.ReturnOrders.Post',
@@ -76,6 +81,10 @@ export const PERMISSIONS = {
   MARKUP_TABLE_DELETE: 'GeneralLedger.ChargesCodes.Delete',
 
   TAX_AUTHORITY_VIEW: 'Tax.TaxAuthorities.View',
+  TAX_ACCOUNT_GROUP_VIEW: 'Tax.LedgerAccountGroups.View',
+  TAX_ACCOUNT_GROUP_CREATE: 'Tax.LedgerAccountGroups.Create',
+  TAX_ACCOUNT_GROUP_EDIT: 'Tax.LedgerAccountGroups.Edit',
+  TAX_ACCOUNT_GROUP_DELETE: 'Tax.LedgerAccountGroups.Delete',
   TAX_AUTHORITY_CREATE: 'Tax.TaxAuthorities.Create',
   TAX_AUTHORITY_EDIT: 'Tax.TaxAuthorities.Edit',
   TAX_AUTHORITY_DELETE: 'Tax.TaxAuthorities.Delete',

@@ -27,7 +27,7 @@ export function useDataGridState<T>(options: UIStateOptions<T>) {
   );
   const [localRowHeight, setLocalRowHeight] = useState(initialState.rowHeight ?? rowHeight);
   const [showColumnBorders, setShowColumnBorders] = useState(
-    initialState.showColumnBorders ?? initialShowColumnBorders ?? false
+    initialState.showColumnBorders ?? initialShowColumnBorders ?? true
   );
   const [showCellBorders, setShowCellBorders] = useState(
     initialState.showCellBorders ?? initialShowCellBorders ?? true

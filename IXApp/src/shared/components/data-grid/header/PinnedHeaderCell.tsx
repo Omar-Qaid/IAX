@@ -45,8 +45,8 @@ export function PinnedHeaderCell<T>({
   onMenuOpen,
   onResizeStart,
   headerHeight,
-  showColumnBorders = false,
-  hideFilterRow = false,
+  showColumnBorders = true,
+  hideFilterRow = true,
   hideColumnMenu = false,
 }: PinnedHeaderCellProps<T>) {
   const { t } = useTranslation();

@@ -84,7 +84,7 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>(
     selectionMode = 'single',
     selectedIds = [],
     onSelectionChange,
-    showColumnBorders = false,
+    showColumnBorders = true,
     showCellBorders = true,
     masterForm = false,
     editingRowId,

@@ -8,10 +8,14 @@ export interface CustInvoiceJournalRecord {
   invoiceAccount: string;
   invoicingName: string;
   salesId: string;
+  workerId: string;
+  workerName: string;
+  projId: string;
   invoiceDate: string;
   ledgerVoucher: string;
   currencyCode: string;
   invoiceAmount: number;
+  salesTaxAmount: number;
   intercompanyCompanyId: string;
   intercompanyPosted: number;
   eInvoiceLineSpecific: number;

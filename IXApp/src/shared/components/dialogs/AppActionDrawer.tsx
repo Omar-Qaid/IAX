@@ -12,6 +12,8 @@ export interface AppActionDrawerProps {
   actions?: React.ReactNode;
   width?: number;
   busy?: boolean;
+  appearance?: 'standard' | 'posting';
+  viewLabel?: string;
 }
 
 /** Shared modal surface for commands with custom forms, lists, or grids. */
@@ -23,6 +25,8 @@ export function AppActionDrawer({
   actions,
   width = 480,
   busy = false,
+  appearance = 'standard',
+  viewLabel,
 }: AppActionDrawerProps) {
   const anchor = useLogicalDrawerAnchor('end');
   const { t } = useAppTranslation();
@@ -35,7 +39,12 @@ export function AppActionDrawer({
       open={open}
       anchor={anchor}
       onClose={close}
-      sx={{ zIndex: (theme) => theme.zIndex.drawer + 2 }}
+      sx={{
+        zIndex: (theme) => theme.zIndex.drawer + 2,
+        ...(appearance === 'posting'
+          ? { '& .MuiBackdrop-root': { backgroundColor: 'transparent' } }
+          : {}),
+      }}
       slotProps={{
         paper: {
           role: 'dialog',
@@ -44,7 +53,8 @@ export function AppActionDrawer({
           'aria-busy': busy,
           sx: {
             width: { xs: '100vw', sm: width },
-            maxWidth: '100vw',
+            maxWidth:
+              appearance === 'posting' ? { xs: '100vw', md: 'calc(100vw - 120px)' } : '100vw',
             overflow: 'hidden',
             borderInlineStart: 1,
             borderColor: 'divider',
@@ -55,21 +65,33 @@ export function AppActionDrawer({
       <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <Box
           sx={{
-            minHeight: 57,
-            px: 2,
+            minHeight: appearance === 'posting' ? 84 : 57,
+            px: appearance === 'posting' ? '24px' : 2,
+            pt: appearance === 'posting' ? '20px' : 0,
             flexShrink: 0,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             gap: 1,
-            borderBottom: 1,
+            borderBottom: appearance === 'posting' ? 0 : 1,
             borderColor: 'divider',
-            bgcolor: 'action.hover',
+            bgcolor: appearance === 'posting' ? 'background.paper' : 'action.hover',
           }}
         >
-          <Typography id={titleId} component="h2" variant="subtitle1" sx={{ fontWeight: 700 }}>
-            {title}
-          </Typography>
+          <Box>
+            {viewLabel && <Typography sx={{ fontSize: 11, mb: '3px' }}>{viewLabel}⌄</Typography>}
+            <Typography
+              id={titleId}
+              component="h2"
+              variant="subtitle1"
+              sx={{
+                fontWeight: appearance === 'posting' ? 600 : 700,
+                fontSize: appearance === 'posting' ? 14 : undefined,
+              }}
+            >
+              {title}
+            </Typography>
+          </Box>
           <IconButton
             size="small"
             disabled={busy}
@@ -79,7 +101,16 @@ export function AppActionDrawer({
             <CloseIcon fontSize="small" />
           </IconButton>
         </Box>
-        <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: 2 }}>{children}</Box>
+        <Box
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            overflow: 'auto',
+            p: appearance === 'posting' ? '0 24px' : 2,
+          }}
+        >
+          {children}
+        </Box>
         {actions && (
           <Box
             sx={{
@@ -87,10 +118,22 @@ export function AppActionDrawer({
               display: 'flex',
               justifyContent: 'flex-end',
               gap: 1,
-              px: 2,
-              py: 1.5,
-              borderTop: 1,
+              px: appearance === 'posting' ? '14px' : 2,
+              py: appearance === 'posting' ? '22px' : 1.5,
+              borderTop: appearance === 'posting' ? 0 : 1,
               borderColor: 'divider',
+              ...(appearance === 'posting'
+                ? {
+                    '& .MuiButton-root': {
+                      minWidth: 50,
+                      height: 26,
+                      px: 1,
+                      py: 0,
+                      fontSize: 12,
+                      borderRadius: '2px',
+                    },
+                  }
+                : {}),
             }}
           >
             {actions}

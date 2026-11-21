@@ -411,6 +411,7 @@ namespace IAX.IXApi.Modules.Finance.Common
         public const int PartyNumber = 20;
         public const int GroupId = 10;
         public const int CampaignId = 10;
+        public const int UserId = 8;
 }
 }
 

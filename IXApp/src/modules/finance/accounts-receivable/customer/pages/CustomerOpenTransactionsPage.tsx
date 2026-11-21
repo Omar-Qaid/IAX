@@ -48,7 +48,7 @@ export function CustomerOpenTransactionsPage(): React.ReactElement {
       width: 120,
       valueGetter: ({ row }) => row.dueDate?.slice(0, 10),
     },
-    { field: 'currencyCode', headerName: t('partyBalance.currency'), width: 95 },
+    { preview: { entity: 'currency' },  field: 'currencyCode', headerName: t('partyBalance.currency'), width: 95 },
     ...(['amountCur', 'settleAmountCur', 'openAmountCur', 'openAmountMst'] as const).map(
       (field) => ({
         field,

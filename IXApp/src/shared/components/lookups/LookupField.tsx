@@ -13,6 +13,7 @@ import { hasLookupValue, lookupValueSx } from './lookupValueStyle';
 import { LookupDisplayField } from './LookupDisplayField';
 import { useFieldViewMode } from '@shared/components/fields/FieldPresentationContext';
 import { RecordPreview, RecordPreviewCard } from '@shared/components/record-preview';
+import { getRecordPreview } from '@shared/components/record-preview/recordPreviewRegistry';
 
 const standardLookupSx = {
   minWidth: 0,
@@ -208,7 +209,7 @@ function ServerLookupDialog({
 
 function SelectLookup({
   label,
-  masterRoute,
+  masterRoute: configuredMasterRoute,
   variant = 'outlined',
   externalLabel = false,
   value,
@@ -237,6 +238,7 @@ function SelectLookup({
   gridCell = false,
 }: LookupFieldProps & { gridCell?: boolean }) {
   const { t, isRtl } = useAppTranslation();
+  const masterRoute = configuredMasterRoute ?? (previewEntity ? getRecordPreview(previewEntity)?.masterRoute : undefined);
   const viewMode = useFieldViewMode();
   const usesServerDataSource = sideMode === 'server' && Boolean(fetchPage || onFetchOptions);
   const resolvedFetchPage = useMemo(
@@ -605,7 +607,7 @@ export function LookupField<TFieldValues extends FieldValues = FieldValues>({
   // it to its Controller. This unbound component holds no form state, so it does not read it.
   name: _name,
   label,
-  masterRoute,
+  masterRoute: configuredMasterRoute,
   variant = 'outlined',
   externalLabel = false,
   value,
@@ -636,6 +638,7 @@ export function LookupField<TFieldValues extends FieldValues = FieldValues>({
   gridCell = false,
 }: LookupFieldProps<TFieldValues> & { gridCell?: boolean }): React.ReactElement {
   const { t, isRtl } = useAppTranslation();
+  const masterRoute = configuredMasterRoute ?? (previewEntity ? getRecordPreview(previewEntity)?.masterRoute : undefined);
   const viewMode = useFieldViewMode();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedOptionCache, setSelectedOptionCache] = useState<LookupOption | undefined>();

@@ -1,5 +1,6 @@
 export const TAX_ROUTE_PATHS = {
   ROOT: '/tax',
+  TAX_ACCOUNT_GROUPS: '/tax/ledger-posting-groups',
   TAX_AUTHORITIES: '/tax/authorities',
   TAX_PERIODS: '/tax/settlement-periods',
   TAX_CODES: '/tax/codes',

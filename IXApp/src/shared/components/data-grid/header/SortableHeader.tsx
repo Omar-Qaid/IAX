@@ -45,7 +45,7 @@ export function SortableHeader<T>({
   onResizeStart,
   headerHeight,
   showColumnBorders,
-  hideFilterRow = false,
+  hideFilterRow = true,
   hideColumnMenu = false,
 }: SortableHeaderProps<T>) {
   const { t } = useTranslation();

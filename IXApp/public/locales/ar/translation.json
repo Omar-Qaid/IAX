@@ -365,6 +365,7 @@
     "tagline": "نظام تخطيط موارد المؤسسة"
   },
   "nav": {
+    "taxLedgerPostingGroups": "مجموعات ترحيل ضريبة المبيعات",
     "customerPostingProfiles": "ملفات تعريف ترحيل العملاء",
     "app_title": "نظام IXApp المؤسسي",
     "app_title_short": "IXApp",
@@ -437,7 +438,8 @@
     "tradeAgreementJournalNames": "أسماء يوميات اتفاقيات التجارة",
     "batchJobs": "المهام الدفعية",
     "batchGroups": "المجموعات الدفعية",
-    "batchJobActivePeriods": "فترات تنشيط المهام الدفعية"
+    "batchJobActivePeriods": "فترات تنشيط المهام الدفعية",
+    "inquiriesAndReports": "الاستعلامات والتقارير"
   },
   "pages": {
     "login": {
@@ -3507,7 +3509,28 @@
     "show": "إظهار",
     "closed": "مغلق",
     "hideCurrencyRevaluations": "إخفاء إعادة تقييم العملة",
-    "loadFailed": "تعذر تحميل معاملات العميل"
+    "loadFailed": "تعذر تحميل معاملات العميل",
+    "costCenter": "مركز التكلفة",
+    "workerId": "رقم الموظف",
+    "actions": {
+      "edit": "تحرير",
+      "voucher": "الإيصال",
+      "viewSettlements": "عرض التسويات",
+      "settlement": "التسوية",
+      "settleOpenTransactions": "تسوية الحركات المفتوحة",
+      "markPaymentForSettlement": "تحديد الدفعة للتسوية",
+      "originalDocument": "المستند الأصلي",
+      "openDetails": "تفاصيل المفتوح",
+      "collections": "التحصيل",
+      "collectionsCustomerPool": "مجموعة عملاء التحصيل",
+      "interestNote": "إشعار فائدة",
+      "collectionLetter": "خطاب تحصيل",
+      "billOfExchange": "الكمبيالة",
+      "reverse": "عكس",
+      "reverseTransaction": "عكس الحركة",
+      "reversalTrace": "تتبع العكس",
+      "cashFlowForecasts": "توقعات التدفق النقدي"
+    }
   },
   "customerSellRibbon": {
     "allSalesOrders": "جميع أوامر المبيعات",
@@ -3724,7 +3747,45 @@
     "intercompanyPosted": "مرحل بين الشركات",
     "lineSpecific": "خاص بالبند",
     "yes": "نعم",
-    "no": "لا"
+    "no": "لا",
+    "workerId": "رقم الموظف",
+    "workerName": "اسم الموظف",
+    "project": "المشروع",
+    "hasAttachment": "يوجد مرفق",
+    "salesTaxAmount": "مبلغ ضريبة المبيعات",
+    "groups": {
+      "accounting": "المحاسبة",
+      "ship": "الشحن",
+      "details": "التفاصيل",
+      "intercompany": "بين الشركات",
+      "document": "المستند",
+      "properties": "الخصائص"
+    },
+    "actions": {
+      "electronicInvoiceServiceRequests": "طلبات خدمة الفوترة الإلكترونية",
+      "postEInvoice": "ترحيل الفاتورة الإلكترونية",
+      "totals": "الإجماليات",
+      "voucher": "الإيصال",
+      "transactions": "الحركات",
+      "charges": "الرسوم",
+      "postedSalesTax": "ضريبة المبيعات المرحلة",
+      "invoiceTab": "الفاتورة",
+      "viewDistributions": "عرض التوزيعات",
+      "viewAccounting": "عرض القيد المحاسبي",
+      "shippingSpecifications": "مواصفات الشحن",
+      "billOfLading": "بوليصة الشحن",
+      "viewHistoricalLoadData": "عرض بيانات التحميل التاريخية",
+      "commissionTransactions": "حركات العمولة",
+      "synchronizeBatchSerialNumbers": "مزامنة أرقام الدفعات والتسلسل",
+      "generateIntercompanyInvoice": "إنشاء فاتورة بين الشركات",
+      "view": "عرض",
+      "send": "إرسال",
+      "invoice": "الفاتورة",
+      "originalPreview": "معاينة الأصل",
+      "email": "بريد إلكتروني",
+      "print": "طباعة",
+      "electronicDocumentProperties": "خصائص المستند الإلكتروني"
+    }
   },
   "custSalesLines": {
     "title": "بنود أوامر العميل",
@@ -4294,5 +4355,142 @@
     },
     "title": "أمر الإرجاع وإشعار الدائن",
     "working": "جارٍ التنفيذ..."
+  },
+  "mainAccount": {
+    "closeType": {
+      "0": "غير قابل للتطبيق",
+      "1": "افتتاحي",
+      "2": "إقفالي"
+    },
+    "commands": {
+      "additionalConsolidationAccounts": "حسابات توحيد إضافية",
+      "assignTemplate": "تعيين قالب",
+      "assignTemplateItem": "تعيين",
+      "currencyCodeValidation": "التحقق من رمز العملة",
+      "postingValidation": "التحقق من الترحيل",
+      "removeTemplate": "إزالة",
+      "totals": "الإجماليات",
+      "userValidation": "التحقق من المستخدم",
+      "newFromTemplate": "جديد من قالب",
+      "newFromTemplateItem": "جديد من قالب",
+      "transactions": "الحركات",
+      "accountingSourceExplorer": "مستكشف مصدر القيد",
+      "nameTranslations": "ترجمات الاسم",
+      "accountStatement": "كشف الحساب",
+      "totalAccounts": "حسابات الإجمالي"
+    },
+    "debitCredit": {
+      "0": "لا شيء",
+      "1": "مدين",
+      "2": "دائن"
+    },
+    "fieldControl": {
+      "0": "اختياري",
+      "1": "إلزامي",
+      "2": "جدول",
+      "3": "قائمة"
+    },
+    "fields": {
+      "balanceControl": "ضبط الرصيد",
+      "closeType": "نوع الإقفال",
+      "closing": "الإقفال",
+      "debitCreditDefault": "المدين/الدائن الافتراضي",
+      "debitCreditRequirement": "متطلب المدين/الدائن",
+      "defaultConsolidationAccount": "حساب التوحيد الافتراضي",
+      "defaultCurrency": "العملة الافتراضية",
+      "exchangeRateType": "نوع سعر الصرف",
+      "level1": "المستوى 1",
+      "level2": "المستوى 2",
+      "level3": "المستوى 3",
+      "mainAccount": "الحساب الرئيسي",
+      "mainAccountCategory": "فئة الحساب الرئيسي",
+      "mainAccountType": "نوع الحساب الرئيسي",
+      "monetary": "نقدي",
+      "name": "الاسم",
+      "offsetAccount": "الحساب المقابل",
+      "openingAccount": "حساب الافتتاح",
+      "postingType": "نوع الترحيل",
+      "postingTypeValidation": "التحقق من نوع الترحيل",
+      "reportingCurrencyExchangeRateType": "نوع سعر صرف عملة التقارير",
+      "validateCurrencyCode": "التحقق من رمز العملة",
+      "validateUser": "التحقق من المستخدم",
+      "reportingType": "نوع التقرير",
+      "foreignCurrencyRevaluation": "إعادة تقييم العملة الأجنبية",
+      "activeFrom": "نشط من",
+      "activeTo": "نشط إلى",
+      "suspended": "موقوف",
+      "userId": "معرف المستخدم"
+    },
+    "groups": {
+      "administration": "الإدارة",
+      "consolidation": "التوحيد",
+      "currency": "العملة",
+      "identification": "التعريف",
+      "ledger": "دفتر الأستاذ",
+      "postingType": "نوع الترحيل",
+      "relatedAccounts": "الحسابات المرتبطة",
+      "reporting": "التقارير",
+      "user": "المستخدم"
+    },
+    "hints": {
+      "advancedRules": "لا توجد بنية قواعد متقدمة معيّنة لهذا الحساب.",
+      "financialReporting": "تستخدم التقارير المالية مستويات التقارير أعلاه.",
+      "legalEntityOverrides": "لا يوجد تجاوز كيان قانوني لهذا الحساب."
+    },
+    "sections": {
+      "advancedRules": "القواعد المتقدمة",
+      "financialReporting": "التقارير المالية",
+      "general": "عام",
+      "legalEntityOverrides": "تجاوزات الكيان القانوني",
+      "postingValidation": "التحقق من الترحيل"
+    },
+    "title": "الحسابات الرئيسية - دليل الحسابات",
+    "types": {
+      "1": "أصل",
+      "2": "التزام",
+      "3": "حقوق ملكية",
+      "4": "إيراد",
+      "5": "مصروف"
+    },
+    "validation": {
+      "accountRequired": "أدخل رقم الحساب الرئيسي.",
+      "nameRequired": "أدخل اسمًا."
+    }
+  },
+  "ledgerTransVoucher": {
+    "title": "حركات الإيصال",
+    "journalNumber": "رقم دفتر اليومية",
+    "voucher": "الإيصال",
+    "date": "التاريخ",
+    "yearClosed": "السنة مقفلة",
+    "ledgerAccount": "حساب الأستاذ",
+    "accountName": "اسم الحساب",
+    "description": "الوصف",
+    "currency": "العملة",
+    "amountCur": "المبلغ بعملة الحركة",
+    "amountMst": "المبلغ بعملة المحاسبة",
+    "postingType": "نوع الترحيل",
+    "overview": "نظرة عامة",
+    "general": "عام",
+    "noRecordSelected": "لم يتم تحديد سجل",
+    "actions": {
+      "viewSubledgerJournal": "عرض دفتر اليومية الفرعي",
+      "transactionOrigin": "مصدر الحركة",
+      "transactions": "الحركات",
+      "auditTrail": "مسار التدقيق",
+      "editVoucher": "تحرير الإيصال",
+      "editZakatTransactions": "تحرير حركات الزكاة",
+      "editDimensions": "تحرير الأبعاد",
+      "postedSalesTax": "ضريبة المبيعات المرحلة",
+      "originalDocument": "المستند الأصلي",
+      "accountingSourceExplorer": "مستكشف مصدر القيد",
+      "reverseTransactions": "عكس الحركات",
+      "reverse": "عكس",
+      "reverseAndTrace": "عكس وتتبع",
+      "reversedTracing": "تتبع المعكوس",
+      "relatedVouchers": "الإيصالات ذات الصلة",
+      "allRelatedVouchers": "كل الإيصالات ذات الصلة",
+      "viewReversalFailures": "عرض حالات فشل العكس"
+    }
   }
 }

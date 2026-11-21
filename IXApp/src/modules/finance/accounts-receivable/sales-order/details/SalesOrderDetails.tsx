@@ -1,4 +1,8 @@
 import { Alert } from '@mui/material';
+import { usePermission } from '@core/permissions/usePermission';
+import { PERMISSIONS } from '@core/permissions/permissions';
+import { CustOpenTrans } from '../../settlement/components/CustOpenTrans';
+import type { ActionPaneRibbonGroup } from '@shared/components/action-pane/ActionPaneRibbon';
 import React from 'react';
 import { MasterDetailPage } from '@patterns/master-detail';
 import { ActionPaneBackButton } from '@shared/components/action-pane/ActionPaneBackButton';
@@ -19,7 +23,6 @@ import { buildSalesOrderHeaderSections } from './SalesOrderHeaderSections';
 /** Reference command tabs of the D365 sales order; each one awaits its own page. */
 const SALES_ORDER_COMMAND_IDS = [
   'manage',
-  'pickAndPack',
   'commerce',
   'general',
   'warehouse',
@@ -32,6 +35,8 @@ export function SalesOrderDetails({
   listPath = ACCOUNTS_RECEIVABLE_ROUTE_PATHS.SALES_ORDERS,
 }: { detailPath?: (id: string) => string; listPath?: string } = {}): React.ReactElement {
   const doc = useSalesOrderDocument();
+  const [settlementOpen, setSettlementOpen] = React.useState(false);
+  const canViewSettlement = usePermission(PERMISSIONS.CUSTOMER_PAYMENT_VIEW).hasPermission;
   const { orderQuery, orderLoading, refetchOrder, t, order } = doc;
   if (orderLoading) return <LoadingState />;
   if (!order)
@@ -66,6 +71,28 @@ export function SalesOrderDetails({
     setTab,
     setLineFilterVisible,
   } = scope;
+  const command = (id: string) => sellRibbonGroups.flatMap((group) => group.actions).find((action) => action.id === id);
+  const unavailable = (id: string, label: string) => ({ id, label: t(`salesOrder.ui.${id}`, label), disabled: true });
+  const packing = command('post-packing-slip');
+  const packingJournal = command('packing-slip-journal');
+  const invoice = command('post-invoice');
+  const invoiceJournal = command('cust-invoice-journal');
+  const pickAndPackGroups: ActionPaneRibbonGroup[] = [
+    { id: 'generate', label: t('salesOrder.ui.generate', 'Generate'), actions: [
+      unavailable('generatePickingList', 'Generate picking list'), unavailable('pickingListRegistration', 'Picking list registration'), unavailable('intercompanyPickingList', 'Intercompany picking list'),
+      ...(packing ? [{ ...packing, label: t('salesOrder.ui.postPackingSlip', 'Post packing slip') }] : []), unavailable('proFormaPackingSlip', 'Pro forma packing slip'),
+    ] },
+    { id: 'journals', label: t('salesOrder.ui.journals', 'Journals'), actions: [unavailable('pickingList', 'Picking list'), ...(packingJournal ? [{ ...packingJournal, label: t('salesOrder.ui.packingSlip', 'Packing slip') }] : [])] },
+  ];
+  const invoiceGroups: ActionPaneRibbonGroup[] = [
+    { id: 'generate', label: t('salesOrder.ui.generate', 'Generate'), actions: [...(invoice ? [invoice] : []), unavailable('proFormaInvoice', 'Pro forma invoice')] },
+    { id: 'bill', label: t('salesOrder.ui.bill', 'Bill'), actions: [unavailable('paymentSchedule', 'Payment schedule'), unavailable('cashFlowForecasts', 'Cash flow forecasts')] },
+    { id: 'settle', label: t('salesOrder.ui.settle', 'Settle'), actions: [{ id: 'open-transactions', label: t('salesOrder.ui.openTransactions', 'Open transactions'), disabled: !canViewSettlement || Boolean(activeHeader) || savingHeader || !order.invoiceAccount, onClick: () => setSettlementOpen(true) }] },
+    { id: 'correction', label: t('salesOrder.ui.correction', 'Correction'), actions: [unavailable('creditInvoicing', 'Credit invoicing')] },
+    { id: 'journals', label: t('salesOrder.ui.journals', 'Journals'), actions: invoiceJournal ? [{ ...invoiceJournal, label: t('salesOrder.ui.invoice', 'Invoice') }] : [] },
+    { id: 'prepayment', label: t('salesOrder.ui.prepayment', 'Prepayment'), actions: [unavailable('prepaymentProposal', 'Prepayment proposal'), unavailable('prepaymentInvoice', 'Prepayment invoice'), unavailable('applyPrepayment', 'Apply prepayment')] },
+    { id: 'deductions', label: t('salesOrder.ui.deductions', 'Deductions'), actions: [unavailable('attachCreditToDeduction', 'Attach credit to deduction'), unavailable('detachCreditFromDeduction', 'Detach credit from deduction')] },
+  ];
   const records = (
     orders.some((record) => record.id === order.id) ? orders : [order, ...orders]
   ).map((record) => ({
@@ -137,9 +164,14 @@ export function SalesOrderDetails({
             groups: sellRibbonGroups.filter((group) => group.id !== 'invoice'),
           },
           {
+            id: 'pick-and-pack',
+            label: t('salesOrder.ui.pickAndPack', 'Pick and pack'),
+            groups: pickAndPackGroups,
+          },
+          {
             id: 'invoice',
             label: t('salesOrder.ui.invoice'),
-            groups: sellRibbonGroups.filter((group) => group.id === 'invoice'),
+            groups: invoiceGroups,
           },
         ]}
         commands={SALES_ORDER_COMMAND_IDS.map((id) => ({
@@ -237,6 +269,9 @@ export function SalesOrderDetails({
         }}
       />
       <SalesOrderDetailsDialogs scope={scope} />
+      <CustOpenTrans open={settlementOpen} accountNum={order.invoiceAccount}
+        customerName={order.invoiceAccount === order.customerAccount ? order.customerName : order.invoiceAccount}
+        onClose={() => setSettlementOpen(false)} />
     </SalesOrderLinesProvider>
   );
 }

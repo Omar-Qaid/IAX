@@ -12,6 +12,10 @@ import { PERMISSIONS } from '@core/permissions/permissions';
 import { currencyApi } from '../../foundation/currency/api/currencyApi';
 import { taxPeriodApi } from '../api/taxPeriodApi';
 import { taxTableApi, type TaxTableRecord } from '../api/taxTableApi';
+import { taxAccountGroupApi } from '../api/taxAccountGroupApi';
+import { TAX_ROUTE_PATHS } from '../routes/taxRoutePaths';
+import { FOUNDATION_ROUTE_PATHS } from '../../foundation/routes/foundationRoutePaths';
+import { useCompanyStore } from '@core/company/useCompanyStore';
 
 const emptyTaxCode = (): TaxTableRecord => ({
   id: `new-${crypto.randomUUID()}`,
@@ -74,6 +78,8 @@ const num = (name: string, label: string): DetailFieldConfig => ({ name, label, 
 
 export function TaxTablePage(): React.ReactElement {
   const { t } = useAppTranslation();
+  const company = useCompanyStore((state) => state.currentCompany);
+  const postingGroups = useQuery({ queryKey: ['tax-posting-groups', company], queryFn: ({ signal }) => taxAccountGroupApi.list(signal) });
   const periods = useQuery({
     queryKey: ['tax-periods'],
     queryFn: ({ signal }) => taxPeriodApi.list(signal),
@@ -89,7 +95,10 @@ export function TaxTablePage(): React.ReactElement {
     name: string,
     label: string,
     options: { value: string; label: string }[]
-  ): DetailFieldConfig => ({ name, label, type: 'select', options });
+  ): DetailFieldConfig => ({ name, label, type: 'select', options,
+    ...(name === 'taxPeriod' ? { masterRoute: TAX_ROUTE_PATHS.TAX_PERIODS } : {}),
+    ...(name === 'taxCurrencyCode' ? { masterRoute: FOUNDATION_ROUTE_PATHS.CURRENCIES } : {}),
+  });
   const reportFields = (
     prefix: 'Outgoing' | 'Incoming' | 'UseTax' | 'UseTaxOffset',
     labels: string[]
@@ -241,6 +250,10 @@ export function TaxTablePage(): React.ReactElement {
                 {
                   name: 'taxAccountGroup',
                   label: t('taxTable.fields.ledgerPostingGroup', 'Ledger posting group'),
+                  type: 'select',
+                  masterRoute: TAX_ROUTE_PATHS.TAX_ACCOUNT_GROUPS,
+                  options: (postingGroups.data ?? []).map((group) => ({ value: group.taxAccountGroup, label: `${group.taxAccountGroup} - ${group.name}` })),
+                  disabled: postingGroups.isPending || postingGroups.isError,
                 },
                 select(
                   'taxCurrencyCode',
@@ -259,6 +272,7 @@ export function TaxTablePage(): React.ReactElement {
                 {
                   name: 'paymentTaxCode',
                   label: t('taxTable.fields.paymentTaxCode', 'Payment sales tax code'),
+                  masterRoute: TAX_ROUTE_PATHS.TAX_CODES,
                 },
               ],
             },
@@ -434,7 +448,7 @@ export function TaxTablePage(): React.ReactElement {
       },
       presentation: { mode: 'list', listWidth: 258, listResizable: true },
     }),
-    [currencies.data, periods.data, t]
+    [currencies.data, periods.data, postingGroups.data, postingGroups.isPending, postingGroups.isError, t]
   );
   return (
     <ListDetailsPage

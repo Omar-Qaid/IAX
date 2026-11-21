@@ -38,6 +38,17 @@ public sealed class DocumentService : IDocumentService
         return new DocumentPageDto(values.Select(ToDto).ToList(), pageNumber, pageSize, total);
     }
 
+    public async Task<IReadOnlyList<long>> GetRecordsWithDocumentsAsync(int refTableId, IReadOnlyCollection<long> refRecIds, CancellationToken cancellationToken = default)
+    {
+        if (refTableId <= 0 || refRecIds.Count == 0) return [];
+        var ids = refRecIds.Where(x => x > 0).Distinct().ToList();
+        if (ids.Count == 0) return [];
+        var company = CurrentCompany();
+        return await Query().AsNoTracking()
+            .Where(x => x.RefTableId == refTableId && x.RefCompanyId == company && ids.Contains(x.RefRecId))
+            .Select(x => x.RefRecId).Distinct().ToListAsync(cancellationToken);
+    }
+
     public async Task<DocumentDto?> GetAsync(long id, CancellationToken cancellationToken = default)
     {
         var value = await Query().AsNoTracking().SingleOrDefaultAsync(x => x.RecId == id && x.RefCompanyId == CurrentCompany(), cancellationToken);

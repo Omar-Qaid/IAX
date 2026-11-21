@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 export interface UnavailableCommandButtonProps {
   /** Translated command label. */
   label: string;
+  startIcon?: React.ReactNode;
 }
 
 /**
@@ -12,12 +13,12 @@ export interface UnavailableCommandButtonProps {
  * on hover, so it reads as unbuilt rather than broken. A disabled button fires no pointer
  * events, so the tooltip hangs on an enabled wrapper.
  */
-export const UnavailableCommandButton: React.FC<UnavailableCommandButtonProps> = ({ label }) => {
+export const UnavailableCommandButton: React.FC<UnavailableCommandButtonProps> = ({ label, startIcon }) => {
   const { t } = useTranslation();
   return (
     <Tooltip title={t('common.notAvailableYet')}>
       <span style={{ display: 'inline-flex' }}>
-        <Button disabled>{label}</Button>
+        <Button disabled startIcon={startIcon}>{label}</Button>
       </span>
     </Tooltip>
   );

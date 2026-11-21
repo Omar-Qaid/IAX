@@ -1,3 +1,4 @@
+import { INVENTORY_ROUTE_PATHS as MASTER_INVENTORY_ROUTES } from '@modules/finance/inventory/routes/inventoryRoutePaths';
 import React, { useMemo } from 'react';
 import { Alert, Box, CircularProgress } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -56,7 +57,7 @@ export function InventParametersPage(): React.ReactElement {
               ...(lookups.data?.units.map((x) => option(x.id, x.name)) ?? []),
             ],
           },
-          {
+          { masterRoute: MASTER_INVENTORY_ROUTES.SITES, 
             name: 'multiSiteDefaultInventSiteId',
             label: t('inventParameters.fields.defaultSite', 'Default site'),
             type: 'select',
@@ -65,7 +66,7 @@ export function InventParametersPage(): React.ReactElement {
               ...(lookups.data?.sites.map((x) => option(x.id, x.name)) ?? []),
             ],
           },
-          {
+          { masterRoute: MASTER_INVENTORY_ROUTES.WAREHOUSES, 
             name: 'multiSiteDefaultInventLocationId',
             label: t('inventParameters.fields.defaultWarehouse', 'Default warehouse'),
             type: 'select',

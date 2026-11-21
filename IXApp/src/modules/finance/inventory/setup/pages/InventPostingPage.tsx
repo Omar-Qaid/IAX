@@ -264,7 +264,7 @@ export function InventPostingPage(): React.ReactElement {
           row.custVendCode === 2 || (tabId !== 'sales' && tabId !== 'purchase')
         ),
     },
-    {
+    { preview: { entity: 'taxGroup' }, 
       field: 'taxGroupId',
       headerName: 'fields.salesTaxGroup',
       width: 155,

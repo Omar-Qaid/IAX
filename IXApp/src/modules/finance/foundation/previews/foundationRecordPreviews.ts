@@ -8,9 +8,49 @@ export const FOUNDATION_RECORD_PREVIEWS = {
   SALES_TAX_GROUP: 'taxGroup',
   ITEM_SALES_TAX_GROUP: 'taxItemGroup',
   TAX_AUTHORITY: 'taxAuthority',
+  TAX_LEDGER_DIMENSION: 'taxLedgerDimension',
+  TAX_ACCOUNT_GROUP: 'taxAccountGroup',
+  TAX_PERIOD: 'taxPeriod',
+  TAX_CODE: 'taxCode',
   DELIVERY_MODE: 'dlvMode',
   DELIVERY_TERMS: 'dlvTerm',
 } as const;
+
+registerRecordPreview<{ code: string; name: string }>(FOUNDATION_RECORD_PREVIEWS.TAX_LEDGER_DIMENSION, {
+  fromOption: (option) => ({ code: option.code, name: option.name ?? '' }),
+  fields: [
+    { labelKey: 'fields.mainAccount', defaultLabel: 'Main account', value: 'code', lookup: true },
+    { labelKey: 'fields.description', defaultLabel: 'Description', value: 'name' },
+  ],
+});
+
+registerRecordPreview<{ taxAccountGroup: string; name: string }>(FOUNDATION_RECORD_PREVIEWS.TAX_ACCOUNT_GROUP, {
+  masterRoute: TAX_ROUTE_PATHS.TAX_ACCOUNT_GROUPS,
+  load: pagedRecordLoader('/v1/TaxLedgerAccountGroup', 'TaxAccountGroup'),
+  fromOption: (option) => ({ taxAccountGroup: option.code, name: option.name ?? '' }),
+  fields: [
+    { labelKey: 'taxAccountGroup.fields.code', defaultLabel: 'Ledger posting group', value: 'taxAccountGroup', lookup: true },
+    { labelKey: 'fields.description', defaultLabel: 'Description', value: 'name' },
+  ],
+});
+registerRecordPreview<{ taxPeriod: string; name: string }>(FOUNDATION_RECORD_PREVIEWS.TAX_PERIOD, {
+  masterRoute: TAX_ROUTE_PATHS.TAX_PERIODS,
+  load: pagedRecordLoader('/v1/TaxPeriodHead', 'TaxPeriod'),
+  fromOption: (option) => ({ taxPeriod: option.code, name: option.name ?? '' }),
+  fields: [
+    { labelKey: 'taxTable.fields.settlementPeriod', defaultLabel: 'Settlement period', value: 'taxPeriod', lookup: true },
+    { labelKey: 'fields.description', defaultLabel: 'Description', value: 'name' },
+  ],
+});
+registerRecordPreview<{ taxCode: string; taxName: string }>(FOUNDATION_RECORD_PREVIEWS.TAX_CODE, {
+  masterRoute: TAX_ROUTE_PATHS.TAX_CODES,
+  load: pagedRecordLoader('/v1/TaxTable', 'TaxCode'),
+  fromOption: (option) => ({ taxCode: option.code, taxName: option.name ?? '' }),
+  fields: [
+    { labelKey: 'taxTable.fields.code', defaultLabel: 'Sales tax code', value: 'taxCode', lookup: true },
+    { labelKey: 'fields.description', defaultLabel: 'Description', value: 'taxName' },
+  ],
+});
 
 // Server DTO fields shown by the cards (the paged loader returns raw DTOs).
 interface CurrencyPreview {

@@ -18,6 +18,10 @@ namespace IAX.IXApi.Modules.Finance.Tax
     {
         private readonly ITaxLedgerAccountGroupService _ledgerService;
 
+        [HttpGet("ledger-accounts")]
+        public async Task<IActionResult> LedgerAccounts(CancellationToken ct) =>
+            Ok(APIResponse<object>.Ok(await _ledgerService.LedgerAccountsAsync(ct)));
+
         public TaxLedgerAccountGroupController(ITaxLedgerAccountGroupService service, ILogger<TaxLedgerAccountGroupController> logger)
             : base(service, logger)
         {

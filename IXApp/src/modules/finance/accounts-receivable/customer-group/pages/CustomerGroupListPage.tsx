@@ -52,7 +52,7 @@ export function CustomerGroupListPage(): React.ReactElement {
         editable: true,
       },
       { field: 'name', headerName: 'fields.description', width: 205, editable: true },
-      {
+      { preview: { entity: 'paymentTerms' }, 
         field: 'paymTermId',
         headerName: 'fields.termsOfPayment',
         width: 205,
@@ -60,7 +60,7 @@ export function CustomerGroupListPage(): React.ReactElement {
         type: 'singleSelect',
         valueOptions: paymentOptions,
       },
-      {
+      { preview: { entity: 'taxGroup' }, 
         field: 'taxGroupId',
         headerName: 'fields.salesTaxGroup',
         width: 150,

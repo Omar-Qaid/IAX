@@ -155,7 +155,7 @@ export function DocumentChargesPage({
         headerAlign: 'right',
         editable: true,
       },
-      {
+      { preview: { entity: 'currency' }, 
         field: 'currencyCode',
         headerName: t('fields.currency', 'Currency'),
         width: 105,
@@ -171,7 +171,7 @@ export function DocumentChargesPage({
         editable: true,
         valueGetter: ({ row }) => row.mcrBrokerContractFee === 1,
       },
-      {
+      { preview: { entity: 'taxGroup' }, 
         field: 'taxGroup',
         headerName: 'fields.salesTaxGroup',
         width: 170,
@@ -179,7 +179,7 @@ export function DocumentChargesPage({
         valueOptions: taxGroupOptions,
         editable: true,
       },
-      {
+      { preview: { entity: 'taxItemGroup' }, 
         field: 'taxItemGroup',
         headerName: 'fields.itemSalesTaxGroup',
         width: 180,

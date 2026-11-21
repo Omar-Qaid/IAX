@@ -1,3 +1,4 @@
+import { INVENTORY_ROUTE_PATHS as MASTER_INVENTORY_ROUTES } from '@modules/finance/inventory/routes/inventoryRoutePaths';
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
@@ -76,7 +77,7 @@ export function WMSLocationPage(): React.ReactElement {
             {
               id: 'location',
               fields: [
-                {
+                { masterRoute: MASTER_INVENTORY_ROUTES.WAREHOUSES, 
                   name: 'inventLocationId',
                   label: t('wmsLocation.fields.warehouse', 'Warehouse'),
                   type: 'select',

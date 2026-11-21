@@ -365,6 +365,7 @@
     "tagline": "Enterprise Resource Planning Solution"
   },
   "nav": {
+    "taxLedgerPostingGroups": "Ledger posting groups",
     "customerPostingProfiles": "Customer posting profiles",
     "app_title": "IXApp Enterprise",
     "app_title_short": "IXApp",
@@ -437,7 +438,8 @@
     "tradeAgreementJournalNames": "Trade agreement journal names",
     "batchJobs": "Batch jobs",
     "batchGroups": "Batch groups",
-    "batchJobActivePeriods": "Batch job active periods"
+    "batchJobActivePeriods": "Batch job active periods",
+    "inquiriesAndReports": "Inquiries and reports"
   },
   "pages": {
     "login": {
@@ -3507,7 +3509,28 @@
     "show": "Show",
     "closed": "Closed",
     "hideCurrencyRevaluations": "Hide currency revaluations",
-    "loadFailed": "Unable to load customer transactions"
+    "loadFailed": "Unable to load customer transactions",
+    "costCenter": "Cost center",
+    "workerId": "Worker id",
+    "actions": {
+      "edit": "Edit",
+      "voucher": "Voucher",
+      "viewSettlements": "View settlements",
+      "settlement": "Settlement",
+      "settleOpenTransactions": "Settle open transactions",
+      "markPaymentForSettlement": "Mark payment for settlement",
+      "originalDocument": "Original document",
+      "openDetails": "Open details",
+      "collections": "Collections",
+      "collectionsCustomerPool": "Collections customer pool",
+      "interestNote": "Interest note",
+      "collectionLetter": "Collection letter",
+      "billOfExchange": "Bill of exchange",
+      "reverse": "Reverse",
+      "reverseTransaction": "Reverse transaction",
+      "reversalTrace": "Reversal trace",
+      "cashFlowForecasts": "Cash flow forecasts"
+    }
   },
   "customerSellRibbon": {
     "allSalesOrders": "All sales orders",
@@ -3724,7 +3747,45 @@
     "intercompanyPosted": "Posted via intercompany",
     "lineSpecific": "Line-specific",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "workerId": "Worker id",
+    "workerName": "Worker name",
+    "project": "Project",
+    "hasAttachment": "Has attachment",
+    "salesTaxAmount": "Sales tax amount",
+    "groups": {
+      "accounting": "Accounting",
+      "ship": "Ship",
+      "details": "Details",
+      "intercompany": "Intercompany",
+      "document": "Document",
+      "properties": "Properties"
+    },
+    "actions": {
+      "electronicInvoiceServiceRequests": "Electronic invoice service requests",
+      "postEInvoice": "Post E-Invoice",
+      "totals": "Totals",
+      "voucher": "Voucher",
+      "transactions": "Transactions",
+      "charges": "Charges",
+      "postedSalesTax": "Posted sales tax",
+      "invoiceTab": "Invoice",
+      "viewDistributions": "View distributions",
+      "viewAccounting": "View accounting",
+      "shippingSpecifications": "Shipping specifications",
+      "billOfLading": "Bill of lading",
+      "viewHistoricalLoadData": "View historical load data",
+      "commissionTransactions": "Commission transactions",
+      "synchronizeBatchSerialNumbers": "Synchronize batch/serial numbers",
+      "generateIntercompanyInvoice": "Generate intercompany invoice",
+      "view": "View",
+      "send": "Send",
+      "invoice": "Invoice",
+      "originalPreview": "Original preview",
+      "email": "Email",
+      "print": "Print",
+      "electronicDocumentProperties": "Electronic document properties"
+    }
   },
   "custSalesLines": {
     "title": "Customer order lines",
@@ -4294,5 +4355,142 @@
     },
     "title": "Return order and credit note",
     "working": "Working..."
+  },
+  "mainAccount": {
+    "closeType": {
+      "0": "Not applicable",
+      "1": "Opening",
+      "2": "Closing"
+    },
+    "commands": {
+      "additionalConsolidationAccounts": "Additional consolidation accounts",
+      "assignTemplate": "Assign template",
+      "assignTemplateItem": "Assign",
+      "currencyCodeValidation": "Currency code validation",
+      "postingValidation": "Posting validation",
+      "removeTemplate": "Remove",
+      "totals": "Totals",
+      "userValidation": "User validation",
+      "newFromTemplate": "New from template",
+      "newFromTemplateItem": "New from template",
+      "transactions": "Transactions",
+      "accountingSourceExplorer": "Accounting source explorer",
+      "nameTranslations": "Name Translations",
+      "accountStatement": "Account statement",
+      "totalAccounts": "Total accounts"
+    },
+    "debitCredit": {
+      "0": "None",
+      "1": "Debit",
+      "2": "Credit"
+    },
+    "fieldControl": {
+      "0": "Optional",
+      "1": "Fill in",
+      "2": "Table",
+      "3": "List"
+    },
+    "fields": {
+      "balanceControl": "Balance control",
+      "closeType": "Close type",
+      "closing": "Closing",
+      "debitCreditDefault": "DB/CR default",
+      "debitCreditRequirement": "DB/CR requirement",
+      "defaultConsolidationAccount": "Default consolidation account",
+      "defaultCurrency": "Default currency",
+      "exchangeRateType": "Exchange rate type",
+      "level1": "Level 1",
+      "level2": "Level 2",
+      "level3": "Level 3",
+      "mainAccount": "Main account",
+      "mainAccountCategory": "Main account category",
+      "mainAccountType": "Main account type",
+      "monetary": "Monetary",
+      "name": "Name",
+      "offsetAccount": "Offset account",
+      "openingAccount": "Opening account",
+      "postingType": "Posting type",
+      "postingTypeValidation": "Posting type validation",
+      "reportingCurrencyExchangeRateType": "Reporting currency exchange rate type",
+      "validateCurrencyCode": "Validate currency code",
+      "validateUser": "Validate user",
+      "reportingType": "Reporting type",
+      "foreignCurrencyRevaluation": "Foreign currency revaluation",
+      "activeFrom": "Active from",
+      "activeTo": "Active to",
+      "suspended": "Suspended",
+      "userId": "User ID"
+    },
+    "groups": {
+      "administration": "Administration",
+      "consolidation": "Consolidation",
+      "currency": "Currency",
+      "identification": "Identification",
+      "ledger": "Ledger",
+      "postingType": "Posting type",
+      "relatedAccounts": "Related accounts",
+      "reporting": "Reporting",
+      "user": "User"
+    },
+    "hints": {
+      "advancedRules": "No advanced rule structure is assigned to this account.",
+      "financialReporting": "Financial reporting uses the reporting levels above.",
+      "legalEntityOverrides": "No legal entity override is defined for this account."
+    },
+    "sections": {
+      "advancedRules": "Advanced rules",
+      "financialReporting": "Financial reporting",
+      "general": "General",
+      "legalEntityOverrides": "Legal entity overrides",
+      "postingValidation": "Posting validation"
+    },
+    "title": "Main accounts - chart of accounts",
+    "types": {
+      "1": "Asset",
+      "2": "Liability",
+      "3": "Equity",
+      "4": "Revenue",
+      "5": "Expense"
+    },
+    "validation": {
+      "accountRequired": "Enter a main account number.",
+      "nameRequired": "Enter a name."
+    }
+  },
+  "ledgerTransVoucher": {
+    "title": "Voucher transactions",
+    "journalNumber": "Journal number",
+    "voucher": "Voucher",
+    "date": "Date",
+    "yearClosed": "Year closed",
+    "ledgerAccount": "Ledger account",
+    "accountName": "Account name",
+    "description": "Description",
+    "currency": "Currency",
+    "amountCur": "Amount in transaction currency",
+    "amountMst": "Amount in accounting currency",
+    "postingType": "Posting type",
+    "overview": "Overview",
+    "general": "General",
+    "noRecordSelected": "No record selected",
+    "actions": {
+      "viewSubledgerJournal": "View subledger journal",
+      "transactionOrigin": "Transaction origin",
+      "transactions": "Transactions",
+      "auditTrail": "Audit trail",
+      "editVoucher": "Edit voucher",
+      "editZakatTransactions": "Edit Zakat transactions",
+      "editDimensions": "Edit dimensions",
+      "postedSalesTax": "Posted sales tax",
+      "originalDocument": "Original document",
+      "accountingSourceExplorer": "Accounting source explorer",
+      "reverseTransactions": "Reverse transactions",
+      "reverse": "Reverse",
+      "reverseAndTrace": "Reverse and trace",
+      "reversedTracing": "Reversed tracing",
+      "relatedVouchers": "Related vouchers",
+      "allRelatedVouchers": "All related vouchers",
+      "viewReversalFailures": "View reversal failures"
+    }
   }
 }

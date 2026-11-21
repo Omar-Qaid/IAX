@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Alert,
   Box,
+  Button,
   CircularProgress,
   Grid,
   IconButton,
@@ -57,6 +58,7 @@ import type {
   DetailValue,
   EnterpriseListDetailsConfig,
   ListDetailRecord,
+  ListDetailsCommand,
   ListDetailsHeaderField,
 } from './types';
 import { d365 } from '@shared/constants/enterpriseUiTokens';
@@ -142,7 +144,10 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
   const { hasPermission: canEdit } = usePermission(config.permissions?.edit);
   const { hasPermission: canDelete } = usePermission(config.permissions?.delete);
   const record = state.draft;
-  const attachmentTableId = config.attachments?.refTableId ?? recordTableId(title);
+  // Attachment identity follows the record's table, like audit, so a title that
+  // names the selected context (a chart of accounts, say) keeps the same documents.
+  const attachmentTableId =
+    config.attachments?.refTableId ?? recordTableId(config.recordTableName ?? title);
   const selectedAttachmentRecId = state.selected
     ? (config.attachments?.getRefRecId?.(state.selected) ?? Number(state.selected.id))
     : null;
@@ -197,15 +202,33 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
     typeof config.commands === 'function'
       ? config.commands(state.selected)
       : (config.commands ?? []);
-  const standaloneCommands = resolvedCommands.filter((command) => !command.menuLabel);
-  const commandMenus = [
-    ...new Set(
-      resolvedCommands
-        .map((command) => command.menuLabel)
-        .filter((label): label is string => Boolean(label))
-    ),
-  ];
+  /**
+   * The action pane keeps the page's own command order, with each dropdown taking
+   * the place of its first entry, so a menu sits where the form puts it.
+   */
+  type ActionPaneEntry =
+    | { kind: 'menu'; menuLabel: string }
+    | { kind: 'command'; command: ListDetailsCommand<T> };
+  const commandEntries = resolvedCommands.flatMap<ActionPaneEntry>((command) =>
+    command.menuLabel
+      ? resolvedCommands.find((candidate) => candidate.menuLabel === command.menuLabel) === command
+        ? [{ kind: 'menu' as const, menuLabel: command.menuLabel }]
+        : []
+      : [{ kind: 'command' as const, command }]
+  );
   if (!canView) return <AccessDeniedState />;
+  /**
+   * Returns the move to the adjacent record, or undefined at either end, so the
+   * pager can both disable its button and perform the step from one call.
+   */
+  const stepRecord = (offset: -1 | 1): (() => void) | undefined => {
+    const rows = state.visibleRecords;
+    const index = rows.findIndex((row) => row.id === state.selectedId);
+    const target = index < 0 ? undefined : rows[index + offset];
+    if (!target || state.editing) return undefined;
+    return () => state.choose(target);
+  };
+
   const listPane = config.renderListPane ? (
     config.renderListPane({
       records: state.records,
@@ -395,9 +418,31 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
               onCancel={state.cancel}
             />
           )}
-          {(standaloneCommands.length > 0 || commandMenus.length > 0) && (
+          {commandEntries.length > 0 && (
             <ActionPaneGroup>
-              {standaloneCommands.map((command) => {
+              {commandEntries.map((entry) => {
+                if (entry.kind === 'menu') {
+                  const menuLabel = entry.menuLabel;
+                  return (
+                    <ActionPaneMenu
+                      key={menuLabel}
+                      label={menuLabel}
+                      disabled={state.editing}
+                      actions={resolvedCommands
+                        .filter((command) => command.menuLabel === menuLabel)
+                        .map((command) => ({
+                          id: command.id,
+                          label: command.label,
+                          disabled:
+                            command.disabled || (command.requiresSelection && !state.selected),
+                          onClick: command.onClick
+                            ? () => command.onClick?.(state.selected)
+                            : undefined,
+                        }))}
+                    />
+                  );
+                }
+                const command = entry.command;
                 const unavailable =
                   state.editing ||
                   command.disabled ||
@@ -420,23 +465,6 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
                   />
                 );
               })}
-              {commandMenus.map((menuLabel) => (
-                <ActionPaneMenu
-                  key={menuLabel}
-                  label={menuLabel}
-                  disabled={state.editing}
-                  actions={resolvedCommands
-                    .filter((command) => command.menuLabel === menuLabel)
-                    .map((command) => ({
-                      id: command.id,
-                      label: command.label,
-                      disabled: command.disabled || (command.requiresSelection && !state.selected),
-                      onClick: command.onClick
-                        ? () => command.onClick?.(state.selected)
-                        : undefined,
-                    }))}
-                />
-              ))}
             </ActionPaneGroup>
           )}
           <ActionPaneGroup>
@@ -503,6 +531,37 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
                 globalThis.location?.pathname
               }
               listPane={listPane}
+              listFooter={
+                config.listPager && (
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      gap: 1,
+                      p: 1,
+                      borderTop: 1,
+                      borderColor: 'divider',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      disabled={config.listPager.previousDisabled ?? !stepRecord(-1)}
+                      onClick={config.listPager.onPrevious ?? (() => stepRecord(-1)?.())}
+                    >
+                      {config.listPager.previousLabel ?? t('common.previous')}
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      disabled={config.listPager.nextDisabled ?? !stepRecord(1)}
+                      onClick={config.listPager.onNext ?? (() => stepRecord(1)?.())}
+                    >
+                      {config.listPager.nextLabel ?? t('common.next')}
+                    </Button>
+                  </Box>
+                )
+              }
               header={
                 <>
                   {config.detailNotice}

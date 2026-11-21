@@ -16,6 +16,8 @@ import { useUnsavedChanges } from '@shared/hooks/useUnsavedChanges';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { deepEqual } from '@shared/utils/deepEqual';
 import type { SetupFieldConfig, SetupPageProps, SetupValue } from './types';
+import { LookupNavigationLabel } from '@shared/components/lookups/LookupNavigationLabel';
+import { RecordPreview } from '@shared/components/record-preview';
 
 function SetupField({
   field,
@@ -38,70 +40,84 @@ function SetupField({
   };
 
   return (
-    <Box sx={{ minWidth: 0 }}>
-      <Typography
-        title={field.label}
-        noWrap
-        sx={{ mb: 0.25, color: 'text.secondary', fontSize: '0.6875rem', lineHeight: 1.3 }}
-      >
-        {field.label}
-      </Typography>
-      {field.type === 'boolean' ? (
-        <Box sx={{ display: 'flex', alignItems: 'center', minHeight: 29 }}>
-          <Switch
-            checked={Boolean(value)}
-            disabled={field.disabled}
-            onChange={(_, checked) => onChange(checked)}
-            size="small"
-            slotProps={{ input: { 'aria-label': field.label } }}
-            sx={{
-              marginInlineStart: -0.75,
-              marginInlineEnd: 0.25,
-              '& .MuiSwitch-switchBase': { p: '5px' },
-              '& .MuiSwitch-thumb': { width: 13, height: 13 },
-              '& .MuiSwitch-track': {
-                border: '1px solid',
-                borderColor: 'text.secondary',
-                bgcolor: 'transparent',
-                opacity: 1,
-              },
-              '& .Mui-checked + .MuiSwitch-track': {
-                borderColor: 'primary.main',
-                bgcolor: 'primary.main',
-                opacity: 1,
-              },
-            }}
-          />
-          <Typography sx={{ fontSize: '0.75rem' }}>{value ? yesLabel : noLabel}</Typography>
-        </Box>
-      ) : field.type === 'select' ? (
-        <TextField
-          select
-          value={value ?? ''}
-          disabled={field.disabled}
-          onChange={(event) => onChange(event.target.value)}
-          slotProps={{ htmlInput: { 'aria-label': field.label } }}
-          sx={inputSx}
+    <RecordPreview
+      masterRoute={field.masterRoute}
+      entity={field.previewEntity}
+      recordKey={typeof value === 'string' || typeof value === 'number' ? value : null}
+      option={
+        field.options?.find((option) => option.value === String(value))
+          ? {
+              code: String(value),
+              name: field.options.find((option) => option.value === String(value))!.label,
+            }
+          : null
+      }
+    >
+      <Box sx={{ minWidth: 0 }}>
+        <Typography
+          title={field.label}
+          noWrap
+          sx={{ mb: 0.25, color: 'text.secondary', fontSize: '0.6875rem', lineHeight: 1.3 }}
         >
-          {(field.options ?? []).map((option) => (
-            <MenuItem key={option.value} value={option.value} sx={{ fontSize: '0.75rem' }}>
-              {option.label}
-            </MenuItem>
-          ))}
-        </TextField>
-      ) : (
-        <TextField
-          type={field.type === 'number' ? 'number' : 'text'}
-          value={value ?? ''}
-          disabled={field.disabled}
-          slotProps={{ htmlInput: { min: field.min, max: field.max, 'aria-label': field.label } }}
-          onChange={(event) =>
-            onChange(field.type === 'number' ? Number(event.target.value) : event.target.value)
-          }
-          sx={inputSx}
-        />
-      )}
-    </Box>
+          <LookupNavigationLabel label={field.label} masterRoute={field.masterRoute} />
+        </Typography>
+        {field.type === 'boolean' ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', minHeight: 29 }}>
+            <Switch
+              checked={Boolean(value)}
+              disabled={field.disabled}
+              onChange={(_, checked) => onChange(checked)}
+              size="small"
+              slotProps={{ input: { 'aria-label': field.label } }}
+              sx={{
+                marginInlineStart: -0.75,
+                marginInlineEnd: 0.25,
+                '& .MuiSwitch-switchBase': { p: '5px' },
+                '& .MuiSwitch-thumb': { width: 13, height: 13 },
+                '& .MuiSwitch-track': {
+                  border: '1px solid',
+                  borderColor: 'text.secondary',
+                  bgcolor: 'transparent',
+                  opacity: 1,
+                },
+                '& .Mui-checked + .MuiSwitch-track': {
+                  borderColor: 'primary.main',
+                  bgcolor: 'primary.main',
+                  opacity: 1,
+                },
+              }}
+            />
+            <Typography sx={{ fontSize: '0.75rem' }}>{value ? yesLabel : noLabel}</Typography>
+          </Box>
+        ) : field.type === 'select' ? (
+          <TextField
+            select
+            value={value ?? ''}
+            disabled={field.disabled}
+            onChange={(event) => onChange(event.target.value)}
+            slotProps={{ htmlInput: { 'aria-label': field.label } }}
+            sx={inputSx}
+          >
+            {(field.options ?? []).map((option) => (
+              <MenuItem key={option.value} value={option.value} sx={{ fontSize: '0.75rem' }}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </TextField>
+        ) : (
+          <TextField
+            type={field.type === 'number' ? 'number' : 'text'}
+            value={value ?? ''}
+            disabled={field.disabled}
+            slotProps={{ htmlInput: { min: field.min, max: field.max, 'aria-label': field.label } }}
+            onChange={(event) =>
+              onChange(field.type === 'number' ? Number(event.target.value) : event.target.value)
+            }
+            sx={inputSx}
+          />
+        )}
+      </Box>
+    </RecordPreview>
   );
 }
 

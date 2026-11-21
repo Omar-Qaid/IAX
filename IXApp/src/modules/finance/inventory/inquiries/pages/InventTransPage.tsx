@@ -117,7 +117,7 @@ export function InventTransPage(): React.ReactElement {
       },
       { field: 'site', headerName: t('inventTrans.fields.site'), width: 90 },
       { field: 'warehouse', headerName: t('inventTrans.fields.warehouse'), width: 115 },
-      { field: 'currencyCode', headerName: t('fields.currency'), width: 95 },
+      { preview: { entity: 'currency' },  field: 'currencyCode', headerName: t('fields.currency'), width: 95 },
     ],
     [t]
   );

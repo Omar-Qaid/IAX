@@ -5,4 +5,5 @@ namespace IAX.IXApi.Modules.Finance.Tax;
 
 public interface ITaxLedgerAccountGroupService : IBaseService<TaxLedgerAccountGroup> {
     void Normalize(TaxLedgerAccountGroup entity);
+    Task<object> LedgerAccountsAsync(CancellationToken ct);
 }

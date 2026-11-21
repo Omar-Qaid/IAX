@@ -349,6 +349,7 @@ describe('account inquiries', () => {
       '/v1/CustTrans/transactions',
       expect.objectContaining({ params: { accountNum: 'C-17' } })
     );
-    expect(screen.queryByRole('button', { name: 'Edit' })).toBeNull();
+    // The inquiry shows the reference form's Edit command, but it never edits a posted transaction.
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeDisabled();
   });
 });

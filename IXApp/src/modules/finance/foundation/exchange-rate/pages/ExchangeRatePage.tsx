@@ -56,13 +56,13 @@ export function ExchangeRatePage(): React.ReactElement {
 
   const pairColumns = useMemo<ColumnDef<ExchangeRatePair>[]>(
     () => [
-      {
+      { preview: { entity: 'currency' }, 
         field: 'fromCurrency',
         headerName: 'exchangeRates.fields.fromCurrency',
         width: 122,
         pinned: 'left',
       },
-      { field: 'toCurrency', headerName: 'exchangeRates.fields.toCurrency', width: 94 },
+      { preview: { entity: 'currency' },  field: 'toCurrency', headerName: 'exchangeRates.fields.toCurrency', width: 94 },
       {
         field: 'conversionFactor',
         headerName: 'exchangeRates.fields.conversionFactor',

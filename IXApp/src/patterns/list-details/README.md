@@ -10,4 +10,8 @@ Grids use `PatternDataGrid`, shared with master-details and the free-text invoic
 
 Pattern-owned pages provide a shared edit session. Nested pattern grids register automatically: Save commits their active rows before validating and saving the page, and a line failure keeps the page and grid in Edit mode. Save and Cancel clear row editors when returning to View. Grid pencils request page Edit mode first; line Add/Remove actions require page Edit mode. Saving locks the editors without switching modes. Custom externally controlled pages (`readOnly` with their own actions) retain responsibility for their edit lifecycle.
 
+A section can carry its own command strip (`commands`) and sub-tabs (`tabs`), the way D365 places commands and tabbed panels under a FastTab heading. A group names the tab it belongs to with `tab`; a group without one shows on every tab. The section keeps its own tab selection unless the page passes `activeTabId`.
+
+Action-pane commands keep the order the page declares them in: a command with `menuLabel` becomes a dropdown at the position of its first entry, so a menu sits where the reference form puts it rather than after every button.
+
 [List-details guide](../../../docs/patterns/LIST_DETAILS_PAGE.md) · [Shared grid](../../shared/components/data-grid/README.md)

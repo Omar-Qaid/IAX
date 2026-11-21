@@ -1,12 +1,15 @@
 import React from 'react';
 import { Box, Checkbox, FormControlLabel, MenuItem, Stack, TextField } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ROUTE_PATHS } from '@app/routes/routePaths';
 import { apiClient } from '@core/api/apiClient';
 import type { ApiResponse } from '@core/api/apiResponse';
 import { useCompanyStore } from '@core/company/useCompanyStore';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { SimpleListPage } from '@patterns/simple-list/SimpleListPage';
+import { ActionPaneButton } from '@shared/components/action-pane/ActionPaneButton';
+import { ActionPaneMenu } from '@shared/components/action-pane/ActionPaneMenu';
 import type { ColumnDef } from '@shared/components/data-grid/types';
 
 interface Transaction {
@@ -22,6 +25,8 @@ interface Transaction {
   amountMst: number;
   balanceMst: number;
   department: string | null;
+  costCenter: string | null;
+  workerId: string | null;
 }
 type Row = Transaction & { id: string };
 type ShowFilter = 'all' | 'open' | 'closed';
@@ -60,15 +65,20 @@ const buildColumns = (t: (key: string) => string): ColumnDef<Row>[] => [
   amountColumn('amountMst'),
   amountColumn('balanceMst'),
   { field: 'department', headerName: 'customerInquiry.department' },
+  { field: 'costCenter', headerName: 'customerInquiry.costCenter' },
+  { field: 'workerId', headerName: 'customerInquiry.workerId' },
 ];
 const showOptions: ShowFilter[] = ['all', 'open', 'closed'];
 
 export function CustTrans(): React.ReactElement {
   const { accountNum } = useParams();
+  const navigate = useNavigate();
   const { t } = useAppTranslation();
   const company = useCompanyStore((state) => state.currentCompany);
   const [show, setShow] = React.useState<ShowFilter>('all');
+  const [asOfDate, setAsOfDate] = React.useState('');
   const [hideRevaluations, setHideRevaluations] = React.useState(false);
+  const [selected, setSelected] = React.useState<Row | null>(null);
   const columns = React.useMemo(() => buildColumns(t), [t]);
   const query = useQuery({
     queryKey: ['CustTrans', company, accountNum],
@@ -87,13 +97,67 @@ export function CustTrans(): React.ReactElement {
       const open = row.balanceCur !== 0 || row.balanceMst !== 0;
       return (
         (show === 'all' || (show === 'open') === open) &&
+        (!asOfDate || row.transDate.slice(0, 10) <= asOfDate) &&
         (!hideRevaluations || row.transactionType !== 'ExchAdjustment')
       );
     })
     .map((row) => ({ ...row, id: String(row.recId) }));
+  const action = (id: string) => t(`customerInquiry.actions.${id}`);
+  /** A reference command of the D365 form that this build does not implement yet. */
+  const reference = (id: string) => (
+    <ActionPaneButton key={id} label={action(id)} disabled tooltip={t('common.notAvailableYet')} />
+  );
+  const referenceMenu = (id: string, items: string[]) => (
+    <ActionPaneMenu
+      key={id}
+      label={action(id)}
+      actions={items.map((item) => ({ id: item, label: action(item), disabled: true }))}
+    />
+  );
+  const actionPane = (
+    <>
+      {reference('edit')}
+      <ActionPaneButton
+        label={action('voucher')}
+        disabled={!selected?.voucher}
+        onClick={() =>
+          navigate(
+            `${ROUTE_PATHS.GENERAL_LEDGER.VOUCHER_TRANSACTIONS}?voucher=${encodeURIComponent(
+              selected?.voucher ?? ''
+            )}&reference=${encodeURIComponent(selected?.invoice ?? accountNum ?? '')}`
+          )
+        }
+      />
+      {reference('viewSettlements')}
+      {referenceMenu('settlement', ['settleOpenTransactions', 'markPaymentForSettlement'])}
+      {reference('originalDocument')}
+      <ActionPaneButton
+        label={action('openDetails')}
+        disabled={!accountNum}
+        onClick={() =>
+          navigate(
+            ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_OPEN_TRANSACTIONS.replace(
+              ':accountNum',
+              encodeURIComponent(accountNum ?? '')
+            )
+          )
+        }
+      />
+      {referenceMenu('collections', [
+        'collectionsCustomerPool',
+        'interestNote',
+        'collectionLetter',
+      ])}
+      {reference('billOfExchange')}
+      {referenceMenu('reverse', ['reverseTransaction', 'reversalTrace'])}
+      {reference('cashFlowForecasts')}
+    </>
+  );
+
   return (
     <SimpleListPage<Row>
       title={t('customerInquiry.customerTransactions')}
+      actionPane={actionPane}
       columns={columns}
       recordTableName="CustTrans"
       enterpriseConfig={{
@@ -105,7 +169,13 @@ export function CustTrans(): React.ReactElement {
       loading={query.isPending}
       error={query.error?.message}
       onRetry={() => void query.refetch()}
-      dataGridProps={{ storageKey: 'accounts-receivable.customer-transactions.reference-view' }}
+      dataGridProps={{
+        storageKey: 'accounts-receivable.customer-transactions.reference-view',
+        selectionMode: 'single',
+        selectedIds: selected ? [selected.id] : [],
+        onSelectionChange: (ids) =>
+          setSelected(rows.find((row) => row.id === String(ids[0])) ?? null),
+      }}
       filterBar={
         <Box sx={{ mx: { xs: 1, sm: 2.5 } }}>
           <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
@@ -122,6 +192,14 @@ export function CustTrans(): React.ReactElement {
                 </MenuItem>
               ))}
             </TextField>
+            <TextField
+              type="date"
+              size="small"
+              label={t('customerInquiry.date')}
+              value={asOfDate}
+              onChange={(event) => setAsOfDate(event.target.value)}
+              slotProps={{ inputLabel: { shrink: true } }}
+            />
             <FormControlLabel
               label={t('customerInquiry.hideCurrencyRevaluations')}
               control={

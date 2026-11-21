@@ -237,6 +237,24 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'main-accounts',
+    path: ROUTE_PATHS.GENERAL_LEDGER.MAIN_ACCOUNTS,
+    permission: PERMISSIONS.MAIN_ACCOUNT_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/general-ledger/main-account/pages/MainAccountDetails'),
+      (module) => module.MainAccountDetails
+    ),
+  },
+  {
+    id: 'LedgerTransVoucher',
+    path: ROUTE_PATHS.GENERAL_LEDGER.VOUCHER_TRANSACTIONS,
+    permission: PERMISSIONS.LEDGER_JOURNAL_ENTRY_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/general-ledger/voucher/pages/LedgerTransVoucher'),
+      (module) => module.LedgerTransVoucher
+    ),
+  },
+  {
     id: 'cust-invoice-journal',
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUST_INVOICE_JOURNAL,
     permission: PERMISSIONS.SALES_ORDER_VIEW,
@@ -250,7 +268,8 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUST_CONFIRM_JOURNAL,
     permission: PERMISSIONS.SALES_ORDER_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/accounts-receivable/sales-order-confirm/pages/CustConfirmJournal'),
+      () =>
+        import('@modules/finance/accounts-receivable/sales-order-confirm/pages/CustConfirmJournal'),
       (module) => module.CustConfirmJournal
     ),
   },
@@ -479,6 +498,15 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     component: lazyPage(
       () => import('@modules/finance/tax/pages/TaxAuthorityPage'),
       (module) => module.TaxAuthorityPage
+    ),
+  },
+  {
+    id: 'tax-account-groups',
+    path: ROUTE_PATHS.TAX.TAX_ACCOUNT_GROUPS,
+    permission: PERMISSIONS.TAX_ACCOUNT_GROUP_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/tax/pages/TaxAccountGroupPage'),
+      (module) => module.TaxAccountGroupPage
     ),
   },
   {
