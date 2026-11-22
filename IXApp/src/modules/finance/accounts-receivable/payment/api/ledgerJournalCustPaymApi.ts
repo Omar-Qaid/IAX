@@ -108,8 +108,16 @@ const lines = createEntityApi<Omit<PaymentJournalLine, 'id'>, PaymentJournalLine
 export const ledgerJournalCustPaymApi = {
   headers,
   lines,
+  /** Customer payment journals only (journal type 1), filtered on the server. */
   async list(signal?: AbortSignal) {
-    return (await headers.list(signal)).filter((row) => row.journalType === 1);
+    const response = await apiClient.get<ApiResponse<Omit<PaymentJournal, 'id'>[]>>(
+      `${headerEndpoint}/by-type/1`,
+      { signal }
+    );
+    // Keep the type guard: the page must never show other journal types.
+    return requireApiData(response.data, 'payment journals')
+      .filter((row) => row.journalType === 1)
+      .map(record<PaymentJournal>);
   },
   async get(recId: string, signal?: AbortSignal) {
     const response = await apiClient.get<ApiResponse<Omit<PaymentJournal, 'id'>>>(
@@ -120,8 +128,13 @@ export const ledgerJournalCustPaymApi = {
     if (row.journalType !== 1) throw new Error('This journal is not a customer payment journal.');
     return row;
   },
+  /** Only this journal's lines (server-filtered), not every journal line of the company. */
   async journalLines(journalNum: string, signal?: AbortSignal) {
-    return (await lines.list(signal)).filter((row) => row.journalNum === journalNum);
+    const response = await apiClient.get<ApiResponse<Omit<PaymentJournalLine, 'id'>[]>>(
+      `${lineEndpoint}/by-journal/${encodeURIComponent(journalNum)}`,
+      { signal }
+    );
+    return requireApiData(response.data, 'payment journal lines').map(record<PaymentJournalLine>);
   },
   async names(signal?: AbortSignal) {
     const response = await apiClient.get<ApiResponse<PaymentJournalName[]>>(
@@ -205,6 +218,9 @@ export function newPaymentJournalLine(header: PaymentJournal): PaymentJournalLin
     noEdit: 0,
   };
 }
+/** Same amount to the cent (avoids floating point noise when matching invoices). */
+export const sameAmount = (a: number, b: number) => Math.round(a * 100) === Math.round(b * 100);
+
 export function paymentJournalTotals(rows: PaymentJournalLine[]) {
   // Each entered side with an offset contributes an equal opposite accounting side.
   const debit = rows.reduce(

@@ -20,8 +20,16 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
             var db = _unitOfWork.Context;
             var dimensions = db.Set<DimensionAttributeValueCombination>().AsNoTracking()
                 .Where(x => x.DataAreaId == area && !x.IsDeleted);
-            var ledger = await dimensions.Where(x => x.MainAccount != 0)
-                .Select(x => new LedgerJournalOffsetAccountDto(x.RecId, x.DisplayValue, x.MainAccountValue, 0))
+            // Name the ledger offsets after their main account, not the account number again.
+            var ledger = await (from dimension in dimensions.Where(x => x.MainAccount != 0)
+                join account in db.Set<MainAccount>().AsNoTracking()
+                    on dimension.MainAccount equals account.RecId into accounts
+                from account in accounts.DefaultIfEmpty()
+                select new LedgerJournalOffsetAccountDto(
+                    dimension.RecId,
+                    dimension.DisplayValue,
+                    account != null && account.Name != "" ? account.Name : dimension.MainAccountValue,
+                    0))
                 .ToListAsync(ct);
             var banks = await (from dimension in dimensions
                 join bank in db.Set<BankAccountTable>().AsNoTracking().Where(x => x.DataAreaId == area && !x.IsDeleted)

@@ -34,6 +34,7 @@ import {
   ledgerJournalCustPaymApi as api,
   newPaymentJournalLine,
   paymentJournalTotals,
+  sameAmount,
   type PaymentJournalLine,
 } from '../api/ledgerJournalCustPaymApi';
 import {
@@ -113,17 +114,26 @@ function JournalLines({ company, journalId }: { company: string; journalId: stri
   });
   const change = (values: Partial<PaymentJournalLine>) =>
     setDraft((current) => (current ? { ...current, ...values } : current));
+  // Date inputs edit plain dates; the server sends date-times.
+  const asDraft = (row: PaymentJournalLine): PaymentJournalLine => ({
+    ...row,
+    transDate: row.transDate.slice(0, 10),
+    documentDate: row.documentDate.slice(0, 10),
+    due: row.due.slice(0, 10),
+  });
   const edit = (row: PaymentJournalLine) => {
     if (canEdit && !draft && !row.noEdit) {
       setSelectedId(row.id);
-      setDraft({
-        ...row,
-        transDate: row.transDate.slice(0, 10),
-        documentDate: row.documentDate.slice(0, 10),
-        due: row.due.slice(0, 10),
-      });
+      setDraft(asDraft(row));
     }
   };
+  /** The selected line may be marked: open, same currency, amount equal to the credit, not later. */
+  const canMark = (invoice: CustOpenTransRow) =>
+    !!selected &&
+    !selected.noEdit &&
+    invoice.currencyCode === selected.currencyCode &&
+    sameAmount(invoice.amountCur, selected.amountCurCredit) &&
+    invoice.transDate.slice(0, 10) <= selected.transDate.slice(0, 10);
   const save = useMutation({
     mutationFn: async () => {
       if (!draft || locked || (draft.recId ? !canEdit : !canCreate))
@@ -353,7 +363,9 @@ function JournalLines({ company, journalId }: { company: string; journalId: stri
       editable: true,
       preview: { entity: 'customer' },
       getDetailHref: (row: PaymentJournalLine) => {
-        const customer = customers.data?.find((item) => item.accountNumber === row.ledgerDimensionName);
+        const customer = customers.data?.find(
+          (item) => item.accountNumber === row.ledgerDimensionName
+        );
         return customer ? paths.customer(customer.id) : undefined;
       },
     },
@@ -412,15 +424,9 @@ function JournalLines({ company, journalId }: { company: string; journalId: stri
     : [];
   const errors = [customers.error, currencies.error, methods.error, offsets.error].filter(Boolean);
   const selectInvoice = (invoice: CustOpenTransRow) => {
-    if (
-      !selected ||
-      invoice.currencyCode !== selected.currencyCode ||
-      invoice.amountCur !== selected.amountCurCredit ||
-      invoice.transDate.slice(0, 10) > selected.transDate.slice(0, 10)
-    )
-      return;
+    if (!selected || !canMark(invoice)) return;
     setDraft({
-      ...selected,
+      ...asDraft(selected),
       invoice: invoice.invoice,
       markedInvoiceRecId: invoice.transRecId,
       markedInvoiceCompany: company,
@@ -553,6 +559,7 @@ function JournalLines({ company, journalId }: { company: string; journalId: stri
               disabled={
                 !selected?.ledgerDimensionName ||
                 !selected?.amountCurCredit ||
+                !!selected?.noEdit ||
                 locked ||
                 busy ||
                 !(draft ? (draft.recId ? canEdit : canCreate) : canEdit)
@@ -764,15 +771,7 @@ function JournalLines({ company, journalId }: { company: string; journalId: stri
                           {row.invoice} · {row.transDate.slice(0, 10)} · {money(row.amountCur)}{' '}
                           {row.currencyCode}
                         </Typography>
-                        <Button
-                          disabled={
-                            !selected ||
-                            row.currencyCode !== selected.currencyCode ||
-                            row.amountCur !== selected.amountCurCredit ||
-                            row.transDate.slice(0, 10) > selected.transDate.slice(0, 10)
-                          }
-                          onClick={() => selectInvoice(row)}
-                        >
+                        <Button disabled={!canMark(row)} onClick={() => selectInvoice(row)}>
                           Mark
                         </Button>
                       </Stack>
@@ -786,10 +785,10 @@ function JournalLines({ company, journalId }: { company: string; journalId: stri
               </Stack>
             </DialogContent>
             <DialogActions>
-              {selected?.markedInvoiceRecId && !locked && canEdit ? (
+              {selected?.markedInvoiceRecId && !locked && canEdit && !selected.noEdit ? (
                 <Button
                   onClick={() => {
-                    setDraft({ ...selected, ...clearMark });
+                    setDraft({ ...asDraft(selected), ...clearMark });
                     setSettleOpen(false);
                   }}
                 >

@@ -5,6 +5,7 @@ import {
   newPaymentJournal,
   newPaymentJournalLine,
   paymentJournalTotals,
+  sameAmount,
 } from '@modules/finance/accounts-receivable/payment/api/ledgerJournalCustPaymApi';
 
 vi.mock('@core/api/apiClient', () => ({
@@ -50,6 +51,23 @@ describe('customer payment journal API', () => {
       })
     );
     expect(apiClient.post).not.toHaveBeenCalled();
+  });
+  it('loads only the opened journal lines from the server, in the journal scope', async () => {
+    vi.mocked(apiClient.get).mockResolvedValueOnce({
+      data: { success: true, data: [{ recId: 5, journalNum: 'PAY/01', lineNum: 1 }] },
+    });
+    expect(await api.journalLines('PAY/01')).toEqual([
+      { recId: 5, id: '5', journalNum: 'PAY/01', lineNum: 1 },
+    ]);
+    expect(apiClient.get).toHaveBeenLastCalledWith(
+      '/v1/LedgerJournalTrans/by-journal/PAY%2F01',
+      expect.anything()
+    );
+  });
+  it('matches invoice amounts to the cent, ignoring floating point noise', () => {
+    expect(sameAmount(100.1, 100.10000000001)).toBe(true);
+    expect(sameAmount(0.1 + 0.2, 0.3)).toBe(true);
+    expect(sameAmount(100.1, 100.11)).toBe(false);
   });
   it('reads the existing unwrapped validation response', async () => {
     const validation = {

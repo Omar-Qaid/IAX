@@ -71,7 +71,8 @@ test('customer payment journal list and editable lines preserve save, settlement
     } else if (path.endsWith('/LedgerJournalTable/22') && req.method() === 'DELETE') {
       headers = headers.filter((row) => row.recId !== 22);
       data = true;
-    } else if (path.endsWith('/LedgerJournalTable')) data = headers;
+    } else if (path.endsWith('/LedgerJournalTable/by-type/1')) data = headers;
+    else if (path.endsWith('/LedgerJournalTable')) data = headers;
     else if (path.endsWith('/LedgerJournalTable/21')) data = header;
     else if (path.endsWith('/LedgerJournalName')) data = [{ ...header, recId: 1 }];
     else if (path.endsWith('/offset-accounts'))
@@ -106,7 +107,9 @@ test('customer payment journal list and editable lines preserve save, settlement
     } else if (path.endsWith('/LedgerJournalTrans/32') && req.method() === 'DELETE') {
       lines = lines.filter((row) => row.recId !== 32);
       data = true;
-    } else if (path.endsWith('/LedgerJournalTrans')) data = lines;
+    } else if (path.includes('/LedgerJournalTrans/by-journal/'))
+      data = lines.filter((row) => path.endsWith(`/by-journal/${row.journalNum}`));
+    else if (path.endsWith('/LedgerJournalTrans')) data = lines;
     else if (path.endsWith('/LedgerJournalTrans/31') && req.method() === 'PUT') {
       const input = req.postDataJSON();
       expect(input.rowVersion).toBe('preserve-token');

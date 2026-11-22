@@ -1,6 +1,7 @@
 using IAX.IXApi.Api.Controllers;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Identity.Permissions;
+using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -14,6 +15,16 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
     {
         private readonly ILedgerJournalTableService _journalService;
         private readonly ILedgerJournalReversalService _reversalService;
+
+        /// <summary>The journals of one journal type (current company), e.g. 1 = customer payments.</summary>
+        [HttpGet("by-type/{journalType:int}")]
+        public async Task<IActionResult> GetByType(int journalType, CancellationToken ct)
+        {
+            var type = (IAX.IXApi.Modules.Finance.Common.LedgerJournalType)journalType;
+            var rows = await _service.FindAsync(x => x.JournalType == type, cancellationToken: ct);
+            return Ok(IAX.IXApi.Shared.Application.Contracts.APIResponse<object>.Ok(
+                rows.Adapt<List<LedgerJournalTableDto>>()));
+        }
 
         [HttpGet("offset-accounts")]
         public async Task<IActionResult> OffsetAccounts(CancellationToken ct) =>

@@ -79,6 +79,8 @@ export function usePaymentJournalActions() {
   const [report, setReport] = React.useState<{
     title: string;
     messages: string[];
+    /** Messages shown as errors (after the summary line). */
+    errors?: string[];
     success: boolean;
   } | null>(null);
   const [pendingPost, setPendingPost] = React.useState<PaymentJournal | null>(null);
@@ -98,10 +100,10 @@ export function usePaymentJournalActions() {
           success: result.valid,
           messages: [
             result.valid ? 'Static validation passed.' : 'Validation failed.',
-            ...result.errors,
             ...result.unverifiedChecks,
             result.scope,
           ],
+          errors: result.errors,
         });
       } else if (action === 'simulate') {
         const result = await api.simulate(journal.recId);
@@ -133,9 +135,18 @@ export function usePaymentJournalActions() {
         <DialogContent>
           <Stack spacing={1}>
             {report?.messages.filter(Boolean).map((message, i) => (
-              <Alert key={i} severity={i === 0 ? (report.success ? 'success' : 'error') : 'info'}>
-                {message}
-              </Alert>
+              <React.Fragment key={i}>
+                <Alert severity={i === 0 ? (report.success ? 'success' : 'error') : 'info'}>
+                  {message}
+                </Alert>
+                {/* Validation errors right below the summary, as errors (not info). */}
+                {i === 0 &&
+                  report.errors?.map((error, e) => (
+                    <Alert key={`error-${e}`} severity="error">
+                      {error}
+                    </Alert>
+                  ))}
+              </React.Fragment>
             ))}
           </Stack>
         </DialogContent>
