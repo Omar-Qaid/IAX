@@ -8,6 +8,7 @@ import {
   DialogTitle,
   Button,
   Stack,
+  Switch,
   Tab,
   Tabs,
   Typography,
@@ -72,6 +73,105 @@ export function JournalDetails({ values }: { values: Record<string, React.ReactN
     </Box>
   );
 }
+/** One read-only field of a header form: text in a box, or a Yes/No switch. */
+export interface JournalField {
+  label: string;
+  value?: React.ReactNode;
+  /** Shows a disabled Yes/No switch instead of a text box. */
+  toggle?: boolean;
+  /** Group title shown above this field (a second group in the same column). */
+  heading?: string;
+  /** D365 field this journal does not store yet: shown empty, with a tooltip. */
+  unavailable?: boolean;
+  /** Editor shown instead of the read-only value (a line being edited). */
+  editor?: React.ReactNode;
+}
+/** A titled column of fields (D365 field group). Untitled groups continue the previous column. */
+export interface JournalFieldGroup {
+  title?: string;
+  fields: JournalField[];
+}
+
+/** D365 header tab layout: field groups side by side, each a column of labelled fields. */
+export function JournalFieldGroups({ groups }: { groups: JournalFieldGroup[] }) {
+  return (
+    <Box
+      sx={{
+        p: 2,
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))',
+        columnGap: 2,
+        rowGap: 1,
+        alignItems: 'start',
+      }}
+    >
+      {groups.map((group, index) => (
+        <Stack key={group.title ?? index} spacing={1} sx={{ minWidth: 0 }}>
+          <Typography
+            variant="caption"
+            sx={{ fontWeight: 700, textTransform: 'uppercase', minHeight: 18 }}
+          >
+            {group.title ?? ''}
+          </Typography>
+          {group.fields.map((field) => (
+            <Box
+              key={field.label}
+              title={field.unavailable ? 'Not stored for this journal yet.' : undefined}
+            >
+              {field.heading && (
+                <Typography
+                  variant="caption"
+                  sx={{ display: 'block', fontWeight: 700, textTransform: 'uppercase', mb: 1 }}
+                >
+                  {field.heading}
+                </Typography>
+              )}
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                {field.label}
+              </Typography>
+              {field.editor ? (
+                field.editor
+              ) : field.toggle ? (
+                <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
+                  <Switch
+                    size="small"
+                    checked={!field.unavailable && Boolean(field.value)}
+                    disabled
+                    slotProps={{ input: { 'aria-label': field.label } }}
+                  />
+                  <Typography sx={{ fontSize: 12 }}>{field.value ? 'Yes' : 'No'}</Typography>
+                </Stack>
+              ) : (
+                <Box
+                  sx={{
+                    mt: 0.25,
+                    minHeight: 28,
+                    px: 0.75,
+                    display: 'flex',
+                    alignItems: 'center',
+                    fontSize: 12,
+                    border: 1,
+                    borderColor: 'divider',
+                    borderRadius: 0.5,
+                    bgcolor: 'action.hover',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {field.value === undefined || field.value === null || field.value === ''
+                    ? ''
+                    : field.value}
+                </Box>
+              )}
+            </Box>
+          ))}
+        </Stack>
+      ))}
+    </Box>
+  );
+}
+
 export function usePaymentJournalActions() {
   const company = useCompanyStore((state) => state.currentCompany);
   const cache = useQueryClient();

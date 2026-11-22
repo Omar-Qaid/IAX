@@ -28,6 +28,33 @@ export interface PaymentJournal extends JournalRecord {
   defaultDimension: number;
   fixedOffsetAccount: number;
   numOfLines: number;
+  // Further LedgerJournalTable fields the API returns (header tabs show them).
+  voucherAllocatedAtPosting?: number;
+  ledgerJournalInclTax?: number;
+  exchRate?: number;
+  exchRateSecondary?: number;
+  fixedExchRate?: number;
+  reportingCurrencyExchRate?: number;
+  reportingCurrencyExchRateSecondary?: number;
+  reportingCurrencyFixedExchRate?: number;
+  originalJournalNum?: string;
+  journalTotalDebit?: number;
+  journalTotalCredit?: number;
+  journalBalance?: number;
+  // Header tab fields (read-only through the API; the server keeps them on update).
+  currentOperationsTax?: number;
+  detailSummaryPosting?: number;
+  linesLimitBeforeDistribution?: number;
+  parentJournalNum?: string;
+  documentNum?: string;
+  taxObligationCompany?: number;
+  bankTransSummarizationEnabled?: number;
+  bankTransSummarizationCriteria?: number;
+  sessionId?: number;
+  systemBlockedReason?: number;
+  workflowApprovalStatus?: number;
+  originalCompany?: string;
+  log?: string;
 }
 export interface PaymentJournalLine extends JournalRecord {
   journalNum: string;
@@ -59,6 +86,42 @@ export interface PaymentJournalLine extends JournalRecord {
   markedInvoiceRecId: number;
   markedInvoiceCompany: string;
   noEdit: number;
+  // Further LedgerJournalTrans fields the API returns (line tabs show them, read-only).
+  exchRate?: number;
+  exchRateSecond?: number;
+  reportingCurrencyExchRate?: number;
+  reportingCurrencyExchRateSecondary?: number;
+  taxGroup?: string;
+  taxItemGroup?: string;
+  taxCode?: string;
+  cashDiscCode?: string;
+  cashDiscBaseDate?: string;
+  prepayment?: number;
+  reverseEntry?: number;
+  reverseDate?: string;
+  qty?: number;
+  releaseDate?: string;
+  transfer?: number;
+  transferred?: number;
+  transferredBy?: string;
+  transferredOn?: string;
+  transferredTo?: string;
+  taxWithholdGroup?: string;
+  taxDirectionControl?: number;
+  cashDiscAmount?: number;
+  dateCashDisc?: string;
+  vatNumJournal?: string;
+  vendorVatDate?: string;
+  approved?: number;
+  approver?: number;
+  paymSpec?: string;
+  bankTransType?: string;
+  bankDepositVoucher?: number;
+  bankDepositNum?: string;
+  foreignCompany?: string;
+  foreignVoucher?: string;
+  reasonRefRecId?: number;
+  paymentStatus?: number;
 }
 export interface PaymentJournalName {
   recId: number;
@@ -88,6 +151,12 @@ export interface JournalSimulation {
   scope: string;
 }
 const headerEndpoint = '/v1/LedgerJournalTable';
+/** An API started before the scoped endpoints existed answers them with 404. */
+// The API client rejects with an ApiError (`status`); raw axios errors carry `response.status`.
+const isNotFound = (error: unknown) => {
+  const value = error as { status?: number; response?: { status?: number } } | null;
+  return value?.status === 404 || value?.response?.status === 404;
+};
 const lineEndpoint = '/v1/LedgerJournalTrans';
 const record = <T extends JournalRecord>(dto: Omit<T, 'id'>): T =>
   ({ ...dto, id: String(dto.recId) }) as T;
@@ -110,10 +179,16 @@ export const ledgerJournalCustPaymApi = {
   lines,
   /** Customer payment journals only (journal type 1), filtered on the server. */
   async list(signal?: AbortSignal) {
-    const response = await apiClient.get<ApiResponse<Omit<PaymentJournal, 'id'>[]>>(
-      `${headerEndpoint}/by-type/1`,
-      { signal }
-    );
+    const response = await apiClient
+      .get<ApiResponse<Omit<PaymentJournal, 'id'>[]>>(`${headerEndpoint}/by-type/1`, { signal })
+      .catch(async (error: unknown) => {
+        // Older API: load every journal and filter here.
+        if (isNotFound(error))
+          return apiClient.get<ApiResponse<Omit<PaymentJournal, 'id'>[]>>(headerEndpoint, {
+            signal,
+          });
+        throw error;
+      });
     // Keep the type guard: the page must never show other journal types.
     return requireApiData(response.data, 'payment journals')
       .filter((row) => row.journalType === 1)
@@ -130,11 +205,17 @@ export const ledgerJournalCustPaymApi = {
   },
   /** Only this journal's lines (server-filtered), not every journal line of the company. */
   async journalLines(journalNum: string, signal?: AbortSignal) {
-    const response = await apiClient.get<ApiResponse<Omit<PaymentJournalLine, 'id'>[]>>(
-      `${lineEndpoint}/by-journal/${encodeURIComponent(journalNum)}`,
-      { signal }
-    );
-    return requireApiData(response.data, 'payment journal lines').map(record<PaymentJournalLine>);
+    try {
+      const response = await apiClient.get<ApiResponse<Omit<PaymentJournalLine, 'id'>[]>>(
+        `${lineEndpoint}/by-journal/${encodeURIComponent(journalNum)}`,
+        { signal }
+      );
+      return requireApiData(response.data, 'payment journal lines').map(record<PaymentJournalLine>);
+    } catch (error) {
+      // Older API: load every line and keep this journal's.
+      if (!isNotFound(error)) throw error;
+      return (await lines.list(signal)).filter((row) => row.journalNum === journalNum);
+    }
   },
   async names(signal?: AbortSignal) {
     const response = await apiClient.get<ApiResponse<PaymentJournalName[]>>(
@@ -144,11 +225,20 @@ export const ledgerJournalCustPaymApi = {
     return requireApiData(response.data, 'journal names').filter((row) => row.journalType === 1);
   },
   async offsets(signal?: AbortSignal) {
-    const response = await apiClient.get<ApiResponse<OffsetAccount[]>>(
-      `${headerEndpoint}/offset-accounts`,
-      { signal }
-    );
-    return requireApiData(response.data, 'offset accounts');
+    try {
+      const response = await apiClient.get<ApiResponse<OffsetAccount[]>>(
+        `${headerEndpoint}/offset-accounts`,
+        { signal }
+      );
+      return requireApiData(response.data, 'offset accounts');
+    } catch (error) {
+      // An older API reads "offset-accounts" as a journal id: "LedgerJournalTable not found".
+      if (isNotFound(error))
+        throw new Error('Offset accounts are not available: restart the API to load them.', {
+          cause: error,
+        });
+      throw error;
+    }
   },
   async validate(recId: number): Promise<JournalValidation> {
     return (await apiClient.get<JournalValidation>(`${headerEndpoint}/${recId}/validate`)).data;

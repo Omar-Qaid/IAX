@@ -16,7 +16,8 @@ import {
   type PaymentJournal,
 } from '../api/ledgerJournalCustPaymApi';
 import {
-  JournalDetails,
+  JournalFieldGroups,
+  type JournalFieldGroup,
   JournalTabs,
   paymentJournalKeys,
   usePaymentJournalActions,
@@ -43,6 +44,200 @@ function JournalList({ company }: { company: string }) {
     queryKey: [...paymentJournalKeys(company), 'names'],
     queryFn: ({ signal }) => api.names(signal),
   });
+  // Only to name the offset account on the Setup tab; the tab still shows the id without it.
+  const offsets = useQuery({
+    queryKey: [...paymentJournalKeys(company), 'offsets'],
+    queryFn: ({ signal }) => api.offsets(signal),
+    enabled: tab === 'Setup',
+    retry: false,
+  });
+  const offsetLabel = (row: PaymentJournal) => {
+    if (!row.offsetLedgerDimension) return '';
+    const offset = offsets.data?.find((item) => Number(item.id) === row.offsetLedgerDimension);
+    return offset
+      ? `${offset.code}${offset.name ? ` - ${offset.name}` : ''}`
+      : String(row.offsetLedgerDimension);
+  };
+  const rate = (value?: number) => (value ? String(value) : '');
+  const dateTime = (value?: string) => (value ? value.replace('T', ' ').slice(0, 19) : '');
+  /** D365 fields this journal does not store yet: same place as in D365, shown empty. */
+  const missing = (label: string, toggle = false) => ({ label, toggle, unavailable: true });
+  const workflowStatus = [
+    'Not submitted',
+    'Submitted',
+    'In review',
+    'Approved',
+    'Rejected',
+    'Cancelled',
+  ];
+  /** The header tabs, laid out as the D365 Customer payment journal form (column by column). */
+  const headerGroups = (current: string, row: PaymentJournal): JournalFieldGroup[] => {
+    if (current === 'General')
+      return [
+        {
+          title: 'Identification',
+          fields: [{ label: 'Journal batch number', value: row.journalNum }],
+        },
+        { title: 'Journal', fields: [{ label: 'Name', value: row.journalName }] },
+        {
+          fields: [
+            { label: 'Journal type', value: 'Customer payment' },
+            { label: 'Description', value: row.name },
+          ],
+        },
+        {
+          title: 'Posting',
+          // D365 CurrentOperationsTax: 0 = Current (the only layer posted here).
+          fields: [
+            {
+              label: 'Posting layer',
+              value: row.currentOperationsTax ? 'Other (not posted here)' : 'Current',
+            },
+          ],
+        },
+        {
+          fields: [
+            {
+              label: 'Detail level',
+              value: row.detailSummaryPosting === 1 ? 'Summary' : 'Details',
+            },
+            { label: 'Lines limit', value: row.linesLimitBeforeDistribution || '' },
+          ],
+        },
+        {
+          fields: [
+            { label: 'Parent journal number', value: row.parentJournalNum },
+            missing('Requires validation', true),
+          ],
+        },
+        { title: 'Payment codes', fields: [missing('Category purpose')] },
+        {
+          fields: [missing('Charge bearer'), missing('Local instrument'), missing('Service level')],
+        },
+      ];
+    if (current === 'Setup')
+      return [
+        {
+          title: 'Offset account',
+          fields: [
+            { label: 'Account type', value: row.offsetAccountType === 5 ? 'Bank' : 'Ledger' },
+            { label: 'Offset account', value: offsetLabel(row) },
+          ],
+        },
+        {
+          title: 'Document',
+          fields: [
+            { label: 'Document', value: row.documentNum },
+            {
+              label: 'Number allocation at posting',
+              value: row.voucherAllocatedAtPosting,
+              toggle: true,
+              heading: 'Voucher allocation',
+            },
+          ],
+        },
+        {
+          title: 'Sales tax',
+          fields: [
+            { label: 'Amounts include sales tax', value: row.ledgerJournalInclTax, toggle: true },
+            {
+              label: 'Legal entity for intercompany tax posting',
+              value: row.taxObligationCompany ? 'Source' : 'Destination',
+            },
+          ],
+        },
+        {
+          title: 'Currency',
+          fields: [
+            { label: 'Currency', value: row.currencyCode },
+            { label: 'Fixed rate', value: row.fixedExchRate, toggle: true },
+            { label: 'Exchange rate', value: rate(row.exchRate) },
+            { label: 'Secondary exchange rate', value: rate(row.exchRateSecondary) },
+          ],
+        },
+        {
+          title: 'Reporting currency',
+          fields: [
+            { label: 'Fixed rate', value: row.reportingCurrencyFixedExchRate, toggle: true },
+            { label: 'Exchange rate', value: rate(row.reportingCurrencyExchRate) },
+            {
+              label: 'Secondary exchange rate',
+              value: rate(row.reportingCurrencyExchRateSecondary),
+            },
+          ],
+        },
+        {
+          title: 'Bank',
+          fields: [
+            {
+              label: 'Summarize amounts in bank account',
+              value: row.bankTransSummarizationEnabled,
+              toggle: true,
+            },
+            {
+              label: 'Summarization criteria',
+              value: row.bankTransSummarizationEnabled
+                ? row.bankTransSummarizationCriteria === 1
+                  ? 'Custom'
+                  : 'Standard'
+                : 'Do not summarize',
+            },
+          ],
+        },
+      ];
+    if (current === 'Blocking')
+      return [
+        { fields: [{ label: 'In use', value: row.sessionId, toggle: true }] },
+        { fields: [missing('Private', true)] },
+        { fields: [missing('Used by user')] },
+        { fields: [missing('Private for user')] },
+        { fields: [{ label: 'Locked by system', value: row.systemBlocked, toggle: true }] },
+        {
+          fields: [
+            {
+              label: 'System locked reason',
+              value: row.systemBlocked ? row.systemBlockedReason || 'Blocked' : 'None',
+            },
+          ],
+        },
+        { fields: [missing('Private for user group')] },
+      ];
+    if (current === 'Financial dimensions')
+      return [
+        {
+          title: 'Financial dimensions',
+          fields: [
+            {
+              label: 'Default dimensions',
+              value: row.defaultDimension ? 'Configured on this journal' : 'Not specified',
+            },
+          ],
+        },
+      ];
+    return [
+      { fields: [missing('Reported as ready by')] },
+      { fields: [missing('Approved by')] },
+      { fields: [missing('Rejected by')] },
+      {
+        fields: [
+          {
+            label: 'Workflow approval status',
+            value: workflowStatus[row.workflowApprovalStatus ?? 0] ?? 'None',
+          },
+        ],
+      },
+      {
+        title: 'Origin',
+        fields: [
+          { label: 'Intercompany accounting', value: row.originalCompany },
+          { label: 'Original journal No.', value: row.originalJournalNum },
+        ],
+      },
+      { fields: [{ label: 'Posted', value: row.posted, toggle: true }] },
+      { fields: [{ label: 'Posted on', value: row.posted ? dateTime(row.postedDateTime) : '' }] },
+      { fields: [{ label: 'Log', value: row.log }] },
+    ];
+  };
   const rows = useMemo(
     () =>
       (query.data ?? []).filter(
@@ -167,13 +362,17 @@ function JournalList({ company }: { company: string }) {
             })();
           },
         },
+        // D365 order: Enter customer payments, Lines, Open lines in Excel, Validate, Post,
+        // Approval, Inquiries, Print, Unlock. Not yet available here: shown disabled.
         getCommands: (row) => [
+          { id: 'enter-payments', label: 'Enter customer payments', disabled: true },
           {
             id: 'lines',
             label: 'Lines',
             requiresSelection: true,
             onClick: () => row && navigate(paths.ledgerJournalTransCustPaym(row.id)),
           },
+          { id: 'open-lines-excel', label: 'Open lines in Excel', disabled: true },
           {
             id: 'validate',
             label: 'Validate',
@@ -196,6 +395,10 @@ function JournalList({ company }: { company: string }) {
             disabled: !row || !editable(row),
             onClick: () => actions.run(row, 'post'),
           },
+          { id: 'approval', label: 'Approval', disabled: true },
+          { id: 'inquiries', label: 'Inquiries', disabled: true },
+          { id: 'print', label: 'Print', disabled: true },
+          { id: 'unlock', label: 'Unlock', disabled: true },
         ],
       }}
       filterBar={
@@ -240,42 +443,7 @@ function JournalList({ company }: { company: string }) {
           ? undefined
           : (row) =>
               row ? (
-                <JournalDetails
-                  values={
-                    tab === 'History'
-                      ? {
-                          'Created by': row.createdBy,
-                          'Created on': row.createdAt,
-                          'Modified by': row.lastModifiedBy,
-                          'Modified on': row.lastModifiedAt,
-                          'Posted on': row.posted ? row.postedDateTime : '',
-                        }
-                      : tab === 'Blocking'
-                        ? {
-                            'System blocked': row.systemBlocked ? 'Yes' : 'No',
-                            Posted: row.posted ? 'Yes' : 'No',
-                          }
-                        : tab === 'Financial dimensions'
-                          ? {
-                              'Default dimensions': row.defaultDimension
-                                ? 'Configured on this journal'
-                                : 'Not specified',
-                            }
-                          : tab === 'Setup'
-                            ? {
-                                Currency: row.currencyCode,
-                                'Offset account type':
-                                  row.offsetAccountType === 5 ? 'Bank' : 'Ledger',
-                                'Fixed offset account': row.fixedOffsetAccount ? 'Yes' : 'No',
-                              }
-                            : {
-                                'Journal batch number': row.journalNum,
-                                Name: row.journalName,
-                                Description: row.name,
-                                Company: row.dataAreaId,
-                              }
-                  }
-                />
+                <JournalFieldGroups groups={headerGroups(tab, row)} />
               ) : (
                 <Alert severity="info">Select a journal.</Alert>
               )
@@ -318,7 +486,6 @@ function JournalList({ company }: { company: string }) {
         },
         storageKey: `LedgerJournalListCustPaym:${company}`,
         hideToolbar: true,
-        hideFooter: true,
       }}
       dialogs={actions.dialogs}
     />

@@ -83,6 +83,32 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger
         public DateTime ReverseDate { get; set; }
         public NoYes ReverseEntry { get; set; }
         public NoYes NoEdit { get; set; }
+
+        // Line fields shown on the journal line tabs (General, Invoice, Payment, History).
+        // Read-only through this DTO: LedgerJournalTransService keeps the stored values on update.
+        public decimal Qty { get; set; }
+        public DateTime ReleaseDate { get; set; }
+        public NoYes Transfer { get; set; }
+        public NoYes Transferred { get; set; }
+        public string TransferredBy { get; set; } = string.Empty;
+        public DateTime TransferredOn { get; set; }
+        public string TransferredTo { get; set; } = string.Empty;
+        public string TaxWithholdGroup { get; set; } = string.Empty;
+        public TaxDirectionControl TaxDirectionControl { get; set; }
+        public decimal CashDiscAmount { get; set; }
+        public DateTime DateCashDisc { get; set; }
+        public string VatNumJournal { get; set; } = string.Empty;
+        public DateTime VendorVatDate { get; set; }
+        public NoYes Approved { get; set; }
+        public long Approver { get; set; }
+        public string PaymSpec { get; set; } = string.Empty;
+        public string BankTransType { get; set; } = string.Empty;
+        public NoYes BankDepositVoucher { get; set; }
+        public string BankDepositNum { get; set; } = string.Empty;
+        public string ForeignCompany { get; set; } = string.Empty;
+        public string ForeignVoucher { get; set; } = string.Empty;
+        public long ReasonRefRecId { get; set; }
+        public LedgerJournalTransStatus PaymentStatus { get; set; }
     }
 }
 

@@ -39,6 +39,8 @@ import {
 } from '../api/ledgerJournalCustPaymApi';
 import {
   JournalDetails,
+  JournalFieldGroups,
+  type JournalFieldGroup,
   JournalTabs,
   paymentJournalKeys,
   usePaymentJournalActions,
@@ -401,6 +403,8 @@ function JournalLines({ company, journalId }: { company: string; journalId: stri
     { field: 'due', headerName: 'Due date', width: 125, editable: true },
   ].map((column) => ({
     ...column,
+    // No hover preview while a line is edited: it would wrap the editors.
+    ...(draft ? { preview: undefined } : {}),
     renderCell:
       column.renderCell ??
       (({ row }: { row: PaymentJournalLine }) =>
@@ -434,22 +438,246 @@ function JournalLines({ company, journalId }: { company: string; journalId: stri
     });
     setSettleOpen(false);
   };
-  const detailFields: Record<string, (keyof PaymentJournalLine)[]> = {
-    General: ['transDate', 'txt', 'documentNum', 'documentDate', 'due'],
-    Bank: ['offsetAccountType', 'offsetLedgerDimension', 'paymReference'],
-    Payment: ['paymMode', 'paymReference'],
+  /** Editor while the line is edited; otherwise the read-only value. */
+  const editable = (field: keyof PaymentJournalLine, label: string) =>
+    draft ? { editor: renderField(field, draft, label) } : {};
+  const missing = (label: string, toggle = false) => ({ label, toggle, unavailable: true });
+  const date = (value?: string) => (value && !value.startsWith('0001') ? value.slice(0, 10) : '');
+  const rate = (value?: number) => (value ? value.toFixed(4) : '');
+  const settlementTypes = ['None', 'Selected transactions', 'Marked transactions'];
+  /** The line tabs, laid out as the D365 Journal voucher form (column by column). */
+  const lineGroups = (current: string, line: PaymentJournalLine): JournalFieldGroup[] => {
+    if (current === 'General')
+      return [
+        {
+          title: 'Identification',
+          fields: [
+            { label: 'Voucher', value: line.voucher },
+            { label: 'Quantity', value: (line.qty ?? 0).toFixed(2) },
+            {
+              label: 'Reason code',
+              value: line.reasonRefRecId ? String(line.reasonRefRecId) : '',
+              heading: 'Reason',
+            },
+            missing('Reason comment'),
+          ],
+        },
+        {
+          title: 'Currency',
+          fields: [
+            {
+              label: 'Currency',
+              value: line.currencyCode,
+              ...editable('currencyCode', 'Currency'),
+            },
+            { label: 'Exchange rate', value: rate(line.exchRate) },
+            { label: 'Secondary exchange rate', value: rate(line.exchRateSecond) },
+            missing('Cross rate'),
+            missing('Calculation method'),
+          ],
+        },
+        {
+          title: 'Reporting currency',
+          fields: [
+            { label: 'Exchange rate', value: rate(line.reportingCurrencyExchRate) },
+            {
+              label: 'Secondary exchange rate',
+              value: rate(line.reportingCurrencyExchRateSecondary),
+            },
+            missing('Cross rate'),
+            missing('Calculation method'),
+          ],
+        },
+        {
+          title: 'Tax',
+          fields: [
+            { label: 'Sales tax group', value: line.taxGroup },
+            { label: 'Item sales tax group', value: line.taxItemGroup },
+            { label: 'Sales tax code', value: line.taxCode },
+          ],
+        },
+        {
+          fields: [
+            { label: 'Sales tax direction', value: line.taxDirectionControl, toggle: true },
+            missing('Sales tax amount'),
+            { label: 'Withholding tax group', value: line.taxWithholdGroup },
+          ],
+        },
+        {
+          fields: [
+            missing('Calculate withholding tax', true),
+            missing('Item withholding tax group'),
+            { label: 'Company', value: line.company, heading: 'Legal entity' },
+            { label: 'Offset company', value: line.offsetCompany },
+          ],
+        },
+        {
+          title: 'Posting',
+          fields: [
+            { label: 'Release date', value: date(line.releaseDate) },
+            { label: 'Reversing entry', value: line.reverseEntry, toggle: true },
+            { label: 'Reversing date', value: line.reverseEntry ? date(line.reverseDate) : '' },
+            { label: 'Transfer', value: line.transfer, toggle: true },
+          ],
+        },
+      ];
+    if (current === 'Invoice')
+      return [
+        {
+          title: 'Posting',
+          fields: [
+            { label: 'Posting profile', value: line.postingProfile },
+            { label: 'Settlement type', value: settlementTypes[line.settleVoucher] ?? '' },
+            missing('Offset posting profile'),
+          ],
+        },
+        {
+          title: 'Invoice',
+          fields: [
+            { label: 'Invoice', value: line.invoice },
+            { label: 'Due date', value: date(line.due), ...editable('due', 'Due date') },
+          ],
+        },
+        {
+          fields: [
+            { label: 'Terms of payment', value: line.payment },
+            missing('Payment ID'),
+            { label: 'VAT Number', value: line.vatNumJournal },
+          ],
+        },
+        {
+          fields: [
+            { label: 'Cash discount', value: line.cashDiscCode },
+            { label: 'Payment terms base date', value: date(line.cashDiscBaseDate) },
+          ],
+        },
+        {
+          fields: [
+            { label: 'Cash discount date', value: date(line.dateCashDisc) },
+            { label: 'Cash discount amount', value: money(line.cashDiscAmount ?? 0) },
+          ],
+        },
+        {
+          title: 'Document',
+          fields: [
+            { label: 'Document', value: line.documentNum, ...editable('documentNum', 'Document') },
+            {
+              label: 'Document date',
+              value: date(line.documentDate),
+              ...editable('documentDate', 'Document date'),
+            },
+            { label: 'Date of vendor VAT register', value: date(line.vendorVatDate) },
+          ],
+        },
+        {
+          title: 'Approve',
+          fields: [
+            { label: 'Approved by', value: line.approver ? String(line.approver) : '' },
+            { label: 'Approved', value: line.approved, toggle: true },
+          ],
+        },
+      ];
+    if (current === 'Payment')
+      return [
+        {
+          title: 'Payment',
+          fields: [
+            {
+              label: 'Method of payment',
+              value: line.paymMode,
+              ...editable('paymMode', 'Method of payment'),
+            },
+          ],
+        },
+        {
+          fields: [
+            { label: 'Payment specification', value: line.paymSpec },
+            { label: 'Prepayment journal voucher', value: line.prepayment, toggle: true },
+          ],
+        },
+        {
+          title: 'Amount',
+          fields: [
+            missing('Balance'),
+            { label: 'Cash discount amount', value: money(line.cashDiscAmount ?? 0) },
+          ],
+        },
+        {
+          title: 'Bank',
+          fields: [
+            { label: 'Bank transaction type', value: line.bankTransType },
+            {
+              label: 'Payment reference',
+              value: line.paymReference,
+              ...editable('paymReference', 'Payment reference'),
+            },
+          ],
+        },
+        {
+          fields: [
+            { label: 'Use a deposit slip', value: line.bankDepositVoucher, toggle: true },
+            { label: 'Deposit slip', value: line.bankDepositNum },
+          ],
+        },
+        { fields: [missing('Bank transaction summarization ID')] },
+        {
+          title: 'Representative',
+          fields: [missing('Representative type'), missing('Name of person')],
+        },
+      ];
+    if (current === 'History')
+      return [
+        {
+          title: 'Whole journal',
+          fields: [missing('Reported as ready by'), missing('Approved by')],
+        },
+        {
+          fields: [
+            missing('Rejected by'),
+            {
+              label: 'Posted on',
+              value: header?.posted ? header.postedDateTime.replace('T', ' ').slice(0, 19) : '',
+            },
+          ],
+        },
+        {
+          title: 'Intercompany accounting',
+          fields: [
+            { label: 'Foreign company accounts', value: line.foreignCompany },
+            { label: 'Foreign voucher', value: line.foreignVoucher },
+          ],
+        },
+        {
+          title: 'Transfer',
+          fields: [{ label: 'Transferred on', value: date(line.transferredOn) }],
+        },
+        {
+          fields: [
+            { label: 'Transferred by', value: line.transferredBy },
+            { label: 'Transferred to journal', value: line.transferredTo },
+          ],
+        },
+        { title: 'Error messages reported for the voucher', fields: [missing('Errors detected')] },
+      ];
+    return [];
   };
-  const labels: Partial<Record<keyof PaymentJournalLine, string>> = {
-    transDate: 'Date',
-    txt: 'Description',
-    documentNum: 'Document',
-    documentDate: 'Document date',
-    due: 'Due date',
-    offsetAccountType: 'Offset account type',
-    offsetLedgerDimension: 'Offset account',
-    paymReference: 'Payment reference',
-    paymMode: 'Method of payment',
-  };
+  const footerLine = draft ?? selected;
+  const offsetName = (row: PaymentJournalLine) =>
+    offsets.data?.find((offset) => Number(offset.id) === row.offsetLedgerDimension)?.name ?? '';
+  const footerBoxSx = {
+    minHeight: 26,
+    px: 0.75,
+    display: 'flex',
+    alignItems: 'center',
+    fontSize: 12,
+    border: 1,
+    borderColor: 'divider',
+    borderRadius: 0.5,
+    bgcolor: 'action.hover',
+    overflow: 'hidden',
+    whiteSpace: 'nowrap',
+    textOverflow: 'ellipsis',
+  } as const;
   return (
     <SimpleListPage<PaymentJournalLine>
       title="Customer payments"
@@ -468,6 +696,8 @@ function JournalLines({ company, journalId }: { company: string; journalId: stri
       enterpriseConfig={{
         readOnly: true,
         backCommand: { onClick: () => navigate(paths.LEDGER_JOURNAL_LIST_CUST_PAYM) },
+        // D365 order: Post, Post in batch, Validate, General journals, Approval, Period journal,
+        // Functions, Fixed assets, Inquiries, Print. Not yet available here: shown disabled.
         commands: [
           {
             id: 'post',
@@ -476,6 +706,7 @@ function JournalLines({ company, journalId }: { company: string; journalId: stri
             permission: PERMISSIONS.LEDGER_JOURNAL_EDIT,
             onClick: () => actions.run(header ?? null, 'post'),
           },
+          { id: 'post-batch', label: 'Post in batch', disabled: true },
           {
             id: 'validate',
             label: 'Validate',
@@ -494,6 +725,18 @@ function JournalLines({ company, journalId }: { company: string; journalId: stri
             disabled: !selected?.ledgerDimensionName || !!draft,
             onClick: () => selected && navigate(paths.custTrans(selected.ledgerDimensionName)),
           },
+          {
+            id: 'general-journals',
+            label: 'General journals',
+            disabled: !!draft,
+            onClick: () => navigate(paths.LEDGER_JOURNAL_LIST_CUST_PAYM),
+          },
+          { id: 'approval', label: 'Approval', disabled: true },
+          { id: 'period-journal', label: 'Period journal', disabled: true },
+          { id: 'functions', label: 'Functions', disabled: true },
+          { id: 'fixed-assets', label: 'Fixed assets', disabled: true },
+          { id: 'inquiries', label: 'Inquiries', disabled: true },
+          { id: 'print', label: 'Print', disabled: true },
         ],
       }}
       actionPane={
@@ -525,7 +768,16 @@ function JournalLines({ company, journalId }: { company: string; journalId: stri
             </Alert>
           ))}
           <JournalTabs
-            tabs={['List', 'General', 'Payment fee', 'Bank', 'History', 'Payment']}
+            tabs={[
+              'List',
+              'General',
+              'Invoice',
+              'Payment',
+              'Payment fee',
+              'Fixed assets',
+              'Remittance',
+              'History',
+            ]}
             value={tab}
             onChange={setTab}
           />
@@ -604,99 +856,85 @@ function JournalLines({ company, journalId }: { company: string; journalId: stri
                 <Alert severity="info">Select a journal line.</Alert>
               ) : tab === 'Payment fee' ? (
                 <Alert severity="info">
-                  Payment fee processing is not available for this journal.
+                  Payment fees are not available for this journal: no payment fee is set up.
                 </Alert>
-              ) : tab === 'History' ? (
-                <JournalDetails
-                  values={{
-                    Voucher: selected.voucher,
-                    'Created by': selected.createdBy,
-                    'Created on': selected.createdAt,
-                    'Modified by': selected.lastModifiedBy,
-                    'Modified on': selected.lastModifiedAt,
-                  }}
-                />
+              ) : tab === 'Fixed assets' || tab === 'Remittance' ? (
+                <Alert severity="info">
+                  {tab === 'Fixed assets'
+                    ? 'Fixed asset transactions are not part of customer payment journals here.'
+                    : 'Remittance details are not available for customer payments yet.'}
+                </Alert>
               ) : (
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                    gap: 2,
-                    p: 2,
-                    alignContent: 'start',
-                  }}
-                >
-                  {(detailFields[tab] ?? []).map((field) => (
-                    <Box key={field}>
-                      {draft ? (
-                        renderField(field, draft, labels[field])
-                      ) : (
-                        <JournalDetails
-                          values={{ [labels[field] || field]: renderField(field, selected) }}
-                        />
-                      )}
-                    </Box>
-                  ))}
-                </Box>
+                <JournalFieldGroups groups={lineGroups(tab, draft ?? selected)} />
               )
       }
       belowGridContent={
         <Box sx={{ py: 1, flexShrink: 0 }}>
-          <Stack direction="row" spacing={3} sx={{ mb: 2 }}>
-            <Box sx={{ width: 180 }}>
-              {draft ? (
-                renderField('paymMode', draft, 'Method of payment')
-              ) : (
-                <JournalDetails values={{ 'Method of payment': selected?.paymMode }} />
-              )}
-            </Box>
-            <JournalDetails
-              values={{
-                'Marked invoice': selected?.invoice,
-                'Payment reference': selected?.paymReference,
-              }}
-            />
-          </Stack>
-          <Box
-            role="table"
-            aria-label="Journal totals"
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: '80px repeat(3, 130px)',
-              gap: 0.5,
-              width: 'fit-content',
-              fontSize: 11,
-            }}
-          >
-            <span />
-            <Typography variant="caption">DEBIT</Typography>
-            <Typography variant="caption">CREDIT</Typography>
-            <Typography variant="caption">BALANCE</Typography>
+          {/* D365 line footer: the selected line's account, offset, tax, invoice and due date. */}
+          <Stack direction="row" spacing={1.5} sx={{ mb: 1.5, flexWrap: 'wrap', rowGap: 1 }}>
             {(
               [
-                ['VOUCHER', totals(voucherRows)],
-                ['JOURNAL', totals(rows)],
+                ['Account name', footerLine ? customerName(footerLine) : '', 150],
+                ['Offset account name', footerLine ? offsetName(footerLine) : '', 150],
+                ['Calculated sales tax amount', null, 100],
+                ['Actual sales tax amount', null, 100],
+                ['Invoice', footerLine?.invoice ?? '', 100],
+                ['Due date', footerLine ? (footerLine.due ?? '').slice(0, 10) : '', 150],
               ] as const
-            ).map(([label, total]) => (
-              <React.Fragment key={label}>
-                <Typography variant="caption">{label}</Typography>
-                {[total.debit, total.credit, total.balance].map((value, index) => (
-                  <Box
-                    key={index}
-                    sx={{
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      px: 1,
-                      py: 0.3,
-                      textAlign: 'right',
-                    }}
-                  >
-                    {value}
-                  </Box>
-                ))}
-              </React.Fragment>
+            ).map(([label, value, width]) => (
+              <Box
+                key={label}
+                sx={{ width }}
+                title={value === null ? 'Sales tax is not calculated on this journal.' : undefined}
+              >
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                  {label}
+                </Typography>
+                <Box sx={footerBoxSx}>{value ?? ''}</Box>
+              </Box>
             ))}
-          </Box>
+          </Stack>
+          <Stack direction="row" spacing={2} sx={{ alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <Box
+              role="table"
+              aria-label="Journal totals"
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: '80px repeat(3, 100px)',
+                gap: 0.5,
+                width: 'fit-content',
+                fontSize: 11,
+              }}
+            >
+              <span />
+              <Typography variant="caption">DEBIT</Typography>
+              <Typography variant="caption">CREDIT</Typography>
+              <Typography variant="caption">BALANCE</Typography>
+              {(
+                [
+                  ['VOUCHER', totals(voucherRows)],
+                  ['JOURNAL', totals(rows)],
+                ] as const
+              ).map(([label, total]) => (
+                <React.Fragment key={label}>
+                  <Typography variant="caption" sx={{ alignSelf: 'center', fontWeight: 600 }}>
+                    {label}
+                  </Typography>
+                  {[total.debit, total.credit, total.balance].map((value, index) => (
+                    <Box key={index} sx={{ ...footerBoxSx, justifyContent: 'flex-end' }}>
+                      {value}
+                    </Box>
+                  ))}
+                </React.Fragment>
+              ))}
+            </Box>
+            <Box sx={{ width: 200 }} title="Budget control is not part of this journal.">
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                Budget check results
+              </Typography>
+              <Box sx={footerBoxSx}>Budget check not performed</Box>
+            </Box>
+          </Stack>
         </Box>
       }
       dataGridProps={{
@@ -711,9 +949,10 @@ function JournalLines({ company, journalId }: { company: string; journalId: stri
           if (!draft) setSelectedId(String(ids.at(-1) ?? ''));
         },
         onRowDoubleClick: edit,
-        onCellEditRequest: (row) => edit(row),
+        // The page edits with its own editors (not the grid's edit mode), so the grid
+        // cannot tell a line is being edited: only offer its view-mode pencil when idle.
+        onCellEditRequest: draft || !canEdit ? undefined : (row) => edit(row),
         hideToolbar: true,
-        hideFooter: true,
         mobilePresentation: 'table',
       }}
       dialogs={

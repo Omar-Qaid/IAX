@@ -29,6 +29,14 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
             }
             if (entity.DocumentDate == default) entity.DocumentDate = entity.TransDate;
             entity.NoEdit = NoYes.No;
+            // Transfer, approval and payment status are set by the system, never by the client.
+            entity.Transferred = NoYes.No;
+            entity.TransferredBy = string.Empty;
+            entity.TransferredTo = string.Empty;
+            entity.TransferredOn = default;
+            entity.Approved = NoYes.No;
+            entity.Approver = 0;
+            entity.PaymentStatus = default;
             if (entity.LineNum == 0)
                 entity.LineNum = (await _unitOfWork.Context.Set<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans>()
                     .Where(x => x.DataAreaId == area && x.JournalNum == entity.JournalNum)
@@ -66,6 +74,32 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
             entity.JournalNum = current.JournalNum;
             entity.Company = current.Company;
             entity.NoEdit = current.NoEdit;
+            // Shown on the line tabs but not edited through this API: customer/vendor payment and
+            // general journals share this DTO, and a client that does not send these fields must
+            // not reset them.
+            entity.Qty = current.Qty;
+            entity.ReleaseDate = current.ReleaseDate;
+            entity.Transfer = current.Transfer;
+            entity.Transferred = current.Transferred;
+            entity.TransferredBy = current.TransferredBy;
+            entity.TransferredOn = current.TransferredOn;
+            entity.TransferredTo = current.TransferredTo;
+            entity.TaxWithholdGroup = current.TaxWithholdGroup;
+            entity.TaxDirectionControl = current.TaxDirectionControl;
+            entity.CashDiscAmount = current.CashDiscAmount;
+            entity.DateCashDisc = current.DateCashDisc;
+            entity.VatNumJournal = current.VatNumJournal;
+            entity.VendorVatDate = current.VendorVatDate;
+            entity.Approved = current.Approved;
+            entity.Approver = current.Approver;
+            entity.PaymSpec = current.PaymSpec;
+            entity.BankTransType = current.BankTransType;
+            entity.BankDepositVoucher = current.BankDepositVoucher;
+            entity.BankDepositNum = current.BankDepositNum;
+            entity.ForeignCompany = current.ForeignCompany;
+            entity.ForeignVoucher = current.ForeignVoucher;
+            entity.ReasonRefRecId = current.ReasonRefRecId;
+            entity.PaymentStatus = current.PaymentStatus;
         }
 
         public override async Task<IEnumerable<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans>> UpdateRangeAsync(

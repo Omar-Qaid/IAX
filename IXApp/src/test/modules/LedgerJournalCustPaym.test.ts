@@ -64,6 +64,34 @@ describe('customer payment journal API', () => {
       expect.anything()
     );
   });
+  it('falls back to loading all journals and lines on an API without the scoped endpoints', async () => {
+    // Same shape as the API client's ApiError.
+    const notFound = Object.assign(new Error('Not found'), { status: 404 });
+    vi.mocked(apiClient.get)
+      .mockRejectedValueOnce(notFound)
+      .mockResolvedValueOnce({
+        data: {
+          success: true,
+          data: [
+            { recId: 1, journalType: 0 },
+            { recId: 2, journalType: 1 },
+          ],
+        },
+      });
+    expect(await api.list()).toEqual([{ recId: 2, id: '2', journalType: 1 }]);
+    vi.mocked(apiClient.get)
+      .mockRejectedValueOnce(notFound)
+      .mockResolvedValueOnce({
+        data: {
+          success: true,
+          data: [
+            { recId: 5, journalNum: 'PAY-1' },
+            { recId: 6, journalNum: 'PAY-2' },
+          ],
+        },
+      });
+    expect(await api.journalLines('PAY-1')).toEqual([{ recId: 5, id: '5', journalNum: 'PAY-1' }]);
+  });
   it('matches invoice amounts to the cent, ignoring floating point noise', () => {
     expect(sameAmount(100.1, 100.10000000001)).toBe(true);
     expect(sameAmount(0.1 + 0.2, 0.3)).toBe(true);

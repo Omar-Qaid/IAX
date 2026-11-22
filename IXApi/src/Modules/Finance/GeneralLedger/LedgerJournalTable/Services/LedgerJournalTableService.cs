@@ -70,6 +70,11 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
             entity.JournalTotalCreditReportingCurrency = 0m;
             entity.NumOfLines = 0;
             entity.SystemBlocked = NoYes.No;
+            // Server-owned header state never comes from the client.
+            entity.SystemBlockedReason = 0;
+            entity.SessionId = 0;
+            entity.WorkflowApprovalStatus = WorkflowApprovalStatus.NotSubmitted;
+            entity.Log = string.Empty;
             if (string.IsNullOrWhiteSpace(entity.JournalNum))
                 entity.JournalNum = _numbers == null
                     ? throw new InvalidOperationException("Journal batch number sequence service is unavailable.")
@@ -91,6 +96,22 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
             entity.JournalType = current.JournalType;
             entity.NumberSequenceTable = current.NumberSequenceTable;
             entity.VoucherAllocatedAtPosting = current.VoucherAllocatedAtPosting;
+            // Shown on the header tabs but not edited through this API: every journal type
+            // (customer/vendor payment, general) shares this DTO, and a client that does not
+            // send these fields must not reset them.
+            entity.CurrentOperationsTax = current.CurrentOperationsTax;
+            entity.DetailSummaryPosting = current.DetailSummaryPosting;
+            entity.LinesLimitBeforeDistribution = current.LinesLimitBeforeDistribution;
+            entity.ParentJournalNum = current.ParentJournalNum;
+            entity.DocumentNum = current.DocumentNum;
+            entity.TaxObligationCompany = current.TaxObligationCompany;
+            entity.BankTransSummarizationEnabled = current.BankTransSummarizationEnabled;
+            entity.BankTransSummarizationCriteria = current.BankTransSummarizationCriteria;
+            entity.SessionId = current.SessionId;
+            entity.SystemBlockedReason = current.SystemBlockedReason;
+            entity.WorkflowApprovalStatus = current.WorkflowApprovalStatus;
+            entity.OriginalCompany = current.OriginalCompany;
+            entity.Log = current.Log;
             entity.Posted = current.Posted;
             entity.PostedDateTime = current.PostedDateTime;
             entity.JournalBalance = current.JournalBalance;

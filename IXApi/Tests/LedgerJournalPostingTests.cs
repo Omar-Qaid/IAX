@@ -20,6 +20,82 @@ namespace IAX.IXApi.Tests;
 public class LedgerJournalPostingTests
 {
     [Fact]
+    public async Task Header_update_keeps_the_stored_tab_fields_a_client_did_not_send()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        await db.SaveChangesAsync();
+        var stored = await db.Set<LedgerJournalTable>().SingleAsync(x => x.RecId == 1);
+        stored.DetailSummaryPosting = DetailSummaryPosting.Summary;
+        stored.LinesLimitBeforeDistribution = 1000;
+        stored.ParentJournalNum = "J0";
+        stored.Log = "Checked";
+        stored.WorkflowApprovalStatus = WorkflowApprovalStatus.Approved;
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        // A journal page that only edits the description sends the other fields as defaults.
+        var update = await db.Set<LedgerJournalTable>().SingleAsync(x => x.RecId == 1);
+        update.Name = "Renamed";
+        update.DetailSummaryPosting = DetailSummaryPosting.Detail;
+        update.LinesLimitBeforeDistribution = 0;
+        update.ParentJournalNum = "";
+        update.Log = "";
+        update.WorkflowApprovalStatus = WorkflowApprovalStatus.NotSubmitted;
+        // The service restores the stored fields before the generic repository save; this test
+        // harness has no repository, so that save step fails and the prepared entity is checked.
+        await Assert.ThrowsAsync<NullReferenceException>(() =>
+            new LedgerJournalTableService(new TestUnitOfWork(db), new TestUser()).UpdateAsync(update));
+        var saved = update;
+        Assert.Equal("Renamed", saved.Name);
+        Assert.Equal(DetailSummaryPosting.Summary, saved.DetailSummaryPosting);
+        Assert.Equal(1000, saved.LinesLimitBeforeDistribution);
+        Assert.Equal("J0", saved.ParentJournalNum);
+        Assert.Equal("Checked", saved.Log);
+        Assert.Equal(WorkflowApprovalStatus.Approved, saved.WorkflowApprovalStatus);
+    }
+
+    [Fact]
+    public async Task Line_update_keeps_the_stored_tab_fields_a_client_did_not_send()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        db.Add(new LedgerJournalTrans { RecId = 900, DataAreaId = "dat", JournalNum = "J1", LineNum = 1, Txt = "Payment" });
+        await db.SaveChangesAsync();
+        var stored = await db.Set<LedgerJournalTrans>().SingleAsync(x => x.RecId == 900);
+        stored.PaymSpec = "SPEC";
+        stored.BankTransType = "01";
+        stored.Qty = 2;
+        stored.Transferred = NoYes.Yes;
+        stored.TransferredBy = "batch";
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var update = await db.Set<LedgerJournalTrans>().SingleAsync(x => x.RecId == 900);
+        update.Txt = "Renamed";
+        update.PaymSpec = "";
+        update.BankTransType = "";
+        update.Qty = 0;
+        update.Transferred = NoYes.No;
+        update.TransferredBy = "";
+        // The service restores the stored fields before the generic repository save; this test
+        // harness has no repository, so that save step fails and the prepared entity is checked.
+        await Assert.ThrowsAsync<NullReferenceException>(() =>
+            new LedgerJournalTransService(new TestUnitOfWork(db), new TestUser()).UpdateAsync(update));
+
+        Assert.Equal("Renamed", update.Txt);
+        Assert.Equal("SPEC", update.PaymSpec);
+        Assert.Equal("01", update.BankTransType);
+        Assert.Equal(2, update.Qty);
+        Assert.Equal(NoYes.Yes, update.Transferred);
+        Assert.Equal("batch", update.TransferredBy);
+    }
+
+    [Fact]
     public async Task Offset_lookup_returns_company_scoped_ledger_and_bank_dimension_ids()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
