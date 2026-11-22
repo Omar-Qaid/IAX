@@ -2,11 +2,11 @@ import React from 'react';
 import { expect, it, vi } from 'vitest';
 import { within } from '@testing-library/react';
 import { fireEvent, render, screen } from '@test/testUtils';
-import { usePaymentJournalActions } from '@modules/finance/accounts-receivable/payment/components/PaymentJournalShared';
+import { usePaymentJournalActions } from '@modules/finance/general-ledger/journal/components/JournalShared';
 import {
   ledgerJournalCustPaymApi,
   newPaymentJournal,
-} from '@modules/finance/accounts-receivable/payment/api/ledgerJournalCustPaymApi';
+} from '@modules/finance/general-ledger/journal/api/ledgerJournalApi';
 
 function Harness() {
   const actions = usePaymentJournalActions();

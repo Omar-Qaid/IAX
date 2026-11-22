@@ -321,6 +321,71 @@ public class LedgerJournalPostingTests
         Assert.Equal(2, await db.Set<CustSettlement>().CountAsync());
     }
 
+    [Fact]
+    public async Task Vendor_payment_journal_settles_the_marked_vendor_invoice()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        SeedSubledgers(db);
+        var invoiceLine = Line(1, "V1", bank: true, credit: 100m);
+        invoiceLine.AccountType = LedgerJournalACType.Vend;
+        invoiceLine.LedgerDimensionName = "V-001";
+        invoiceLine.OffsetLedgerDimension = 2;
+        invoiceLine.Invoice = "VINV-1";
+        db.Add(invoiceLine);
+        await db.SaveChangesAsync();
+        var service = new LedgerJournalTableService(new TestUnitOfWork(db), new TestUser());
+        var (invoiceResult, invoiceError) = await service.PostAsync(1, default);
+        Assert.Null(invoiceError);
+        Assert.NotNull(invoiceResult);
+        var invoice = await db.Set<VendTrans>().AsNoTracking().SingleAsync();
+        Assert.Equal(-100m, invoice.AmountCur);
+
+        db.Add(new LedgerJournalTable { RecId = 2, DataAreaId = "dat", JournalNum = "J2", JournalName = "GEN" });
+        var payment = Line(2, "V2", bank: true, debit: 100m);
+        payment.JournalNum = "J2";
+        payment.AccountType = LedgerJournalACType.Vend;
+        payment.LedgerDimensionName = "V-001";
+        payment.OffsetLedgerDimension = 2;
+        payment.SettleVoucher = SettleVoucher.Selection;
+        payment.MarkedInvoiceRecId = invoice.RecId;
+        db.Add(payment);
+        await db.SaveChangesAsync();
+        var (result, error) = await service.PostAsync(2, default);
+        Assert.Null(error);
+        Assert.NotNull(result);
+        Assert.Empty(await db.Set<VendTransOpen>().ToListAsync());
+        var settlement = Assert.Single(await db.Set<VendSettlement>().ToListAsync());
+        Assert.Equal(invoice.RecId, settlement.InvoiceTransRecId);
+        Assert.Equal(100m, settlement.AmountCur);
+        Assert.All(await db.Set<VendTrans>().AsNoTracking().ToListAsync(), trans => Assert.NotEqual(default, trans.Closed));
+    }
+
+    [Fact]
+    public async Task Vendor_payment_marking_requires_a_matching_open_invoice()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        SeedSubledgers(db);
+        var payment = Line(1, "V1", bank: true, debit: 100m);
+        payment.AccountType = LedgerJournalACType.Vend;
+        payment.LedgerDimensionName = "V-001";
+        payment.OffsetLedgerDimension = 2;
+        payment.SettleVoucher = SettleVoucher.Selection;
+        payment.MarkedInvoiceRecId = 999;
+        db.Add(payment);
+        await db.SaveChangesAsync();
+        var (result, error) = await new LedgerJournalTableService(new TestUnitOfWork(db), new TestUser()).PostAsync(1, default);
+        Assert.Null(result);
+        Assert.Contains("marked invoice", error);
+        Assert.Empty(await db.Set<VendTrans>().ToListAsync());
+        Assert.Empty(await db.Set<VendSettlement>().ToListAsync());
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
@@ -499,7 +564,6 @@ public class LedgerJournalPostingTests
     [Theory]
     [InlineData(LedgerJournalACType.Cust, SettleVoucher.Automatic)]
     [InlineData(LedgerJournalACType.Vend, SettleVoucher.Automatic)]
-    [InlineData(LedgerJournalACType.Vend, SettleVoucher.Selection)]
     [InlineData(LedgerJournalACType.Ledger, SettleVoucher.Selection)]
     public async Task Unsupported_journal_settlement_requests_are_not_silently_ignored(LedgerJournalACType accountType, SettleVoucher settlement)
     {
@@ -2042,7 +2106,7 @@ public class LedgerJournalPostingTests
                 typeof(ExchangeRateCurrencyPair), typeof(ExchangeRate),
                 typeof(Currency),
                 typeof(CustTable), typeof(CustTrans), typeof(CustTransOpen), typeof(CustParameters), typeof(CustSettlement),
-                typeof(CustLedgerAccounts), typeof(VendTable), typeof(VendTrans), typeof(VendTransOpen),
+                typeof(CustLedgerAccounts), typeof(VendTable), typeof(VendTrans), typeof(VendTransOpen), typeof(VendSettlement), typeof(VendInvoiceJour),
                 typeof(VendParameters), typeof(VendLedgerAccounts),
                 typeof(BankAccountTable), typeof(BankAccountTrans)];
             if (this is DimensionPostingContext)

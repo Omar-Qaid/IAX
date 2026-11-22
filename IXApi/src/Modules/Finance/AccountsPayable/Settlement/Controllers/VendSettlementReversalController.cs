@@ -28,6 +28,10 @@ public sealed class VendSettlementReversalController : BaseController<VendSettle
     /// D365's *Settle open transactions*: applies marked open transactions to each other, which is
     /// how a vendor credit note or an on-account payment is applied to an invoice.
     /// </summary>
+    [HttpGet("open-transactions")]
+    public async Task<IActionResult> OpenTransactions([FromQuery] string accountNum, CancellationToken ct) =>
+        Present(await _settle.GetOpenTransactionsAsync(accountNum, ct), "Loading open transactions failed.");
+
     [HttpPost("settle-open-transactions")]
     [DomainPermission("AccountsPayable", "VendorPayments", "Post")]
     public async Task<IActionResult> SettleOpenTransactions([FromBody] VendSettleOpenInput input, CancellationToken ct) =>

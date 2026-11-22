@@ -10,7 +10,7 @@ import {
   newPaymentJournalLine,
   type PaymentJournal,
   type PaymentJournalLine,
-} from '@modules/finance/accounts-receivable/payment/api/ledgerJournalCustPaymApi';
+} from '@modules/finance/general-ledger/journal/api/ledgerJournalApi';
 import { customerQuickCreateApi } from '@modules/finance/accounts-receivable/customer/api/customerQuickCreateApi';
 import { currencyApi } from '@modules/finance/foundation/currency/api/currencyApi';
 import { custOpenTransApi } from '@modules/finance/accounts-receivable/settlement/api/custOpenTransApi';

@@ -48,6 +48,30 @@ export const ROUTE_METADATA: RouteMetadata[] = [
       { labelKey: 'Lines' },
     ],
   },
+  {
+    path: ROUTE_PATHS.GENERAL_LEDGER.LEDGER_JOURNAL_TRANS_VEND_PAYM,
+    breadcrumbs: [
+      home,
+      {
+        labelKey: 'nav.generalLedger',
+        path: ROUTE_PATHS.GENERAL_LEDGER.LEDGER_JOURNAL_LIST_VEND_PAYM,
+      },
+      {
+        labelKey: 'Vendor payment journal',
+        path: ROUTE_PATHS.GENERAL_LEDGER.LEDGER_JOURNAL_LIST_VEND_PAYM,
+      },
+      { labelKey: 'Lines' },
+    ],
+  },
+  {
+    path: ROUTE_PATHS.GENERAL_LEDGER.LEDGER_JOURNAL_TRANS_DAILY,
+    breadcrumbs: [
+      home,
+      { labelKey: 'nav.generalLedger', path: ROUTE_PATHS.GENERAL_LEDGER.LEDGER_JOURNAL_LIST_DAILY },
+      { labelKey: 'General journal', path: ROUTE_PATHS.GENERAL_LEDGER.LEDGER_JOURNAL_LIST_DAILY },
+      { labelKey: 'Lines' },
+    ],
+  },
   ...[
     {
       path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.FREE_TEXT_INVOICE_NEW,

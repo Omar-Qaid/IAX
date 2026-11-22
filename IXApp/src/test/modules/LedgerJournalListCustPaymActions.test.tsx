@@ -7,7 +7,7 @@ import {
   ledgerJournalCustPaymApi as api,
   newPaymentJournal,
   type PaymentJournal,
-} from '@modules/finance/accounts-receivable/payment/api/ledgerJournalCustPaymApi';
+} from '@modules/finance/general-ledger/journal/api/ledgerJournalApi';
 
 const navigate = vi.fn();
 vi.mock('react-router-dom', async (importOriginal) => ({

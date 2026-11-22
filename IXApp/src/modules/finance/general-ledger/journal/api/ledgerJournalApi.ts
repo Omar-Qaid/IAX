@@ -174,83 +174,118 @@ const lines = createEntityApi<Omit<PaymentJournalLine, 'id'>, PaymentJournalLine
   toRecord: record<PaymentJournalLine>,
   toDto: dto,
 });
-export const ledgerJournalCustPaymApi = {
-  headers,
-  lines,
-  /** Customer payment journals only (journal type 1), filtered on the server. */
-  async list(signal?: AbortSignal) {
-    const response = await apiClient
-      .get<ApiResponse<Omit<PaymentJournal, 'id'>[]>>(`${headerEndpoint}/by-type/1`, { signal })
-      .catch(async (error: unknown) => {
-        // Older API: load every journal and filter here.
+/** D365 LedgerJournalType: 0 = Daily (general journal), 1 = customer payment, 2 = vendor payment. */
+export type LedgerJournalTypeId = 0 | 1 | 2;
+const journalTypeNames: Record<LedgerJournalTypeId, string> = {
+  0: 'general journal',
+  1: 'customer payment journal',
+  2: 'vendor payment journal',
+};
+
+/** The journal API of one journal type: lists, reads and names only journals of that type. */
+function createLedgerJournalApi(journalType: LedgerJournalTypeId) {
+  return {
+    headers,
+    lines,
+    journalType,
+    /** Journals of this type only, filtered on the server. */
+    async list(signal?: AbortSignal) {
+      const response = await apiClient
+        .get<ApiResponse<Omit<PaymentJournal, 'id'>[]>>(
+          `${headerEndpoint}/by-type/${journalType}`,
+          { signal }
+        )
+        .catch(async (error: unknown) => {
+          // Older API: load every journal and filter here.
+          if (isNotFound(error))
+            return apiClient.get<ApiResponse<Omit<PaymentJournal, 'id'>[]>>(headerEndpoint, {
+              signal,
+            });
+          throw error;
+        });
+      // Keep the type guard: the page must never show other journal types.
+      return requireApiData(response.data, 'payment journals')
+        .filter((row) => row.journalType === journalType)
+        .map(record<PaymentJournal>);
+    },
+    async get(recId: string, signal?: AbortSignal) {
+      const response = await apiClient.get<ApiResponse<Omit<PaymentJournal, 'id'>>>(
+        `${headerEndpoint}/${encodeURIComponent(recId)}`,
+        { signal }
+      );
+      const row = record<PaymentJournal>(requireApiData(response.data, 'payment journal'));
+      if (row.journalType !== journalType)
+        throw new Error(`This journal is not a ${journalTypeNames[journalType]}.`);
+      return row;
+    },
+    /** Only this journal's lines (server-filtered), not every journal line of the company. */
+    async journalLines(journalNum: string, signal?: AbortSignal) {
+      try {
+        const response = await apiClient.get<ApiResponse<Omit<PaymentJournalLine, 'id'>[]>>(
+          `${lineEndpoint}/by-journal/${encodeURIComponent(journalNum)}`,
+          { signal }
+        );
+        return requireApiData(response.data, 'payment journal lines').map(
+          record<PaymentJournalLine>
+        );
+      } catch (error) {
+        // Older API: load every line and keep this journal's.
+        if (!isNotFound(error)) throw error;
+        return (await lines.list(signal)).filter((row) => row.journalNum === journalNum);
+      }
+    },
+    async names(signal?: AbortSignal) {
+      const response = await apiClient.get<ApiResponse<PaymentJournalName[]>>(
+        '/v1/LedgerJournalName',
+        { signal }
+      );
+      return requireApiData(response.data, 'journal names').filter(
+        (row) => row.journalType === journalType
+      );
+    },
+    async offsets(signal?: AbortSignal) {
+      try {
+        const response = await apiClient.get<ApiResponse<OffsetAccount[]>>(
+          `${headerEndpoint}/offset-accounts`,
+          { signal }
+        );
+        return requireApiData(response.data, 'offset accounts');
+      } catch (error) {
+        // An older API reads "offset-accounts" as a journal id: "LedgerJournalTable not found".
         if (isNotFound(error))
-          return apiClient.get<ApiResponse<Omit<PaymentJournal, 'id'>[]>>(headerEndpoint, {
-            signal,
+          throw new Error('Offset accounts are not available: restart the API to load them.', {
+            cause: error,
           });
         throw error;
-      });
-    // Keep the type guard: the page must never show other journal types.
-    return requireApiData(response.data, 'payment journals')
-      .filter((row) => row.journalType === 1)
-      .map(record<PaymentJournal>);
-  },
-  async get(recId: string, signal?: AbortSignal) {
-    const response = await apiClient.get<ApiResponse<Omit<PaymentJournal, 'id'>>>(
-      `${headerEndpoint}/${encodeURIComponent(recId)}`,
-      { signal }
-    );
-    const row = record<PaymentJournal>(requireApiData(response.data, 'payment journal'));
-    if (row.journalType !== 1) throw new Error('This journal is not a customer payment journal.');
-    return row;
-  },
-  /** Only this journal's lines (server-filtered), not every journal line of the company. */
-  async journalLines(journalNum: string, signal?: AbortSignal) {
-    try {
-      const response = await apiClient.get<ApiResponse<Omit<PaymentJournalLine, 'id'>[]>>(
-        `${lineEndpoint}/by-journal/${encodeURIComponent(journalNum)}`,
-        { signal }
-      );
-      return requireApiData(response.data, 'payment journal lines').map(record<PaymentJournalLine>);
-    } catch (error) {
-      // Older API: load every line and keep this journal's.
-      if (!isNotFound(error)) throw error;
-      return (await lines.list(signal)).filter((row) => row.journalNum === journalNum);
-    }
-  },
-  async names(signal?: AbortSignal) {
-    const response = await apiClient.get<ApiResponse<PaymentJournalName[]>>(
-      '/v1/LedgerJournalName',
-      { signal }
-    );
-    return requireApiData(response.data, 'journal names').filter((row) => row.journalType === 1);
-  },
-  async offsets(signal?: AbortSignal) {
-    try {
-      const response = await apiClient.get<ApiResponse<OffsetAccount[]>>(
-        `${headerEndpoint}/offset-accounts`,
-        { signal }
-      );
-      return requireApiData(response.data, 'offset accounts');
-    } catch (error) {
-      // An older API reads "offset-accounts" as a journal id: "LedgerJournalTable not found".
-      if (isNotFound(error))
-        throw new Error('Offset accounts are not available: restart the API to load them.', {
-          cause: error,
-        });
-      throw error;
-    }
-  },
-  async validate(recId: number): Promise<JournalValidation> {
-    return (await apiClient.get<JournalValidation>(`${headerEndpoint}/${recId}/validate`)).data;
-  },
-  async simulate(recId: number): Promise<JournalSimulation> {
-    return (await apiClient.post<JournalSimulation>(`${headerEndpoint}/${recId}/simulate`)).data;
-  },
-  async post(recId: number): Promise<void> {
-    await apiClient.post(`${headerEndpoint}/${recId}/post`);
-  },
-};
-export function newPaymentJournal(company: string): PaymentJournal {
+      }
+    },
+    async validate(recId: number): Promise<JournalValidation> {
+      return (await apiClient.get<JournalValidation>(`${headerEndpoint}/${recId}/validate`)).data;
+    },
+    async simulate(recId: number): Promise<JournalSimulation> {
+      return (await apiClient.post<JournalSimulation>(`${headerEndpoint}/${recId}/simulate`)).data;
+    },
+    async post(recId: number): Promise<void> {
+      await apiClient.post(`${headerEndpoint}/${recId}/post`);
+    },
+  };
+}
+export type LedgerJournalApi = ReturnType<typeof createLedgerJournalApi>;
+const journalApis = new Map<LedgerJournalTypeId, LedgerJournalApi>();
+/** One shared API object per journal type (pages and tests see the same instance). */
+export function ledgerJournalApiFor(journalType: LedgerJournalTypeId): LedgerJournalApi {
+  let api = journalApis.get(journalType);
+  if (!api) {
+    api = createLedgerJournalApi(journalType);
+    journalApis.set(journalType, api);
+  }
+  return api;
+}
+export const ledgerJournalCustPaymApi = ledgerJournalApiFor(1);
+export function newPaymentJournal(
+  company: string,
+  journalType: LedgerJournalTypeId = 1
+): PaymentJournal {
   return {
     id: '',
     recId: 0,
@@ -258,7 +293,7 @@ export function newPaymentJournal(company: string): PaymentJournal {
     journalNum: '',
     journalName: '',
     name: '',
-    journalType: 1,
+    journalType,
     posted: 0,
     postedDateTime: '0001-01-01T00:00:00',
     systemBlocked: 0,
@@ -270,7 +305,8 @@ export function newPaymentJournal(company: string): PaymentJournal {
     numOfLines: 0,
   };
 }
-export function newPaymentJournalLine(header: PaymentJournal): PaymentJournalLine {
+/** A new line; `accountType` is the D365 LedgerJournalACType (0 ledger, 1 customer, 2 vendor). */
+export function newPaymentJournalLine(header: PaymentJournal, accountType = 1): PaymentJournalLine {
   const now = new Date();
   const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   return {
@@ -282,7 +318,7 @@ export function newPaymentJournalLine(header: PaymentJournal): PaymentJournalLin
     voucher: '',
     transDate: date,
     company: header.dataAreaId,
-    accountType: 1,
+    accountType,
     ledgerDimension: 0,
     ledgerDimensionName: '',
     defaultDimension: header.defaultDimension,

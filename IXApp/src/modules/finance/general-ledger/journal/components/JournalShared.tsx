@@ -17,12 +17,14 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCompanyStore } from '@core/company/useCompanyStore';
 import { useNotifications } from '@shared/hooks/useNotifications';
 import {
-  ledgerJournalCustPaymApi as api,
+  ledgerJournalApiFor,
+  type LedgerJournalTypeId,
   type PaymentJournal,
-} from '../api/ledgerJournalCustPaymApi';
+} from '../api/ledgerJournalApi';
 
-export const paymentJournalKeys = (company: string) =>
-  ['customer-payment-journals', company] as const;
+/** Query keys of one journal type in one company (types never share cached rows). */
+export const paymentJournalKeys = (company: string, journalType: LedgerJournalTypeId = 1) =>
+  ['ledger-journals', journalType, company] as const;
 export const paymentJournalSx = {
   '& .MuiTab-root': { minHeight: 32, minWidth: 0, px: 1.2, fontSize: 11, textTransform: 'none' },
   minHeight: 32,
@@ -172,7 +174,12 @@ export function JournalFieldGroups({ groups }: { groups: JournalFieldGroup[] }) 
   );
 }
 
-export function usePaymentJournalActions() {
+/** Validate / simulate / post for journals of one type, with their report and confirmation dialogs. */
+export function usePaymentJournalActions(
+  journalType: LedgerJournalTypeId = 1,
+  title = 'customer payment journal'
+) {
+  const api = ledgerJournalApiFor(journalType);
   const company = useCompanyStore((state) => state.currentCompany);
   const cache = useQueryClient();
   const { notifyError, notifySuccess } = useNotifications();
@@ -184,7 +191,8 @@ export function usePaymentJournalActions() {
     success: boolean;
   } | null>(null);
   const [pendingPost, setPendingPost] = React.useState<PaymentJournal | null>(null);
-  const refresh = () => cache.invalidateQueries({ queryKey: paymentJournalKeys(company) });
+  const refresh = () =>
+    cache.invalidateQueries({ queryKey: paymentJournalKeys(company, journalType) });
   const operation = useMutation({
     mutationFn: async ({
       journal,
@@ -255,7 +263,7 @@ export function usePaymentJournalActions() {
         </DialogActions>
       </Dialog>
       <Dialog open={!!pendingPost} onClose={() => setPendingPost(null)}>
-        <DialogTitle>Post customer payment journal</DialogTitle>
+        <DialogTitle>Post {title}</DialogTitle>
         <DialogContent>
           Post journal {pendingPost?.journalNum}? This creates financial transactions and locks the
           journal against editing.

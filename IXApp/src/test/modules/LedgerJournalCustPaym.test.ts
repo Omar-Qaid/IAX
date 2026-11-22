@@ -6,7 +6,7 @@ import {
   newPaymentJournalLine,
   paymentJournalTotals,
   sameAmount,
-} from '@modules/finance/accounts-receivable/payment/api/ledgerJournalCustPaymApi';
+} from '@modules/finance/general-ledger/journal/api/ledgerJournalApi';
 
 vi.mock('@core/api/apiClient', () => ({
   apiClient: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },

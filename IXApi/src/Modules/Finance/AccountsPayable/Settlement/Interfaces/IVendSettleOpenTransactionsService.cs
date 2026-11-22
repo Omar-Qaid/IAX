@@ -15,4 +15,7 @@ public interface IVendSettleOpenTransactionsService : IBaseService<VendSettlemen
 {
     /// <summary>Settles marked open vendor transactions against each other, with no payment involved.</summary>
     Task<PurchResult> SettleAsync(VendSettleOpenInput input, CancellationToken ct);
+
+    /// <summary>The open transactions of one vendor, for marking an invoice to settle.</summary>
+    Task<PurchResult> GetOpenTransactionsAsync(string accountNum, CancellationToken ct);
 }

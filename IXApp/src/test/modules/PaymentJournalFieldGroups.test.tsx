@@ -1,7 +1,7 @@
 import React from 'react';
 import { expect, it } from 'vitest';
 import { render, screen } from '@test/testUtils';
-import { JournalFieldGroups } from '@modules/finance/accounts-receivable/payment/components/PaymentJournalShared';
+import { JournalFieldGroups } from '@modules/finance/general-ledger/journal/components/JournalShared';
 
 it('renders titled field groups with text values and read-only Yes/No switches', () => {
   render(

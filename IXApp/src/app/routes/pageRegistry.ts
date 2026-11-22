@@ -40,6 +40,51 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
       (module) => module.LedgerJournalTransCustPaym
     ),
   },
+  {
+    id: 'LedgerJournalListVendPaym',
+    path: ROUTE_PATHS.GENERAL_LEDGER.LEDGER_JOURNAL_LIST_VEND_PAYM,
+    permission: PERMISSIONS.LEDGER_JOURNAL_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-payable/payment/pages/LedgerJournalListVendPaym'),
+      (module) => module.LedgerJournalListVendPaym
+    ),
+  },
+  {
+    id: 'LedgerJournalTransVendPaym',
+    path: ROUTE_PATHS.GENERAL_LEDGER.LEDGER_JOURNAL_TRANS_VEND_PAYM,
+    permission: PERMISSIONS.LEDGER_JOURNAL_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-payable/payment/pages/LedgerJournalTransVendPaym'),
+      (module) => module.LedgerJournalTransVendPaym
+    ),
+  },
+  {
+    id: 'VendTrans',
+    path: ROUTE_PATHS.GENERAL_LEDGER.VEND_TRANS,
+    permission: PERMISSIONS.VENDOR_TRANSACTION_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-payable/vendor/pages/VendTrans'),
+      (module) => module.VendTrans
+    ),
+  },
+  {
+    id: 'LedgerJournalListDaily',
+    path: ROUTE_PATHS.GENERAL_LEDGER.LEDGER_JOURNAL_LIST_DAILY,
+    permission: PERMISSIONS.LEDGER_JOURNAL_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/general-ledger/journal/pages/LedgerJournalDailyPages'),
+      (module) => module.LedgerJournalListDaily
+    ),
+  },
+  {
+    id: 'LedgerJournalTransDaily',
+    path: ROUTE_PATHS.GENERAL_LEDGER.LEDGER_JOURNAL_TRANS_DAILY,
+    permission: PERMISSIONS.LEDGER_JOURNAL_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/general-ledger/journal/pages/LedgerJournalDailyPages'),
+      (module) => module.LedgerJournalTransDaily
+    ),
+  },
   ...[
     {
       id: 'CustFreeInvoiceNewPage',

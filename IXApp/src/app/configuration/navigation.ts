@@ -279,6 +279,22 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
     matchPath: ROUTE_PATHS.FOUNDATION.ROOT,
     sections: [
       {
+        id: 'journals',
+        title: 'Journal entries',
+        links: [
+          {
+            label: 'General journals',
+            path: ROUTE_PATHS.GENERAL_LEDGER.LEDGER_JOURNAL_LIST_DAILY,
+            permission: PERMISSIONS.LEDGER_JOURNAL_VIEW,
+          },
+          {
+            label: 'Vendor payment journal',
+            path: ROUTE_PATHS.GENERAL_LEDGER.LEDGER_JOURNAL_LIST_VEND_PAYM,
+            permission: PERMISSIONS.LEDGER_JOURNAL_VIEW,
+          },
+        ],
+      },
+      {
         id: 'setup',
         title: 'nav.setup',
         links: [

@@ -390,7 +390,9 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                 db.Set<VendTrans>().Add(vendTrans);
                 await db.SaveChangesAsync(ct); // The open row references the transaction key.
                 if (primary) line.VendTransId = vendTrans.RecId;
-                VendorOpenBalance.Add(db, vendTrans);
+                var vendOpen = VendorOpenBalance.Add(db, vendTrans);
+                if (primary && line.SettleVoucher == SettleVoucher.Selection)
+                    await SettleMarkedVendInvoiceAsync(area, line, vendTrans, vendOpen, ct);
                 return;
             }
             case LedgerJournalACType.Bank:
@@ -444,6 +446,52 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
             credit.Voucher, marked.Debit, marked.Open, credit, creditOpen, marked.Open.AmountCur);
     }
 
+    /// <summary>
+    /// A vendor payment line that marks one invoice settles it on posting (D365 marked settlement):
+    /// the payment debit must equal the invoice's open credit, in the same currency and rate.
+    /// </summary>
+    private async Task SettleMarkedVendInvoiceAsync(string area, LedgerJournalTrans line, VendTrans debit,
+        VendTransOpen? debitOpen, CancellationToken ct)
+    {
+        if (line.MarkedInvoiceRecId <= 0 || debitOpen == null || debit.AmountCur <= 0 || line.Prepayment == NoYes.Yes
+            || (line.MarkedInvoiceCompany.Length > 0 && line.MarkedInvoiceCompany != area))
+            throw new SubledgerPostingException("Selected settlement requires a vendor payment and a marked invoice in this company.");
+
+        await new SubledgerPostingSupport(db).LockVendorSettlementAsync(area, debit.AccountNum, ct);
+        var marked = await (
+            from credit in db.Set<VendTrans>()
+            join open in db.Set<VendTransOpen>() on credit.RecId equals open.RefRecId
+            where credit.RecId == line.MarkedInvoiceRecId && credit.DataAreaId == area && open.DataAreaId == area
+                && credit.AccountNum == debit.AccountNum && open.AccountNum == debit.AccountNum
+            select new { Credit = credit, Open = open }).SingleOrDefaultAsync(ct);
+        if (marked != null)
+        {
+            // A tracking query can reuse balances loaded before the settlement lock.
+            await db.Entry(marked.Credit).ReloadAsync(ct);
+            await db.Entry(marked.Open).ReloadAsync(ct);
+        }
+        if (marked == null || string.IsNullOrWhiteSpace(marked.Credit.Invoice)
+            || db.Entry(marked.Credit).State == EntityState.Detached || db.Entry(marked.Open).State == EntityState.Detached
+            || marked.Credit.CurrencyCode != debit.CurrencyCode || marked.Credit.TransDate.Date > debit.TransDate
+            || marked.Open.AmountCur != -debitOpen.AmountCur)
+            throw new SubledgerPostingException("The marked invoice must have an open balance matching the payment amount and currency.");
+        if (await db.Set<VendInvoiceJour>().AnyAsync(invoice => invoice.DataAreaId == area
+                && invoice.InvoiceAccount == debit.AccountNum && invoice.InvoiceId == marked.Credit.Invoice
+                && invoice.LedgerVoucher == marked.Credit.Voucher && invoice.Prepayment == NoYes.Yes, ct))
+            throw new SubledgerPostingException("Pay the purchase order prepayment invoice using a payment that selects that invoice.");
+        // Same currency is not the same rate: a rate difference realizes an exchange gain or loss,
+        // which this path does not post.
+        decimal Rate(VendTrans trans) => trans.AmountCur == 0m ? 0m
+            : decimal.Round(trans.AmountMst / trans.AmountCur, 6, MidpointRounding.AwayFromZero);
+        if (Rate(marked.Credit) != Rate(debit))
+            throw new SubledgerPostingException(
+                "The marked invoice was posted at a different exchange rate; settling it realizes an exchange difference, which this path does not post.");
+
+        await db.SaveChangesAsync(ct);
+        VendSettleOpenTransactionsService.ApplyPair(db, area, debit.AccountNum, debit.TransDate, debit.Voucher,
+            marked.Credit, marked.Open, debit, debitOpen, debitOpen.AmountCur);
+    }
+
     private static void EnsureInScope(string area, JournalHeader header, LedgerJournalTrans line)
     {
         var label = $"Line {line.LineNum}";
@@ -474,7 +522,8 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
         if (taxRequested && !supportedTax)
             throw new SubledgerPostingException($"{label}: journal tax calculation is not supported; post tax through its own process.");
         if (line.SettleVoucher != SettleVoucher.PostedVoucher
-            && !(line.AccountType == LedgerJournalACType.Cust && line.SettleVoucher == SettleVoucher.Selection))
+            && !((line.AccountType == LedgerJournalACType.Cust || line.AccountType == LedgerJournalACType.Vend)
+                && line.SettleVoucher == SettleVoucher.Selection))
             throw new SubledgerPostingException(
                 $"{label}: {line.SettleVoucher} settlement for {line.AccountType} journal lines is not supported; use the settlement process.");
         if (line.ReverseEntry == NoYes.Yes)

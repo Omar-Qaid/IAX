@@ -80,7 +80,7 @@ public sealed class VendSettleOpenTransactionsService : BaseService<VendSettleme
         await _unitOfWork.BeginTransactionAsync(ct);
         try
         {
-            await support.LockAsync($"VendSettleOpen:{area}:{account}".ToUpperInvariant(), ct);
+            await support.LockVendorSettlementAsync(area, account, ct);
 
             var vendor = await Db.Set<VendTable>().AsNoTracking()
                 .FirstOrDefaultAsync(x => x.DataAreaId == area && x.AccountNum == account, ct);
@@ -176,28 +176,7 @@ public sealed class VendSettleOpenTransactionsService : BaseService<VendSettleme
                                     "Clear vendor prepayment account", 0m, ledger.Ledger.AccountingCurrency));
                         }
                     }
-                    Db.Set<VendSettlement>().Add(new VendSettlement
-                    {
-                        DataAreaId = area, AccountNum = account,
-                        InvoiceTransRecId = invoice.Trans.RecId, PaymentTransRecId = offset.Trans.RecId,
-                        TransDate = date, Voucher = voucher,
-                        AmountCur = amount, AmountMst = accounting,
-                        CanBeReversed = NoYes.Yes
-                    });
-
-                    // The invoice gives up part of its credit; the offsetting debit gives up the
-                    // same magnitude. Directions match VendPaymentService so the restore inverts them.
-                    invoice.Trans.SettleAmountCur -= amount;
-                    invoice.Trans.SettleAmountMst -= accounting;
-                    invoice.Open.AmountCur += amount;
-                    invoice.Open.AmountMst += accounting;
-                    CloseIfSettled(area, invoice.Trans, invoice.Open, date);
-
-                    offset.Trans.SettleAmountCur += amount;
-                    offset.Trans.SettleAmountMst += accounting;
-                    offset.Open.AmountCur -= amount;
-                    offset.Open.AmountMst -= accounting;
-                    CloseIfSettled(area, offset.Trans, offset.Open, date);
+                    ApplyPair(Db, area, account, date, voucher, invoice.Trans, invoice.Open, offset.Trans, offset.Open, amount);
 
                     totalSettled += amount;
                     applied.Add(new
@@ -232,6 +211,63 @@ public sealed class VendSettleOpenTransactionsService : BaseService<VendSettleme
     }
 
     /// <summary>
+    /// Settles <paramref name="amount"/> of a vendor invoice (a credit, open amount negative) against
+    /// a debit (payment or credit note, open amount positive) and records the <c>VendSettlement</c>.
+    /// The caller owns the transaction and the vendor settlement lock, and has checked currency and rate.
+    /// </summary>
+    internal static void ApplyPair(DbContext db, string area, string account, DateTime date, string voucher,
+        VendTrans invoice, VendTransOpen invoiceOpen, VendTrans offset, VendTransOpen offsetOpen, decimal amount)
+    {
+        var accounting = Accounting(invoice, amount);
+        db.Set<VendSettlement>().Add(new VendSettlement
+        {
+            DataAreaId = area, AccountNum = account,
+            InvoiceTransRecId = invoice.RecId, PaymentTransRecId = offset.RecId,
+            TransDate = date, Voucher = voucher,
+            AmountCur = amount, AmountMst = accounting,
+            CanBeReversed = NoYes.Yes
+        });
+
+        // The invoice gives up part of its credit; the offsetting debit gives up the
+        // same magnitude. Directions match VendPaymentService so the restore inverts them.
+        invoice.SettleAmountCur -= amount;
+        invoice.SettleAmountMst -= accounting;
+        invoiceOpen.AmountCur += amount;
+        invoiceOpen.AmountMst += accounting;
+        CloseIfSettled(db, invoice, invoiceOpen, date);
+
+        offset.SettleAmountCur += amount;
+        offset.SettleAmountMst += accounting;
+        offsetOpen.AmountCur -= amount;
+        offsetOpen.AmountMst -= accounting;
+        CloseIfSettled(db, offset, offsetOpen, date);
+    }
+
+    /// <summary>The open transactions of one vendor in the selected company, oldest due first.</summary>
+    public async Task<PurchResult> GetOpenTransactionsAsync(string accountNum, CancellationToken ct)
+    {
+        var area = _company.GetDataAreaId();
+        if (string.IsNullOrWhiteSpace(area)) return new(400, null, "A company must be selected.");
+        var account = (accountNum ?? string.Empty).Trim();
+        if (account.Length == 0) return new(400, null, "A vendor account is required.");
+        if (!await Db.Set<VendTable>().AsNoTracking().AnyAsync(x => x.DataAreaId == area && x.AccountNum == account, ct))
+            return new(404, null, "The vendor was not found in the selected company.");
+        var rows = await (from open in Db.Set<VendTransOpen>().AsNoTracking()
+            join trans in Db.Set<VendTrans>().AsNoTracking() on open.RefRecId equals trans.RecId
+            where open.DataAreaId == area && trans.DataAreaId == area
+                && open.AccountNum == account && trans.AccountNum == account
+            orderby open.DueDate, open.RecId
+            select new
+            {
+                recId = open.RecId, transRecId = trans.RecId, invoice = trans.Invoice, voucher = trans.Voucher,
+                description = trans.Txt, currencyCode = trans.CurrencyCode, transDate = trans.TransDate,
+                dueDate = open.DueDate, amountCur = open.AmountCur, amountMst = open.AmountMst,
+                originalAmountCur = trans.AmountCur, settledAmountCur = trans.SettleAmountCur
+            }).ToListAsync(ct);
+        return new(200, new { accountNum = account, dataAreaId = area, transactions = rows }, string.Empty);
+    }
+
+    /// <summary>
     /// The accounting value of <paramref name="amount"/> at the rate the transaction was posted at,
     /// so the subledger clears at the value it was booked at.
     /// </summary>
@@ -243,11 +279,11 @@ public sealed class VendSettleOpenTransactionsService : BaseService<VendSettleme
     /// A fully settled transaction closes and its open row goes, which is the invariant
     /// <c>VendSettlementRestore</c> rebuilds from.
     /// </summary>
-    private void CloseIfSettled(string area, VendTrans trans, VendTransOpen open, DateTime date)
+    private static void CloseIfSettled(DbContext db, VendTrans trans, VendTransOpen open, DateTime date)
     {
         if (open.AmountCur != 0m) return;
         trans.Closed = date;
-        Db.Set<VendTransOpen>().Remove(open);
+        db.Set<VendTransOpen>().Remove(open);
     }
 
     private async Task<PurchResult> Fail(int status, string message, CancellationToken ct)
