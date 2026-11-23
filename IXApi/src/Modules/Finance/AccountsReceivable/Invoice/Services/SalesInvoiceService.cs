@@ -373,7 +373,8 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
                 Db.Set<TaxTrans>().Add(TaxTransaction(area, date, invoiceId, code, value.Group, value.ItemGroup,
                     order.CurrencyCode, currency, -value.Base, -value.Tax,
                     translation.ToAccounting(-value.Base), translation.ToAccounting(-value.Tax),
-                    translation.ToReporting(-value.Base), translation.ToReporting(-value.Tax), value.Rate));
+                    translation.ToReporting(-value.Base), translation.ToReporting(-value.Tax), value.Rate,
+                    await support.TaxDirectionAsync(area, value.Group, code, sales: true, ct)));
             }
 
             // Charges debited to the customer are part of what the customer owes; charges the
@@ -568,13 +569,14 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
     internal static TaxTrans TaxTransaction(string area, DateTime date, string voucher, string code, string group,
         string itemGroup, string sourceCurrency, string currency, decimal baseAmount, decimal taxAmount,
         decimal? accountingBase = null, decimal? accountingTax = null,
-        decimal? reportingBase = null, decimal? reportingTax = null, decimal rate = 0m) => new()
+        decimal? reportingBase = null, decimal? reportingTax = null, decimal rate = 0m,
+        TaxDirection direction = TaxDirection.Outgoing) => new()
     {
         DataAreaId = area, TransDate = date, Voucher = voucher, TaxCode = code, TaxGroup = group, TaxItemGroup = itemGroup,
         // The rate applied, so a posted document stays explainable after the rate changes, and so a
         // zero-rated row is distinguishable from one whose rate was never recorded.
         TaxValue = rate,
-        TaxDirection = TaxDirection.Outgoing, SourceCurrencyCode = sourceCurrency, CurrencyCode = currency,
+        TaxDirection = direction, SourceCurrencyCode = sourceCurrency, CurrencyCode = currency,
         SourceBaseAmountCur = baseAmount, SourceTaxAmountCur = taxAmount, TaxBaseAmountCur = baseAmount, TaxAmountCur = taxAmount,
         TaxBaseAmount = accountingBase ?? baseAmount, TaxAmount = accountingTax ?? taxAmount,
         TaxBaseAmountRep = reportingBase ?? baseAmount, TaxAmountRep = reportingTax ?? taxAmount

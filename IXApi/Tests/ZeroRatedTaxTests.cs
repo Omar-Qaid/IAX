@@ -168,6 +168,46 @@ public class ZeroRatedTaxTests
     /// Attaches a tax code to the fixture's tax group and item tax group. A null rate adds no
     /// <see cref="TaxData"/> row, which is how "no rate configured" is expressed.
     /// </summary>
+    /// <summary>
+    /// D365 exempt treatment: the group marks the code ExemptTax, so it applies at zero whatever its rate
+    /// row says and posts as TaxExemptSales or TaxExemptPurchase, while an ordinary code keeps its direction.
+    /// </summary>
+    [Fact]
+    public async Task An_exempt_code_applies_at_zero_and_reports_an_exempt_direction()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        AddCode(db, "VAT-EX", rate: 15m);
+        AddCode(db, "VAT-STD", rate: 15m);
+        db.Set<TaxGroupData>().Local.Single(x => x.TaxCode == "VAT-EX").ExemptTax = NoYes.Yes;
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var support = new SubledgerPostingSupport(db);
+        var codes = await support.ApplicableTaxCodesAsync(Area, "DOM", "FULL", Date, default);
+
+        Assert.Equal([("VAT-EX", 0m), ("VAT-STD", 15m)], codes);
+        Assert.Equal(TaxDirection.TaxExemptSales, await support.TaxDirectionAsync(Area, "DOM", "VAT-EX", sales: true, default));
+        Assert.Equal(TaxDirection.TaxExemptPurchase, await support.TaxDirectionAsync(Area, "DOM", "VAT-EX", sales: false, default));
+        Assert.Equal(TaxDirection.Outgoing, await support.TaxDirectionAsync(Area, "DOM", "VAT-STD", sales: true, default));
+        Assert.Equal(TaxDirection.Incoming, await support.TaxDirectionAsync(Area, "DOM", "VAT-STD", sales: false, default));
+    }
+
+    /// <summary>Out of scope: the item group shares no code with the tax group, so nothing applies.</summary>
+    [Fact]
+    public async Task An_out_of_scope_item_group_applies_no_code()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        AddCode(db, "VAT-STD", rate: 15m);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        Assert.Empty(await new SubledgerPostingSupport(db).ApplicableTaxCodesAsync(Area, "DOM", "OOS", Date, default));
+    }
+
     private static void AddCode(DbContext db, string taxCode, decimal? rate,
         DateTime from = default, DateTime to = default)
     {

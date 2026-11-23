@@ -279,6 +279,19 @@ internal sealed class SubledgerPostingSupport(DbContext db)
     }
 
     /// <summary>
+    /// The D365 TaxDirection of a posted tax row: exempt when the tax group marks the code
+    /// <see cref="TaxGroupData.ExemptTax"/>, otherwise outgoing for a sale and incoming for a purchase.
+    /// </summary>
+    public async Task<TaxDirection> TaxDirectionAsync(string area, string taxGroup, string taxCode, bool sales,
+        CancellationToken ct)
+    {
+        var exempt = await db.Set<TaxGroupData>().AsNoTracking().AnyAsync(x => x.DataAreaId == area
+            && x.TaxGroup == taxGroup && x.TaxCode == taxCode && x.ExemptTax == NoYes.Yes, ct);
+        if (exempt) return sales ? TaxDirection.TaxExemptSales : TaxDirection.TaxExemptPurchase;
+        return sales ? TaxDirection.Outgoing : TaxDirection.Incoming;
+    }
+
+    /// <summary>
     /// Tax codes that apply when the customer tax group and item tax group share a code, at the rate
     /// valid on the date.
     /// <para>
@@ -289,14 +302,22 @@ internal sealed class SubledgerPostingSupport(DbContext db)
     /// not treat it as "no tax applies" - see the zero-tax handling where each flow writes its
     /// <c>TaxTrans</c> rows.
     /// </para>
+    /// <para>
+    /// A code the tax group marks <see cref="TaxGroupData.ExemptTax"/> is kept <b>at rate zero</b>
+    /// whatever its rate row says, as D365 does: the exempt turnover posts a zero-tax <c>TaxTrans</c>
+    /// whose direction <see cref="TaxDirectionAsync"/> reports as exempt, so an exempt line stays
+    /// distinguishable from an out-of-scope line, which shares no code and posts no row.
+    /// </para>
     /// </summary>
     public async Task<List<(string Code, decimal Rate)>> ApplicableTaxCodesAsync(string area, string taxGroup,
         string taxItemGroup, DateTime date, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(taxGroup) || string.IsNullOrWhiteSpace(taxItemGroup)) return [];
-        var groupCodes = await db.Set<TaxGroupData>().AsNoTracking()
-            .Where(x => x.DataAreaId == area && x.TaxGroup == taxGroup && x.ExemptTax != NoYes.Yes)
-            .Select(x => x.TaxCode).ToListAsync(ct);
+        var groupRows = await db.Set<TaxGroupData>().AsNoTracking()
+            .Where(x => x.DataAreaId == area && x.TaxGroup == taxGroup)
+            .Select(x => new { x.TaxCode, x.ExemptTax }).ToListAsync(ct);
+        var groupCodes = groupRows.Select(x => x.TaxCode).ToList();
+        var exempt = groupRows.Where(x => x.ExemptTax == NoYes.Yes).Select(x => x.TaxCode).ToHashSet();
         var itemCodes = await db.Set<TaxOnItem>().AsNoTracking()
             .Where(x => x.DataAreaId == area && x.TaxItemGroup == taxItemGroup).Select(x => x.TaxCode).ToListAsync(ct);
         var codes = groupCodes.Intersect(itemCodes).Distinct().OrderBy(x => x).ToList();
@@ -307,7 +328,7 @@ internal sealed class SubledgerPostingSupport(DbContext db)
                 && (x.TaxToDate == default || x.TaxToDate.Date >= date))
             .OrderByDescending(x => x.TaxFromDate).FirstOrDefault()))
             .Where(x => x.Row != null)
-            .Select(x => (x.Code, x.Row!.TaxValue)).ToList();
+            .Select(x => (x.Code, exempt.Contains(x.Code) ? 0m : x.Row!.TaxValue)).ToList();
         await RefuseUncalculatedTaxOriginAsync(area, applicable.Select(x => x.Code).ToList(), ct);
         return applicable;
     }

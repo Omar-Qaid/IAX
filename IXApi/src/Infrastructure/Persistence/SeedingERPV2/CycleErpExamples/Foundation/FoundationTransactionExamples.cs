@@ -14,7 +14,7 @@ public sealed class FoundationTransactionExamples(ApplicationDbContext db, Found
     public async Task<FoundationTransactionReport> RunAsync(FoundationExampleOptions options, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(options);
-        await preparation.PrepareAsync(options, ct);
+        var prepared = await preparation.PrepareAsync(options, ct);
         db.ChangeTracker.Clear();
         var report = await transactions.RunAsync(new AccountsPayableTransactionOptions(options.FiscalYear, options.Actor, ["04", "07"]), ct);
         var details = new List<FoundationTaxJournalReference>();
@@ -41,6 +41,6 @@ public sealed class FoundationTransactionExamples(ApplicationDbContext db, Found
             }
         }
         var associations = await taxAssociations.SeedAsync(associationTaxIds, ct);
-        return new(report.Company, report.FiscalYear, report.Scenarios, details) { TaxAccountingAssociationIds = associations };
+        return new(report.Company, report.FiscalYear, report.Scenarios, details) { TaxAccountingAssociationIds = associations, Preparation = prepared };
     }
 }

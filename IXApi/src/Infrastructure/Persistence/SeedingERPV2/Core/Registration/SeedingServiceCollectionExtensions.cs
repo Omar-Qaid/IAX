@@ -80,6 +80,28 @@ public static class SeedingServiceCollectionExtensions
         return services;
     }
 
+    /// <summary>
+    /// Every module's configuration and master data in one run: Foundation, General ledger, Tax, Cash
+    /// and bank, Inventory, Accounts payable, Accounts receivable, Administration, Communication,
+    /// Workflow and Organization. The runner orders all seeders on their declared dependencies and
+    /// runs every module's integrity validator over the combined result before it commits, so a
+    /// cross-module reference that one phase alone would never check fails the whole run. No
+    /// transactions are created; those stay with each module's transaction examples.
+    /// </summary>
+    public static IServiceCollection AddAllModulesPhaseOneSeeding(this IServiceCollection services)
+    {
+        services.AddFoundationPhaseOneSeeding();
+        services.AddAccountsReceivablePhaseOneSeeding();
+        services.AddAdministrationPhaseOneSeeding();
+        services.AddCommunicationPhaseOneSeeding();
+        services.AddWorkflowPhaseOneSeeding();
+        services.AddOrganizationPhaseOneSeeding();
+        // Registered only by their own example packages before, so a plain phase-one run never ran them.
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<ISeedValidator, TaxIntegrityValidator>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<ISeedValidator, CashAndBankIntegrityValidator>());
+        return services;
+    }
+
     public static IServiceCollection AddAccountsPayablePhaseOneSeeding(this IServiceCollection services)
     {
         services.TryAddScoped<SeedRunner>();

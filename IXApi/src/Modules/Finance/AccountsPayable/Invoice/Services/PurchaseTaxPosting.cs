@@ -58,7 +58,8 @@ internal sealed class PurchaseTaxPosting(DbContext db)
             }
             db.Add(new TaxTrans { DataAreaId = area, SourceTableId = FinanceTableNumbers.VendInvoiceTrans, SourceRecId = line.RecId,
                 SourceDocumentLine = line.RecId, TransDate = line.InvoiceDate, Voucher = line.InternalInvoiceId, TaxCode = code,
-                TaxGroup = line.TaxGroup, TaxItemGroup = line.TaxItemGroup, TaxValue = rate, TaxDirection = TaxDirection.Incoming,
+                TaxGroup = line.TaxGroup, TaxItemGroup = line.TaxItemGroup, TaxValue = rate,
+                TaxDirection = await support.TaxDirectionAsync(area, line.TaxGroup, code, sales: false, ct),
                 SourceCurrencyCode = line.CurrencyCode, CurrencyCode = translation.TransactionCurrency,
                 SourceBaseAmountCur = line.LineAmount, SourceTaxAmountCur = amount, TaxBaseAmountCur = line.LineAmount, TaxAmountCur = amount,
                 // The unsuffixed and Rep amounts are the accounting and reporting translations,

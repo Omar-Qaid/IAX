@@ -1,4 +1,4 @@
-using IAX.IXApi.Modules.Finance.Entities;
+﻿using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using System.Reflection;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
@@ -45,12 +45,20 @@ public sealed class FoundationIntegrityValidator : ISeedValidator
                 {
                     var key = fk.Properties.Select(p => p.PropertyInfo?.GetValue(row)).ToArray();
                     if (key.Any(x => x == null)) continue;
-                    if (!parents.Any(parent => fk.PrincipalKey.Properties.Select(p => p.PropertyInfo?.GetValue(parent)).SequenceEqual(key)))
+                    var parent = parents.FirstOrDefault(parent => fk.PrincipalKey.Properties.Select(p => p.PropertyInfo?.GetValue(parent)).SequenceEqual(key));
+                    if (parent == null)
                         throw new InvalidOperationException($"Foundation reference {type.ClrType.Name} -> {fk.PrincipalEntityType.ClrType.Name} is missing or crosses company {c.Company}.");
+                    // Rows are read without query filters, so a soft-deleted or deactivated parent still
+                    // matches the key; a live master row must not point at one.
+                    if (IsAvailable(type, row) && !IsAvailable(fk.PrincipalEntityType, parent))
+                        throw new InvalidOperationException($"Foundation reference {type.ClrType.Name} -> {fk.PrincipalEntityType.ClrType.Name} points at a deleted or inactive record in {c.Company}.");
                 }
             }
         }
     }
+    private static bool IsAvailable(IEntityType type, object row) =>
+        type.FindProperty("IsDeleted")?.PropertyInfo?.GetValue(row) is not true
+        && type.FindProperty("IsActive")?.PropertyInfo?.GetValue(row) is not false;
     private static async Task<object[]> Load<T>(SeedContext c, CancellationToken ct) where T : class
     {
         var query = c.Db.Set<T>().IgnoreQueryFilters().AsNoTracking();

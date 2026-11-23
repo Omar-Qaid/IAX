@@ -188,7 +188,8 @@ internal sealed class PurchaseChargePosting(DbContext db)
             {
                 DataAreaId = area, TransDate = date, Voucher = voucher, TaxCode = taxCode,
                 TaxGroup = taxGroup, TaxItemGroup = itemGroup,
-                TaxValue = taxCodes.Single(x => x.Code == taxCode).Rate, TaxDirection = TaxDirection.Incoming,
+                TaxValue = taxCodes.Single(x => x.Code == taxCode).Rate,
+                TaxDirection = await support.TaxDirectionAsync(area, taxGroup, taxCode, sales: false, ct),
                 SourceCurrencyCode = order.CurrencyCode, CurrencyCode = translation.TransactionCurrency,
                 SourceBaseAmountCur = amount, SourceTaxAmountCur = codeTax,
                 TaxBaseAmountCur = amount, TaxAmountCur = codeTax,

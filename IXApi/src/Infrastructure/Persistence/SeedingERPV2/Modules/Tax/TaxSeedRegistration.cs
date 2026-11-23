@@ -12,6 +12,7 @@ public static class TaxSeedRegistration
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, TaxItemGroupHeadingSeeder>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, TaxGroupDataSeeder>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, TaxOnItemSeeder>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, TaxVatCategorySeeder>());
         return services;
     }
 }

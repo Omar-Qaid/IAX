@@ -205,12 +205,14 @@ public sealed class TaxSettlementService : ITaxSettlementService
         if (group == null)
             throw new SubledgerPostingException($"Ledger posting group '{accountGroup}' was not found.");
 
-        var dimension = direction == TaxDirection.Outgoing
+        // An exempt sale sits on the sales side and an exempt purchase on the purchase side; both carry zero tax.
+        var outgoing = direction is TaxDirection.Outgoing or TaxDirection.TaxExemptSales;
+        var dimension = outgoing
             ? group.TaxOutgoingLedgerDimension
             : group.TaxIncomingLedgerDimension;
         if (dimension is not > 0)
             throw new SubledgerPostingException(
-                $"The {(direction == TaxDirection.Outgoing ? "sales tax payable" : "purchase input tax")} account is missing for ledger posting group '{accountGroup}'.");
+                $"The {(outgoing ? "sales tax payable" : "purchase input tax")} account is missing for ledger posting group '{accountGroup}'.");
         if (group.TaxReportLedgerDimension is not > 0)
             throw new SubledgerPostingException(
                 $"The sales tax settlement account is missing for ledger posting group '{accountGroup}'.");

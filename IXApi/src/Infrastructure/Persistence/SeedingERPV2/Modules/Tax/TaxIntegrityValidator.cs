@@ -1,6 +1,7 @@
 using System.Reflection;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models;
+using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -50,6 +51,20 @@ public sealed class TaxIntegrityValidator : ISeedValidator
         await c.RequireAsync<TaxItemGroupHeading>(x => x.TaxItemGroup == item.TaxItemGroup, ct);
         foreach (var exempt in new[] { group.TaxExemptCode, item.TaxExemptCode }.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct())
             await c.RequireAsync<TaxExemptCodeTable>(x => x.ExemptCode == exempt, ct);
+
+        // VAT treatments: an exempt code must give its exemption reason, the zero-rated and exempt codes
+        // must carry a zero rate, and the out-of-scope item group must share no code with any tax group.
+        foreach (var row in await c.Rows<TaxGroupData>().Where(x => x.ExemptTax == NoYes.Yes).ToListAsync(ct))
+        {
+            if (string.IsNullOrWhiteSpace(row.TaxExemptCode))
+                throw new InvalidOperationException($"Exempt tax code {row.TaxCode} in group {row.TaxGroup} has no exemption reason code.");
+            await c.RequireAsync<TaxExemptCodeTable>(x => x.ExemptCode == row.TaxExemptCode, ct);
+        }
+        foreach (var zero in new[] { TaxVatCategorySeeder.ZeroRated, TaxVatCategorySeeder.Exempt })
+            if (await c.Rows<TaxData>().AnyAsync(x => x.TaxCode == zero && x.TaxValue != 0m, ct))
+                throw new InvalidOperationException($"Tax code {zero} must carry a zero rate.");
+        if (await c.Rows<TaxOnItem>().AnyAsync(x => x.TaxItemGroup == TaxVatCategorySeeder.OutOfScopeItemGroup, ct))
+            throw new InvalidOperationException($"Item tax group {TaxVatCategorySeeder.OutOfScopeItemGroup} is out of scope and must hold no tax code.");
 
         // Reporting rests on the period head, its authority, and periods that tile the fiscal year.
         var period = await c.RequireAsync<TaxPeriodHead>(x => x.TaxPeriod == code.TaxPeriod, ct);

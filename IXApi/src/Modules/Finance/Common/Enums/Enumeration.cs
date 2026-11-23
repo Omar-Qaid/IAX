@@ -1345,7 +1345,11 @@ namespace IAX.IXApi.Modules.Finance.Common
     public enum TaxDirection
     {
         Incoming = 0,
-        Outgoing = 1
+        Outgoing = 1,
+        /// <summary>D365 TaxExemptPurchase: an exempt purchase, posted with a zero tax amount for reporting.</summary>
+        TaxExemptPurchase = 2,
+        /// <summary>D365 TaxExemptSales: an exempt sale, posted with a zero tax amount for reporting.</summary>
+        TaxExemptSales = 3
     }
     public enum TaxCountryRegionType
     {

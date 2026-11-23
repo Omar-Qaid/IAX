@@ -416,7 +416,7 @@ public sealed class FreeTextInvoiceService(
         }));
         Db.AddRange(tax.Select(row => TaxTransaction(area, date, id, row.TaxCode, row.TaxGroup, row.TaxItemGroup,
             row.CurrencyCode, -row.TaxBaseAmountCur, -row.TaxAmountCur, -row.TaxBaseAmount, -row.TaxAmount,
-            -row.TaxBaseAmountRep, -row.TaxAmountRep, row.TaxValue)));
+            -row.TaxBaseAmountRep, -row.TaxAmountRep, row.TaxValue, row.TaxDirection)));
         foreach (var line in sourceLines)
         {
             var adjustingLine = new CustInvoiceLine
@@ -566,7 +566,8 @@ public sealed class FreeTextInvoiceService(
             Db.Set<TaxTrans>().Add(TaxTransaction(area, header.InvoiceDate.Date, invoiceId, key.Code,
                 key.Group, key.ItemGroup, header.CurrencyCode, -value.Base, -value.Tax,
                 translation.ToAccounting(-value.Base), translation.ToAccounting(-value.Tax),
-                translation.ToReporting(-value.Base), translation.ToReporting(-value.Tax), key.Rate));
+                translation.ToReporting(-value.Base), translation.ToReporting(-value.Tax), key.Rate,
+                await support.TaxDirectionAsync(area, key.Group, key.Code, sales: true, ct)));
             signedVoucherTotal -= value.Tax;
         }
 
@@ -650,7 +651,8 @@ public sealed class FreeTextInvoiceService(
     private static TaxTrans TaxTransaction(string area, DateTime date, string voucher, string code,
         string group, string itemGroup, string currency, decimal baseAmount, decimal taxAmount,
         decimal? accountingBase = null, decimal? accountingTax = null,
-        decimal? reportingBase = null, decimal? reportingTax = null, decimal rate = 0m) => new()
+        decimal? reportingBase = null, decimal? reportingTax = null, decimal rate = 0m,
+        TaxDirection direction = TaxDirection.Outgoing) => new()
     {
         DataAreaId = area,
         TransDate = date,
@@ -660,7 +662,7 @@ public sealed class FreeTextInvoiceService(
         TaxItemGroup = itemGroup,
         // The rate applied, so a zero-rated row is distinguishable from an unrecorded rate.
         TaxValue = rate,
-        TaxDirection = TaxDirection.Outgoing,
+        TaxDirection = direction,
         SourceCurrencyCode = currency,
         CurrencyCode = currency,
         SourceBaseAmountCur = baseAmount,

@@ -523,7 +523,8 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
                 Db.Set<TaxTrans>().Add(SalesInvoiceService.TaxTransaction(area, date, invoiceId, code, value.Group, value.ItemGroup,
                     order.CurrencyCode, currency, value.Base, value.Tax,
                     translation.ToAccounting(value.Base), translation.ToAccounting(value.Tax),
-                    translation.ToReporting(value.Base), translation.ToReporting(value.Tax), value.Rate));
+                    translation.ToReporting(value.Base), translation.ToReporting(value.Tax), value.Rate,
+                    await support.TaxDirectionAsync(area, value.Group, code, sales: true, ct)));
             }
 
             var total = totalRevenue + totalTax;

@@ -275,7 +275,7 @@ public sealed class FoundationSeedTests
         Assert.NotNull(first.MasterData);
         Assert.All(await db.Set<TaxReportPeriod>().ToListAsync(), interval => Assert.Equal(0, interval.VersionNum));
         Assert.Equal(4, first.PreparationSteps.Count);
-        Assert.Equal(69, first.MasterData.Tables.Count);
+        Assert.Equal(68, first.MasterData.Tables.Count);
         Assert.Equal(first.CompletedSeeders, first.SeederSteps.Select(x => x.SeederId));
         Assert.Equal(Enumerable.Range(1, first.CompletedSeeders.Count), first.SeederSteps.Select(x => x.Order));
         Assert.Equal(13, first.MasterData.References.Count);
