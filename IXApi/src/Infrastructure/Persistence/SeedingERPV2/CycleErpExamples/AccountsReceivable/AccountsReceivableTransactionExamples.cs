@@ -1,4 +1,3 @@
-using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsReceivable.Data;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsReceivable.Reports;
@@ -22,7 +21,7 @@ public sealed class AccountsReceivableTransactionExamples(ApplicationDbContext d
         db.ChangeTracker.Clear();
         await preparation.PrepareAsync(new(options.FiscalYear, options.Actor), ct);
         db.ChangeTracker.Clear();
-        await using var seedLock = await new SqlServerSeederLock(db).AcquireLockAsync(120, ct);
+        await using var seedLock = await new SeedLock(db).AcquireAsync(120, ct);
         var reports = new List<AccountsReceivableScenarioReport>();
         foreach (var id in selected)
         {

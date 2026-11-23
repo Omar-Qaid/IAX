@@ -31,7 +31,6 @@ namespace IAX.IXApi.Bootstrap
             
             // Infrastructure Services
             services.AddScoped<Infrastructure.Identity.ICurrentUserService, Infrastructure.Identity.CurrentUserService>();
-            services.AddScoped<Infrastructure.Persistence.Seeding.IDatabaseSeederService, Infrastructure.Persistence.Seeding.DatabaseSeederService>();
             services.AddScoped<Infrastructure.Realtime.ISysRealtimeManager, Infrastructure.Realtime.SysRealtimeManager>();
 
             // Shared Services

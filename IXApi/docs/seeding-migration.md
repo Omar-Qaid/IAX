@@ -1,3 +1,10 @@
+# Database seeding
+
+> The legacy `Persistence/Seeding` implementation described below has been replaced by SeedingERPV2. Startup seeding
+> is now the SeedingERPV2 baseline profile (`AddBaselineSeeding`, `BaselineSeedRunner`); see
+> `src/Infrastructure/Persistence/SeedingERPV2/MIGRATION-FROM-SEEDING.md`. The text below is kept as a record of the
+> previous contract.
+
 # Database seeding migration and inventory
 
 ## Execution contract

@@ -1,8 +1,8 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using IAX.IXApi.Bootstrap.Extensions;
 using IAX.IXApi.Modules.Identity.Permissions;
-using IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks;
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Identity;
 using IAX.IXApi.Modules.Administration.BackgroundJobs;
 using IAX.IXApi.Modules.Administration.BackgroundJobs.Controllers;
 using IAX.IXApi.Modules.Administration.AuditLogs;
@@ -33,10 +33,8 @@ public sealed class AuthorizationPolicyTests
     [Fact]
     public void Seeded_permission_resources_are_well_formed_and_cover_known_contracts()
     {
-        var field = typeof(IdentitySeeder).GetField(
-            "PermissionDefs",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        var definitions = Assert.IsType<(string Module, string Resource)[]>(field?.GetValue(null));
+        var seeded = IdentityBaselineCatalog.Load();
+        var definitions = seeded.Resources.Select(x => (x.Module, x.Resource)).ToArray();
 
         Assert.All(definitions, definition =>
         {
@@ -59,11 +57,7 @@ public sealed class AuthorizationPolicyTests
         Assert.Contains(("Inventory", "Items"), catalog);
         Assert.Contains(("Inventory", "ItemGroups"), catalog);
 
-        var additionalField = typeof(IdentitySeeder).GetField(
-            "AdditionalPermissions",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        var additional = Assert.IsType<(string Module, string Resource, string Action)[]>(
-            additionalField?.GetValue(null));
+        var additional = seeded.AdditionalPermissions.Select(x => (x.Module, x.Resource, x.Action)).ToArray();
         Assert.Contains(("AccountsReceivable", "SalesOrders", "Confirm"), additional);
         Assert.Contains(("AccountsReceivable", "SalesOrders", "Post"), additional);
         Assert.Contains(("System", "DataManagement", "Import"), additional);

@@ -42,13 +42,22 @@ public sealed class BaselineLogisticsSeeder : IBaselineSeeder
         {
             CityKey = hq.CityKey, Name = hq.City, Description = hq.City + " City", CountryRegionId = countryId, StateId = hq.Region, CountyId = hq.County
         }, ct);
+        // An existing city, district or postal code with the same key but different geography is someone's own data:
+        // keep it untouched and stop, rather than link the headquarters to the wrong place.
+        if (city.Name != hq.City || city.CountryRegionId != countryId || city.StateId != hq.Region || city.CountyId != hq.County)
+            throw new InvalidOperationException($"Existing city {hq.CityKey} has different geography; customized records were preserved.");
         var district = await c.AddMissingAsync<LogisticsAddressDistrict>(x => x.Name == hq.District,
             new() { Name = hq.District, Description = hq.District + " district", City = city.RecId }, ct);
+        if (district.City != city.RecId)
+            throw new InvalidOperationException($"Existing district {hq.District} belongs to another city; customized records were preserved.");
         var zip = await c.AddMissingAsync<LogisticsAddressZipCode>(x => x.ZipCode == hq.Zip, new()
         {
             ZipCode = hq.Zip, CountryRegionId = countryId, State = hq.Region, County = hq.County, City = hq.City, CityAlias = hq.County,
             CityRecId = city.RecId, District = district.RecId, DistrictName = district.Name
         }, ct);
+        if (zip.CountryRegionId != countryId || zip.State != hq.Region || zip.County != hq.County || zip.City != hq.City
+            || zip.CityRecId != city.RecId || zip.District != district.RecId)
+            throw new InvalidOperationException($"Postal code {hq.Zip} belongs to different geography; existing postal codes were preserved.");
 
         var location = await c.AddMissingAsync<LogisticsLocation>(x => x.LocationId == hq.Company + "-LOC-1",
             new() { LocationId = hq.Company + "-LOC-1", Description = hq.Company + " Headquarters", IsPostalAddress = NoYes.Yes }, ct);

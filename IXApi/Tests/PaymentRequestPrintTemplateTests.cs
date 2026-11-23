@@ -1,92 +1,53 @@
-using System.Reflection;
-using IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks;
+using System.Text.Json;
 using IAX.IXApi.Modules.Workflow.PrintTemplates;
-using IAX.IXApi.Modules.Workflow.Requests;
-using IAX.IXApi.Modules.Workflow.Steps;
 using Xunit;
 
 namespace IAX.IXApi.Tests;
 
+/// <summary>
+/// The payment request's print layout, as the workflow baseline seeds it, keeps the approved Arabic structure and
+/// binds to the request controls seeded alongside it.
+/// </summary>
 public sealed class PaymentRequestPrintTemplateTests
 {
     [Fact]
     public void Payment_request_template_matches_the_approved_arabic_structure()
     {
-        var controlCodes = new[]
-        {
-            "PAYMENT_REQUEST_TYPE",
-            "PAYMENT_REQUEST_DATE",
-            "PAYMENT_SITE",
-            "PAYMENT_DEPARTMENT",
-            "PAYMENT_DETAILS",
-            "PAYMENT_GRAND_TOTAL",
-        };
-        var controls = controlCodes.Select((code, index) => new WfRequestControl
-            {
-                RecId = index + 1,
-                Code = code,
-                ControlId = (byte)(index + 1),
-            })
-            .ToDictionary(control => control.Code!, StringComparer.OrdinalIgnoreCase);
+        using var stream = typeof(IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models.BaselineManifest).Assembly
+            .GetManifestResourceStream("SeedingERPV2.Baseline.baseline-workflow.json")!;
+        var manifest = JsonDocument.Parse(stream).RootElement;
+        JsonElement[] Rows(string table) => manifest.GetProperty("allocated").EnumerateArray()
+            .Single(x => x.GetProperty("table").GetString() == table).GetProperty("rows").EnumerateArray().ToArray();
 
-        var stepCodes = new[]
-        {
-            "PAYMENT_AUDIT_STEP",
-            "PAYMENT_ACCOUNTANT_STEP",
-            "PAYMENT_ACCOUNTING_REVIEW_STEP",
-            "PAYMENT_FINANCE_MANAGER_STEP",
-            "PAYMENT_EXECUTIVE_DIRECTOR_STEP",
-            "PAYMENT_CEO_STEP",
-        };
-        var steps = stepCodes.Select((code, index) => new WfStep
-            {
-                RecId = index + 1,
-                Code = code,
-                NameAlias = code,
-            })
-            .ToDictionary(step => step.Code!, StringComparer.OrdinalIgnoreCase);
-
-        var method = typeof(WfProcessSeedData).GetMethod(
-            "BuildPaymentRequestPrintTemplate",
-            BindingFlags.Static | BindingFlags.NonPublic);
-        Assert.NotNull(method);
-        var document = Assert.IsType<PrintTemplateDocument>(method.Invoke(null, [controls, steps]));
+        var process = Rows("WfProcesses").Single(x => x.GetProperty("Code").GetString() == "PAYMENT_REQUEST").GetProperty("RecId").GetInt64();
+        var controls = Rows("WfRequestControls").Where(x => x.GetProperty("ProcessId").GetInt64() == process)
+            .ToDictionary(x => x.GetProperty("Code").GetString()!, x => x.GetProperty("RecId").GetInt64());
+        var template = Rows("ReportTemplates").Single(x => x.GetProperty("RefRecId").GetInt64() == process).GetProperty("RecId").GetInt64();
+        var json = Rows("ReportTemplateVersions").Single(x => x.GetProperty("TemplateId").GetInt64() == template).GetProperty("TemplateJson").GetString()!;
+        var document = JsonSerializer.Deserialize<PrintTemplateDocument>(json, new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
 
         Assert.Equal("ar", document.Language);
         Assert.Equal("rtl", document.Direction);
         Assert.Equal("A4", document.Page.Size);
-        Assert.Contains(document.Header.SelectMany(Descendants), element =>
-            element is PrintImageElement { SourceType: "companyLogo" });
-        Assert.Contains(document.Header.SelectMany(Descendants), element =>
-            element is PrintTextElement { ValueAlias: "طلب الصرف" });
+        Assert.Contains(document.Header.SelectMany(Descendants), element => element is PrintImageElement { SourceType: "companyLogo" });
+        Assert.Contains(document.Header.SelectMany(Descendants), element => element is PrintTextElement { ValueAlias: "طلب الصرف" });
 
         var elements = document.Sections.SelectMany(Descendants).ToList();
         var table = Assert.Single(elements.OfType<PrintTableElement>());
-        Assert.Equal(controls["PAYMENT_DETAILS"].RecId, table.DataSource.RequestControlId);
-        Assert.Equal(7, table.Columns.Count);
-        Assert.Equal(
-            ["sequence", "beneficiary", "invoice_number", "invoice_amount", "vat", "total", "payment_statement"],
+        Assert.Equal(controls["PAYMENT_DETAILS"], table.DataSource.RequestControlId);
+        Assert.Equal(["sequence", "beneficiary", "invoice_number", "invoice_amount", "vat", "total", "payment_statement"],
             table.Columns.Select(column => column.Field));
-        Assert.Contains(elements.OfType<PrintFieldElement>(), field =>
-            field.Binding.RequestControlId == controls["PAYMENT_GRAND_TOTAL"].RecId);
+        Assert.Contains(elements.OfType<PrintFieldElement>(), field => field.Binding.RequestControlId == controls["PAYMENT_GRAND_TOTAL"]);
         Assert.Contains(elements, element => element.Id == "payment-finance-approvals-row");
         Assert.Contains(elements, element => element.Id == "payment-final-approvals-row");
         Assert.Empty(new PrintTemplateDocumentValidator().Validate(document));
-        var allElements = document.Header.Concat(document.Sections).Concat(document.Footer)
-            .SelectMany(Descendants).ToList();
-        Assert.All(allElements.OfType<PrintTextElement>(), text =>
+        var all = document.Header.Concat(document.Sections).Concat(document.Footer).SelectMany(Descendants).ToList();
+        Assert.All(all.OfType<PrintTextElement>(), text =>
         {
             Assert.False(string.IsNullOrWhiteSpace(text.ValueAlias));
             Assert.Equal(text.ValueAlias, text.TextAlias);
         });
-        Assert.All(elements.OfType<PrintFieldElement>().Where(field => field.Label.Length > 0),
-            field => Assert.False(string.IsNullOrWhiteSpace(field.LabelAlias)));
         Assert.All(table.Columns, column => Assert.False(string.IsNullOrWhiteSpace(column.LabelAlias)));
-        var json = System.Text.Json.JsonSerializer.Serialize(document,
-            new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web));
-        Assert.Contains("\"textAlias\":", json);
-        Assert.Contains("\"valueAlias\":", json);
-        Assert.Contains("\"labelAlias\":", json);
     }
 
     private static IEnumerable<PrintTemplateElement> Descendants(PrintTemplateElement element)

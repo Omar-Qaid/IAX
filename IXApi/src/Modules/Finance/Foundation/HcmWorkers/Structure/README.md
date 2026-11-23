@@ -126,9 +126,9 @@ Close any dated resource:
 
 ### Example seed data
 
-`OrganizationStructureSeeder` runs after `OrganizationUnitSeeder` in
-`DatabaseSeederService`. It adds missing records only in company `dat`, effective
-2026-01-01, using codes to resolve generated IDs:
+`BaselineOrganizationStructureSeeder` (SeedingERPV2 baseline profile, data in
+`Modules/Foundation/Data/baseline-organization.json`) runs at startup. It adds missing records only in company
+`dat`, effective 2026-01-01, using codes to resolve generated IDs:
 
 - Nine units: example company, trading business unit, Western Area, Jeddah Region,
   North Jeddah zone, Showrooms A/B, Finance Department and Central Warehouse.

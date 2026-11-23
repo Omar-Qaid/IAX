@@ -28,63 +28,6 @@ public sealed class OrganizationStructureTests
     private static readonly DateOnly TransferDate = new(2026, 9, 16);
 
     [Fact]
-    public async Task Structure_seed_is_repeatable_and_assigns_available_workers()
-    {
-        await using var f = await Fixture.CreateAsync();
-        var seeder = new IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks.OrganizationStructureSeeder();
-        await seeder.SeedStructureAsync(f.Db);
-        await seeder.SeedStructureAsync(f.Db);
-        Assert.Equal(13, await f.Db.OrganizationUnits.CountAsync());
-        Assert.Equal(12, await f.Db.OrganizationRoles.CountAsync());
-        Assert.Equal(2, await f.Db.OrganizationHierarchies.CountAsync());
-        Assert.Equal(19, await f.Db.OrganizationHierarchyNodes.CountAsync());
-        Assert.Equal(14, await f.Db.HcmPositions.CountAsync());
-        Assert.Equal(2, await f.Db.HcmReportingHierarchies.CountAsync());
-        Assert.Equal(7, await f.Db.HcmPositionReportingLines.CountAsync());
-        Assert.NotEmpty(await f.Db.HcmWorkerOrganizationAssignments.ToListAsync());
-        Assert.DoesNotContain(await f.Db.OrganizationUnits.ToListAsync(), x => string.IsNullOrWhiteSpace(x.NameAlias));
-        Assert.DoesNotContain(await f.Db.OrganizationRoles.ToListAsync(), x => string.IsNullOrWhiteSpace(x.NameAlias));
-        Assert.DoesNotContain(await f.Db.OrganizationHierarchies.ToListAsync(), x => string.IsNullOrWhiteSpace(x.NameAlias));
-        Assert.DoesNotContain(await f.Db.HcmPositions.ToListAsync(), x => string.IsNullOrWhiteSpace(x.NameAlias));
-        Assert.DoesNotContain(await f.Db.HcmReportingHierarchies.ToListAsync(), x => string.IsNullOrWhiteSpace(x.NameAlias));
-        Assert.All(await f.Service.GetUnitsAsync(Start, default), x => Assert.False(string.IsNullOrWhiteSpace(x.NameAlias)));
-        Assert.All(await f.Service.GetRolesAsync(default), x => Assert.False(string.IsNullOrWhiteSpace(x.NameAlias)));
-        Assert.All(await f.Service.GetHierarchiesAsync(default), x => Assert.False(string.IsNullOrWhiteSpace(x.NameAlias)));
-        Assert.All(await f.Service.GetPositionsAsync(Start, default), x => Assert.False(string.IsNullOrWhiteSpace(x.NameAlias)));
-        var hierarchy = await f.Db.OrganizationHierarchies.SingleAsync(x => x.Code == "ORG-OPERATIONS");
-        var shop = await f.Db.OrganizationUnits.SingleAsync(x => x.Code == "SH-A");
-        Assert.All(await f.Service.GetAncestorsAsync(hierarchy.RecId, shop.RecId, Start),
-            x => Assert.False(string.IsNullOrWhiteSpace(x.NameAlias)));
-        Assert.Equal(new[] { "SH-A", "SUP-NJ", "REG-JED", "AREA-W", "ORG-BU", "ORG-COMPANY" },
-            (await f.Service.GetAncestorsAsync(hierarchy.RecId, shop.RecId, Start)).Select(x => x.Code));
-    }
-    [Fact]
-    public async Task Structure_seed_preserves_customized_closed_and_deleted_records_across_company_contexts()
-    {
-        await using var f = await Fixture.CreateAsync();
-        var seeder = new IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks.OrganizationStructureSeeder();
-        await seeder.SeedStructureAsync(f.Db);
-        var position = await f.Db.HcmPositions.SingleAsync(x => x.Code == "SH-A-SELLER-01");
-        position.Name = "Customized seat";
-        position.ValidTo = TransferDate;
-        var role = await f.Db.OrganizationRoles.SingleAsync(x => x.Code == "SELLER");
-        role.IsDeleted = true;
-        var hierarchy = await f.Db.OrganizationHierarchies.SingleAsync(x => x.Code == "ORG-OPERATIONS");
-        var shop = await f.Db.OrganizationUnits.SingleAsync(x => x.Code == "SH-A");
-        var node = await f.Db.OrganizationHierarchyNodes.SingleAsync(x => x.HierarchyId == hierarchy.RecId && x.OrganizationUnitId == shop.RecId);
-        node.ValidTo = TransferDate;
-        await f.Db.SaveChangesAsync();
-        f.Company.Code = "ksa";
-        await seeder.SeedStructureAsync(f.Db);
-        Assert.Empty(await f.Db.OrganizationUnits.ToListAsync());
-        Assert.Equal(14, await f.Db.HcmPositions.IgnoreQueryFilters().CountAsync());
-        Assert.Equal(19, await f.Db.OrganizationHierarchyNodes.IgnoreQueryFilters().CountAsync());
-        Assert.Equal("Customized seat", (await f.Db.HcmPositions.IgnoreQueryFilters().SingleAsync(x => x.RecId == position.RecId)).Name);
-        Assert.Equal(TransferDate, (await f.Db.OrganizationHierarchyNodes.IgnoreQueryFilters().SingleAsync(x => x.RecId == node.RecId)).ValidTo);
-        Assert.True((await f.Db.OrganizationRoles.IgnoreQueryFilters().SingleAsync(x => x.RecId == role.RecId)).IsDeleted);
-    }
-
-    [Fact]
     public async Task Transfer_preserves_history_and_exclusive_boundary()
     {
         await using var f = await Fixture.CreateAsync();

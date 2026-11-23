@@ -1,6 +1,5 @@
 using IAX.IXApi.Shared.Application.Querying;
 using IAX.IXApi.Api.Middleware;
-using IAX.IXApi.Infrastructure.Persistence.Seeding;
 using IAX.IXApi.Bootstrap.Extensions;
 using IAX.IXApi.Bootstrap;
 using IAX.IXApi.Modules.Workflow;

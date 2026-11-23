@@ -1,6 +1,6 @@
 using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Api.Middleware;
-using IAX.IXApi.Infrastructure.Persistence.Seeding;
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
@@ -51,8 +51,8 @@ namespace IAX.IXApi.Bootstrap.Extensions
                 await db.Database.MigrateAsync();
             }
 
-            var seeder = scope.ServiceProvider.GetRequiredService<IDatabaseSeederService>();
-            await seeder.SeedAsync();
+            // The baseline profile: the data every installation starts with. Examples are never seeded at startup.
+            await scope.ServiceProvider.GetRequiredService<BaselineSeedRunner>().RunAsync();
         }
     }
 }

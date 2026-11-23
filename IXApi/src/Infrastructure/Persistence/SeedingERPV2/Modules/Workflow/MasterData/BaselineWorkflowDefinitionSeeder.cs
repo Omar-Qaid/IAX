@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models;
@@ -115,6 +116,13 @@ public sealed class BaselineWorkflowDefinitionSeeder : IBaselineSeeder
                 }
             }
 
+            foreach (var (column, properties) in table.Json ?? [])
+                if (entry.Property(column).CurrentValue is string text && JsonNode.Parse(text) is { } document)
+                {
+                    Remap(document, properties, ids);
+                    entry.Property(column).CurrentValue = document.ToJsonString();
+                }
+
             var match = await c.Db.Set<T>().IgnoreQueryFilters().FirstOrDefaultAsync(Match<T>(c, row, table.Match), ct);
             if (match != null)
             {
@@ -129,6 +137,27 @@ public sealed class BaselineWorkflowDefinitionSeeder : IBaselineSeeder
             var newId = Convert.ToInt64(c.Db.Entry(row).Property("RecId").CurrentValue);
             ids[(table.Table, oldId)] = newId;
             pending.AddRange(deferred.Select(x => new PendingReference(typeof(T), table.Table, newId, x.Column, x.Principal, x.Old)));
+        }
+    }
+
+    /// <summary>Rewrites ids held inside a JSON column (a print layout's request controls) to the ids those rows actually have.</summary>
+    private static void Remap(JsonNode node, IReadOnlyDictionary<string, string> properties, Dictionary<(string Table, long Old), long> ids)
+    {
+        switch (node)
+        {
+            case JsonObject item:
+                foreach (var (name, child) in item.ToList())
+                {
+                    if (properties.TryGetValue(name, out var table) && child is JsonValue value && value.TryGetValue<long>(out var old)
+                        && ids.TryGetValue((table, old), out var mapped))
+                        item[name] = mapped;
+                    else if (child != null) Remap(child, properties, ids);
+                }
+                break;
+            case JsonArray array:
+                foreach (var child in array)
+                    if (child != null) Remap(child, properties, ids);
+                break;
         }
     }
 
@@ -155,7 +184,8 @@ public sealed class BaselineWorkflowDefinitionSeeder : IBaselineSeeder
 
     private sealed record Manifest(int ProcessTableId, FixedTable[] Fixed, AllocatedTable[] Allocated);
     private sealed record FixedTable(string Table, string Entity, JsonElement[] Rows);
-    private sealed record AllocatedTable(string Table, string Entity, string[] Match, Dictionary<string, string> References, JsonElement[] Rows);
+    private sealed record AllocatedTable(string Table, string Entity, string[] Match, Dictionary<string, string> References, JsonElement[] Rows,
+        Dictionary<string, Dictionary<string, string>>? Json = null);
     private sealed record PendingReference(Type Type, string Table, long RowId, string Column, string Principal, long OldValue);
 }
 

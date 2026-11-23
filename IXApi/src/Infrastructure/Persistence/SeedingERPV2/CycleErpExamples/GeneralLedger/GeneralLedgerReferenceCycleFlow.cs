@@ -1,5 +1,4 @@
 using System.Globalization;
-using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.GeneralLedger.Reports;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.Data;
@@ -52,7 +51,7 @@ public sealed class GeneralLedgerReferenceCycleFlow(ApplicationDbContext db, IPu
     {
         if (db.ChangeTracker.HasChanges()) throw new InvalidOperationException("Run GL examples in a clean DI scope.");
         db.ChangeTracker.Clear();
-        await using var seedLock = await new SqlServerSeederLock(db).AcquireLockAsync(120, ct);
+        await using var seedLock = await new SeedLock(db).AcquireAsync(120, ct);
 
         var key = $"GLV2-{fiscalYear}-02";
         var item = InventoryCycleMasterSeeder.Item(fiscalYear, InventoryCycleSeedExample.GlReferenceSuffix);
