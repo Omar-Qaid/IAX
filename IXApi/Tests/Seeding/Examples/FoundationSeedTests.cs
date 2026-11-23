@@ -85,6 +85,37 @@ public sealed class FoundationSeedTests
         Assert.False(await db.Set<TaxReportPeriod>().AnyAsync(x => x.FromDate.Year == 2027));
     }
     [Fact]
+    public async Task Manager_position_seeded_with_the_purchasing_role_is_corrected_but_an_operator_role_is_kept()
+    {
+        await using var database = await SqliteTestDatabase.CreateAsync();
+        var db = database.Context;
+        using var provider = new ServiceCollection().AddFoundationPhaseOneSeeding().BuildServiceProvider();
+        using var scope = provider.CreateScope();
+        var runner = new SeedRunner(db, scope.ServiceProvider.GetServices<IDataSeeder>(), scope.ServiceProvider.GetServices<ISeedValidator>());
+        await runner.RunAsync(2026, "foundation-test");
+        var roles = await db.Set<IAX.IXApi.Modules.Finance.Foundation.Structure.OrganizationRole>().ToDictionaryAsync(x => x.Code, x => x.RecId);
+
+        // As earlier versions left it: the manager position on the purchasing role.
+        var position = await db.Set<IAX.IXApi.Modules.Finance.Foundation.Structure.HcmPosition>().SingleAsync(x => x.Code == "FNV2-MANAGER");
+        position.RoleId = roles["FNV2-BUYER"];
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        await runner.RunAsync(2026, "foundation-test");
+        Assert.Equal(roles["FNV2-MANAGER"], (await db.Set<IAX.IXApi.Modules.Finance.Foundation.Structure.HcmPosition>().SingleAsync(x => x.Code == "FNV2-MANAGER")).RoleId);
+
+        // Any other role is the operator's: kept, and reported as a conflict instead of overwritten.
+        var custom = new IAX.IXApi.Modules.Finance.Foundation.Structure.OrganizationRole { DataAreaId = "dat", Code = "OPERATOR-ROLE", Name = "Operator role" };
+        db.Add(custom);
+        await db.SaveChangesAsync();
+        position = await db.Set<IAX.IXApi.Modules.Finance.Foundation.Structure.HcmPosition>().SingleAsync(x => x.Code == "FNV2-MANAGER");
+        position.RoleId = custom.RecId;
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        await Assert.ThrowsAsync<InvalidOperationException>(() => runner.RunAsync(2026, "foundation-test"));
+        Assert.Equal(custom.RecId, (await db.Set<IAX.IXApi.Modules.Finance.Foundation.Structure.HcmPosition>().SingleAsync(x => x.Code == "FNV2-MANAGER")).RoleId);
+    }
+
+    [Fact]
     public async Task Late_cross_company_reference_is_rejected_and_rolled_back()
     {
         await using var database = await SqliteTestDatabase.CreateAsync();

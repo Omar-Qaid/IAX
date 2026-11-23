@@ -16,8 +16,17 @@ public sealed class HcmPositionSeeder : IDataSeeder
     public async Task SeedAsync(SeedContext c, CancellationToken ct)
     {
         var u = await c.RequireAsync<OrganizationUnit>(x => x.Code == "FNV2-FIN", ct);
-        var r = await c.RequireAsync<OrganizationRole>(x => x.Code == "FNV2-BUYER", ct);
-        foreach (var code in new[] { "FNV2-MANAGER", "FNV2-BUYER" })
-            await c.EnsureAsync<HcmPosition>(x => x.Code == code, new() { Code = code, Name = code, OrganizationUnitId = u.RecId, RoleId = r.RecId, ValidFrom = new(2026,1,1) }, ct, nameof(HcmPosition.Code), nameof(HcmPosition.Name), nameof(HcmPosition.OrganizationUnitId), nameof(HcmPosition.RoleId), nameof(HcmPosition.ValidFrom));
+        var buyer = await c.RequireAsync<OrganizationRole>(x => x.Code == "FNV2-BUYER", ct);
+        var manager = await c.RequireAsync<OrganizationRole>(x => x.Code == "FNV2-MANAGER", ct);
+        // Earlier versions seeded the manager position with the purchasing role. Correct only that seeded value;
+        // any other role on the position is an operator's choice and is kept (the comparison below then reports it).
+        var existing = await c.Rows<HcmPosition>().SingleOrDefaultAsync(x => x.Code == "FNV2-MANAGER", ct);
+        if (existing != null && existing.RoleId == buyer.RecId)
+        {
+            existing.RoleId = manager.RecId;
+            await c.Db.SaveChangesAsync(ct);
+        }
+        foreach (var (code, role) in new[] { ("FNV2-MANAGER", manager), ("FNV2-BUYER", buyer) })
+            await c.EnsureAsync<HcmPosition>(x => x.Code == code, new() { Code = code, Name = code, OrganizationUnitId = u.RecId, RoleId = role.RecId, ValidFrom = new(2026,1,1) }, ct, nameof(HcmPosition.Code), nameof(HcmPosition.Name), nameof(HcmPosition.OrganizationUnitId), nameof(HcmPosition.RoleId), nameof(HcmPosition.ValidFrom));
     }
 }

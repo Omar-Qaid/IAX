@@ -67,6 +67,8 @@ public sealed class FoundationScenarioTests
         var showroom = await db.Set<HcmShowroom>().SingleAsync(x => x.PersonnelNumber == "FNV2-SHOWROOM");
 
         Assert.Equal((unit.RecId, role.RecId), (buyerPosition.OrganizationUnitId, buyerPosition.RoleId));
+        var managerRole = await db.Set<OrganizationRole>().SingleAsync(x => x.Code == "FNV2-MANAGER");
+        Assert.Equal((unit.RecId, managerRole.RecId), (managerPosition.OrganizationUnitId, managerPosition.RoleId));
         var assignment = await db.Set<HcmWorkerOrganizationAssignment>().SingleAsync(x => x.HcmWorkerId == buyer.RecId);
         Assert.Equal((buyerPosition.RecId, unit.RecId, role.RecId), (assignment.PositionId, assignment.OrganizationUnitId, assignment.OrganizationRoleId));
         var line = await db.Set<HcmWorkerOrganizationAssignmentV1>().SingleAsync(x => x.HcmWorkerId == buyer.RecId);

@@ -16,5 +16,6 @@ public sealed class OrganizationRoleSeeder : IDataSeeder
     public async Task SeedAsync(SeedContext c, CancellationToken ct)
     {
         await c.EnsureAsync<OrganizationRole>(x => x.Code == "FNV2-BUYER", new() { Code = "FNV2-BUYER", Name = "Purchasing officer" }, ct, nameof(OrganizationRole.Code), nameof(OrganizationRole.Name));
+        await c.EnsureAsync<OrganizationRole>(x => x.Code == "FNV2-MANAGER", new() { Code = "FNV2-MANAGER", Name = "Finance manager" }, ct, nameof(OrganizationRole.Code), nameof(OrganizationRole.Name));
     }
 }
