@@ -50,6 +50,31 @@ public sealed class BaselineSeedingTests
         Assert.Empty(after.Where(x => before[x.Key] != x.Value).Select(x => $"{x.Key}: {before[x.Key]} -> {x.Value}"));
     }
 
+    [Fact]
+    public async Task Legacy_imports_run_once_from_the_embedded_export_and_are_not_repeated()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:;Foreign Keys=True");
+        await connection.OpenAsync();
+        await using var db = new Fixture(new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlite(connection).Options);
+        await db.Database.ExecuteSqlRawAsync(db.Database.GenerateCreateScript().Replace("N'", "'"));
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Seeding:EnableLegacyImports"] = "true", ["Seeding:EnableEmbeddedFixtures"] = "true"
+        }).Build();
+        using var provider = new ServiceCollection().AddSingleton<ApplicationDbContext>(db).AddLogging()
+            .AddSingleton<IConfiguration>(configuration).AddBaselineSeeding(configuration).BuildServiceProvider();
+
+        var first = await Run(provider);
+        Assert.Contains("Finance.Foundation.LegacyEmployees", first.CompletedSeeders);
+        Assert.Contains("Workflow.LegacyMaster", first.CompletedSeeders);
+        Assert.True(await db.Set<IAX.IXApi.Modules.Finance.Foundation.HcmWorkers.HcmWorker>().IgnoreQueryFilters().AnyAsync());
+
+        db.ChangeTracker.Clear();
+        var second = await Run(provider);
+        Assert.DoesNotContain("Finance.Foundation.LegacyEmployees", second.CompletedSeeders);
+        Assert.DoesNotContain("Workflow.LegacyMaster", second.CompletedSeeders);
+    }
+
     private static async Task<IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models.SeedResult> Run(ServiceProvider provider)
     {
         using var scope = provider.CreateScope();

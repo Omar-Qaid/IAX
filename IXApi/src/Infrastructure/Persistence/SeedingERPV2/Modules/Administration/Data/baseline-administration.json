@@ -1,0 +1,29 @@
+{
+  "batchExamples": [
+    { "name": "Example - Process request submission", "intervalSeconds": 900,
+      "description": "Disabled scaffold. Implement WorkflowRequestSubmissionBatchService.ProcessAsync and configure task parameters before enabling.",
+      "tasks": [ { "name": "Submit process requests", "serviceKey": "WorkflowRequestSubmission" } ] },
+    { "name": "Example - Activity notification delivery", "intervalSeconds": 60,
+      "description": "Disabled example. Uses activity-configured queued channels. Do not enable alongside the existing delivery jobs.",
+      "tasks": [ { "name": "System notifications", "serviceKey": "WorkflowNotification" }, { "name": "Email delivery", "serviceKey": "EmailDelivery" },
+                 { "name": "SMS delivery", "serviceKey": "SmsDelivery" } ] },
+    { "name": "Example - Activity auto-pass", "intervalSeconds": 900,
+      "description": "Disabled example. Checks AutoPassing and AutoPassingHrs on assignments; the interval is the sweep frequency, not the activity deadline. Do not enable alongside WfActivityAutoPass.",
+      "tasks": [ { "name": "Process due activity auto-pass", "serviceKey": "WfActivityAutoPass" } ] },
+    { "name": "Example - Push notification delivery", "intervalSeconds": 60,
+      "description": "Disabled example. Delivers queued push notifications. Configure the transport before enabling; do not duplicate PushNotification.",
+      "tasks": [ { "name": "Deliver push notifications", "serviceKey": "PushNotification" } ] },
+    { "name": "Example - Other notification delivery", "intervalSeconds": 60,
+      "description": "Disabled example. Processes other supported queued notification channels; do not duplicate NotificationDelivery.",
+      "tasks": [ { "name": "Deliver other notifications", "serviceKey": "NotificationDelivery" } ] },
+    { "name": "Example - Workflow reminders", "intervalSeconds": 300,
+      "description": "Disabled example. Processes due queued workflow reminders; do not duplicate WorkflowReminder.",
+      "tasks": [ { "name": "Process workflow reminders", "serviceKey": "WorkflowReminder" } ] },
+    { "name": "Example - Workflow escalations", "intervalSeconds": 300,
+      "description": "Disabled example. Processes queued escalation notifications; do not duplicate WorkflowEscalation.",
+      "tasks": [ { "name": "Process workflow escalations", "serviceKey": "WorkflowEscalation" } ] },
+    { "name": "Example - Expired notification cleanup", "intervalSeconds": 86400,
+      "description": "Disabled example. Marks expired notifications without deleting them; do not duplicate WorkflowCleanup.",
+      "tasks": [ { "name": "Clean expired notifications", "serviceKey": "WorkflowCleanup" } ] }
+  ]
+}

@@ -6,9 +6,11 @@ using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Administration;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Communication;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Foundation;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.GeneralLedger;
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Identity;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Inventory;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Organization;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Tax;
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Workflow;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -41,6 +43,25 @@ public static class BaselineSeedingRegistration
         Reuse<SysBackgroundJobSeeder>(services, "Administration.BackgroundJobs", Settings);
         Reuse<SysNotificationTemplateSeeder>(services, "Administration.NotificationTemplates", BaselineCompanySeeder.SeederId);
         Reuse<DocuTypeSeeder>(services, "Organization.DocumentManagement", BaselineCompanySeeder.SeederId);
+        Add<BaselineBatchExampleSeeder>(services);
+
+        // Identity: roles, users, permissions, and the system user's access to every company.
+        Add<BaselineIdentitySeeder>(services);
+        Add<BaselineCompanyAccessSeeder>(services);
+
+        // Workflow: the V2 catalog seeders for the lookup tables, then the installation's process definitions.
+        var catalog = BaselineWorkflowDefinitionSeeder.Catalog;
+        Reuse<WfCategorySeeder>(services, catalog[0], BaselineCompanySeeder.SeederId);
+        Reuse<WfControlSeeder>(services, catalog[1], BaselineCompanySeeder.SeederId);
+        Reuse<WfPrioritySeeder>(services, catalog[2], BaselineCompanySeeder.SeederId);
+        Reuse<WfProcessTypeSeeder>(services, catalog[3], BaselineCompanySeeder.SeederId);
+        Reuse<WfActivityTypeSeeder>(services, catalog[4], BaselineCompanySeeder.SeederId);
+        Reuse<WfOperatorSeeder>(services, catalog[5], BaselineCompanySeeder.SeederId);
+        Reuse<WfDataTypeSeeder>(services, catalog[6], BaselineCompanySeeder.SeederId);
+        Reuse<WfPerformerTypeSeeder>(services, catalog[7], BaselineCompanySeeder.SeederId);
+        Reuse<WfPerformerSeeder>(services, catalog[8], catalog[7]);
+        Add<BaselineWorkflowDefinitionSeeder>(services);
+        Add<LegacyWorkflowImportSeeder>(services);
 
         // Foundation and General ledger.
         Add<BaselineCompanySeeder>(services);

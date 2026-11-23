@@ -1,0 +1,495 @@
+{
+  "roles": [
+    "Admin",
+    "User"
+  ],
+  "users": [
+    {
+      "userName": "omar",
+      "email": "omar@iax.local",
+      "role": "Admin",
+      "id": null
+    },
+    {
+      "userName": "sys",
+      "email": "sys@iax.local",
+      "role": "User",
+      "id": "sys"
+    }
+  ],
+  "adminRole": "Admin",
+  "standardActions": [
+    "View",
+    "Create",
+    "Edit",
+    "Delete"
+  ],
+  "resources": [
+    {
+      "module": "AccountsReceivable",
+      "resource": "Customers"
+    },
+    {
+      "module": "AccountsReceivable",
+      "resource": "CustomerGroups"
+    },
+    {
+      "module": "AccountsReceivable",
+      "resource": "PriceDiscAdmTables"
+    },
+    {
+      "module": "AccountsReceivable",
+      "resource": "PriceDiscGroups"
+    },
+    {
+      "module": "AccountsReceivable",
+      "resource": "PriceDiscAdmNames"
+    },
+    {
+      "module": "AccountsReceivable",
+      "resource": "SalesOrders"
+    },
+    {
+      "module": "AccountsReceivable",
+      "resource": "Invoices"
+    },
+    {
+      "module": "AccountsReceivable",
+      "resource": "CustomerPayments"
+    },
+    {
+      "module": "AccountsReceivable",
+      "resource": "ReturnOrders"
+    },
+    {
+      "module": "AccountsReceivable",
+      "resource": "DeliveryModes"
+    },
+    {
+      "module": "AccountsReceivable",
+      "resource": "DeliveryTerms"
+    },
+    {
+      "module": "AccountsReceivable",
+      "resource": "PaymTerm"
+    },
+    {
+      "module": "AccountsReceivable",
+      "resource": "PaymSched"
+    },
+    {
+      "module": "AccountsPayable",
+      "resource": "Vendors"
+    },
+    {
+      "module": "AccountsPayable",
+      "resource": "VendorGroups"
+    },
+    {
+      "module": "AccountsPayable",
+      "resource": "PurchaseOrders"
+    },
+    {
+      "module": "AccountsPayable",
+      "resource": "PostingProfiles"
+    },
+    {
+      "module": "AccountsPayable",
+      "resource": "Transactions"
+    },
+    {
+      "module": "Organization",
+      "resource": "Departments"
+    },
+    {
+      "module": "Organization",
+      "resource": "Occupations"
+    },
+    {
+      "module": "Organization",
+      "resource": "Jobs"
+    },
+    {
+      "module": "Organization",
+      "resource": "Managers"
+    },
+    {
+      "module": "Organization",
+      "resource": "Structure"
+    },
+    {
+      "module": "Organization",
+      "resource": "Employees"
+    },
+    {
+      "module": "Organization",
+      "resource": "Nationalities"
+    },
+    {
+      "module": "Organization",
+      "resource": "Genders"
+    },
+    {
+      "module": "Organization",
+      "resource": "Announcements"
+    },
+    {
+      "module": "Organization",
+      "resource": "PostalAddresses"
+    },
+    {
+      "module": "Organization",
+      "resource": "ElectronicAddresses"
+    },
+    {
+      "module": "Organization",
+      "resource": "LegalEntities"
+    },
+    {
+      "module": "Organization",
+      "resource": "Showrooms"
+    },
+    {
+      "module": "Inventory",
+      "resource": "Items"
+    },
+    {
+      "module": "Inventory",
+      "resource": "ItemGroups"
+    },
+    {
+      "module": "Inventory",
+      "resource": "UOM"
+    },
+    {
+      "module": "Inventory",
+      "resource": "Transactions"
+    },
+    {
+      "module": "Inventory",
+      "resource": "Setup"
+    },
+    {
+      "module": "Inventory",
+      "resource": "Journals"
+    },
+    {
+      "module": "Inventory",
+      "resource": "Posting"
+    },
+    {
+      "module": "Inventory",
+      "resource": "Inquiry"
+    },
+    {
+      "module": "SystemAdministration",
+      "resource": "Users"
+    },
+    {
+      "module": "SystemAdministration",
+      "resource": "Roles"
+    },
+    {
+      "module": "SystemAdministration",
+      "resource": "UserGroups"
+    },
+    {
+      "module": "SystemAdministration",
+      "resource": "UserCategories"
+    },
+    {
+      "module": "SystemAdministration",
+      "resource": "Permissions"
+    },
+    {
+      "module": "System",
+      "resource": "Documents"
+    },
+    {
+      "module": "Workflow",
+      "resource": "Processes"
+    },
+    {
+      "module": "Workflow",
+      "resource": "ProcessBuilder"
+    },
+    {
+      "module": "Workflow",
+      "resource": "Steps"
+    },
+    {
+      "module": "Workflow",
+      "resource": "Activities"
+    },
+    {
+      "module": "Workflow",
+      "resource": "ActivityTypes"
+    },
+    {
+      "module": "Workflow",
+      "resource": "ActivityControls"
+    },
+    {
+      "module": "Workflow",
+      "resource": "Requests"
+    },
+    {
+      "module": "Workflow",
+      "resource": "RequestControls"
+    },
+    {
+      "module": "Workflow",
+      "resource": "Transitions"
+    },
+    {
+      "module": "Workflow",
+      "resource": "Variables"
+    },
+    {
+      "module": "Workflow",
+      "resource": "Controls"
+    },
+    {
+      "module": "Workflow",
+      "resource": "Operators"
+    },
+    {
+      "module": "Workflow",
+      "resource": "Performers"
+    },
+    {
+      "module": "Workflow",
+      "resource": "PerformerTypes"
+    },
+    {
+      "module": "Workflow",
+      "resource": "Categories"
+    },
+    {
+      "module": "Workflow",
+      "resource": "Priorities"
+    },
+    {
+      "module": "Workflow",
+      "resource": "ProcessTypes"
+    },
+    {
+      "module": "Workflow",
+      "resource": "PrintTemplates"
+    },
+    {
+      "module": "Workflow",
+      "resource": "DataTypes"
+    },
+    {
+      "module": "Workflow",
+      "resource": "DataManagement"
+    },
+    {
+      "module": "System",
+      "resource": "AuditLog"
+    },
+    {
+      "module": "System",
+      "resource": "NumberSequences"
+    },
+    {
+      "module": "System",
+      "resource": "NotificationTemplate"
+    },
+    {
+      "module": "System",
+      "resource": "Settings"
+    },
+    {
+      "module": "System",
+      "resource": "DataManagement"
+    },
+    {
+      "module": "System",
+      "resource": "BackgroundJobs"
+    },
+    {
+      "module": "System",
+      "resource": "Notifications"
+    },
+    {
+      "module": "System",
+      "resource": "Chat"
+    },
+    {
+      "module": "GeneralLedger",
+      "resource": "Currencies"
+    },
+    {
+      "module": "GeneralLedger",
+      "resource": "ExchangeRates"
+    },
+    {
+      "module": "GeneralLedger",
+      "resource": "ExchangeRateTypes"
+    },
+    {
+      "module": "GeneralLedger",
+      "resource": "ExchangeRateCurrencyPairs"
+    },
+    {
+      "module": "GeneralLedger",
+      "resource": "FiscalCalendars"
+    },
+    {
+      "module": "Finance",
+      "resource": "MarkupCodes"
+    },
+    {
+      "module": "Tax",
+      "resource": "TaxCodes"
+    },
+    {
+      "module": "Tax",
+      "resource": "TaxGroups"
+    },
+    {
+      "module": "Tax",
+      "resource": "ItemTaxGroups"
+    },
+    {
+      "module": "Tax",
+      "resource": "TaxAuthorities"
+    },
+    {
+      "module": "Tax",
+      "resource": "LedgerAccountGroups"
+    },
+    {
+      "module": "Tax",
+      "resource": "SettlementPeriods"
+    },
+    {
+      "module": "Tax",
+      "resource": "Settlement"
+    },
+    {
+      "module": "Tax",
+      "resource": "ExemptCodes"
+    },
+    {
+      "module": "AccountsReceivable",
+      "resource": "SalesPools"
+    },
+    {
+      "module": "AccountsReceivable",
+      "resource": "PostingProfiles"
+    },
+    {
+      "module": "AccountsReceivable",
+      "resource": "PaymentMethods"
+    },
+    {
+      "module": "Application",
+      "resource": "Dashboard"
+    }
+  ],
+  "additionalPermissions": [
+    {
+      "module": "Workflow",
+      "resource": "PrintTemplates",
+      "action": "Publish"
+    },
+    {
+      "module": "Workflow",
+      "resource": "PrintTemplates",
+      "action": "Archive"
+    },
+    {
+      "module": "AccountsReceivable",
+      "resource": "SalesOrders",
+      "action": "Confirm"
+    },
+    {
+      "module": "AccountsReceivable",
+      "resource": "SalesOrders",
+      "action": "Post"
+    },
+    {
+      "module": "AccountsReceivable",
+      "resource": "Invoices",
+      "action": "Post"
+    },
+    {
+      "module": "AccountsReceivable",
+      "resource": "CustomerPayments",
+      "action": "Post"
+    },
+    {
+      "module": "AccountsReceivable",
+      "resource": "CurrencyRevaluation",
+      "action": "Post"
+    },
+    {
+      "module": "AccountsReceivable",
+      "resource": "CollectionLetters",
+      "action": "Create"
+    },
+    {
+      "module": "AccountsReceivable",
+      "resource": "CollectionLetters",
+      "action": "Post"
+    },
+    {
+      "module": "AccountsReceivable",
+      "resource": "Transactions",
+      "action": "View"
+    },
+    {
+      "module": "AccountsReceivable",
+      "resource": "ReturnOrders",
+      "action": "Post"
+    },
+    {
+      "module": "AccountsPayable",
+      "resource": "PurchaseOrders",
+      "action": "Confirm"
+    },
+    {
+      "module": "AccountsPayable",
+      "resource": "PurchaseOrders",
+      "action": "Post"
+    },
+    {
+      "module": "System",
+      "resource": "DataManagement",
+      "action": "Import"
+    },
+    {
+      "module": "System",
+      "resource": "DataManagement",
+      "action": "Export"
+    },
+    {
+      "module": "System",
+      "resource": "BackgroundJobs",
+      "action": "Run"
+    },
+    {
+      "module": "System",
+      "resource": "BackgroundJobs",
+      "action": "Cancel"
+    },
+    {
+      "module": "System",
+      "resource": "BackgroundJobs",
+      "action": "Retry"
+    },
+    {
+      "module": "Workflow",
+      "resource": "DataManagement",
+      "action": "Import"
+    },
+    {
+      "module": "Workflow",
+      "resource": "DataManagement",
+      "action": "Export"
+    }
+  ]
+}
