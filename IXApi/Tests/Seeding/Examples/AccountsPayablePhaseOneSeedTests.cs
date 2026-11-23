@@ -82,7 +82,7 @@ public sealed class AccountsPayablePhaseOneSeedTests
             first.CompletedSeeders.OrderBy(x => x));
         await Assert.ThrowsAsync<InvalidOperationException>(() => new SeedContext(db, 2026, "phase-one-test")
             .RequireAsync<LogisticsLocation>(x => x.LocationId == "OTHER-LOCATION", default));
-        Assert.Equal(2, await db.Set<VendTable>().CountAsync());
+        Assert.Equal(3, await db.Set<VendTable>().CountAsync()); // LOCAL, USD and the tax-free prepayment vendor
         Assert.Equal(2, await db.Set<VendBankAccount>().CountAsync());
         var vendor = await db.Set<VendTable>().SingleAsync(x => x.Currency == "SAR");
         var party = await db.Set<DirPartyTable>().SingleAsync(x => x.RecId == vendor.Party);
@@ -356,7 +356,7 @@ public sealed class AccountsPayablePhaseOneSeedTests
         using var scope = provider.CreateScope();
         var examples = scope.ServiceProvider.GetRequiredService<AccountsPayableTransactionExamples>();
         var result = await examples.RunAsync(new(2026, "cycle-test"));
-        Assert.Equal(20, result.Scenarios.Count);
+        Assert.Equal(21, result.Scenarios.Count);
         Assert.All(result.Scenarios, x => Assert.True(x.PostedVouchers > 0));
         var complete = result.Scenarios.Single(x => x.Id == "01");
         Assert.Equal(100m, complete.PhysicalQuantity);
@@ -389,7 +389,7 @@ public sealed class AccountsPayablePhaseOneSeedTests
             using var scope = provider.CreateScope();
             var examples = scope.ServiceProvider.GetRequiredService<AccountsPayableTransactionExamples>();
             var first = await examples.RunAsync(new(2026, "sql-cycle-test"));
-            Assert.Equal(20, first.Scenarios.Count);
+            Assert.Equal(21, first.Scenarios.Count);
             var counts = await CountsAsync(db);
             await examples.RunAsync(new(2026, "sql-cycle-test"));
             Assert.Equal(counts, await CountsAsync(db));
@@ -749,7 +749,7 @@ public sealed class AccountsPayablePhaseOneSeedTests
         await Stage("1", "إعداد المورد والأصناف والضرائب وحسابات الترحيل", async () =>
         {
             await services.GetRequiredService<AccountsPayableCycleSeeder>().PrepareAsync(new(2026,"cycle-test"));
-            Assert.Equal(2, await db.Set<VendTable>().CountAsync());
+            Assert.Equal(3, await db.Set<VendTable>().CountAsync()); // LOCAL, USD and the tax-free prepayment vendor
             Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
         });
         var orders = services.GetRequiredService<IPurchOrderService>();
@@ -886,7 +886,7 @@ public sealed class AccountsPayablePhaseOneSeedTests
             ["01"]="شراء مخزني وخدمي حتى الدفع", ["02"]="استلام وفوترة جزئية", ["03"]="شراء خدمة دون مخزون",
             ["04"]="فاتورة مصروف مباشرة", ["05"]="فاتورة مقابل عدة استلامات", ["06"]="مطابقة السعر والكمية ورفض المخالفة",
             ["07"]="مصاريف الشراء", ["08"]="دفعة جزئية", ["09"]="دفعة على الحساب ثم تسوية",
-            ["11"]="دفعة مقدمة من يومية الدفع وتطبيقها", ["12"]="الخصم النقدي", ["13"]="عملة أجنبية وفروق صرف محققة",
+            ["10"]="دفعة مقدمة على أمر الشراء وتطبيقها", ["11"]="دفعة مقدمة من يومية الدفع وتطبيقها", ["12"]="الخصم النقدي", ["13"]="عملة أجنبية وفروق صرف محققة",
             ["14"]="مرتجع شراء وإشعار دائن", ["15"]="إشعار دائن مالي دون مخزون", ["16"]="إلغاء الكمية المتبقية", ["17"]="تصحيح إيصال الاستلام",
             ["18"]="عكس التسوية", ["19"]="عكس الدفعة", ["20"]="رفض العمليات غير الصحيحة والتراجع عن آثارها",
             ["21"]="استرداد إشعار دائن من المورد"
@@ -1062,6 +1062,8 @@ public sealed class AccountsPayablePhaseOneSeedTests
             "14" => (90m,2250m,337.50m,-2587.50m,-2587.50m,0m,0m,0m,0m,0m,0m,0m),
             "15" => (0m,0m,37.50m,-287.50m,-287.50m,250m,0m,0m,0m,0m,0m,0m),
             "16" or "20" => (60m,1500m,225m,-1725m,-1725m,0m,0m,0m,0m,0m,0m,0m),
+            // Prepayment 1,000 then the 1,500 remainder; tax-free vendor; advance 181005 nets to zero.
+            "10" => (100m,2500m,0m,-2500m,-2500m,0m,0m,0m,0m,0m,0m,0m),
             // Received 100, corrected to 50, never invoiced: only the physical quantity remains.
             "17" => (50m,0m,0m,0m,0m,0m,0m,0m,0m,0m,0m,0m),
             "18" => (100m,2500m,375m,-2875m,-2875m,0m,0m,0m,0m,0m,2875m,2875m),

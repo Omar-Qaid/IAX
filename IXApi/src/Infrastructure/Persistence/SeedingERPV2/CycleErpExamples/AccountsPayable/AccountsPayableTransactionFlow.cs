@@ -22,7 +22,7 @@ public sealed class AccountsPayableTransactionFlow(ApplicationDbContext db, IPur
         ["15"] = "Financial credit note without inventory", ["05"] = "Invoice across multiple receipts",
         ["06"] = "Price and quantity matching", ["08"] = "Partial payment", ["09"] = "On-account payment and later settlement",
         ["14"] = "Purchase return and vendor credit", ["16"] = "Cancel unreceived remainder",
-        ["17"] = "Product receipt correction",
+        ["10"] = "Purchase order prepayment and application", ["17"] = "Product receipt correction",
         ["18"] = "Settlement reversal", ["19"] = "Payment reversal", ["20"] = "Validation failures and rollback",
         ["21"] = "Vendor refund of a financial credit note"
     };
@@ -67,6 +67,7 @@ public sealed class AccountsPayableTransactionFlow(ApplicationDbContext db, IPur
             steps.Add(new("Vendor refund", key + "-REF", "Credit note recovered into the bank and settled"));
             return await Reconcile(key, id, 0m, 0m, 0m, ct);
         }
+        if (id == "10") return await PurchaseOrderPrepaymentAsync(key, date, ct);
         if (id == "11") await journals.PrepaymentAsync(key + "-PRE", account, 1000m, date.AddDays(-13), ct);
         var serviceOnly = id == "03";
         var order = await db.Set<PurchTable>().SingleOrDefaultAsync(x => x.DataAreaId == Area && x.PurchName == key && x.PurchaseType != PurchaseType.ReturnItem, ct);
@@ -194,6 +195,50 @@ public sealed class AccountsPayableTransactionFlow(ApplicationDbContext db, IPur
         }
         return await Reconcile(key, id, expectedPhysical, expectedOpenDebit, expectedOpenCredit, ct);
     }
+    /// <summary>
+    /// D365 purchase order prepayment: define the prepayment on the order, post the prepayment invoice (supplier
+    /// advance 181005 against the vendor), pay it, receive and invoice the goods, apply the paid prepayment to the
+    /// final invoice, and pay the remainder. Uses the tax-free prepayment vendor, as the prepayment invoice path
+    /// refuses a purchase with a sales tax group.
+    /// </summary>
+    private async Task<AccountsPayableScenarioReport> PurchaseOrderPrepaymentAsync(string key, DateTime date, CancellationToken ct)
+    {
+        const decimal prepayment = 1000m;
+        var account = Modules.AccountsPayable.VendPrepaymentSetupSeeder.VendorAccount(Area);
+        var order = await db.Set<PurchTable>().SingleOrDefaultAsync(x => x.DataAreaId == Area && x.PurchName == key && x.PurchaseType != PurchaseType.ReturnItem, ct);
+        if (order == null)
+        {
+            var created = await orders.CreateAsync(new(account, null, "SAR", date, "APV2-SITE", "APV2-WH", key, date.AddDays(-14)), ct);
+            Success(created, "create prepayment order");
+            order = (PurchTable)created.Data!;
+        }
+        Check(order.OrderAccount == account, "existing prepayment order differs.");
+        await EnsureLine(order, "APV2-STOCK", 100m, 25m, date, ct);
+        if (!await db.Set<VendPurchOrderJour>().AnyAsync(x => x.DataAreaId == Area && x.PurchId == order.PurchId, ct))
+            Success(await confirmations.ConfirmAsync(order.RecId, ct, date.AddDays(-12)), "confirm order");
+        var category = await db.Set<EcoResCategory>()
+            .SingleAsync(x => x.Name == Modules.AccountsPayable.VendPrepaymentSetupSeeder.CategoryName, ct);
+        Success(await orders.DefinePrepaymentAsync(order.RecId, new(prepayment, category.RecId, "Purchase order prepayment"), ct), "define prepayment");
+        steps.Add(new("Prepayment definition", order.PurchId, $"Prepayment {prepayment} on the order"));
+
+        Success(await invoices.PostPrepaymentAsync(order.RecId, key + "-PRE", date.AddDays(-11), prepayment, ct), "prepayment invoice");
+        Success(await payments.PostAsync(new(account, "APV2-BANK", prepayment, key + "-PREPAY", date.AddDays(-10), SettleInvoiceId: key + "-PRE"), ct), "prepayment payment");
+        steps.Add(new("Prepayment invoice and payment", key + "-PRE", "Advance posted and paid"));
+
+        var line = await db.Set<PurchLine>().SingleAsync(x => x.DataAreaId == Area && x.PurchId == order.PurchId, ct);
+        await Receipt(order, key + "-R1", date.AddDays(-5), [new(line.RecId, 100m)], ct);
+        await Invoice(order, key + "-I1", date, [new(line.RecId, 100m)], ct);
+        var advance = await db.Set<VendInvoiceJour>().SingleAsync(x => x.DataAreaId == Area && x.InvoiceAccount == account && x.InvoiceId == key + "-PRE", ct);
+        var final = await db.Set<VendInvoiceJour>().SingleAsync(x => x.DataAreaId == Area && x.InvoiceAccount == account && x.InvoiceId == key + "-I1", ct);
+        Success(await invoices.ApplyPrepaymentAsync(order.RecId, advance.RecId, final.RecId, date.AddDays(1), prepayment, ct), "apply prepayment");
+        steps.Add(new("Prepayment application", final.InvoiceId, "Paid prepayment applied to the final invoice"));
+
+        Success(await payments.PostAsync(new(account, "APV2-BANK", final.InvoiceAmount - prepayment, key + "-PAY", date.AddDays(35),
+            SettleInvoiceId: final.InvoiceId), ct), "remaining payment");
+        steps.Add(new("Payment", key + "-PAY", "Remainder paid and settled"));
+        return await Reconcile(key, "10", 100m, 0m, 0m, ct);
+    }
+
     private async Task EnsureLine(PurchTable order, string item, decimal qty, decimal price, DateTime date, CancellationToken ct)
     {
         var existing = await db.Set<PurchLine>().SingleOrDefaultAsync(x => x.DataAreaId == Area && x.PurchId == order.PurchId && x.ItemId == item, ct);
