@@ -118,6 +118,8 @@ public sealed class TaxTableService : BaseService<TaxTable>, ITaxTableService
     {
         var entity = dto.Adapt<TaxTable>();
         entity.DataAreaId = SelectedCompany();
+        // IsActive is a system flag the tax code form never sends; a new code is always usable.
+        entity.IsActive = true;
 
         TaxCodeRateService.SanitizeEntity(entity);
         var created = await AddAsync(entity, cancellationToken);
@@ -150,10 +152,13 @@ public sealed class TaxTableService : BaseService<TaxTable>, ITaxTableService
         var originalRecId = existingEntity.RecId;
         var originalCode = existingEntity.TaxCode;
         var originalArea = existingEntity.DataAreaId;
+        var originalActive = existingEntity.IsActive;
 
         dto.Adapt(existingEntity);
         existingEntity.RecId = originalRecId;
         existingEntity.DataAreaId = originalArea;
+        // The DTO's IsActive defaults to false when omitted; an edit must not deactivate the code.
+        existingEntity.IsActive = originalActive;
         if (!string.IsNullOrEmpty(originalCode))
         {
             existingEntity.TaxCode = originalCode;

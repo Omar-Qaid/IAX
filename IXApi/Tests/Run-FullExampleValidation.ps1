@@ -20,7 +20,9 @@ foreach ($key in $settings.Keys) {
 }
 
 try {
-    foreach ($project in @('IXApi.Tests', 'InventoryCycle.Tests')) {
+    # IXApi.Tests compiles every test file; the focused projects (InventoryCycle.Tests and others) are
+    # subsets of it for a faster inner loop, so running them here would only repeat the same tests.
+    foreach ($project in @('IXApi.Tests')) {
         $arguments = @('test', (Join-Path $PSScriptRoot "$project.csproj"),
             '--logger', "trx;LogFileName=$project.trx", '--results-directory', $resultsDirectory)
         if ($NoBuild) { $arguments += '--no-build' }

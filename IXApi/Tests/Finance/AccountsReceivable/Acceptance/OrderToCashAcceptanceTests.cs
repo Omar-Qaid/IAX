@@ -622,10 +622,11 @@ public sealed partial class AccountsReceivableCycleStageTests
             openAfterPayment = 680;
             beforeSettlement = await statements.GetStatementAsync(Customer, Date, Date.AddDays(1), default);
         });
-        async Task SettleOpen()
+        // Settlement may not be dated before any marked transaction, so callers pass the latest one's date.
+        async Task SettleOpen(DateTime settlementDate)
         {
             var ids = await db.Set<CustTransOpen>().Where(x => x.DataAreaId == Company && x.AccountNum == Customer).Select(x => x.RefRecId).ToListAsync();
-            var result = await services.GetRequiredService<ICustSettleOpenTransactionsService>().SettleAsync(new(Customer,Date.AddDays(2),ids),default);
+            var result = await services.GetRequiredService<ICustSettleOpenTransactionsService>().SettleAsync(new(Customer,settlementDate,ids),default);
             Assert.True(result.StatusCode == 200,result.Message);
         }
         if (!corrections)
@@ -668,7 +669,7 @@ public sealed partial class AccountsReceivableCycleStageTests
         {
             var result = await payment.PostAsync(new(Customer,Bank,680,Date.AddDays(3),"ARV2",null,"OTC-P2",false),default);
             Assert.Equal(200,result.StatusCode);
-            await SettleOpen();
+            await SettleOpen(Date.AddDays(3)); // the 680 payment's date
             await AssertOpen(0,0);
             Assert.Equal(0m,await LedgerAsync(db,GeneralLedgerSeedExample.CustomerControl));
             Assert.Equal(1380m,await LedgerAsync(db,GeneralLedgerSeedExample.Bank));
@@ -848,7 +849,7 @@ public sealed partial class AccountsReceivableCycleStageTests
             });
             await Stage(["RET-04"],"Apply the physical-return credit to the open invoice",async () =>
             {
-                await SettleOpen();
+                await SettleOpen(Date.AddDays(6)); // the return credit note's date
                 await AssertOpen(450,0);
                 Assert.Equal(700m,await LedgerAsync(db,GeneralLedgerSeedExample.Bank));
             });

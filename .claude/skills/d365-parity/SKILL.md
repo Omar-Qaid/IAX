@@ -89,7 +89,7 @@ missing**. Never approximate an advanced feature inside a basic path.
 ## Checks before reporting done
 
 - `dotnet build IXApi/IXApi.csproj` → 0 errors.
-- `dotnet test IXApi/Tests/IXApi.Tests.csproj` and `IXApi/Tests/InventoryCycle.Tests.csproj`.
+- `dotnet test IXApi/Tests/IXApi.Tests.csproj` (it compiles every test; `InventoryCycle.Tests` is only a faster subset).
 - Report pre-existing failures as pre-existing, with the evidence that they are unrelated.
 - State plainly what of the cycle is done and what is not. Partial parity reported as complete is
   the failure mode this skill exists to prevent.

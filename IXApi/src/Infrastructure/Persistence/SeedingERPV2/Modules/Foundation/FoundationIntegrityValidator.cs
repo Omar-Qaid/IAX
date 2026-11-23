@@ -51,7 +51,8 @@ public sealed class FoundationIntegrityValidator : ISeedValidator
                     // Rows are read without query filters, so a soft-deleted or deactivated parent still
                     // matches the key; a live master row must not point at one.
                     if (IsAvailable(type, row) && !IsAvailable(fk.PrincipalEntityType, parent))
-                        throw new InvalidOperationException($"Foundation reference {type.ClrType.Name} -> {fk.PrincipalEntityType.ClrType.Name} points at a deleted or inactive record in {c.Company}.");
+                        throw new InvalidOperationException($"Foundation reference {type.ClrType.Name} -> {fk.PrincipalEntityType.ClrType.Name} " +
+                            $"({string.Join(", ", fk.Properties.Select(p => p.Name))} = {string.Join(", ", key)}) points at a deleted or inactive record in {c.Company}.");
                 }
             }
         }

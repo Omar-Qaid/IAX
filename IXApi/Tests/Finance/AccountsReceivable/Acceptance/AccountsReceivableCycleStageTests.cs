@@ -445,6 +445,10 @@ public sealed partial class AccountsReceivableCycleStageTests
             "16" or "20" => (-60m,-1500m,-2400m,-360m,2760m,2760m,0m,0m,0m,0m,0m),
             "18" => (-100m,-2500m,-4000m,-600m,4600m,4600m,0m,4600m,4600m,0m,0m),
             "19" => (-100m,-2500m,-4000m,-600m,0m,0m,4600m,4600m,0m,0m,0m),
+            // Scenarios/10-CustomerPrepayment: bank 1,000 + 3,600; advance and control both net to 0.
+            "10" => (-100m,-2500m,-4000m,-600m,4600m,4600m,0m,0m,0m,0m,0m),
+            // Scenarios/11-Overpayment: bank 4,700; the extra 100 stays a credit on control and open on the payment.
+            "11" => (-100m,-2500m,-4000m,-600m,4700m,4700m,-100m,0m,100m,0m,0m),
             "02" or "05" or "09" => (-100m,-2500m,-4000m,-600m,4600m,4600m,0m,0m,0m,0m,0m),
             _ => throw new InvalidOperationException("Missing arithmetic expectations for AR " + id)
         };

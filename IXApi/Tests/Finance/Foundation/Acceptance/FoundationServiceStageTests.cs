@@ -200,7 +200,8 @@ public sealed class FoundationServiceStageTests
         {
             var group = await db.Set<TaxGroupHeading>().SingleAsync(x => x.TaxGroup == "APV2");
             var item = await db.Set<TaxItemGroupHeading>().SingleAsync(x => x.TaxItemGroup == "APV2");
-            var line = await db.Set<TaxGroupData>().SingleAsync(x => x.TaxGroup == "APV2");
+            // The group also holds the zero-rated and exempt codes; the standard line is enough here.
+            var line = await db.Set<TaxGroupData>().SingleAsync(x => x.TaxGroup == "APV2" && x.TaxCode == "APV2-15");
             var itemLine = await db.Set<TaxOnItem>().SingleAsync(x => x.TaxItemGroup == "APV2");
             actor.DataAreaId = "oth";
             Assert.Null(await sp.GetRequiredService<ITaxGroupQueryService>().GetByIdAsync(group.RecId.ToString()));
@@ -497,6 +498,8 @@ public sealed class FoundationServiceStageTests
         db.ChangeTracker.Clear();
         Assert.Equal(18m,(await service.GetDetailAsync("FT-VAT"))!.TaxValue);
         Assert.Equal(from,(await db.Set<TaxData>().SingleAsync(x => x.TaxCode == "FT-VAT")).TaxFromDate);
+        // The form never sends IsActive; neither create nor update may deactivate the code.
+        Assert.True((await db.Set<TaxTable>().AsNoTracking().SingleAsync(x => x.TaxCode == "FT-VAT")).IsActive);
         Assert.Contains(await service.GetDetailsAsync(),x => x.TaxCode == "FT-VAT");
         // A referenced master cannot be deleted while its rate rows still depend on it.
         await Assert.ThrowsAsync<DbUpdateException>(() => service.DeleteByCodeAsync("FT-VAT"));
