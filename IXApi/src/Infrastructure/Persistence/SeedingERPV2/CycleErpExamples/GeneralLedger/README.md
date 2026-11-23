@@ -6,7 +6,7 @@ Two transaction scenarios are implemented. `GeneralLedgerTransactionExamples.Sce
 
 [Scenarios/README.md](Scenarios/README.md) maps the catalog rows (GL-01 … GL-26 in `AllModules/Secnarios.md`, F1 … F6 in `AllModules/FullExample.md`) to the seeded scenarios or covering tests. The catalog numbering differs from the seeded IDs.
 
-The fifteen-step §2 cycle of `Logic_Readonly.md` is seeded as GL-02 ([details](Scenarios/02-ReferenceCycle/README.md)). It asserts the 6,300 trial balance and the 1,200 profit over its own vouchers. The §5 year-end close is not seeded, because it would close the year for every example in the company. `General_ledger_reference_cycle_balances_at_six_thousand_three_hundred_and_carries_twelve_hundred_to_equity` in `Tests/GeneralLedgerCycleTests.cs` still proves it.
+The fifteen-step §2 cycle of `Logic_Readonly.md` is seeded as GL-02 ([details](Scenarios/02-ReferenceCycle/README.md)). It asserts the 6,300 trial balance and the 1,200 profit over its own vouchers. The §5 year-end close is not seeded, because it would close the year for every example in the company. `General_ledger_reference_cycle_balances_at_six_thousand_three_hundred_and_carries_twelve_hundred_to_equity` in `Tests/Finance/GeneralLedger/Acceptance/GeneralLedgerCycleTests.cs` still proves it.
 
 Register `AddGeneralLedgerTransactionExamples` in an explicit example host and resolve `GeneralLedgerTransactionExamples` from a fresh scope. The host supplies the application DbContext and company and current-user services. Setup uses the shared Foundation, AP, AR, Tax, Cash and Bank, Inventory and GL registrations, plus the example journal name and voucher sequence.
 

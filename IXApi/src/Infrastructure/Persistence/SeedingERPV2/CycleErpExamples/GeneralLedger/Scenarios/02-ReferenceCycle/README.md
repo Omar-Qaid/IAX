@@ -43,7 +43,7 @@ The totals are 6,300 debit and 6,300 credit. Net profit is 1,200: revenue 3,000,
 
 ## Not covered here
 
-The §5 year-end close, which carries the 1,200 to retained earnings and opens the next year at 4,500, closes the year for the whole company. It would also close the year for every other example, so it is not seeded. `General_ledger_reference_cycle_balances_at_six_thousand_three_hundred_and_carries_twelve_hundred_to_equity` in `Tests/GeneralLedgerCycleTests.cs` still proves it.
+The §5 year-end close, which carries the 1,200 to retained earnings and opens the next year at 4,500, closes the year for the whole company. It would also close the year for every other example, so it is not seeded. `General_ledger_reference_cycle_balances_at_six_thousand_three_hundred_and_carries_twelve_hundred_to_equity` in `Tests/Finance/GeneralLedger/Acceptance/GeneralLedgerCycleTests.cs` still proves it.
 
 ## Rerun
 

@@ -210,7 +210,7 @@ Legal entity -> number sequences/parameters -> UOM -> sites/warehouses/locations
 
 ## Verification
 
-`Tests/InventoryArchitectureTests.cs` covers warehouse CRUD guards and company isolation, transaction inquiry costs and labels, on-hand standard buckets, and UOM duplicate/conversion/use restrictions. `Tests/InventSiteTests.cs` covers existing site behavior. These SQLite tests do not replace authenticated API checks against the deployed database.
+`Tests/Finance/Inventory/Integration/InventoryArchitectureTests.cs` covers warehouse CRUD guards and company isolation, transaction inquiry costs and labels, on-hand standard buckets, and UOM duplicate/conversion/use restrictions. `Tests/Finance/Inventory/Integration/InventSiteTests.cs` covers existing site behavior. These SQLite tests do not replace authenticated API checks against the deployed database.
 
 ## Persistent implementation checklist
 

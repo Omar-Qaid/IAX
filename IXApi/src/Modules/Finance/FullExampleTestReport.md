@@ -1,7 +1,7 @@
 ﻿# Core ERP cycle — QA execution report (PlanTestForFullEmaple.md)
 > **Latest verified result — SQL enabled:** Main suite **1,150 passed, 0 failed, 0 skipped**; inventory suite **147 passed, 0 failed, 0 skipped**. All original 2 failures and 21 skips passed in the same final main-suite run. Evidence: `TestResults/FullExampleEnabled/20261115-145803/`. Earlier runs below are retained as history and are superseded by the SQL-enabled follow-up at the end.
 
-**Earlier run date:** 2026-11-15 · **Branch:** `feat/ap-pending-vendor-invoice` · **Database:** isolated in-memory SQLite per test (never the hosted database) · **Entry points:** the real Finance services, invoked by `IXApi/Tests/FullExampleCycleTests.cs` and `IXApi/Tests/InventoryWeightedAverageReturnCloseTests.cs` · **Earlier suite:** `dotnet test Tests/IXApi.Tests.csproj` — 1128 passed, 0 failed, 21 skipped.
+**Earlier run date:** 2026-11-15 · **Branch:** `feat/ap-pending-vendor-invoice` · **Database:** isolated in-memory SQLite per test (never the hosted database) · **Entry points:** the real Finance services, invoked by `IXApi/Tests/Finance/Acceptance/FullExampleCycleTests.cs` and `IXApi/Tests/Finance/Inventory/Acceptance/InventoryWeightedAverageReturnCloseTests.cs` · **Earlier suite:** `dotnet test Tests/IXApi.Tests.csproj` — 1128 passed, 0 failed, 21 skipped.
 
 The integrated cycle below is executed by one ordered test,
 `Core_erp_reference_cycle_closes_at_fifty_six_pieces_and_a_profit_of_nineteen_hundred`, whose

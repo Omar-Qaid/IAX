@@ -94,7 +94,7 @@
 - `foundation-final-services.trx`: 2 Passed، 0 Failed، 0 NotExecuted؛ إجمالي 2.
 - `foundation-inventory-regression.trx`: 128 Passed، 0 Failed، 0 NotExecuted؛ إجمالي 128.
 - سجل كل المحاولات بما فيها الفشل: `.validation/foundation-services/results.jsonl`.
-- الاختبارات: `IXApi/Tests/FoundationServiceStageTests.cs`، مع الاختبارات المتخصصة الموجودة المذكورة في كتالوج التغطية.
+- الاختبارات: `IXApi/Tests/Finance/Foundation/Acceptance/FoundationServiceStageTests.cs`، مع الاختبارات المتخصصة الموجودة المذكورة في كتالوج التغطية.
 - SQL Server مؤقت من النمط `IXApi_FoundationServices_<guid>` ويُحذف في finally؛ فحص الحذف النهائي مسجل بعد التشغيل.
 
 ## إعادة التشغيل

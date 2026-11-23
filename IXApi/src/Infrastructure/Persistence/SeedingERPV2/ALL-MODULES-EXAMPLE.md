@@ -67,7 +67,7 @@ The following are basic D365 exclusions and are not seeded: posting layers other
 
 ## Verification
 
-`Tests/AllModulesSeedIntegrityTests.cs` covers two things:
+`Tests/Seeding/Examples/AllModulesSeedIntegrityTests.cs` covers two things:
 
 - every module contributes seeders, and every module that owns a validator has it registered;
 - all eleven modules seed together on SQLite with foreign keys on, pass every validator, and a rerun leaves every table's row count unchanged (the seed history table is excluded).

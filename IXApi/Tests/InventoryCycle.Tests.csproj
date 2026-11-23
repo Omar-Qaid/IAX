@@ -8,8 +8,8 @@
     <OutputPath>bin/InventoryCycle.Tests/</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="InventoryCycleTests.cs" />
-    <Compile Include="InventoryAcceptanceTests.cs" />
+    <Compile Include="Finance/Inventory/Acceptance/InventoryCycleTests.cs" />
+    <Compile Include="Finance/Inventory/Acceptance/InventoryAcceptanceTests.cs" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.9" />

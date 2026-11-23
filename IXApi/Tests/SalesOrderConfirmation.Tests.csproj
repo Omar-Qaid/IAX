@@ -8,7 +8,7 @@
     <OutputPath>bin/SalesOrderConfirmation.Tests/</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="SalesOrderConfirmationTests.cs" />
+    <Compile Include="Finance/AccountsReceivable/Integration/SalesOrderConfirmationTests.cs" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.9" />

@@ -10,4 +10,4 @@
 
 Company filtering, legacy sales header table ID handling, routes, permissions, calculation rounding, and validation messages are retained. Automatic-charge entities remain configuration models; this refactor does not introduce an automatic-charge execution feature.
 
-Regression coverage: `Tests/MarkupTests.cs` verifies protected-field mapping, normalization, validation ordering, and percentage boundaries. These tests do not establish live database or authenticated API acceptance.
+Regression coverage: `Tests/Finance/Foundation/Unit/MarkupTests.cs` verifies protected-field mapping, normalization, validation ordering, and percentage boundaries. These tests do not establish live database or authenticated API acceptance.

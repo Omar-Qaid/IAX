@@ -8,7 +8,7 @@ All 17 existing Foundation feature folders and their nested folders were reviewe
 - 17 Foundation files created.
 - 9 files moved: 7 Tax interfaces and 2 PaymentSchedules EF configurations.
 - No classes removed. Old paths of moved files were removed.
-- Integration changes: `src/Modules/Finance/FinanceModule.cs`, `Tests/OrganizationStructureTests.cs`, and new `Tests/FoundationRefactorTests.cs`.
+- Integration changes: `src/Modules/Finance/FinanceModule.cs`, `Tests/Organization/Integration/OrganizationStructureTests.cs`, and new `Tests/Finance/Foundation/Integration/FoundationRefactorTests.cs`.
 - Backend only; no frontend, entity, table, migration or schema changes.
 
 ## Shared architecture applied

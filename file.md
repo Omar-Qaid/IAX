@@ -161,7 +161,7 @@ This was a repository-wide static and automated review, not a formal penetration
 
 **Evidence**
 
-- Backend test `AdministrationCharacterizationTests.Number_sequence_format_prefers_annotated_format_and_replaces_date_tokens` fails at `IXApi/Tests/AdministrationCharacterizationTests.cs:62`.
+- Backend test `AdministrationCharacterizationTests.Number_sequence_format_prefers_annotated_format_and_replaces_date_tokens` fails at `IXApi/Tests/Administration/Unit/AdministrationCharacterizationTests.cs:62`.
 - Expected: `DOC-20260830-00042`
 - Actual: `DOC-20260830-42`
 - `IXApi/src/Modules/Administration/NumberSequences/SysNumberSequenceService.cs:278-299` selects `AnnotatedFormat` for output but derives padding only by counting `#` characters in `Format`. With `Format = "IGNORED-{SEQ}"`, padding falls back to one character.

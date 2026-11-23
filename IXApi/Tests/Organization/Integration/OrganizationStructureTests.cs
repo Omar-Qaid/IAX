@@ -1,0 +1,260 @@
+using Mapster;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using FluentValidation;
+using IAX.IXApi.Modules.Finance.Foundation.Departments;
+using IAX.IXApi.Modules.Finance.Foundation.HcmShowrooms;
+using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
+using IAX.IXApi.Modules.Finance.Foundation.OrganizationUnits;
+using IAX.IXApi.Modules.Finance.Foundation.Structure;
+using IAX.IXApi.Modules.Finance.Foundation.WorkerOrganizationAssignments;
+using IAX.IXApi.Modules.Finance.Foundation.WorkerShowroomAssignments;
+using IAX.IXApi.Modules.Identity.Users;
+using IAX.IXApi.Modules.Organization.DocumentManagement.Entities;
+using IAX.IXApi.Modules.Organization.Persistence;
+using IAX.IXApi.Modules.Finance.Persistence;
+using IAX.IXApi.Modules.Finance.Entities;
+using IAX.IXApi.Shared.Application.Identity;
+using IAX.IXApi.Shared.Domain.Entities;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using Xunit;
+
+namespace IAX.IXApi.Tests;
+
+public sealed class OrganizationStructureTests
+{
+    static OrganizationStructureTests() => new OrganizationStructureMapping().Register(TypeAdapterConfig.GlobalSettings);
+    private static readonly DateOnly Start = new(2026, 1, 1);
+    private static readonly DateOnly TransferDate = new(2026, 9, 16);
+
+    [Fact]
+    public async Task Transfer_preserves_history_and_exclusive_boundary()
+    {
+        await using var f = await Fixture.CreateAsync();
+        var (unit, role, position) = await f.SeatAsync("A");
+        var second = await f.Service.CreatePositionAsync(new("B", "Seat B", unit, role, Start, null), default);
+        var oldId = await f.Service.AssignWorkerAsync(new(1, position, Start, null), default);
+        var newId = await f.Service.TransferAsync(oldId, new(second, TransferDate, null), default);
+        var before = Assert.Single(await f.Service.GetWorkerAssignmentsAsync(1, TransferDate.AddDays(-1)));
+        var after = Assert.Single(await f.Service.GetWorkerAssignmentsAsync(1, TransferDate));
+        Assert.Equal(oldId, before.AssignmentId);
+        Assert.Equal(TransferDate, before.ValidTo);
+        Assert.Equal(newId, after.AssignmentId);
+        Assert.Equal(second, after.PositionId);
+        Assert.Equal(2, await f.Db.HcmWorkerOrganizationAssignments.CountAsync());
+    }
+
+    [Fact]
+    public async Task Occupancy_and_primary_assignment_overlaps_are_rejected()
+    {
+        await using var f = await Fixture.CreateAsync();
+        var (unit, role, position) = await f.SeatAsync("A");
+        var second = await f.Service.CreatePositionAsync(new("B", "Seat B", unit, role, Start, null), default);
+        await f.Service.AssignWorkerAsync(new(1, position, Start, TransferDate), default);
+        await Assert.ThrowsAsync<ValidationException>(() => f.Service.AssignWorkerAsync(new(2, position, Start, null), default));
+        await Assert.ThrowsAsync<ValidationException>(() => f.Service.AssignWorkerAsync(new(1, second, Start, null), default));
+        // Adjacent periods do not overlap.
+        await f.Service.AssignWorkerAsync(new(2, position, TransferDate, null), default);
+    }
+
+    [Fact]
+    public async Task Failed_transfer_rolls_back_old_assignment_and_clears_tracked_changes()
+    {
+        await using var f = await Fixture.CreateAsync();
+        var (unit, role, position) = await f.SeatAsync("A");
+        var second = await f.Service.CreatePositionAsync(new("B", "Seat B", unit, role, Start, null), default);
+        var oldId = await f.Service.AssignWorkerAsync(new(1, position, Start, null), default);
+        await f.Service.AssignWorkerAsync(new(2, second, Start, null), default);
+        await Assert.ThrowsAsync<ValidationException>(() => f.Service.TransferAsync(oldId, new(second, TransferDate, null), default));
+        Assert.False(f.Db.ChangeTracker.HasChanges());
+        Assert.Null((await f.Db.HcmWorkerOrganizationAssignments.SingleAsync(x => x.RecId == oldId)).ValidTo);
+        Assert.Equal(oldId, Assert.Single(await f.Service.GetWorkerAssignmentsAsync(1, TransferDate)).AssignmentId);
+    }
+
+    [Fact]
+    public async Task Company_scope_applies_to_reads_and_referenced_records()
+    {
+        await using var f = await Fixture.CreateAsync();
+        var (_, _, foreignPosition) = await f.SeatAsync("A");
+        f.Company.Code = "ksa";
+        Assert.Empty(await f.Service.GetUnitsAsync(Start, default));
+        Assert.Empty(await f.Service.GetPositionsAsync(Start, default));
+        var (unit, role, localPosition) = await f.SeatAsync("A"); // Same codes are legal in another company.
+        await Assert.ThrowsAsync<ValidationException>(() => f.Service.AssignWorkerAsync(new(1, localPosition, Start, null), default));
+        f.Company.Code = "dat";
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => f.Service.AssignWorkerAsync(new(1, localPosition, Start, null), default));
+        Assert.NotEqual(foreignPosition, localPosition);
+    }
+
+    [Fact]
+    public async Task Unauthorized_execution_company_is_rejected_before_writing()
+    {
+        await using var f = await Fixture.CreateAsync();
+        f.Company.Authorized = false;
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => f.Service.CreateRoleAsync(new("SELLER", "Seller"), default));
+        Assert.Equal(0, await f.Db.OrganizationRoles.IgnoreQueryFilters().CountAsync());
+    }
+
+    [Fact]
+    public async Task Multiple_hierarchies_resolve_different_ancestry_and_occupants()
+    {
+        await using var f = await Fixture.CreateAsync();
+        var (area, role, position) = await f.SeatAsync("AREA");
+        var shop = await f.Service.CreateUnitAsync(new("SHOP", "Shop", 4, Start, null), default);
+        var operational = await f.Service.CreateHierarchyAsync(new("OPS", "Operations", "Sales"), default);
+        var financial = await f.Service.CreateHierarchyAsync(new("FIN", "Finance", "Financial reporting"), default);
+        var root = await f.Service.CreateNodeAsync(new(operational, area, null, Start, null), default);
+        await f.Service.CreateNodeAsync(new(operational, shop, root, Start, null), default);
+        await f.Service.CreateNodeAsync(new(financial, shop, null, Start, null), default);
+        Assert.Empty(await f.Service.GetRoleOccupantsAsync(operational, shop, "ROLE-AREA", Start));
+        await f.Service.AssignWorkerAsync(new(1, position, Start, null), default);
+        Assert.Equal(new[] { shop, area }, (await f.Service.GetAncestorsAsync(operational, shop, Start)).Select(x => x.Id));
+        Assert.Single(await f.Service.GetAncestorsAsync(financial, shop, Start));
+        Assert.Equal(1, Assert.Single(await f.Service.GetRoleOccupantsAsync(operational, shop, "ROLE-AREA", Start)).WorkerId);
+        Assert.Empty(await f.Service.GetRoleOccupantsAsync(financial, shop, "ROLE-AREA", Start));
+    }
+
+    [Fact]
+    public async Task Hierarchy_rejects_overlapping_membership_and_invalid_parent_periods()
+    {
+        await using var f = await Fixture.CreateAsync();
+        var (area, _, _) = await f.SeatAsync("AREA");
+        var shop = await f.Service.CreateUnitAsync(new("SHOP", "Shop", 4, Start, null), default);
+        var hierarchy = await f.Service.CreateHierarchyAsync(new("OPS", "Operations", "Sales"), default);
+        var root = await f.Service.CreateNodeAsync(new(hierarchy, area, null, Start, TransferDate), default);
+        await Assert.ThrowsAsync<ValidationException>(() => f.Service.CreateNodeAsync(new(hierarchy, shop, root, Start, null), default));
+        var child = await f.Service.CreateNodeAsync(new(hierarchy, shop, root, Start, TransferDate), default);
+        await Assert.ThrowsAsync<ValidationException>(() => f.Service.CreateNodeAsync(new(hierarchy, shop, null, Start, TransferDate), default));
+        await Assert.ThrowsAsync<ValidationException>(() => f.Service.CloseNodeAsync(root, TransferDate.AddDays(-1), default));
+        await f.Service.CloseNodeAsync(child, TransferDate.AddDays(-1), default);
+        await f.Service.CloseNodeAsync(root, TransferDate.AddDays(-1), default);
+    }
+
+    [Fact]
+    public async Task Position_cannot_close_before_its_occupant_and_invalid_periods_fail()
+    {
+        await using var f = await Fixture.CreateAsync();
+        var (_, _, position) = await f.SeatAsync("A");
+        await Assert.ThrowsAsync<ValidationException>(() => f.Service.AssignWorkerAsync(new(1, position, TransferDate, Start), default));
+        var assignment = await f.Service.AssignWorkerAsync(new(1, position, Start, null), default);
+        await Assert.ThrowsAsync<ValidationException>(() => f.Service.ClosePositionAsync(position, TransferDate, default));
+        await f.Service.CloseAssignmentAsync(assignment, TransferDate, default);
+        await f.Service.ClosePositionAsync(position, TransferDate, default);
+        Assert.Empty(await f.Service.GetPositionsAsync(TransferDate, default));
+        Assert.Single(await f.Service.GetPositionsAsync(TransferDate.AddDays(-1), default));
+    }
+
+    private sealed class TestCompany : ICompanyExecutionContext
+    {
+        public string Code { get; set; } = "dat";
+        public bool Authorized { get; set; } = true;
+        public string GetDataAreaId() => Code;
+        public bool IsRequestedCompanyAuthorized() => Authorized;
+    }
+
+    private sealed class Fixture : IAsyncDisposable
+    {
+        private readonly SqliteConnection connection = new("Data Source=:memory:");
+        public TestCompany Company { get; } = new();
+        public TestContext Db { get; private set; } = null!;
+        public OrganizationStructureService Service { get; private set; } = null!;
+        public static async Task<Fixture> CreateAsync()
+        {
+            var f = new Fixture();
+            await f.connection.OpenAsync();
+            f.Db = new TestContext(new DbContextOptionsBuilder<TestContext>().UseSqlite(f.connection).Options, f.Company);
+            await f.Db.Database.EnsureCreatedAsync();
+            f.Db.HcmWorkers.AddRange(new HcmWorker { RecId = 1, PersonnelNumber = "DEMO-DIRECTOR", DataAreaId = "dat" }, new HcmWorker { RecId = 2, PersonnelNumber = "DEMO-SALES-MGR", DataAreaId = "dat" });
+            await f.Db.SaveChangesAsync();
+            f.Service = new OrganizationStructureService(new StructureUnitOfWork(f.Db), f.Company);
+            return f;
+        }
+        public async Task<(long Unit, long Role, long Position)> SeatAsync(string code)
+        {
+            var unit = await Service.CreateUnitAsync(new(code, code, 1, Start, null), default);
+            var role = await Service.CreateRoleAsync(new("ROLE-" + code, "Role " + code), default);
+            var position = await Service.CreatePositionAsync(new("POS-" + code, "Seat " + code, unit, role, Start, null), default);
+            return (unit, role, position);
+        }
+        public async ValueTask DisposeAsync() { await Db.DisposeAsync(); await connection.DisposeAsync(); }
+    }
+
+    // Real relational execution with the production Organization mappings; unrelated modules are
+    // excluded. SQL Server-specific defaults/rowversion are adapted only in this SQLite fixture.
+    private sealed class StructureUnitOfWork(DbContext context) : IUnitOfWork
+    {
+        public DbContext Context => context;
+        public IGenericRepository<T> Repository<T>() where T : class => throw new NotSupportedException();
+        public Task<int> CompleteAsync(CancellationToken ct = default) => context.SaveChangesAsync(ct);
+        public Task BeginTransactionAsync(CancellationToken ct = default) => throw new NotSupportedException();
+        public Task CommitTransactionAsync(CancellationToken ct = default) => throw new NotSupportedException();
+        public Task RollbackTransactionAsync(CancellationToken ct = default) => throw new NotSupportedException();
+        public void Dispose() { }
+    }
+
+    private sealed class TestContext(DbContextOptions<TestContext> options, TestCompany company) : DbContext(options), IOrganizationDataContext, IFinanceDataContext
+    {
+        public string CompanyCode => company.Code;
+        public DbSet<HcmWorker> HcmWorkers => Set<HcmWorker>();
+        public DbSet<HcmDepartment> HcmDepartments => Set<HcmDepartment>();
+        public DbSet<HcmShowroom> HcmShowrooms => Set<HcmShowroom>();
+        public DbSet<HcmWorkerShowroomAssignment> HcmWorkerShowroomAssignments => Set<HcmWorkerShowroomAssignment>();
+        public DbSet<OrganizationUnit> OrganizationUnits => Set<OrganizationUnit>();
+        public DbSet<OrganizationRole> OrganizationRoles => Set<OrganizationRole>();
+        public DbSet<OrganizationHierarchy> OrganizationHierarchies => Set<OrganizationHierarchy>();
+        public DbSet<OrganizationHierarchyNode> OrganizationHierarchyNodes => Set<OrganizationHierarchyNode>();
+        public DbSet<HcmPosition> HcmPositions => Set<HcmPosition>();
+        public DbSet<HcmReportingHierarchy> HcmReportingHierarchies => Set<HcmReportingHierarchy>();
+        public DbSet<HcmPositionReportingLine> HcmPositionReportingLines => Set<HcmPositionReportingLine>();
+        public DbSet<HcmWorkerOrganizationAssignment> HcmWorkerOrganizationAssignments => Set<HcmWorkerOrganizationAssignment>();
+        public DbSet<HcmWorkerOrganizationAssignmentV1> HcmWorkerOrganizationAssignmentsV1 => Set<HcmWorkerOrganizationAssignmentV1>();
+        public DbSet<TaxData> TaxData => Set<TaxData>();
+        public DbSet<TaxGroupHeading> TaxGroupHeadings => Set<TaxGroupHeading>();
+        public DbSet<TaxGroupData> TaxGroupDatas => Set<TaxGroupData>();
+        public DbSet<TaxOnItem> TaxOnItems => Set<TaxOnItem>();
+        public DbSet<AspNetUser> Users => Set<AspNetUser>();
+        public DbSet<DocuType> DocuTypes => Set<DocuType>();
+        public DbSet<DocuValue> DocuValues => Set<DocuValue>();
+        public DbSet<DocuRef> DocuRefs => Set<DocuRef>();
+        public Task<long> CreateWorkerPartyAsync(string name, string nameAlias, string partyNumber, string createdBy, string ownerAccountId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            foreach (var entry in ChangeTracker.Entries().Where(x => x.State == EntityState.Added && x.Metadata.FindProperty("RowVersion") != null))
+                entry.Property("RowVersion").CurrentValue = Array.Empty<byte>();
+            return base.SaveChangesAsync(cancellationToken);
+        }
+
+        protected override void OnModelCreating(ModelBuilder b)
+        {
+            // DbSet discovery finds unrelated interface sets; exclude them from this fixture.
+             b.Ignore<AspNetUser>();
+            b.Ignore<DocuType>(); b.Ignore<DocuValue>(); b.Ignore<DocuRef>();
+            var worker = b.Entity<HcmWorker>();
+            worker.Ignore(x => x.Nationality); worker.Ignore(x => x.User);
+            b.ApplyConfiguration(new OrganizationUnitConfiguration());
+            b.ApplyConfiguration(new OrganizationRoleConfiguration());
+            b.ApplyConfiguration(new OrganizationHierarchyConfiguration());
+            b.ApplyConfiguration(new OrganizationHierarchyNodeConfiguration());
+            b.ApplyConfiguration(new HcmPositionConfiguration());
+            b.ApplyConfiguration(new HcmReportingHierarchyConfiguration());
+            b.ApplyConfiguration(new HcmPositionReportingLineConfiguration());
+            b.ApplyConfiguration(new HcmWorkerOrganizationAssignmentConfiguration());
+            var allowed = new[] { typeof(HcmWorker), typeof(OrganizationUnit), typeof(OrganizationRole), typeof(OrganizationHierarchy),
+                typeof(OrganizationHierarchyNode), typeof(HcmPosition), typeof(HcmWorkerOrganizationAssignment),
+                typeof(HcmReportingHierarchy), typeof(HcmPositionReportingLine) };
+            foreach (var unrelated in b.Model.GetEntityTypes().Where(x => !allowed.Contains(x.ClrType)).Select(x => x.ClrType).ToList())
+                b.Ignore(unrelated);
+            b.Entity<HcmWorkerOrganizationAssignment>().Property(x => x.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            b.Entity<HcmWorker>().HasQueryFilter(x => x.DataAreaId == CompanyCode && !x.IsDeleted);
+            b.Entity<OrganizationUnit>().HasQueryFilter(x => x.DataAreaId == CompanyCode);
+            b.Entity<OrganizationRole>().HasQueryFilter(x => x.DataAreaId == CompanyCode && !x.IsDeleted);
+            b.Entity<OrganizationHierarchy>().HasQueryFilter(x => x.DataAreaId == CompanyCode && !x.IsDeleted);
+            b.Entity<OrganizationHierarchyNode>().HasQueryFilter(x => x.DataAreaId == CompanyCode && !x.IsDeleted);
+            b.Entity<HcmPosition>().HasQueryFilter(x => x.DataAreaId == CompanyCode && !x.IsDeleted);
+            b.Entity<HcmWorkerOrganizationAssignment>().HasQueryFilter(x => x.DataAreaId == CompanyCode);
+            foreach (var entity in b.Model.GetEntityTypes().Where(x => x.FindProperty("RowVersion") != null))
+                b.Entity(entity.ClrType).Property<byte[]>("RowVersion").IsConcurrencyToken(false).ValueGeneratedNever().HasDefaultValue(Array.Empty<byte>());
+        }
+    }
+}

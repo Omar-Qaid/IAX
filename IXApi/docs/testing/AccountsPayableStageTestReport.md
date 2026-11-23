@@ -160,7 +160,7 @@ dotnet test IXApi/Tests/IXApi.Tests.csproj "/p:BaseOutputPath=$PWD/IXApi/.ap-sta
 - إعادة التحقق بعد الإصلاح: `ap-stage-verified-tests.log`.
 - الانحدار العام: `ap-complete-regression-tests.log`.
 - انحدار المخزون: `ap-complete-inventory-tests.log`.
-- الاختبارات القابلة لإعادة التشغيل: `IXApi/Tests/AccountsPayablePhaseOneSeedTests.cs`، الدالتان `Detailed_AP_stages_SQLite` و`Detailed_AP_stages_SQLServer`.
+- الاختبارات القابلة لإعادة التشغيل: `IXApi/Tests/Seeding/Examples/AccountsPayablePhaseOneSeedTests.cs`، الدالتان `Detailed_AP_stages_SQLite` و`Detailed_AP_stages_SQLServer`.
 
 ### إعادة التحقق قبل الانتقال إلى Accounts Receivable
 

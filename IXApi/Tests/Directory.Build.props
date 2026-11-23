@@ -1,5 +1,5 @@
 <Project>
-  <Import Project="../Directory.Build.props" />
+  <Import Project="../Directory.Build.props" Condition="Exists('../Directory.Build.props')" />
   <PropertyGroup>
     <!-- Set before SDK props/NuGet consume it: each colocated project owns its assets. -->
     <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)obj/$(MSBuildProjectName)/</BaseIntermediateOutputPath>
