@@ -1,0 +1,280 @@
+{
+  "ledger": {
+    "calendarId": "HBMC",
+    "description": "Primary ledger",
+    "accountingCurrency": "SAR",
+    "defaultExchangeRateType": "Default"
+  },
+  "accountStructures": [
+    {
+      "name": "BS",
+      "description": "Balance sheet accounts",
+      "segments": [
+        {
+          "dimension": "MainAccount",
+          "criteria": "100000..399999"
+        },
+        {
+          "dimension": "Department",
+          "criteria": "*;\"\""
+        }
+      ]
+    },
+    {
+      "name": "PL",
+      "description": "Profit and loss accounts",
+      "segments": [
+        {
+          "dimension": "MainAccount",
+          "criteria": "400000..899999"
+        },
+        {
+          "dimension": "Department",
+          "criteria": "ADMIN;SALES;SERVICE"
+        }
+      ]
+    }
+  ],
+  "mainAccounts": [
+    {
+      "mainAccountId": "10010000",
+      "name": "Cash on Hand",
+      "type": "Asset",
+      "currencyCode": "SAR",
+      "consolidationMainAccount": "10010000",
+      "groupLevel01": "Assets",
+      "groupLevel02": "Current Assets",
+      "groupLevel03": "Cash & Bank"
+    },
+    {
+      "mainAccountId": "10020000",
+      "name": "Main Operating Bank Account",
+      "type": "Asset",
+      "currencyCode": "SAR",
+      "consolidationMainAccount": "10020000",
+      "groupLevel01": "Assets",
+      "groupLevel02": "Current Assets",
+      "groupLevel03": "Cash & Bank"
+    },
+    {
+      "mainAccountId": "11010000",
+      "name": "Accounts Receivable - General Fallback",
+      "type": "Asset",
+      "currencyCode": "SAR",
+      "consolidationMainAccount": "11010000",
+      "groupLevel01": "Assets",
+      "groupLevel02": "Current Assets",
+      "groupLevel03": "Trade Receivables"
+    },
+    {
+      "mainAccountId": "14010000",
+      "name": "Inventory - Finished Goods",
+      "type": "Asset",
+      "currencyCode": "SAR",
+      "consolidationMainAccount": "14010000",
+      "groupLevel01": "Assets",
+      "groupLevel02": "Current Assets",
+      "groupLevel03": "Inventory"
+    },
+    {
+      "mainAccountId": "11020005",
+      "name": "Trade Accounts Receivable - Local",
+      "type": "Asset",
+      "currencyCode": "SAR",
+      "consolidationMainAccount": "11020005",
+      "groupLevel01": "Assets",
+      "groupLevel02": "Current Assets",
+      "groupLevel03": "Trade Receivables"
+    },
+    {
+      "mainAccountId": "11020010",
+      "name": "Customer Prepayments & Advanced Payments",
+      "type": "Asset",
+      "currencyCode": "SAR",
+      "consolidationMainAccount": "11020010",
+      "groupLevel01": "Assets",
+      "groupLevel02": "Current Assets",
+      "groupLevel03": "Trade Receivables"
+    },
+    {
+      "mainAccountId": "11020020",
+      "name": "Trade Accounts Receivable - Export",
+      "type": "Asset",
+      "currencyCode": "USD",
+      "consolidationMainAccount": "11020020",
+      "groupLevel01": "Assets",
+      "groupLevel02": "Current Assets",
+      "groupLevel03": "Trade Receivables"
+    },
+    {
+      "mainAccountId": "11020099",
+      "name": "Accounts Receivable - VIP Customers",
+      "type": "Asset",
+      "currencyCode": "SAR",
+      "consolidationMainAccount": "11020099",
+      "groupLevel01": "Assets",
+      "groupLevel02": "Current Assets",
+      "groupLevel03": "Trade Receivables"
+    },
+    {
+      "mainAccountId": "11030000",
+      "name": "Accounts Receivable - Government",
+      "type": "Asset",
+      "currencyCode": "SAR",
+      "consolidationMainAccount": "11030000",
+      "groupLevel01": "Assets",
+      "groupLevel02": "Current Assets",
+      "groupLevel03": "Trade Receivables"
+    },
+    {
+      "mainAccountId": "11040000",
+      "name": "Accounts Receivable - Trading",
+      "type": "Asset",
+      "currencyCode": "SAR",
+      "consolidationMainAccount": "11040000",
+      "groupLevel01": "Assets",
+      "groupLevel02": "Current Assets",
+      "groupLevel03": "Trade Receivables"
+    },
+    {
+      "mainAccountId": "11050000",
+      "name": "Accounts Receivable - Specific Customer (C00015)",
+      "type": "Asset",
+      "currencyCode": "SAR",
+      "consolidationMainAccount": "11050000",
+      "groupLevel01": "Assets",
+      "groupLevel02": "Current Assets",
+      "groupLevel03": "Trade Receivables"
+    },
+    {
+      "mainAccountId": "11090001",
+      "name": "Payment Clearing & Liquidity Account",
+      "type": "Asset",
+      "currencyCode": "SAR",
+      "consolidationMainAccount": "11090001",
+      "groupLevel01": "Assets",
+      "groupLevel02": "Current Assets",
+      "groupLevel03": "Cash & Bank"
+    },
+    {
+      "mainAccountId": "20010000",
+      "name": "Accounts Payable Summary",
+      "type": "Liability",
+      "currencyCode": "SAR",
+      "consolidationMainAccount": "20010000",
+      "groupLevel01": "Liabilities",
+      "groupLevel02": "Current Liabilities",
+      "groupLevel03": "Trade Payables"
+    },
+    {
+      "mainAccountId": "60018000",
+      "name": "Purchase Expenditure for Product",
+      "type": "Expense",
+      "currencyCode": "SAR",
+      "consolidationMainAccount": "60018000",
+      "groupLevel01": "Expenses",
+      "groupLevel02": "Cost of Sales",
+      "groupLevel03": "Purchase Expenditure"
+    },
+    {
+      "mainAccountId": "21010000",
+      "name": "Accrued Purchases - Product Receipt",
+      "type": "Liability",
+      "currencyCode": "SAR",
+      "consolidationMainAccount": "21010000",
+      "groupLevel01": "Liabilities",
+      "groupLevel02": "Current Liabilities",
+      "groupLevel03": "Accrued Liabilities"
+    },
+    {
+      "mainAccountId": "21020000",
+      "name": "Accrued Cost of Goods Sold - Packing Slip",
+      "type": "Liability",
+      "currencyCode": "SAR",
+      "consolidationMainAccount": "21020000",
+      "groupLevel01": "Liabilities",
+      "groupLevel02": "Current Liabilities",
+      "groupLevel03": "Accrued Liabilities"
+    },
+    {
+      "mainAccountId": "22010005",
+      "name": "Sales Tax / VAT Prepayments Account",
+      "type": "Liability",
+      "currencyCode": "SAR",
+      "consolidationMainAccount": "22010005",
+      "groupLevel01": "Liabilities",
+      "groupLevel02": "Current Liabilities",
+      "groupLevel03": "Tax Liabilities"
+    },
+    {
+      "mainAccountId": "30010000",
+      "name": "Share Capital",
+      "type": "Equity",
+      "currencyCode": "SAR",
+      "consolidationMainAccount": "30010000",
+      "groupLevel01": "Equity",
+      "groupLevel02": "Owner Capital",
+      "groupLevel03": "Capital"
+    },
+    {
+      "mainAccountId": "40010000",
+      "name": "Sales Revenue - Local",
+      "type": "Revenue",
+      "currencyCode": "SAR",
+      "consolidationMainAccount": "40010000",
+      "groupLevel01": "Revenue",
+      "groupLevel02": "Operating Revenue",
+      "groupLevel03": "Sales"
+    },
+    {
+      "mainAccountId": "40910000",
+      "name": "Inventory Gain / Profit",
+      "type": "Revenue",
+      "currencyCode": "SAR",
+      "consolidationMainAccount": "40910000",
+      "groupLevel01": "Revenue",
+      "groupLevel02": "Operating Revenue",
+      "groupLevel03": "Inventory Adjustments"
+    },
+    {
+      "mainAccountId": "50010000",
+      "name": "Cost of Goods Sold (COGS)",
+      "type": "Expense",
+      "currencyCode": "SAR",
+      "consolidationMainAccount": "50010000",
+      "groupLevel01": "Expenses",
+      "groupLevel02": "Direct Costs",
+      "groupLevel03": "COGS"
+    },
+    {
+      "mainAccountId": "50910000",
+      "name": "Inventory Loss / Shrinkage",
+      "type": "Expense",
+      "currencyCode": "SAR",
+      "consolidationMainAccount": "50910000",
+      "groupLevel01": "Expenses",
+      "groupLevel02": "Direct Costs",
+      "groupLevel03": "Inventory Adjustments"
+    },
+    {
+      "mainAccountId": "51030001",
+      "name": "Customer Cash Discounts Allowed",
+      "type": "Expense",
+      "currencyCode": "SAR",
+      "consolidationMainAccount": "51030001",
+      "groupLevel01": "Expenses",
+      "groupLevel02": "Financial Expenses",
+      "groupLevel03": "Discounts"
+    },
+    {
+      "mainAccountId": "51040001",
+      "name": "Bad Debt Write-Off Expense",
+      "type": "Expense",
+      "currencyCode": "SAR",
+      "consolidationMainAccount": "51040001",
+      "groupLevel01": "Expenses",
+      "groupLevel02": "Operating Expenses",
+      "groupLevel03": "Bad Debt"
+    }
+  ]
+}

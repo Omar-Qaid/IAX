@@ -1,12 +1,11 @@
 using System.Data;
-using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution;
 
-/// <summary>Explicit phase-one entry point; never invoked by normal application startup.</summary>
+/// <summary>The examples profile: an explicit run for one fiscal year in a single transaction. Startup uses <see cref="BaselineSeedRunner"/>.</summary>
 public sealed class SeedRunner(ApplicationDbContext db, IEnumerable<IDataSeeder> seeders, IEnumerable<ISeedValidator> validators)
 {
     public async Task<SeedResult> RunAsync(int fiscalYear, string actor, CancellationToken ct = default)
@@ -16,7 +15,7 @@ public sealed class SeedRunner(ApplicationDbContext db, IEnumerable<IDataSeeder>
         if (db.ChangeTracker.Entries().Any()) throw new InvalidOperationException("Run seeding in a fresh DI scope.");
         var ordered = new SeedDependencyResolver().Resolve(seeders);
         if (ordered.Count == 0) throw new InvalidOperationException("No phase-one seeders registered.");
-        await using var seedLock = await new SqlServerSeederLock(db).AcquireLockAsync(120, ct);
+        await using var seedLock = await new SeedLock(db).AcquireAsync(120, ct);
         return await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
             db.ChangeTracker.Clear();

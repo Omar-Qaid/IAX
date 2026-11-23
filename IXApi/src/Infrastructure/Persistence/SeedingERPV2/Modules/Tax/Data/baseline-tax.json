@@ -1,0 +1,368 @@
+{
+  "taxAuthorities": [
+    {
+      "roundOff": 0.01,
+      "roundOffType": "Ordinary",
+      "taxReportLayout": "Default",
+      "useDefaultLayout": "Yes",
+      "taxAuthority": "ZATCA",
+      "name": "Zakat, Tax and Customs Authority",
+      "taxAuthorityId": "ZATCA_HQ",
+      "accountNum": "VEND-ZATCA",
+      "address": "Riyadh, Kingdom of Saudi Arabia",
+      "email": "vat@zatca.gov.sa",
+      "mobile": "+966 11 200 0000",
+      "phone": "+966 11 200 0000",
+      "url": "https://zatca.gov.sa"
+    },
+    {
+      "roundOff": 0.01,
+      "roundOffType": "Ordinary",
+      "taxReportLayout": "Default",
+      "useDefaultLayout": "Yes",
+      "taxAuthority": "FTA",
+      "name": "Federal Tax Authority",
+      "taxAuthorityId": "FTA_HQ",
+      "accountNum": "VEND-200",
+      "address": "Abu Dhabi, United Arab Emirates",
+      "email": "info@tax.gov.ae",
+      "mobile": "+971 600 599 999",
+      "phone": "+971 600 599 999",
+      "url": "https://tax.gov.ae"
+    }
+  ],
+  "taxPeriods": [
+    {
+      "taxPeriod": "Monthly",
+      "name": "Monthly VAT Settlement Period",
+      "taxAuthority": "ZATCA",
+      "periodUnit": "Month",
+      "qtyUnit": 1
+    },
+    {
+      "taxPeriod": "Quarterly",
+      "name": "Quarterly VAT Settlement Period",
+      "taxAuthority": "ZATCA",
+      "periodUnit": "Quarter",
+      "qtyUnit": 1
+    }
+  ],
+  "reportYear": 2026,
+  "exemptCodes": [
+    {
+      "exemptCode": "NONE",
+      "description": "No Exemption - Standard VAT Applies"
+    },
+    {
+      "exemptCode": "EXPORT",
+      "description": "Zero-rated export of goods outside GCC"
+    },
+    {
+      "exemptCode": "GOV_EXEMPT",
+      "description": "Governmental / Sovereign Exemption"
+    },
+    {
+      "exemptCode": "MED_EXEMPT",
+      "description": "Exempt Qualifying Medicines and Medical Devices"
+    },
+    {
+      "exemptCode": "ZERO_RATE",
+      "description": "Zero-rated supply under Saudi VAT regulations"
+    },
+    {
+      "exemptCode": "INTL_SVC",
+      "description": "International service supplied outside the taxable territory"
+    }
+  ],
+  "taxGroups": [
+    {
+      "taxGroupSetup": "Standard",
+      "source": "Customer",
+      "taxGroupRounding": "None",
+      "taxReverseOnCashDisc": "No",
+      "taxGroup": "DOM",
+      "taxGroupName": "Domestic Standard Sales Tax Group"
+    },
+    {
+      "taxGroupSetup": "Standard",
+      "source": "Customer",
+      "taxGroupRounding": "None",
+      "taxReverseOnCashDisc": "No",
+      "taxGroup": "KSA",
+      "taxGroupName": "Saudi Arabia Standard VAT"
+    },
+    {
+      "taxGroupSetup": "Standard",
+      "source": "Customer",
+      "taxGroupRounding": "None",
+      "taxReverseOnCashDisc": "No",
+      "taxGroup": "EXP",
+      "taxGroupName": "Export / Zero-Rated Sales Tax Group"
+    },
+    {
+      "taxGroupSetup": "Standard",
+      "source": "Customer",
+      "taxGroupRounding": "None",
+      "taxReverseOnCashDisc": "No",
+      "taxGroup": "EXEMPT",
+      "taxGroupName": "Exempt / Non-Taxable Sales Tax Group"
+    }
+  ],
+  "itemTaxGroups": [
+    {
+      "taxItemGroup": "FULL",
+      "name": "Standard Rated Items (15%)",
+      "source": "Customer",
+      "euSalesListType": "Item"
+    },
+    {
+      "taxItemGroup": "REDUCED",
+      "name": "Reduced Rate Items (5%)",
+      "source": "Customer",
+      "euSalesListType": "Item"
+    },
+    {
+      "taxItemGroup": "EXEMPT",
+      "name": "Exempt / Zero Rated Items",
+      "source": "Customer",
+      "euSalesListType": "Item"
+    },
+    {
+      "taxItemGroup": "VAT15",
+      "name": "Standard VAT 15% Items",
+      "source": "Customer",
+      "euSalesListType": "Item"
+    },
+    {
+      "taxItemGroup": "SERVICES",
+      "name": "Standard Rated Services (15%)",
+      "source": "Customer",
+      "euSalesListType": "Service"
+    },
+    {
+      "taxItemGroup": "FIXEDASSET",
+      "name": "Fixed Assets (15%)",
+      "source": "Customer",
+      "euSalesListType": "Item"
+    },
+    {
+      "taxItemGroup": "EXPORT",
+      "name": "Exported Goods and Services (0%)",
+      "source": "Customer",
+      "euSalesListType": "Item"
+    }
+  ],
+  "ledgerAccountGroups": [
+    {
+      "taxAccountGroup": "VAT-STD",
+      "name": "Standard VAT Posting Group"
+    },
+    {
+      "taxAccountGroup": "VAT-EXP",
+      "name": "Export Tax Posting Group"
+    },
+    {
+      "taxAccountGroup": "VAT-EXEMPT",
+      "name": "Exempt Tax Posting Group"
+    }
+  ],
+  "taxCodes": [
+    {
+      "taxPeriod": "Monthly",
+      "taxCurrencyCode": "SAR",
+      "taxUnit": "EA",
+      "taxBase": "PctPerNet",
+      "taxCalcMethod": "Line",
+      "taxLimitBase": "None",
+      "taxCode": "VAT15",
+      "taxName": "Standard VAT 15%",
+      "taxAccountGroup": "VAT-STD",
+      "printCode": "VAT15"
+    },
+    {
+      "taxPeriod": "Monthly",
+      "taxCurrencyCode": "SAR",
+      "taxUnit": "EA",
+      "taxBase": "PctPerNet",
+      "taxCalcMethod": "Line",
+      "taxLimitBase": "None",
+      "taxCode": "VAT5",
+      "taxName": "Reduced VAT 5%",
+      "taxAccountGroup": "VAT-STD",
+      "printCode": "VAT5"
+    },
+    {
+      "taxPeriod": "Monthly",
+      "taxCurrencyCode": "SAR",
+      "taxUnit": "EA",
+      "taxBase": "PctPerNet",
+      "taxCalcMethod": "Line",
+      "taxLimitBase": "None",
+      "taxCode": "VAT0",
+      "taxName": "Zero Rated VAT 0%",
+      "taxAccountGroup": "VAT-EXP",
+      "printCode": "VAT0"
+    },
+    {
+      "taxPeriod": "Monthly",
+      "taxCurrencyCode": "SAR",
+      "taxUnit": "EA",
+      "taxBase": "PctPerNet",
+      "taxCalcMethod": "Line",
+      "taxLimitBase": "None",
+      "taxCode": "EXEMPT",
+      "taxName": "Exempt Tax Code 0%",
+      "taxAccountGroup": "VAT-EXEMPT",
+      "printCode": "EXEMPT"
+    },
+    {
+      "taxPeriod": "Monthly",
+      "taxCurrencyCode": "SAR",
+      "taxUnit": "EA",
+      "taxBase": "PctPerNet",
+      "taxCalcMethod": "Line",
+      "taxLimitBase": "None",
+      "taxCode": "SERVICES15",
+      "taxName": "VAT Services 15%",
+      "taxAccountGroup": "VAT-STD",
+      "printCode": "SVC VAT15"
+    },
+    {
+      "taxPeriod": "Monthly",
+      "taxCurrencyCode": "SAR",
+      "taxUnit": "EA",
+      "taxBase": "PctPerNet",
+      "taxCalcMethod": "Line",
+      "taxLimitBase": "None",
+      "taxCode": "VATFA",
+      "taxName": "VAT on Fixed Assets 15%",
+      "taxAccountGroup": "VAT-STD",
+      "printCode": "VAT FA 15%"
+    }
+  ],
+  "taxValues": [
+    {
+      "taxCode": "VAT15",
+      "taxFromDate": "2020-07-01",
+      "taxToDate": "2099-12-31",
+      "taxValue": 15.0,
+      "vatExemptPct": 0.0
+    },
+    {
+      "taxCode": "VAT5",
+      "taxFromDate": "2018-01-01",
+      "taxToDate": "2099-12-31",
+      "taxValue": 5.0,
+      "vatExemptPct": 0.0
+    },
+    {
+      "taxCode": "VAT0",
+      "taxFromDate": "2018-01-01",
+      "taxToDate": "2099-12-31",
+      "taxValue": 0.0,
+      "vatExemptPct": 0.0
+    },
+    {
+      "taxCode": "EXEMPT",
+      "taxFromDate": "2018-01-01",
+      "taxToDate": "2099-12-31",
+      "taxValue": 0.0,
+      "vatExemptPct": 100.0
+    },
+    {
+      "taxCode": "SERVICES15",
+      "taxFromDate": "2020-07-01",
+      "taxToDate": "2099-12-31",
+      "taxValue": 15.0,
+      "vatExemptPct": 0.0
+    },
+    {
+      "taxCode": "VATFA",
+      "taxFromDate": "2020-07-01",
+      "taxToDate": "2099-12-31",
+      "taxValue": 15.0,
+      "vatExemptPct": 0.0
+    }
+  ],
+  "taxGroupCodes": [
+    {
+      "taxGroup": "DOM",
+      "taxCode": "VAT15",
+      "taxExemptCode": "NONE",
+      "exemptTax": "No"
+    },
+    {
+      "taxGroup": "DOM",
+      "taxCode": "VAT5",
+      "taxExemptCode": "NONE",
+      "exemptTax": "No"
+    },
+    {
+      "taxGroup": "DOM",
+      "taxCode": "SERVICES15",
+      "taxExemptCode": "NONE",
+      "exemptTax": "No"
+    },
+    {
+      "taxGroup": "DOM",
+      "taxCode": "VATFA",
+      "taxExemptCode": "NONE",
+      "exemptTax": "No"
+    },
+    {
+      "taxGroup": "KSA",
+      "taxCode": "VAT15",
+      "taxExemptCode": "NONE",
+      "exemptTax": "No"
+    },
+    {
+      "taxGroup": "EXP",
+      "taxCode": "VAT0",
+      "taxExemptCode": "EXPORT",
+      "exemptTax": "Yes"
+    },
+    {
+      "taxGroup": "EXEMPT",
+      "taxCode": "EXEMPT",
+      "taxExemptCode": "GOV_EXEMPT",
+      "exemptTax": "Yes"
+    }
+  ],
+  "itemTaxGroupCodes": [
+    {
+      "taxItemGroup": "FULL",
+      "taxCode": "VAT15",
+      "taxExemptCode": "NONE"
+    },
+    {
+      "taxItemGroup": "VAT15",
+      "taxCode": "VAT15",
+      "taxExemptCode": "NONE"
+    },
+    {
+      "taxItemGroup": "REDUCED",
+      "taxCode": "VAT5",
+      "taxExemptCode": "NONE"
+    },
+    {
+      "taxItemGroup": "EXEMPT",
+      "taxCode": "EXEMPT",
+      "taxExemptCode": "MED_EXEMPT"
+    },
+    {
+      "taxItemGroup": "SERVICES",
+      "taxCode": "SERVICES15",
+      "taxExemptCode": "NONE"
+    },
+    {
+      "taxItemGroup": "FIXEDASSET",
+      "taxCode": "VATFA",
+      "taxExemptCode": "NONE"
+    },
+    {
+      "taxItemGroup": "EXPORT",
+      "taxCode": "VAT0",
+      "taxExemptCode": "EXPORT"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "companies": [
+    { "dataArea": "dat", "partyNumber": "DAT", "name": "Company accounts data", "languageId": "en-us", "timeZone": "(GMT-08:00) Pacific Time (US & Canada)" },
+    { "dataArea": "HBMC", "partyNumber": "HBMC", "name": "AlHayat Building Materials Company", "languageId": "ar", "timeZone": "(GMT+03:00) Riyadh" }
+  ],
+  "locationRoles": [
+    { "name": "Business", "isContactInfo": true },
+    { "name": "Delivery", "isContactInfo": false },
+    { "name": "Invoice", "isContactInfo": false },
+    { "name": "Home", "isContactInfo": true },
+    { "name": "Remit-to", "isContactInfo": false }
+  ],
+  "country": { "countryRegionId": "SA", "isoCode": "SA", "addrFormat": "SAU" },
+  "headquarters": [
+    { "company": "DAT", "region": "MAK", "regionName": "Makkah", "county": "JED", "city": "Jeddah", "cityKey": "SA-MAK-JED", "district": "Al Rawdah",
+      "zip": "23431", "street": "Prince Sultan Street", "building": "4100", "additional": "2100", "phone": "+966120000000", "email": "info@dat.com" },
+    { "company": "HBMC", "region": "RIY", "regionName": "Riyadh", "county": "RUH", "city": "Riyadh", "cityKey": "SA-RIY-RUH", "district": "Al Amal",
+      "zip": "12643", "street": "King Abdul Aziz Road", "building": "4200", "additional": "2200", "phone": "+966112345678", "email": "info@hbmc.com.sa" }
+  ],
+  "dimensions": [
+    { "name": "Department", "values": [ "ADMIN", "SALES", "SERVICE" ] }
+  ],
+  "currencies": [
+    { "code": "SAR", "symbol": "ر.س" },
+    { "code": "USD", "symbol": "$" },
+    { "code": "EUR", "symbol": null },
+    { "code": "AED", "symbol": "د.إ" }
+  ],
+  "exchangeRateTypes": [
+    { "name": "Default", "description": "Default global rate" },
+    { "name": "Average", "description": "Default average rate" },
+    { "name": "Budget", "description": "Default budget rate" },
+    { "name": "Closing", "description": "Default closing rate" },
+    { "name": "Spot", "description": "Current market spot rate" },
+    { "name": "Forward", "description": "Forward contract rate" },
+    { "name": "Historical", "description": "Historical fixed rate" },
+    { "name": "Projected", "description": "Projected future rate" },
+    { "name": "Intercompany", "description": "Internal transfer rate" },
+    { "name": "Realized", "description": "Realized gain/loss rate" },
+    { "name": "Unrealized", "description": "Unrealized gain/loss rate" },
+    { "name": "Tax", "description": "Tax authority rate" },
+    { "name": "IFRS", "description": "IFRS compliance rate" },
+    { "name": "GAAP", "description": "Local GAAP rate" },
+    { "name": "Management", "description": "Management reporting rate" },
+    { "name": "Regulatory", "description": "Regulatory reporting rate" },
+    { "name": "Daily", "description": "End of day rate" },
+    { "name": "Weekly", "description": "End of week rate" },
+    { "name": "Monthly", "description": "End of month rate" },
+    { "name": "Commercial", "description": "Commercial business rate" },
+    { "name": "Retail", "description": "Retail customer rate" },
+    { "name": "Wholesale", "description": "Wholesale partner rate" },
+    { "name": "Corporate", "description": "Corporate treasury rate" },
+    { "name": "Market", "description": "Open market rate" }
+  ],
+  "exchangeRates": {
+    "accountingCurrency": "SAR",
+    "validFrom": "2024-07-01",
+    "validTo": "2026-12-31",
+    "rates": [
+      { "from": "AED", "rate": 1.02 },
+      { "from": "EUR", "rate": 4.10 },
+      { "from": "USD", "rate": 3.75 }
+    ]
+  },
+  "fiscalCalendar": { "calendarId": "HBMC", "description": "HBMC Default calendar", "year": 2026 }
+}

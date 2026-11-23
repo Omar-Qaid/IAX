@@ -1,5 +1,5 @@
 using IAX.IXApi.Infrastructure.Persistence;
-using IAX.IXApi.Infrastructure.Persistence.Seeding.Entities;
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.AccountsReceivable;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution;

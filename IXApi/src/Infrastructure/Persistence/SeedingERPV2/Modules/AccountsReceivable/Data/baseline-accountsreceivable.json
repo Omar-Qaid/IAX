@@ -1,0 +1,698 @@
+{
+  "custGroups": [
+    {
+      "custGroupId": "Consultant",
+      "name": "Consultant Customers"
+    },
+    {
+      "custGroupId": "Contractor",
+      "name": "Contractor Customers"
+    },
+    {
+      "custGroupId": "Government",
+      "name": "Government Customers"
+    },
+    {
+      "custGroupId": "IKKAff",
+      "name": "IKK Affiliates"
+    },
+    {
+      "custGroupId": "SisComp",
+      "name": "Sister Companies"
+    },
+    {
+      "custGroupId": "Traders",
+      "name": "Trading Customers"
+    },
+    {
+      "custGroupId": "DOM",
+      "name": "Domestic"
+    },
+    {
+      "custGroupId": "INT",
+      "name": "International"
+    },
+    {
+      "custGroupId": "CUST-RTL",
+      "name": "Retail Customers"
+    },
+    {
+      "custGroupId": "CUST-WHL",
+      "name": "Wholesale Customers"
+    },
+    {
+      "custGroupId": "CUST-VIP",
+      "name": "VIP Customers"
+    },
+    {
+      "custGroupId": "CUST-GOV",
+      "name": "Government"
+    }
+  ],
+  "salesPools": [
+    {
+      "salesPoolId": "RETAIL",
+      "name": "Retail Sales Pool"
+    },
+    {
+      "salesPoolId": "WHOLESALE",
+      "name": "Wholesale Sales Pool"
+    },
+    {
+      "salesPoolId": "ONLINE",
+      "name": "Online E-Commerce Channel"
+    },
+    {
+      "salesPoolId": "DIRECT",
+      "name": "Direct Sales Force"
+    },
+    {
+      "salesPoolId": "EXPORT",
+      "name": "Export Sales Pool"
+    },
+    {
+      "salesPoolId": "GOV",
+      "name": "Government Contracts"
+    }
+  ],
+  "priceDiscJournalNames": [
+    {
+      "journalName": "SALEPRICE",
+      "name": "Sales prices",
+      "defaultRelation": "PriceSales"
+    },
+    {
+      "journalName": "LINEDISC",
+      "name": "Sales line discounts",
+      "defaultRelation": "LineDiscSales"
+    },
+    {
+      "journalName": "TOTALDISC",
+      "name": "Sales total discounts",
+      "defaultRelation": "EndDiscSales"
+    }
+  ],
+  "priceDiscGroups": [
+    {
+      "groupId": "CUSTDISC",
+      "name": "Customer discount group",
+      "module": "Cust",
+      "type": "LineDiscSales"
+    },
+    {
+      "groupId": "ITEMDISC",
+      "name": "Item discount group",
+      "module": "Invent",
+      "type": "LineDiscSales"
+    },
+    {
+      "groupId": "CUSTPRICE",
+      "name": "Customer sales price group",
+      "module": "Cust",
+      "type": "PriceSales"
+    }
+  ],
+  "priceDiscJournals": [
+    {
+      "journalNum": "SEED-TA-001",
+      "journalName": "SALEPRICE",
+      "name": "Sample sales price agreement journal",
+      "defaultRelation": "PriceSales",
+      "posted": "No"
+    }
+  ],
+  "deliveryModes": [
+    {
+      "code": "DHL",
+      "txt": "DHL Express",
+      "displayOrder": 1,
+      "shipCarrierDlvType": "Ground",
+      "markupGroup": "",
+      "mcrExpedite": "",
+      "domPriority": 1
+    },
+    {
+      "code": "FEDEX",
+      "txt": "FedEx Ground",
+      "displayOrder": 2,
+      "shipCarrierDlvType": "Ground",
+      "markupGroup": "",
+      "mcrExpedite": "",
+      "domPriority": 2
+    }
+  ],
+  "deliveryTerms": [
+    {
+      "code": "FOB",
+      "txt": "Free on Board",
+      "shipCarrierFreeMinimum": 0,
+      "freightChargeTerm": 0,
+      "taxLocationRole": 0,
+      "itmGoodsInTransitControl": "No",
+      "itmPortMandatory": "No"
+    },
+    {
+      "code": "CIF",
+      "txt": "Cost, Insurance & Freight",
+      "shipCarrierFreeMinimum": 1000,
+      "freightChargeTerm": 1,
+      "taxLocationRole": 0,
+      "itmGoodsInTransitControl": "Yes",
+      "itmPortMandatory": "Yes"
+    }
+  ],
+  "paymentTerms": [
+    {
+      "paymTermId": "Net 30",
+      "description": "Net 30 Days",
+      "numOfMonths": 0,
+      "numOfDays": 30,
+      "paymMethod": "Net",
+      "cash": "No",
+      "postOffsettingAr": "No",
+      "customerUpdateDueDate": "Yes",
+      "vendorUpdateDueDate": "Yes"
+    },
+    {
+      "paymTermId": "COD",
+      "description": "Cash on Delivery",
+      "numOfMonths": 0,
+      "numOfDays": 0,
+      "paymMethod": "COD",
+      "cash": "Yes",
+      "postOffsettingAr": "No",
+      "customerUpdateDueDate": "No",
+      "vendorUpdateDueDate": "No"
+    },
+    {
+      "paymTermId": "Monthly",
+      "description": "Monthly Payment Terms",
+      "numOfMonths": 1,
+      "numOfDays": 0,
+      "paymMethod": "Net",
+      "cash": "No",
+      "postOffsettingAr": "No",
+      "customerUpdateDueDate": "Yes",
+      "vendorUpdateDueDate": "Yes"
+    }
+  ],
+  "paymentSchedules": [
+    {
+      "name": "3 Instal",
+      "description": "3 Installments (Equal)",
+      "numOfPayment": 3,
+      "payBy": "Equal",
+      "periodUnit": "Month",
+      "qtyUnit": 1,
+      "taxDistribution": "Proportionate",
+      "mcrFlexiblePlan": "No"
+    }
+  ],
+  "paymentScheduleLines": [
+    {
+      "name": "3 Instal",
+      "lineNum": 1,
+      "qty": 0,
+      "percentAmount": 34,
+      "value": 0,
+      "cfmPrepayment": "Yes",
+      "mcrShipping": "Yes"
+    },
+    {
+      "name": "3 Instal",
+      "lineNum": 2,
+      "qty": 1,
+      "percentAmount": 33,
+      "value": 0,
+      "cfmPrepayment": "No",
+      "mcrShipping": "No"
+    },
+    {
+      "name": "3 Instal",
+      "lineNum": 3,
+      "qty": 2,
+      "percentAmount": 33,
+      "value": 0,
+      "cfmPrepayment": "No",
+      "mcrShipping": "No"
+    }
+  ],
+  "charges": [
+    {
+      "markupCode": "Freight",
+      "txt": "Shipping & Freight Charges",
+      "moduleType": "Sales",
+      "taxItemGroup": "FULL",
+      "custType": 0,
+      "vendType": 0,
+      "includeIntoIntrastatInvoiceValue": "No",
+      "includeIntoIntrastatStatisticalValue": "No",
+      "isShipping": "Yes"
+    },
+    {
+      "markupCode": "Insurance",
+      "txt": "Transit Insurance Fee",
+      "moduleType": "Sales",
+      "taxItemGroup": "EXEMPT",
+      "custType": 0,
+      "vendType": 0,
+      "includeIntoIntrastatInvoiceValue": "No",
+      "includeIntoIntrastatStatisticalValue": "No",
+      "isShipping": "No"
+    },
+    {
+      "markupCode": "Handling",
+      "txt": "Warehouse Handling Fee",
+      "moduleType": "Sales",
+      "taxItemGroup": "FULL",
+      "custType": 0,
+      "vendType": 0,
+      "includeIntoIntrastatInvoiceValue": "No",
+      "includeIntoIntrastatStatisticalValue": "No",
+      "isShipping": "No"
+    },
+    {
+      "markupCode": "ServiceFee",
+      "txt": "Administrative Service Charge",
+      "moduleType": "Sales",
+      "taxItemGroup": "FULL",
+      "custType": 0,
+      "vendType": 0,
+      "includeIntoIntrastatInvoiceValue": "No",
+      "includeIntoIntrastatStatisticalValue": "No",
+      "isShipping": "No"
+    },
+    {
+      "markupCode": "Sample",
+      "txt": "Customer Samples",
+      "moduleType": "Sales",
+      "taxItemGroup": "EXEMPT",
+      "custType": 1,
+      "vendType": 0,
+      "includeIntoIntrastatInvoiceValue": "No",
+      "includeIntoIntrastatStatisticalValue": "No",
+      "refundable": "No",
+      "mcrProrate": "No",
+      "isShipping": "No"
+    },
+    {
+      "markupCode": "ShipCharge",
+      "txt": "Shipping Charges",
+      "moduleType": "Sales",
+      "taxItemGroup": "FULL",
+      "custType": 1,
+      "vendType": 0,
+      "includeIntoIntrastatInvoiceValue": "Yes",
+      "includeIntoIntrastatStatisticalValue": "Yes",
+      "refundable": "Yes",
+      "mcrProrate": "Yes",
+      "isShipping": "Yes"
+    },
+    {
+      "markupCode": "PFreight",
+      "txt": "Purchase Freight Charges",
+      "moduleType": "Purchase",
+      "taxItemGroup": "FULL",
+      "custType": 0,
+      "vendType": 1,
+      "useInMatching": "Yes",
+      "includeIntoIntrastatInvoiceValue": "Yes",
+      "includeIntoIntrastatStatisticalValue": "Yes",
+      "isShipping": "Yes"
+    },
+    {
+      "markupCode": "PHandling",
+      "txt": "Purchase Handling Fee",
+      "moduleType": "Purchase",
+      "taxItemGroup": "FULL",
+      "custType": 0,
+      "vendType": 1,
+      "useInMatching": "Yes",
+      "includeIntoIntrastatInvoiceValue": "No",
+      "includeIntoIntrastatStatisticalValue": "No",
+      "isShipping": "No"
+    },
+    {
+      "markupCode": "PInsurance",
+      "txt": "Purchase Transit Insurance",
+      "moduleType": "Purchase",
+      "taxItemGroup": "EXEMPT",
+      "custType": 0,
+      "vendType": 1,
+      "useInMatching": "Yes",
+      "includeIntoIntrastatInvoiceValue": "Yes",
+      "includeIntoIntrastatStatisticalValue": "No",
+      "isShipping": "No"
+    }
+  ],
+  "paymentModes": [
+    {
+      "paymMode": "Cash",
+      "name": "Cash Payment",
+      "accountType": "Ledger",
+      "paymStatus": "None",
+      "paymentType": "Other",
+      "typeOfDraft": "NoDraft",
+      "paymSumBy": 0,
+      "discGraceDays": 0,
+      "furtherPosting": "No",
+      "bridgingAccountByBank": "No",
+      "isSepa": "No",
+      "directDebit": "No"
+    },
+    {
+      "paymMode": "Check",
+      "name": "Customer Check",
+      "accountType": "Bank",
+      "paymStatus": "None",
+      "paymentType": "Check",
+      "typeOfDraft": "NoDraft",
+      "paymSumBy": 0,
+      "discGraceDays": 0,
+      "furtherPosting": "Yes",
+      "bridgingAccountByBank": "Yes",
+      "isSepa": "No",
+      "directDebit": "No"
+    },
+    {
+      "paymMode": "SPAN",
+      "name": "SPAN / MADA Debit Card",
+      "accountType": "Bank",
+      "paymStatus": "None",
+      "paymentType": "ElectronicPayment",
+      "typeOfDraft": "NoDraft",
+      "paymSumBy": 0,
+      "discGraceDays": 0,
+      "furtherPosting": "No",
+      "bridgingAccountByBank": "No",
+      "isSepa": "No",
+      "directDebit": "No"
+    },
+    {
+      "paymMode": "Transfer",
+      "name": "Bank Wire Transfer (SWIFT)",
+      "accountType": "Bank",
+      "paymStatus": "None",
+      "paymentType": "ElectronicPayment",
+      "typeOfDraft": "NoDraft",
+      "paymSumBy": 0,
+      "discGraceDays": 0,
+      "furtherPosting": "No",
+      "bridgingAccountByBank": "No",
+      "isSepa": "No",
+      "directDebit": "No"
+    },
+    {
+      "paymMode": "CreditCard",
+      "name": "Credit Card (Visa/MasterCard)",
+      "accountType": "Bank",
+      "paymStatus": "None",
+      "paymentType": "CreditCard",
+      "typeOfDraft": "NoDraft",
+      "paymSumBy": 0,
+      "discGraceDays": 0,
+      "furtherPosting": "No",
+      "bridgingAccountByBank": "No",
+      "isSepa": "No",
+      "directDebit": "No"
+    },
+    {
+      "paymMode": "DirDebit",
+      "name": "Direct Debit Mandate",
+      "accountType": "Bank",
+      "paymStatus": "Sent",
+      "paymentType": "ElectronicPayment",
+      "typeOfDraft": "NoDraft",
+      "paymSumBy": 1,
+      "discGraceDays": 3,
+      "furtherPosting": "No",
+      "bridgingAccountByBank": "No",
+      "isSepa": "Yes",
+      "directDebit": "Yes"
+    },
+    {
+      "paymMode": "BillOfExch",
+      "name": "Bill of Exchange",
+      "accountType": "Ledger",
+      "paymStatus": "Confirmed",
+      "paymentType": "BillOfExchange",
+      "typeOfDraft": "Acceptance",
+      "paymSumBy": 2,
+      "discGraceDays": 5,
+      "furtherPosting": "Yes",
+      "bridgingAccountByBank": "No",
+      "isSepa": "No",
+      "directDebit": "No"
+    },
+    {
+      "paymMode": "PromNote",
+      "name": "Promissory Note",
+      "accountType": "Ledger",
+      "paymStatus": "None",
+      "paymentType": "Other",
+      "typeOfDraft": "Promissory",
+      "paymSumBy": 0,
+      "discGraceDays": 0,
+      "furtherPosting": "No",
+      "bridgingAccountByBank": "No",
+      "isSepa": "No",
+      "directDebit": "No"
+    },
+    {
+      "paymMode": "L/C",
+      "name": "Letter of Credit (L/C)",
+      "accountType": "Bank",
+      "paymStatus": "Confirmed",
+      "paymentType": "Other",
+      "typeOfDraft": "NoDraft",
+      "paymSumBy": 0,
+      "discGraceDays": 0,
+      "furtherPosting": "Yes",
+      "bridgingAccountByBank": "No",
+      "isSepa": "No",
+      "directDebit": "No"
+    },
+    {
+      "paymMode": "Sadad",
+      "name": "SADAD Payment Gateway",
+      "accountType": "Bank",
+      "paymStatus": "Received",
+      "paymentType": "ElectronicPayment",
+      "typeOfDraft": "NoDraft",
+      "paymSumBy": 0,
+      "discGraceDays": 0,
+      "furtherPosting": "No",
+      "bridgingAccountByBank": "No",
+      "isSepa": "No",
+      "directDebit": "No"
+    }
+  ],
+  "postingProfiles": [
+    {
+      "postingProfile": "GEN",
+      "name": "General Customers",
+      "settlement": "Yes",
+      "interest": "Yes",
+      "collectionLetter": "Yes"
+    },
+    {
+      "postingProfile": "PrePayment",
+      "name": "Customers Advanced Payment",
+      "settlement": "No",
+      "interest": "No",
+      "collectionLetter": "No"
+    },
+    {
+      "postingProfile": "EXPORT",
+      "name": "Export Customers",
+      "settlement": "Yes",
+      "interest": "Yes",
+      "collectionLetter": "Yes"
+    },
+    {
+      "postingProfile": "GOV",
+      "name": "Government Customers",
+      "settlement": "Yes",
+      "interest": "No",
+      "collectionLetter": "No"
+    }
+  ],
+  "postingProfileAccounts": [
+    {
+      "postingProfile": "GEN",
+      "accountCode": "Group",
+      "num": "Consultant",
+      "summaryLedgerDimension": 0,
+      "clearingLedgerDimension": 0,
+      "vatPrepaymentsLedgerDimension": 0,
+      "liabilitiesForDiscountLedgerDimension": 0,
+      "writeOffLedgerDimension": 0,
+      "collectionLetterCourse": "Collection",
+      "custInterest": 1
+    },
+    {
+      "postingProfile": "GEN",
+      "accountCode": "Group",
+      "num": "Contractor",
+      "summaryLedgerDimension": 0,
+      "clearingLedgerDimension": 0,
+      "vatPrepaymentsLedgerDimension": 0,
+      "liabilitiesForDiscountLedgerDimension": 0,
+      "writeOffLedgerDimension": 0,
+      "collectionLetterCourse": "Collection",
+      "custInterest": 1
+    },
+    {
+      "postingProfile": "GEN",
+      "accountCode": "Group",
+      "num": "Government",
+      "summaryLedgerDimension": 0,
+      "clearingLedgerDimension": 0,
+      "vatPrepaymentsLedgerDimension": 0,
+      "liabilitiesForDiscountLedgerDimension": 0,
+      "writeOffLedgerDimension": 0,
+      "collectionLetterCourse": "Collection",
+      "custInterest": 1
+    },
+    {
+      "postingProfile": "GEN",
+      "accountCode": "Group",
+      "num": "IKKAff",
+      "summaryLedgerDimension": 0,
+      "clearingLedgerDimension": 0,
+      "vatPrepaymentsLedgerDimension": 0,
+      "liabilitiesForDiscountLedgerDimension": 0,
+      "writeOffLedgerDimension": 0,
+      "collectionLetterCourse": "Collection",
+      "custInterest": 1
+    },
+    {
+      "postingProfile": "GEN",
+      "accountCode": "Group",
+      "num": "SisComp",
+      "summaryLedgerDimension": 0,
+      "clearingLedgerDimension": 0,
+      "vatPrepaymentsLedgerDimension": 0,
+      "liabilitiesForDiscountLedgerDimension": 0,
+      "writeOffLedgerDimension": 0,
+      "collectionLetterCourse": "Collection",
+      "custInterest": 1
+    },
+    {
+      "postingProfile": "GEN",
+      "accountCode": "Group",
+      "num": "Traders",
+      "summaryLedgerDimension": 0,
+      "clearingLedgerDimension": 0,
+      "vatPrepaymentsLedgerDimension": 0,
+      "liabilitiesForDiscountLedgerDimension": 0,
+      "writeOffLedgerDimension": 0,
+      "collectionLetterCourse": "Collection",
+      "custInterest": 1
+    },
+    {
+      "postingProfile": "GEN",
+      "accountCode": "Group",
+      "num": "CUST-RTL",
+      "summaryLedgerDimension": 0,
+      "clearingLedgerDimension": 0,
+      "vatPrepaymentsLedgerDimension": 0,
+      "liabilitiesForDiscountLedgerDimension": 0,
+      "writeOffLedgerDimension": 0,
+      "collectionLetterCourse": "Collection",
+      "custInterest": 1
+    },
+    {
+      "postingProfile": "GEN",
+      "accountCode": "Table",
+      "num": "C00015",
+      "summaryLedgerDimension": 0,
+      "clearingLedgerDimension": 0,
+      "vatPrepaymentsLedgerDimension": 0,
+      "liabilitiesForDiscountLedgerDimension": 0,
+      "writeOffLedgerDimension": 0,
+      "collectionLetterCourse": "Collection",
+      "custInterest": 1
+    },
+    {
+      "postingProfile": "GEN",
+      "accountCode": "Table",
+      "num": "CUST-300",
+      "summaryLedgerDimension": 0,
+      "clearingLedgerDimension": 0,
+      "vatPrepaymentsLedgerDimension": 0,
+      "liabilitiesForDiscountLedgerDimension": 0,
+      "writeOffLedgerDimension": 0,
+      "collectionLetterCourse": "Collection",
+      "custInterest": 1
+    },
+    {
+      "postingProfile": "GEN",
+      "accountCode": "All",
+      "num": "",
+      "summaryLedgerDimension": 0,
+      "clearingLedgerDimension": 0,
+      "vatPrepaymentsLedgerDimension": 0,
+      "liabilitiesForDiscountLedgerDimension": 0,
+      "writeOffLedgerDimension": 0,
+      "collectionLetterCourse": "Collection",
+      "custInterest": 1
+    },
+    {
+      "postingProfile": "PrePayment",
+      "accountCode": "All",
+      "num": "",
+      "summaryLedgerDimension": 0,
+      "clearingLedgerDimension": 0,
+      "vatPrepaymentsLedgerDimension": 0,
+      "liabilitiesForDiscountLedgerDimension": 0,
+      "writeOffLedgerDimension": 0
+    },
+    {
+      "postingProfile": "EXPORT",
+      "accountCode": "Group",
+      "num": "INT",
+      "summaryLedgerDimension": 0,
+      "clearingLedgerDimension": 0,
+      "vatPrepaymentsLedgerDimension": 0,
+      "liabilitiesForDiscountLedgerDimension": 0,
+      "writeOffLedgerDimension": 0,
+      "collectionLetterCourse": "Collection",
+      "custInterest": 1
+    },
+    {
+      "postingProfile": "EXPORT",
+      "accountCode": "All",
+      "num": "",
+      "summaryLedgerDimension": 0,
+      "clearingLedgerDimension": 0,
+      "vatPrepaymentsLedgerDimension": 0,
+      "liabilitiesForDiscountLedgerDimension": 0,
+      "writeOffLedgerDimension": 0,
+      "collectionLetterCourse": "Collection",
+      "custInterest": 1
+    },
+    {
+      "postingProfile": "GOV",
+      "accountCode": "Group",
+      "num": "Government",
+      "summaryLedgerDimension": 0,
+      "clearingLedgerDimension": 0,
+      "vatPrepaymentsLedgerDimension": 0,
+      "liabilitiesForDiscountLedgerDimension": 0,
+      "writeOffLedgerDimension": 0,
+      "collectionLetterCourse": "Collection"
+    },
+    {
+      "postingProfile": "GOV",
+      "accountCode": "All",
+      "num": "",
+      "summaryLedgerDimension": 0,
+      "clearingLedgerDimension": 0,
+      "vatPrepaymentsLedgerDimension": 0,
+      "liabilitiesForDiscountLedgerDimension": 0,
+      "writeOffLedgerDimension": 0,
+      "collectionLetterCourse": "Collection"
+    }
+  ]
+}

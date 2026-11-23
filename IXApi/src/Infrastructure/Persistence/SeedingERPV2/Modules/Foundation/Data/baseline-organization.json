@@ -1,0 +1,424 @@
+{
+  "effectiveFrom": "2026-01-01",
+  "units": [
+    {
+      "code": "ORG-COMPANY",
+      "name": "Example Company",
+      "nameAlias": "الشركة النموذجية",
+      "type": 5
+    },
+    {
+      "code": "ORG-BU",
+      "name": "Trading Business Unit",
+      "nameAlias": "وحدة أعمال التجارة",
+      "type": 6
+    },
+    {
+      "code": "AREA-W",
+      "name": "Western Area",
+      "nameAlias": "المنطقة الغربية",
+      "type": 1
+    },
+    {
+      "code": "REG-JED",
+      "name": "Jeddah Region",
+      "nameAlias": "منطقة جدة",
+      "type": 2
+    },
+    {
+      "code": "SUP-NJ",
+      "name": "North Jeddah",
+      "nameAlias": "شمال جدة",
+      "type": 3
+    },
+    {
+      "code": "SH-A",
+      "name": "Showroom A",
+      "nameAlias": "معرض أ",
+      "type": 4
+    },
+    {
+      "code": "SH-B",
+      "name": "Showroom B",
+      "nameAlias": "معرض ب",
+      "type": 4
+    },
+    {
+      "code": "ORG-FIN",
+      "name": "Finance Department",
+      "nameAlias": "الإدارة المالية",
+      "type": 8
+    },
+    {
+      "code": "ORG-FIN-ACC",
+      "name": "Accounts Department",
+      "nameAlias": "قسم الحسابات",
+      "type": 8
+    },
+    {
+      "code": "ORG-FIN-AR",
+      "name": "Accounts Receivable Team",
+      "nameAlias": "فريق حسابات العملاء",
+      "type": 8
+    },
+    {
+      "code": "ORG-IT",
+      "name": "IT Department",
+      "nameAlias": "إدارة تقنية المعلومات",
+      "type": 8
+    },
+    {
+      "code": "BR-JED",
+      "name": "Jeddah Branch",
+      "nameAlias": "فرع جدة",
+      "type": 7
+    },
+    {
+      "code": "ORG-WH",
+      "name": "Central Warehouse",
+      "nameAlias": "المستودع المركزي",
+      "type": 9
+    }
+  ],
+  "roles": [
+    {
+      "code": "AREA_MANAGER",
+      "name": "Area Manager",
+      "nameAlias": "مدير المنطقة"
+    },
+    {
+      "code": "REGION_MANAGER",
+      "name": "Region Manager",
+      "nameAlias": "مدير الإقليم"
+    },
+    {
+      "code": "SUPERVISOR",
+      "name": "Supervisor",
+      "nameAlias": "مشرف"
+    },
+    {
+      "code": "SELLER",
+      "name": "Seller",
+      "nameAlias": "بائع"
+    },
+    {
+      "code": "FINANCE_MANAGER",
+      "name": "Finance Manager",
+      "nameAlias": "مدير المالية"
+    },
+    {
+      "code": "WAREHOUSE_MANAGER",
+      "name": "Warehouse Manager",
+      "nameAlias": "مدير المستودع"
+    },
+    {
+      "code": "DIRECT_MANAGER",
+      "name": "Direct Manager",
+      "nameAlias": "المدير المباشر"
+    },
+    {
+      "code": "EMPLOYEE",
+      "name": "Employee",
+      "nameAlias": "موظف"
+    },
+    {
+      "code": "DEPARTMENT_MANAGER",
+      "name": "Department Manager",
+      "nameAlias": "مدير القسم"
+    },
+    {
+      "code": "ADMINISTRATION_MANAGER",
+      "name": "Administration Manager",
+      "nameAlias": "مدير الإدارة"
+    },
+    {
+      "code": "IT_MANAGER",
+      "name": "IT Manager",
+      "nameAlias": "مدير تقنية المعلومات"
+    },
+    {
+      "code": "BOSS",
+      "name": "Boss",
+      "nameAlias": "الرئيس"
+    }
+  ],
+  "hierarchies": [
+    {
+      "code": "ORG-OPERATIONS",
+      "name": "Operational Organization",
+      "nameAlias": "الهيكل التشغيلي",
+      "purpose": "Operations",
+      "nodes": [
+        {
+          "unit": "ORG-COMPANY",
+          "parent": null
+        },
+        {
+          "unit": "ORG-BU",
+          "parent": "ORG-COMPANY"
+        },
+        {
+          "unit": "AREA-W",
+          "parent": "ORG-BU"
+        },
+        {
+          "unit": "REG-JED",
+          "parent": "AREA-W"
+        },
+        {
+          "unit": "SUP-NJ",
+          "parent": "REG-JED"
+        },
+        {
+          "unit": "SH-A",
+          "parent": "SUP-NJ"
+        },
+        {
+          "unit": "SH-B",
+          "parent": "SUP-NJ"
+        },
+        {
+          "unit": "ORG-WH",
+          "parent": "ORG-BU"
+        },
+        {
+          "unit": "BR-JED",
+          "parent": "REG-JED"
+        },
+        {
+          "unit": "ORG-IT",
+          "parent": "ORG-BU"
+        }
+      ]
+    },
+    {
+      "code": "ORG-FINANCE",
+      "name": "Financial Organization",
+      "nameAlias": "الهيكل المالي",
+      "purpose": "Financial reporting",
+      "nodes": [
+        {
+          "unit": "ORG-COMPANY",
+          "parent": null
+        },
+        {
+          "unit": "ORG-BU",
+          "parent": "ORG-COMPANY"
+        },
+        {
+          "unit": "ORG-FIN",
+          "parent": "ORG-BU"
+        },
+        {
+          "unit": "ORG-FIN-ACC",
+          "parent": "ORG-FIN"
+        },
+        {
+          "unit": "ORG-FIN-AR",
+          "parent": "ORG-FIN-ACC"
+        },
+        {
+          "unit": "SH-A",
+          "parent": "ORG-BU"
+        },
+        {
+          "unit": "SH-B",
+          "parent": "ORG-BU"
+        },
+        {
+          "unit": "ORG-WH",
+          "parent": "ORG-BU"
+        },
+        {
+          "unit": "BR-JED",
+          "parent": "REG-JED"
+        },
+        {
+          "unit": "ORG-IT",
+          "parent": "ORG-BU"
+        }
+      ]
+    }
+  ],
+  "positions": [
+    {
+      "code": "AREA-W-MGR",
+      "name": "Western Area Manager",
+      "nameAlias": "مدير المنطقة الغربية",
+      "unit": "AREA-W",
+      "role": "AREA_MANAGER"
+    },
+    {
+      "code": "REG-JED-MGR",
+      "name": "Jeddah Region Manager",
+      "nameAlias": "مدير منطقة جدة",
+      "unit": "REG-JED",
+      "role": "REGION_MANAGER"
+    },
+    {
+      "code": "SUP-NJ-SUP",
+      "name": "North Jeddah Supervisor",
+      "nameAlias": "مشرف شمال جدة",
+      "unit": "SUP-NJ",
+      "role": "SUPERVISOR"
+    },
+    {
+      "code": "SH-A-SELLER-01",
+      "name": "Showroom A Seller",
+      "nameAlias": "بائع معرض أ",
+      "unit": "SH-A",
+      "role": "SELLER"
+    },
+    {
+      "code": "SH-B-SELLER-01",
+      "name": "Showroom B Seller",
+      "nameAlias": "بائع معرض ب",
+      "unit": "SH-B",
+      "role": "SELLER"
+    },
+    {
+      "code": "ORG-FIN-MGR",
+      "name": "Finance Manager",
+      "nameAlias": "مدير المالية",
+      "unit": "ORG-FIN",
+      "role": "FINANCE_MANAGER"
+    },
+    {
+      "code": "ORG-WH-MGR",
+      "name": "Warehouse Manager",
+      "nameAlias": "مدير المستودع",
+      "unit": "ORG-WH",
+      "role": "WAREHOUSE_MANAGER"
+    },
+    {
+      "code": "BR-JED-BOSS",
+      "name": "Jeddah Branch Boss",
+      "nameAlias": "رئيس فرع جدة",
+      "unit": "BR-JED",
+      "role": "BOSS"
+    },
+    {
+      "code": "ORG-IT-MGR",
+      "name": "IT Manager",
+      "nameAlias": "مدير تقنية المعلومات",
+      "unit": "ORG-IT",
+      "role": "IT_MANAGER"
+    },
+    {
+      "code": "SH-A-DIRECT-MGR",
+      "name": "Showroom A Direct Manager",
+      "nameAlias": "المدير المباشر لمعرض أ",
+      "unit": "SH-A",
+      "role": "DIRECT_MANAGER"
+    },
+    {
+      "code": "ORG-FIN-ADMIN-MGR",
+      "name": "Finance Administration Manager",
+      "nameAlias": "مدير الإدارة المالية",
+      "unit": "ORG-FIN",
+      "role": "ADMINISTRATION_MANAGER"
+    },
+    {
+      "code": "ORG-FIN-ACC-MGR",
+      "name": "Accounts Department Manager",
+      "nameAlias": "مدير قسم الحسابات",
+      "unit": "ORG-FIN-ACC",
+      "role": "DEPARTMENT_MANAGER"
+    },
+    {
+      "code": "ORG-FIN-AR-LINE-MGR",
+      "name": "Accounts Receivable Direct Manager",
+      "nameAlias": "المدير المباشر لحسابات العملاء",
+      "unit": "ORG-FIN-AR",
+      "role": "DIRECT_MANAGER"
+    },
+    {
+      "code": "ORG-FIN-AR-EMP-01",
+      "name": "Accounts Receivable Employee",
+      "nameAlias": "موظف حسابات العملاء",
+      "unit": "ORG-FIN-AR",
+      "role": "EMPLOYEE"
+    }
+  ],
+  "assignments": [
+    {
+      "position": "AREA-W-MGR",
+      "personnelNumber": "DEMO-DIRECTOR"
+    },
+    {
+      "position": "REG-JED-MGR",
+      "personnelNumber": "DEMO-SALES-MGR"
+    },
+    {
+      "position": "SUP-NJ-SUP",
+      "personnelNumber": "DEMO-SUPERVISOR"
+    },
+    {
+      "position": "SH-A-SELLER-01",
+      "personnelNumber": "DEMO-SELLER-A"
+    },
+    {
+      "position": "SH-B-SELLER-01",
+      "personnelNumber": "DEMO-SELLER-B"
+    },
+    {
+      "position": "ORG-FIN-MGR",
+      "personnelNumber": "DEMO-FIN-MGR"
+    },
+    {
+      "position": "ORG-FIN-AR-EMP-01",
+      "personnelNumber": "DEMO-ACCOUNTANT"
+    }
+  ],
+  "reportingHierarchies": [
+    {
+      "code": "SALES",
+      "name": "Sales Reporting Structure",
+      "nameAlias": "هيكل الإشراف البيعي",
+      "purpose": "Sales reporting"
+    },
+    {
+      "code": "ADMIN",
+      "name": "Administrative Reporting Structure",
+      "nameAlias": "هيكل الإشراف الإداري",
+      "purpose": "Administrative reporting"
+    }
+  ],
+  "reportingLines": [
+    {
+      "hierarchy": "SALES",
+      "subordinate": "SH-A-SELLER-01",
+      "manager": "SUP-NJ-SUP"
+    },
+    {
+      "hierarchy": "SALES",
+      "subordinate": "SH-B-SELLER-01",
+      "manager": "SUP-NJ-SUP"
+    },
+    {
+      "hierarchy": "SALES",
+      "subordinate": "SUP-NJ-SUP",
+      "manager": "REG-JED-MGR"
+    },
+    {
+      "hierarchy": "SALES",
+      "subordinate": "REG-JED-MGR",
+      "manager": "AREA-W-MGR"
+    },
+    {
+      "hierarchy": "ADMIN",
+      "subordinate": "ORG-FIN-AR-EMP-01",
+      "manager": "ORG-FIN-AR-LINE-MGR"
+    },
+    {
+      "hierarchy": "ADMIN",
+      "subordinate": "ORG-FIN-AR-LINE-MGR",
+      "manager": "ORG-FIN-ACC-MGR"
+    },
+    {
+      "hierarchy": "ADMIN",
+      "subordinate": "ORG-FIN-ACC-MGR",
+      "manager": "ORG-FIN-ADMIN-MGR"
+    }
+  ]
+}

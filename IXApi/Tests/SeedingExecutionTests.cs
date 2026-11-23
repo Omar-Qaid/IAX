@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Infrastructure.Persistence.Seeding;
 using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
-using IAX.IXApi.Infrastructure.Persistence.Seeding.Entities;
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

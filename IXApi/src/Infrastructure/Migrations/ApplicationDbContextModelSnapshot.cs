@@ -22,7 +22,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("IAX.IXApi.Infrastructure.Persistence.Seeding.Entities.SysDataSeedLog", b =>
+            modelBuilder.Entity("IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution.SysDataSeedLog", b =>
                 {
                     b.Property<int>("RecId")
                         .ValueGeneratedOnAdd()

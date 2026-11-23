@@ -1,0 +1,99 @@
+{
+  "units": [ "EA", "PCS", "DOZ", "PR", "SET", "KG", "G", "TON", "LB", "L", "ML", "GAL", "M", "CM", "MM", "FT", "BOX", "CTN", "PCK", "PLT", "BAG", "CAN", "BTL", "ROL", "HR", "DAY", "MON" ],
+  "baseUnits": [
+    { "unit": "EA", "class": "Quantity" },
+    { "unit": "KG", "class": "Mass" },
+    { "unit": "L", "class": "Volume" },
+    { "unit": "M", "class": "Length" },
+    { "unit": "HR", "class": "Time" }
+  ],
+  "conversions": [
+    { "from": "G", "to": "KG", "factor": 0.001 },
+    { "from": "TON", "to": "KG", "factor": 1000 },
+    { "from": "LB", "to": "KG", "factor": 0.453592 },
+    { "from": "ML", "to": "L", "factor": 0.001 },
+    { "from": "GAL", "to": "L", "factor": 3.78541 },
+    { "from": "CM", "to": "M", "factor": 0.01 },
+    { "from": "MM", "to": "M", "factor": 0.001 },
+    { "from": "FT", "to": "M", "factor": 0.3048 },
+    { "from": "PCS", "to": "EA", "factor": 1 },
+    { "from": "DOZ", "to": "EA", "factor": 12 },
+    { "from": "PR", "to": "EA", "factor": 2 }
+  ],
+  "itemGroups": [
+    { "itemGroupId": "RAW", "name": "Raw materials", "taxItemGroup": null },
+    { "itemGroupId": "FIN", "name": "Finished goods", "taxItemGroup": null },
+    { "itemGroupId": "CONS", "name": "Consumables", "taxItemGroup": null },
+    { "itemGroupId": "SPR", "name": "Spare parts", "taxItemGroup": null },
+    { "itemGroupId": "FURNITURE", "name": "Furniture", "taxItemGroup": "VAT15" },
+    { "itemGroupId": "FINISHED", "name": "Finished Goods", "taxItemGroup": "VAT15" },
+    { "itemGroupId": "RAW-MAT", "name": "Raw Materials", "taxItemGroup": "VAT15" },
+    { "itemGroupId": "SERVICES", "name": "Services", "taxItemGroup": "VAT15" }
+  ],
+  "modelGroups": [
+    { "modelGroupId": "FIFO", "name": "FIFO Stocked Items", "model": "FIFO", "stocked": true },
+    { "modelGroupId": "WAVG", "name": "Weighted Average Stocked Items", "model": "WeightedAvg", "stocked": true },
+    { "modelGroupId": "NON-STK", "name": "Non-Stocked Services", "model": "MovingAverage", "stocked": false }
+  ],
+  "storageGroups": [
+    { "name": "SW", "description": "Site and warehouse", "location": false },
+    { "name": "SWL", "description": "Site, warehouse and location", "location": true }
+  ],
+  "trackingGroups": [
+    { "name": "NONE", "description": "No tracking dimensions", "batch": false, "serial": false },
+    { "name": "BATCH", "description": "Batch tracked items", "batch": true, "serial": false },
+    { "name": "SERIAL", "description": "Serial tracked items", "batch": false, "serial": true }
+  ],
+  "journalNames": [
+    { "journalNameId": "IJ-ADJ", "description": "Inventory Adjustment (Loss/Profit)", "type": "Adjustment" },
+    { "journalNameId": "IJ-MOV", "description": "Inventory Movement", "type": "Movement" },
+    { "journalNameId": "IJ-TRF", "description": "Inventory Transfer", "type": "Transfer" },
+    { "journalNameId": "IJ-CNT", "description": "Inventory Counting", "type": "Counting" }
+  ],
+  "voucherSequence": "Voucher",
+  "parameters": {
+    "defaultUnitId": "PCS", "defaultSite": "JED", "defaultWarehouse": "JED-1",
+    "movementJournal": "IJ-MOV", "lossProfitJournal": "IJ-ADJ", "transferJournal": "IJ-TRF", "countJournal": "IJ-CNT"
+  },
+  "statuses": [
+    { "statusId": "AVAILABLE", "name": "Available", "blocking": false },
+    { "statusId": "BLOCKED", "name": "Blocked for inspection", "blocking": true }
+  ],
+  "defaultStatus": "AVAILABLE",
+  "sites": [
+    { "siteId": "RIY", "name": "Riyadh", "warehouse": "Riyadh" },
+    { "siteId": "JED", "name": "Jeddah", "warehouse": "Jeddah" },
+    { "siteId": "DMM", "name": "Dammam", "warehouse": "Dammam" }
+  ],
+  "warehouseLocations": [
+    { "wmsLocationId": "RECEIPT", "checkText": "Inbound Receipt Dock", "locationType": 1 },
+    { "wmsLocationId": "ISSUE", "checkText": "Outbound Shipping Dock", "locationType": 2 },
+    { "wmsLocationId": "BULK-01", "checkText": "Bulk Storage 01", "locationType": 0 },
+    { "wmsLocationId": "PICK-01", "checkText": "Picking Location 01", "locationType": 3 }
+  ],
+  "product": {
+    "itemId": "ITEM-001", "name": "Office Chair", "nameAlias": "كرسي مكتب", "unit": "PCS",
+    "itemGroup": "FURNITURE", "modelGroup": "FIFO", "storageGroup": "SW", "trackingGroup": "NONE",
+    "defaultDimension": "ITEM001-JED-1", "site": "JED", "warehouse": "JED-1",
+    "translations": [
+      { "language": "en-us", "name": "Office Chair", "description": "Basic stocked office chair" },
+      { "language": "ar", "name": "كرسي مكتب", "description": "كرسي مكتب قياسي" }
+    ],
+    "purchasePrice": 100, "salesPrice": 150, "taxItemGroup": "VAT15"
+  },
+  "postingRules": [
+    { "accountType": "PurchPackingSlip", "mainAccount": "50010000" },
+    { "accountType": "SalesPackingSlip", "mainAccount": "50010000" },
+    { "accountType": "SalesConsump", "mainAccount": "50010000" },
+    { "accountType": "SalesRevenue", "mainAccount": "40010000" },
+    { "accountType": "PurchReceipt", "mainAccount": "14010000" },
+    { "accountType": "SalesIssue", "mainAccount": "14010000" },
+    { "accountType": "InventIssue", "mainAccount": "14010000" },
+    { "accountType": "InventReceipt", "mainAccount": "14010000" },
+    { "accountType": "InventProfit", "mainAccount": "40910000" },
+    { "accountType": "InventLoss", "mainAccount": "50910000" },
+    { "accountType": "PurchPackingSlipOffsetAccount", "mainAccount": "21010000" },
+    { "accountType": "SalesPackingSlipOffsetAccount", "mainAccount": "21020000" },
+    { "accountType": "PurchConsump", "mainAccount": "60018000" }
+  ]
+}

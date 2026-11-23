@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
@@ -35,9 +35,9 @@
     <Folder Include="Migrations\" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Persistence\Seeding\Data\LegacyWorkflowMasterData.json" />
+    <EmbeddedResource Include="Persistence\SeedingERPV2\Modules\*\Data\legacy-*.json" LogicalName="SeedingERPV2.Import.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Persistence\SeedingERPV2\Modules\*\Data\baseline-*.json" LogicalName="SeedingERPV2.Baseline.%(Filename)%(Extension)" />
     <EmbeddedResource Include="Persistence\SeedingERPV2\CycleErpExamples\GeneralLedger\Data\*.json" LogicalName="SeedingERPV2.GeneralLedger.%(Filename)%(Extension)" />
-    <EmbeddedResource Include="Persistence\Seeding\Data\LegacyOrganizationEmployeeData.json" />
     <EmbeddedResource Include="Persistence\SeedingERPV2\CycleErpExamples\CashAndBank\Data\*.json" LogicalName="SeedingERPV2.CashAndBank.%(Filename)%(Extension)" />
     <EmbeddedResource Include="Persistence\SeedingERPV2\CycleErpExamples\Tax\Data\*.json" LogicalName="SeedingERPV2.Tax.%(Filename)%(Extension)" />
     <EmbeddedResource Include="Persistence\SeedingERPV2\CycleErpExamples\Organization\Data\*.json" LogicalName="SeedingERPV2.Organization.%(Filename)%(Extension)" />

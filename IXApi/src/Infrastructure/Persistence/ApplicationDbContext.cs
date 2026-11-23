@@ -5,7 +5,7 @@ using IAX.IXApi.Shared.Domain.Reporting;
 
 using IAX.IXApi.Modules.Administration.AuditLogs.Entities;
 
-using IAX.IXApi.Infrastructure.Persistence.Seeding.Entities;
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution;
 using IAX.IXApi.Modules.Communication.Notifications.Entities;
 using IAX.IXApi.Modules.Administration.BackgroundJobs.Entities;
 using IAX.IXApi.Modules.Identity.Users;
