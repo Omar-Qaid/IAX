@@ -14,6 +14,7 @@ using Xunit;
 namespace IAX.IXApi.Tests;
 
 /// <summary>The startup (baseline) profile seeds every module's reference data once and adds nothing on a rerun.</summary>
+[Collection(SeedingCollection.Name)]
 public sealed class BaselineSeedingTests
 {
     [Fact]

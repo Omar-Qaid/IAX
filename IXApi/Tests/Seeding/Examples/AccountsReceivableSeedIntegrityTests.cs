@@ -17,7 +17,7 @@ using Xunit;
 
 namespace IAX.IXApi.Tests;
 
-[Collection("AccountsReceivable cycle stages")]
+[Collection(SeedingCollection.Name)]
 public sealed class AccountsReceivableSeedIntegrityTests
 {
     [Fact]

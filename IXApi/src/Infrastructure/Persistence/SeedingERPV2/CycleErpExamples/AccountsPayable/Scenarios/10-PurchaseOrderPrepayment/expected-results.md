@@ -2,11 +2,11 @@
 
 ## Numerical and behavioral assertions
 
-Not implemented: the seeded examples have no purchase-order prepayment (AccountsPayableTransactionFlow defines no scenario 10). Payment-journal prepayment is scenario 11.
+Prepayment invoice: supplier advance 181005 debit 1,000, vendor 281001 credit 1,000; paid from the bank. Final invoice 2,500 (no sales tax). Application moves the 1,000 from 181005 to the vendor. Net: inventory 2,500; bank -2,500 (1,000 + 1,500); supplier advance 0; vendor 0; nothing open.
 
 ## Input basis
 
-Not implemented.
+Order 100 at 25 with a 1,000 prepayment, tax-free vendor APV2-{company}-PREPAY.
 
 ## Acceptance record
 

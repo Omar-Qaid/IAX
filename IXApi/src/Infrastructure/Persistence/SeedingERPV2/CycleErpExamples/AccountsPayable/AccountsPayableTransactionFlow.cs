@@ -218,10 +218,17 @@ public sealed class AccountsPayableTransactionFlow(ApplicationDbContext db, IPur
             Success(await confirmations.ConfirmAsync(order.RecId, ct, date.AddDays(-12)), "confirm order");
         var category = await db.Set<EcoResCategory>()
             .SingleAsync(x => x.Name == Modules.AccountsPayable.VendPrepaymentSetupSeeder.CategoryName, ct);
-        Success(await orders.DefinePrepaymentAsync(order.RecId, new(prepayment, category.RecId, "Purchase order prepayment"), ct), "define prepayment");
+        // Replay verifies each completed step instead of repeating it: the order is invoiced by then, and D365 refuses
+        // a new prepayment definition or prepayment invoice on an invoiced order.
+        var definition = await db.Set<PurchPrepayTable>().SingleOrDefaultAsync(x => x.DataAreaId == Area && x.PurchTable == order.PurchId, ct);
+        if (definition == null)
+            Success(await orders.DefinePrepaymentAsync(order.RecId, new(prepayment, category.RecId, "Purchase order prepayment"), ct), "define prepayment");
+        else
+            Check(definition.PrepayCategoryId == category.RecId, "existing prepayment definition differs.");
         steps.Add(new("Prepayment definition", order.PurchId, $"Prepayment {prepayment} on the order"));
 
-        Success(await invoices.PostPrepaymentAsync(order.RecId, key + "-PRE", date.AddDays(-11), prepayment, ct), "prepayment invoice");
+        if (!await HasInvoice(key + "-PRE", account, ct))
+            Success(await invoices.PostPrepaymentAsync(order.RecId, key + "-PRE", date.AddDays(-11), prepayment, ct), "prepayment invoice");
         Success(await payments.PostAsync(new(account, "APV2-BANK", prepayment, key + "-PREPAY", date.AddDays(-10), SettleInvoiceId: key + "-PRE"), ct), "prepayment payment");
         steps.Add(new("Prepayment invoice and payment", key + "-PRE", "Advance posted and paid"));
 

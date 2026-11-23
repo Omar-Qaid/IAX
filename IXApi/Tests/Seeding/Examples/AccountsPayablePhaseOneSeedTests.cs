@@ -28,10 +28,8 @@ using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.GeneralLedger;
 
 namespace IAX.IXApi.Tests;
 
-[CollectionDefinition("AccountsPayable phase one", DisableParallelization = true)]
-public sealed class AccountsPayablePhaseOneSeedCollection { }
 
-[Collection("AccountsPayable phase one")]
+[Collection(SeedingCollection.Name)]
 public sealed class AccountsPayablePhaseOneSeedTests
 {
     [Fact]
@@ -41,7 +39,7 @@ public sealed class AccountsPayablePhaseOneSeedTests
         using var provider = services.BuildServiceProvider();
         using var scope = provider.CreateScope();
         var ordered = new SeedDependencyResolver().Resolve(scope.ServiceProvider.GetServices<IDataSeeder>());
-        Assert.Equal(63, ordered.Count);
+        Assert.Equal(64, ordered.Count); // includes VendPrepaymentSetupSeeder
         Assert.Single(ordered, x => x.Id == "ERPV2.TaxVatCategorySeeder");
         Assert.Single(ordered, x => x.Id == "ERPV2.InventoryNumberSequenceSeeder");
         // The inventory journal setup: its own account structure for the profit and loss codes, and
@@ -84,7 +82,7 @@ public sealed class AccountsPayablePhaseOneSeedTests
             .RequireAsync<LogisticsLocation>(x => x.LocationId == "OTHER-LOCATION", default));
         Assert.Equal(3, await db.Set<VendTable>().CountAsync()); // LOCAL, USD and the tax-free prepayment vendor
         Assert.Equal(2, await db.Set<VendBankAccount>().CountAsync());
-        var vendor = await db.Set<VendTable>().SingleAsync(x => x.Currency == "SAR");
+        var vendor = await db.Set<VendTable>().SingleAsync(x => x.AccountNum == "APV2-dat-LOCAL");
         var party = await db.Set<DirPartyTable>().SingleAsync(x => x.RecId == vendor.Party);
         Assert.NotNull(party.PrimaryAddressLocation);
         Assert.NotNull(party.PrimaryContactEmail);

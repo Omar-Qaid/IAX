@@ -12,7 +12,7 @@ using Xunit;
 namespace IAX.IXApi.Tests;
 
 /// <summary>The Tax scenarios (CycleErpExamples/Tax/Scenarios/01-02) checked against their README: direction, code and account.</summary>
-[Collection("AccountsPayable phase one")]
+[Collection(SeedingCollection.Name)]
 public sealed class TaxScenarioTests
 {
     private const string Company = TestIdentity.DefaultCompany;

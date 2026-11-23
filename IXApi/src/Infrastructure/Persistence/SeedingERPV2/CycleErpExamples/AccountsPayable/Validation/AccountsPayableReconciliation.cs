@@ -98,6 +98,15 @@ public sealed class AccountsPayableReconciliationSnapshot
         var correctionVouchers = await db.Set<VendPackingSlipVersion>().Where(x => receiptIds.Contains(x.VendPackingSlipJour)).Select(x => x.LedgerVoucher).ToArrayAsync(ct);
         var receiptVouchers = receipts.Select(x => x.LedgerVoucher).Concat(correctionVouchers).Where(x => x.Length > 0).ToArray();
         var settlementRows = await db.Set<VendSettlement>().Where(x => x.DataAreaId == area && ids.Contains(x.InvoiceTransRecId)).ToListAsync(ct);
+        // A prepayment application settles against a vendor transaction posted on its own voucher; include every
+        // vendor transaction the settlements reference so both sides are in the snapshot.
+        var settledIds = settlementRows.Select(x => x.PaymentTransRecId).Concat(settlementRows.Select(x => x.InvoiceTransRecId)).Except(ids).ToArray();
+        if (settledIds.Length > 0)
+        {
+            vendorTransactions.AddRange(await db.Set<VendTrans>().Where(x => x.DataAreaId == area && settledIds.Contains(x.RecId)).ToListAsync(ct));
+            ids = vendorTransactions.Select(x => x.RecId).ToArray();
+            open = await db.Set<VendTransOpen>().Where(x => x.DataAreaId == area && ids.Contains(x.RefRecId)).ToListAsync(ct);
+        }
         var allVouchers = vendorVouchers.Concat(receiptVouchers).Concat(settlementRows.Select(x => x.Voucher)).Distinct().ToArray();
         var posted = await db.Set<GeneralJournalEntry>().Where(x => x.DataAreaId == area && allVouchers.Contains(x.SubledgerVoucher)).Select(x => x.RecId).ToArrayAsync(ct);
         var entries = await db.Set<GeneralJournalAccountEntry>().Where(x => x.DataAreaId == area && posted.Contains(x.GeneralJournalEntry)).ToListAsync(ct);

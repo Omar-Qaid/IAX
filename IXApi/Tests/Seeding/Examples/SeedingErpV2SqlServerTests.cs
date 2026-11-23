@@ -18,6 +18,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace IAX.IXApi.Tests;
 
+[Collection(SeedingCollection.Name)]
 public sealed class SeedingErpV2SqlServerTests(ITestOutputHelper output)
 {
     [SqlServerSeedFact]

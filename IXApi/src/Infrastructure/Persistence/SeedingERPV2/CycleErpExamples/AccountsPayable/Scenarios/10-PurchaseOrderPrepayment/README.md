@@ -1,6 +1,6 @@
 # Purchase Order Prepayment
 
-> **Not implemented.** `AccountsPayableTransactionFlow` has no scenario 10, so running the AP examples does not post this cycle. This page describes the intended behavior only.
+> Implemented scenario `10`, executed by `AccountsPayableTransactionFlow` with the tax-free vendor `APV2-{company}-PREPAY` (the prepayment invoice path refuses a purchase with a sales tax group). Setup comes from `VendPrepaymentSetupSeeder`: advance posting profile `APV2-ADV` on `VendParameters` (summary 281001), procurement category `APV2 purchase prepayment` with `PurchAdvance` posting to supplier advances 181005. Steps: order 100 at 25; define a 1,000 prepayment (`PurchPrepayTable`); post prepayment invoice `APV2-{year}-10-PRE`; pay it; receive and invoice 2,500 (`-I1`); apply the 1,000 to the final invoice; pay the 1,500 remainder.
 
 > Not implemented. `AccountsPayableTransactionFlow.Scenarios` has no ID 10; this page is a specification only.
 

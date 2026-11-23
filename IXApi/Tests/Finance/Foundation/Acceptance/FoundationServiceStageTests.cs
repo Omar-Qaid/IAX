@@ -38,7 +38,7 @@ using Xunit;
 
 namespace IAX.IXApi.Tests;
 
-[Collection("AccountsPayable phase one")]
+[Collection(SeedingCollection.Name)]
 public sealed class FoundationServiceStageTests
 {
     private static readonly Type[] CrudServices = typeof(FinanceModule).Assembly.GetTypes()

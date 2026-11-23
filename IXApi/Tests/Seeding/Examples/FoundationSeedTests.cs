@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 namespace IAX.IXApi.Tests;
-[Collection("AccountsPayable phase one")]
+[Collection(SeedingCollection.Name)]
 public sealed class FoundationSeedTests
 {
     [Fact]

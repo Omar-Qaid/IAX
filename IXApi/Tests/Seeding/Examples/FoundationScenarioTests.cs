@@ -24,7 +24,7 @@ namespace IAX.IXApi.Tests;
 /// scenario's expected results against persisted data. Scenario 06 (conflict, cross-company and rerun rollback)
 /// is covered by <see cref="FoundationSeedTests"/>.
 /// </summary>
-[Collection("AccountsPayable phase one")]
+[Collection(SeedingCollection.Name)]
 public sealed class FoundationScenarioTests
 {
     private const string Company = TestIdentity.DefaultCompany;

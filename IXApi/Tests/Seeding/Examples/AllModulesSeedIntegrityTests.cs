@@ -10,6 +10,7 @@ using Xunit;
 namespace IAX.IXApi.Tests;
 
 /// <summary>All eleven modules' configuration and master data seeded together, then rerun.</summary>
+[Collection(SeedingCollection.Name)]
 public sealed class AllModulesSeedIntegrityTests
 {
     private static readonly string[] Modules =

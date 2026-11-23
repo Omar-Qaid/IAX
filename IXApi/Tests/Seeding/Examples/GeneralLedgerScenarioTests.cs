@@ -19,6 +19,7 @@ namespace IAX.IXApi.Tests;
 /// the whole ledger is that scenario's postings, and checked account by account against its README. Expected
 /// amounts are computed here from the scenario inputs, not read from the flow.
 /// </summary>
+[Collection(SeedingCollection.Name)]
 public sealed class GeneralLedgerScenarioTests
 {
     private const string Company = TestIdentity.DefaultCompany;

@@ -31,8 +31,6 @@ using Xunit;
 
 namespace IAX.IXApi.Tests;
 
-[CollectionDefinition("AccountsReceivable cycle stages", DisableParallelization = true)]
-public sealed class AccountsReceivableCycleStageCollection { }
 
 /// <summary>
 /// The customer cycle, stage by stage, through the services that own each document: order,
@@ -40,7 +38,7 @@ public sealed class AccountsReceivableCycleStageCollection { }
 /// reconciliation. The full path runs first, then the same path with partial delivery, partial
 /// invoicing and partial collection. Every stage records its financial and inventory effect.
 /// </summary>
-[Collection("AccountsReceivable cycle stages")]
+[Collection(SeedingCollection.Name)]
 public sealed partial class AccountsReceivableCycleStageTests
 {
     private const string Company = "dat";
@@ -124,7 +122,7 @@ public sealed partial class AccountsReceivableCycleStageTests
         {
             await services.GetRequiredService<AccountsReceivableCycleSeeder>().PrepareAsync(new(2026, "ar-cycle-test"));
             Assert.Equal(2, await db.Set<CustTable>().CountAsync());
-            Assert.Equal(2, await db.Set<VendTable>().CountAsync());
+            Assert.Equal(3, await db.Set<VendTable>().CountAsync()); // LOCAL, USD and the tax-free prepayment vendor
             Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
             var price = await db.Set<PriceDiscTable>().SingleAsync(x => x.AccountRelation == Customer
                 && x.ItemRelation == Item && x.Relation == PriceType.PriceSales);

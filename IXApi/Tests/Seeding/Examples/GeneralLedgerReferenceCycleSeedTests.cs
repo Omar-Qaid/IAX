@@ -14,6 +14,7 @@ using Xunit;
 namespace IAX.IXApi.Tests;
 
 /// <summary>GL-02: the seeded fifteen-step reference cycle reaches the 6,300 trial balance and replays without posting again.</summary>
+[Collection(SeedingCollection.Name)]
 public sealed class GeneralLedgerReferenceCycleSeedTests
 {
     [Fact]

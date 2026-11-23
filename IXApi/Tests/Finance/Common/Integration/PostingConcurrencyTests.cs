@@ -18,7 +18,7 @@ namespace IAX.IXApi.Tests;
 /// empty rather than through EnsureCreated - which keeps these fast.
 /// </para>
 /// </summary>
-[Collection("AccountsPayable phase one")]
+[Collection(SeedingCollection.Name)]
 public sealed class PostingConcurrencyTests(Xunit.Abstractions.ITestOutputHelper output)
 {
     private const string Key = "VendInvoice:dat:V-0001";

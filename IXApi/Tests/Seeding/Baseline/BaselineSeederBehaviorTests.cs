@@ -23,6 +23,7 @@ using Xunit;
 namespace IAX.IXApi.Tests;
 
 /// <summary>The rules individual baseline seeders and the startup runner keep: what a rerun may and may not change.</summary>
+[Collection(SeedingCollection.Name)]
 public sealed class BaselineSeederBehaviorTests
 {
     [Fact]
