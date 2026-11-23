@@ -134,13 +134,13 @@
   {
     "suffix": "FIFO",
     "name": "Inventory FIFO close item",
-    "productType": "Service",
+    "productType": "Item",
     "unit": "EA",
     "modelGroup": "APV2-FIFO",
     "itemGroup": "APV2",
     "itemTaxGroup": "IV2-ZERO",
-    "stocked": false,
-    "purchasePrice": 60,
-    "salesPrice": 90
+    "stocked": true,
+    "purchasePrice": 10,
+    "salesPrice": 25
   }
 ]

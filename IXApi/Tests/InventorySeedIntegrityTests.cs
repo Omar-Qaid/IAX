@@ -217,8 +217,8 @@ public sealed class InventorySeedIntegrityTests(Xunit.Abstractions.ITestOutputHe
         using var scope = provider.CreateScope();
         var runner = scope.ServiceProvider.GetRequiredService<InventoryTransactionExamples>();
         var first = await runner.RunAsync(new(2026, "inventory-test"));
-        Assert.Equal(9, first.Scenarios.Count);
-        Assert.Equal(9, first.Scenarios.Select(x => x.ItemId).Distinct().Count());
+        Assert.Equal(10, first.Scenarios.Count);
+        Assert.Equal(10, first.Scenarios.Select(x => x.ItemId).Distinct().Count());
         output.WriteLine(System.Text.Json.JsonSerializer.Serialize(first));
         var movements = await db.Set<InventTrans>().CountAsync();
         var vouchers = await db.Set<GeneralJournalEntry>().CountAsync();
