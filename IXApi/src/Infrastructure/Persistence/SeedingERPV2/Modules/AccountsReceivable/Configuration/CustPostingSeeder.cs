@@ -19,6 +19,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.AccountsRece
 /// </summary>
 public sealed class CustPostingSeeder : IDataSeeder
 {
+    public const string PrepaymentProfile = "ARV2-PRE";
     public string Id => "ERPV2.CustPostingSeeder";
     public IReadOnlyCollection<string> Dependencies => ["ERPV2.CustGroupSeeder", "ERPV2.SalesAccountStructureSeeder"];
     public async Task SeedAsync(SeedContext c, CancellationToken ct)
@@ -29,5 +30,11 @@ public sealed class CustPostingSeeder : IDataSeeder
             new() { PostingProfile = "ARV2", Name = "AR example posting profile", Settlement = NoYes.Yes }, ct);
         await c.EnsureAsync<CustLedgerAccounts>(x => x.PostingProfile == "ARV2" && x.AccountCode == AccountCode.Group && x.Num == "ARV2",
             new() { PostingProfile = "ARV2", AccountCode = AccountCode.Group, Num = "ARV2", SummaryLedgerDimension = summary.RecId, ClearingLedgerDimension = advance.RecId }, ct);
+        // D365 posts a customer prepayment through its own posting profile, whose summary account is the
+        // customer-advance liability; settling it against the invoice moves the amount to the receivable.
+        await c.EnsureAsync<CustLedger>(x => x.PostingProfile == PrepaymentProfile,
+            new() { PostingProfile = PrepaymentProfile, Name = "AR example prepayment posting profile", Settlement = NoYes.Yes }, ct);
+        await c.EnsureAsync<CustLedgerAccounts>(x => x.PostingProfile == PrepaymentProfile && x.AccountCode == AccountCode.Group && x.Num == "ARV2",
+            new() { PostingProfile = PrepaymentProfile, AccountCode = AccountCode.Group, Num = "ARV2", SummaryLedgerDimension = advance.RecId }, ct);
     }
 }

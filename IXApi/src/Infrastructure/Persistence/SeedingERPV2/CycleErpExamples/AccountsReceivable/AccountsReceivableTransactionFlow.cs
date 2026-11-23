@@ -36,7 +36,9 @@ public sealed class AccountsReceivableTransactionFlow(ApplicationDbContext db,
         ["01"] = "Stock and service sale to collection", ["02"] = "Partial deliveries and invoices",
         ["03"] = "Non-stocked service sales order", ["04"] = "Free text invoice",
         ["05"] = "Invoice across multiple deliveries", ["08"] = "Partial collection",
-        ["09"] = "On-account collection and later settlement", ["12"] = "Cash discount",
+        ["09"] = "On-account collection and later settlement",
+        ["10"] = "Customer prepayment applied to the invoice", ["11"] = "Overpayment left as a customer credit",
+        ["12"] = "Cash discount",
         ["13"] = "Foreign-currency sale and realized exchange difference",
         ["14"] = "Sales return and customer credit", ["16"] = "Cancel undelivered remainder",
         ["18"] = "Settlement reversal", ["19"] = "Payment reversal",
@@ -112,6 +114,8 @@ public sealed class AccountsReceivableTransactionFlow(ApplicationDbContext db,
         }
         steps.Add(new("Sales order and confirmation", order.SalesId, "Created/verified"));
 
+        if (id == "10") await PrepaymentAsync(key, account, date.AddDays(-11), ct);
+
         var orderLines = (await db.Set<SalesLine>().Where(x => x.DataAreaId == Area && x.SalesId == order.SalesId).ToListAsync(ct))
             .OrderBy(x => x.LineNum).ToList();
 
@@ -159,6 +163,14 @@ public sealed class AccountsReceivableTransactionFlow(ApplicationDbContext db,
         var collected = total;
 
         if (id == "12") collected = decimal.Round(total * 0.98m, 2, MidpointRounding.AwayFromZero);
+        if (id == "10")
+        {
+            // The prepayment sits on the advance account until it is settled against the invoice, which
+            // moves it to the receivable; only the remainder is collected afterwards.
+            await SettleMarked(key, account, date.AddDays(1), ct);
+            collected -= Prepayment;
+        }
+        if (id == "11") { collected += Overpayment; expectedOpenCredit = Overpayment; }
         if (id == "14")
         {
             var originalInvoiceId = posted.Single(x => x.ParmId == key + "-I1").InvoiceId;
@@ -282,6 +294,18 @@ public sealed class AccountsReceivableTransactionFlow(ApplicationDbContext db,
             TaxGroup = "ARV2", TaxItemGroup = "APV2"
         }, ct);
         Check(added.Status == SalesLineWriteStatus.Success, added.Error ?? "the example sales line was not added.");
+    }
+
+    private const decimal Prepayment = 1000m;
+    private const decimal Overpayment = 100m;
+
+    /// <summary>A customer prepayment, posted through the prepayment posting profile before invoicing.</summary>
+    private async Task PrepaymentAsync(string key, string account, DateTime date, CancellationToken ct)
+    {
+        var prepaid = await payments.PostAsync(new(account, "APV2-BANK", Prepayment, date, "ARV2", null, key + "-PRE",
+            SettleAutomatically: false, Prepayment: true), ct);
+        Success(prepaid.StatusCode, prepaid.Message, "customer prepayment");
+        steps.Add(new("Prepayment", key + "-PRE", "Posted to the customer-advance account"));
     }
 
     private async Task Deliver(SalesTable order, string number, DateTime date, List<(long RecId, decimal Qty)> quantities, CancellationToken ct)

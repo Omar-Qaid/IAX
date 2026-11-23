@@ -17,6 +17,14 @@ public sealed class CustParametersSeeder : IDataSeeder
     public IReadOnlyCollection<string> Dependencies => ["ERPV2.CustPostingSeeder"];
     public async Task SeedAsync(SeedContext c, CancellationToken ct)
     {
-        await c.EnsureAsync<CustParameters>(x => x.Key == 0, new() { Key = 0, CustPostingProfile = "ARV2" }, ct);
+        var parameters = await c.EnsureAsync<CustParameters>(x => x.Key == 0,
+            new() { Key = 0, CustPostingProfile = "ARV2", PrepaymentPostingProfile = CustPostingSeeder.PrepaymentProfile }, ct,
+            nameof(CustParameters.CustPostingProfile));
+        // A company seeded before the prepayment profile existed gets it; an operator's own choice is kept.
+        if (string.IsNullOrWhiteSpace(parameters.PrepaymentPostingProfile))
+        {
+            parameters.PrepaymentPostingProfile = CustPostingSeeder.PrepaymentProfile;
+            await c.Db.SaveChangesAsync(ct);
+        }
     }
 }
