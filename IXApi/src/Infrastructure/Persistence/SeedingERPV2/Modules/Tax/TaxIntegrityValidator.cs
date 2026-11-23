@@ -1,6 +1,7 @@
-using System.Reflection;
+﻿using System.Reflection;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models;
+using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -60,11 +61,13 @@ public sealed class TaxIntegrityValidator : ISeedValidator
                 throw new InvalidOperationException($"Exempt tax code {row.TaxCode} in group {row.TaxGroup} has no exemption reason code.");
             await c.RequireAsync<TaxExemptCodeTable>(x => x.ExemptCode == row.TaxExemptCode, ct);
         }
-        foreach (var zero in new[] { TaxVatCategorySeeder.ZeroRated, TaxVatCategorySeeder.Exempt })
+        foreach (var zero in new[] { TaxSeedCatalog.ZeroRated, TaxSeedCatalog.Exempt })
             if (await c.Rows<TaxData>().AnyAsync(x => x.TaxCode == zero && x.TaxValue != 0m, ct))
                 throw new InvalidOperationException($"Tax code {zero} must carry a zero rate.");
-        if (await c.Rows<TaxOnItem>().AnyAsync(x => x.TaxItemGroup == TaxVatCategorySeeder.OutOfScopeItemGroup, ct))
-            throw new InvalidOperationException($"Item tax group {TaxVatCategorySeeder.OutOfScopeItemGroup} is out of scope and must hold no tax code.");
+        if (await c.Rows<TaxOnItem>().AnyAsync(x => x.TaxItemGroup == TaxSeedCatalog.OutOfScopeItemGroup, ct))
+            throw new InvalidOperationException($"Item tax group {TaxSeedCatalog.OutOfScopeItemGroup} is out of scope and must hold no tax code.");
+
+        await ValidateCrossModuleReferencesAsync(c, ct);
 
         // Reporting rests on the period head, its authority, and periods that tile the fiscal year.
         var period = await c.RequireAsync<TaxPeriodHead>(x => x.TaxPeriod == code.TaxPeriod, ct);
@@ -105,6 +108,50 @@ public sealed class TaxIntegrityValidator : ISeedValidator
                         throw new InvalidOperationException($"Tax reference {type.ClrType.Name} -> {fk.PrincipalEntityType.ClrType.Name} is missing or crosses company {c.Company}.");
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Every tax group and item tax group another module stamps on its masters must exist in Tax, every
+    /// code a group holds must be a defined code, and a code reachable from a customer (or vendor) tax
+    /// group must post through a group carrying the payable (or receivable) account. A module seeding a
+    /// code Tax does not define, or a group no posting can resolve, fails here instead of at invoicing.
+    /// </summary>
+    private static async Task ValidateCrossModuleReferencesAsync(SeedContext c, CancellationToken ct)
+    {
+        var partyGroups = (await c.Rows<TaxGroupHeading>().Select(x => x.TaxGroup).ToListAsync(ct)).ToHashSet();
+        var itemGroups = (await c.Rows<TaxItemGroupHeading>().Select(x => x.TaxItemGroup).ToListAsync(ct)).ToHashSet();
+        var codes = await c.Rows<TaxTable>().ToDictionaryAsync(x => x.TaxCode, x => x.TaxAccountGroup, ct);
+        var postingGroups = await c.Rows<TaxLedgerAccountGroup>().ToDictionaryAsync(x => x.TaxAccountGroup, ct);
+
+        var customerGroups = (await c.Rows<CustTable>().Select(x => x.TaxGroupId).ToListAsync(ct))
+            .Concat(await c.Rows<CustGroup>().Select(x => x.TaxGroupId).ToListAsync(ct))
+            .Where(x => !string.IsNullOrWhiteSpace(x)).ToHashSet();
+        var vendorGroups = (await c.Rows<VendTable>().Select(x => x.TaxGroup).ToListAsync(ct))
+            .Concat(await c.Rows<VendGroup>().Select(x => x.TaxGroupId).ToListAsync(ct))
+            .Where(x => !string.IsNullOrWhiteSpace(x)).ToHashSet();
+        foreach (var group in customerGroups.Concat(vendorGroups).Where(x => !partyGroups.Contains(x)))
+            throw new InvalidOperationException($"Sales tax group {group} is set on a customer or vendor in {c.Company} but is not defined in Tax.");
+
+        var itemReferences = (await c.Rows<InventTableModule>().Select(x => x.TaxItemGroupId).ToListAsync(ct))
+            .Concat(await c.Rows<MarkupTable>().Select(x => x.TaxItemGroup).ToListAsync(ct))
+            .Where(x => !string.IsNullOrWhiteSpace(x)).Distinct();
+        foreach (var group in itemReferences.Where(x => !itemGroups.Contains(x)))
+            throw new InvalidOperationException($"Item sales tax group {group} is set on an item or charge in {c.Company} but is not defined in Tax.");
+
+        foreach (var row in await c.Rows<TaxOnItem>().ToListAsync(ct))
+            if (!codes.ContainsKey(row.TaxCode))
+                throw new InvalidOperationException($"Item tax group {row.TaxItemGroup} holds undefined tax code {row.TaxCode}.");
+        foreach (var row in await c.Rows<TaxGroupData>().ToListAsync(ct))
+        {
+            if (!codes.TryGetValue(row.TaxCode, out var accountGroup))
+                throw new InvalidOperationException($"Sales tax group {row.TaxGroup} holds undefined tax code {row.TaxCode}.");
+            if (!postingGroups.TryGetValue(accountGroup, out var posting))
+                throw new InvalidOperationException($"Tax code {row.TaxCode} posts through missing ledger posting group {accountGroup}.");
+            if (customerGroups.Contains(row.TaxGroup) && posting.TaxOutgoingLedgerDimension is not > 0)
+                throw new InvalidOperationException($"Tax code {row.TaxCode} reaches customers through group {row.TaxGroup}, but posting group {accountGroup} has no sales tax payable account.");
+            if (vendorGroups.Contains(row.TaxGroup) && posting.TaxIncomingLedgerDimension is not > 0)
+                throw new InvalidOperationException($"Tax code {row.TaxCode} reaches vendors through group {row.TaxGroup}, but posting group {accountGroup} has no input tax account.");
         }
     }
 

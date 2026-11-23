@@ -11,6 +11,7 @@ using IAX.IXApi.Modules.Finance.Foundation.Dimensions.LedgerDimension;
 using IAX.IXApi.Modules.Finance.Foundation.Dimensions.AccountStructure;
 using Microsoft.EntityFrameworkCore;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.GeneralLedger;
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Tax;
 namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.AccountsReceivable;
 
 /// <summary>
@@ -21,12 +22,13 @@ namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.AccountsRece
 public sealed class SalesTaxSeeder : IDataSeeder
 {
     public string Id => "ERPV2.SalesTaxSeeder";
-    public IReadOnlyCollection<string> Dependencies => ["ERPV2.SalesAccountStructureSeeder", "ERPV2.TaxItemGroupHeadingSeeder", "ERPV2.TaxTableSeeder", "ERPV2.CurrencySeeder", "ERPV2.UnitOfMeasureSeeder"];
+    public IReadOnlyCollection<string> Dependencies => ["ERPV2.SalesAccountStructureSeeder", "ERPV2.TaxItemGroupHeadingSeeder", "ERPV2.TaxTableSeeder", "ERPV2.TaxVatCategorySeeder", "ERPV2.TaxPostingSeeder", "ERPV2.CurrencySeeder", "ERPV2.UnitOfMeasureSeeder"];
     public async Task SeedAsync(SeedContext c, CancellationToken ct)
     {
         var output = await c.RequireAsync<DimensionAttributeValueCombination>(x => x.MainAccountValue == GeneralLedgerSeedExample.PayableSalesTax, ct);
         await c.EnsureAsync<TaxLedgerAccountGroup>(x => x.TaxAccountGroup == "ARV2",
-            new() { TaxAccountGroup = "ARV2", Name = "AR example output tax", TaxOutgoingLedgerDimension = output.RecId }, ct);
+            new() { TaxAccountGroup = "ARV2", Name = "AR example output tax", TaxOutgoingLedgerDimension = output.RecId }, ct,
+            nameof(TaxLedgerAccountGroup.Name), nameof(TaxLedgerAccountGroup.TaxOutgoingLedgerDimension));
         await c.EnsureAsync<TaxTable>(x => x.TaxCode == "ARV2-15", new() { TaxCode = "ARV2-15", TaxName = "AR example 15 percent",
             TaxCurrencyCode = "SAR", TaxAccountGroup = "ARV2", TaxUnit = "EA", TaxBase = TaxBaseType.PctPerNet,
             TaxCalcMethod = TaxCalcMethod.Line, TaxRoundOff = 0.01m }, ct);
@@ -43,5 +45,25 @@ public sealed class SalesTaxSeeder : IDataSeeder
         await c.RequireAsync<TaxItemGroupHeading>(x => x.TaxItemGroup == "APV2", ct);
         await c.EnsureAsync<TaxOnItem>(x => x.TaxItemGroup == "APV2" && x.TaxCode == "ARV2-15",
             new() { TaxItemGroup = "APV2", TaxCode = "ARV2-15", TaxExemptCode = exempt.ExemptCode }, ct);
+
+        // The zero-rated and exempt codes are shared with purchasing (Tax owns them), so customers
+        // reach the same codes through their own tax group instead of a sales copy of each.
+        await c.EnsureAsync<TaxGroupData>(x => x.TaxGroup == TaxSeedCatalog.CustomerTaxGroup && x.TaxCode == TaxSeedCatalog.ZeroRated,
+            new() { TaxGroup = TaxSeedCatalog.CustomerTaxGroup, TaxCode = TaxSeedCatalog.ZeroRated }, ct);
+        await c.EnsureAsync<TaxGroupData>(x => x.TaxGroup == TaxSeedCatalog.CustomerTaxGroup && x.TaxCode == TaxSeedCatalog.Exempt,
+            new() { TaxGroup = TaxSeedCatalog.CustomerTaxGroup, TaxCode = TaxSeedCatalog.Exempt,
+                ExemptTax = NoYes.Yes, TaxExemptCode = TaxSeedCatalog.ExemptReason }, ct);
+        // Those shared codes post through the purchase posting group, which D365 lets carry both
+        // sides; the sales side needs its payable account. Only an empty account is filled in, so an
+        // operator's own choice is kept.
+        var shared = await c.RequireAsync<TaxLedgerAccountGroup>(x => x.TaxAccountGroup == TaxSeedCatalog.PurchasePostingGroup, ct);
+        var sales = await c.RequireAsync<TaxLedgerAccountGroup>(x => x.TaxAccountGroup == TaxSeedCatalog.SalesPostingGroup, ct);
+        var changed = false;
+        if (shared.TaxOutgoingLedgerDimension is not > 0) { shared.TaxOutgoingLedgerDimension = output.RecId; changed = true; }
+        // A database seeded before the codes were unified still has a zero-rated code on the sales
+        // posting group inside the vendor tax group; its purchases settle through the input account.
+        if (sales.TaxIncomingLedgerDimension is not > 0 && shared.TaxIncomingLedgerDimension is > 0)
+        { sales.TaxIncomingLedgerDimension = shared.TaxIncomingLedgerDimension; changed = true; }
+        if (changed) await c.Db.SaveChangesAsync(ct);
     }
 }

@@ -19,6 +19,7 @@ public sealed class TaxPostingSeeder : IDataSeeder
     {
 
         var input = await c.RequireAsync<DimensionAttributeValueCombination>(x => x.MainAccountValue == "181004", ct);
-        await c.EnsureAsync<TaxLedgerAccountGroup>(x => x.TaxAccountGroup == "APV2", new() { TaxAccountGroup = "APV2", Name = "AP example input tax", TaxIncomingLedgerDimension = input.RecId }, ct);
+        await c.EnsureAsync<TaxLedgerAccountGroup>(x => x.TaxAccountGroup == "APV2", new() { TaxAccountGroup = "APV2", Name = "AP example input tax", TaxIncomingLedgerDimension = input.RecId }, ct,
+            nameof(TaxLedgerAccountGroup.Name), nameof(TaxLedgerAccountGroup.TaxIncomingLedgerDimension));
     }
 }
