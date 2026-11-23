@@ -490,14 +490,8 @@ public sealed partial class AccountsReceivableCycleStageTests
     private static async Task<decimal> OpenTotalAsync(ApplicationDbContext db) =>
         (await db.Set<CustTransOpen>().Where(x => x.DataAreaId == Company).ToListAsync()).Sum(x => x.AmountCur);
 
-    private static async Task<decimal> LedgerAsync(ApplicationDbContext db, string mainAccount)
-    {
-        var dimensions = await db.Set<DimensionAttributeValueCombination>().AsNoTracking()
-            .Where(x => x.DataAreaId == Company && x.MainAccountValue == mainAccount).Select(x => x.RecId).ToArrayAsync();
-        return (await db.Set<GeneralJournalAccountEntry>().AsNoTracking()
-            .Where(x => x.DataAreaId == Company && dimensions.Contains(x.LedgerDimension)).ToListAsync())
-            .Sum(x => x.AccountingCurrencyAmount);
-    }
+    private static Task<decimal> LedgerAsync(ApplicationDbContext db, string mainAccount) =>
+        LedgerBalances.OfMainAccountAsync(db, Company, mainAccount);
 
     private static async Task<string> CountsAsync(ApplicationDbContext db) => string.Join(":",
         await db.Set<CustTrans>().CountAsync(), await db.Set<CustTransOpen>().CountAsync(),

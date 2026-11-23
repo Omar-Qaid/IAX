@@ -33,6 +33,8 @@ contacts are demonstration data.
 
 Verification is in `FoundationSeedTests`: registration/dependency resolution,
 mapped master coverage, FK-enabled persistence, reruns and conflict rollback.
+`FoundationScenarioTests` (`Tests/Seeding/Examples/`) has one test per scenario in `Scenarios/01`-`05`, each
+asserting that scenario's `expected-results.md` against persisted data; scenario 06 is `FoundationSeedTests`.
 Check current test output before claiming complete coverage or successful execution.
 
 
