@@ -1,0 +1,10 @@
+{
+  "masters": [
+    "SysBackgroundJob",
+    "SysNumberSequence",
+    "SysSettings"
+  ],
+  "transactions": [
+    "SysBackgroundJobExecution"
+  ]
+}

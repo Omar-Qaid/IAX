@@ -1,0 +1,20 @@
+{
+  "masters": [
+    "TaxAuthorityAddress",
+    "TaxData",
+    "TaxExemptCodeTable",
+    "TaxGroupData",
+    "TaxGroupHeading",
+    "TaxItemGroupHeading",
+    "TaxLedgerAccountGroup",
+    "TaxOnItem",
+    "TaxPeriodHead",
+    "TaxReportPeriod",
+    "TaxTable"
+  ],
+  "transactions": [
+    "TaxJournalTrans",
+    "TaxTrans",
+    "TaxTransGeneralJournalAccountEntry"
+  ]
+}

@@ -1,4 +1,7 @@
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Registration;
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Tax.Validation;
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Tax;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -10,6 +13,8 @@ public static class TaxCycleRegistration
     {
         services.AddFoundationPhaseOneSeeding();
         services.AddAccountsReceivablePhaseOneSeeding();
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<ISeedValidator, TaxIntegrityValidator>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<ISeedValidator, TaxCycleValidator>());
         services.TryAddScoped<TaxCycleSeeder>();
         return services;
     }

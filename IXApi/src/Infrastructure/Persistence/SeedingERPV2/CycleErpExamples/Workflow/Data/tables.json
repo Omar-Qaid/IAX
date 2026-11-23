@@ -1,0 +1,17 @@
+{
+  "masters": [
+    "WfActivityType",
+    "WfCategory",
+    "WfControl",
+    "WfDataType",
+    "WfOperator",
+    "WfPerformer",
+    "WfPerformerType",
+    "WfPriority",
+    "WfProcessType"
+  ],
+  "transactions": [
+    "WfRequest",
+    "WfRequestDetail"
+  ]
+}

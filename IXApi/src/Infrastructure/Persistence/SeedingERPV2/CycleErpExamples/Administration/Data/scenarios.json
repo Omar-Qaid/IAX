@@ -1,0 +1,10 @@
+{
+  "scope": "ConfigurationAndMasterData",
+  "steps": [
+    "validate-definition",
+    "prepare-module-masters",
+    "validate-and-capture-references",
+    "commit-and-report"
+  ],
+  "transactionScenarioIds": []
+}

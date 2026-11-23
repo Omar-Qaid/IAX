@@ -1,0 +1,12 @@
+[
+  { "entity": "TaxLedgerAccountGroup", "field": "TaxAccountGroup", "value": "APV2" },
+  { "entity": "TaxExemptCodeTable", "field": "ExemptCode", "value": "APV2-NONE" },
+  { "entity": "TaxTable", "field": "TaxCode", "value": "APV2-15" },
+  { "entity": "TaxData", "field": "TaxCode", "value": "APV2-15" },
+  { "entity": "TaxGroupHeading", "field": "TaxGroup", "value": "APV2" },
+  { "entity": "TaxItemGroupHeading", "field": "TaxItemGroup", "value": "APV2" },
+  { "entity": "TaxGroupData", "field": "TaxCode", "value": "APV2-15" },
+  { "entity": "TaxOnItem", "field": "TaxCode", "value": "APV2-15" },
+  { "entity": "TaxAuthorityAddress", "field": "TaxAuthority", "value": "FNV2" },
+  { "entity": "TaxPeriodHead", "field": "TaxPeriod", "value": "Monthly" }
+]

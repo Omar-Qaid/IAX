@@ -14,12 +14,13 @@ namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.CashAndBank;
 public sealed class BankAccountTableSeeder : IDataSeeder
 {
     public string Id => "ERPV2.BankAccountTableSeeder";
-    public IReadOnlyCollection<string> Dependencies => ["ERPV2.DimensionAttributeValueCombinationSeeder", "ERPV2.CurrencySeeder", "ERPV2.LedgerJournalNameSeeder"];
+    public IReadOnlyCollection<string> Dependencies => ["ERPV2.DimensionAttributeValueCombinationSeeder", "ERPV2.CurrencySeeder", "ERPV2.LedgerJournalNameSeeder", "ERPV2.BankGroupSeeder"];
     public async Task SeedAsync(SeedContext c, CancellationToken ct)
     {
 
         var dimension = await c.RequireAsync<DimensionAttributeValueCombination>(x => x.MainAccountValue == "181001", ct);
-        await c.EnsureAsync<BankAccountTable>(x => x.AccountId == "APV2-BANK", new() { AccountId = "APV2-BANK", AccountNum = "000000009001", Name = "Treasury operating account (demo)", CurrencyCode = "SAR", LedgerDimension = dimension.RecId, BankAccountStatus = BankAccountStatus.Active, VendPaymentJournalName = "APV2-PAY", ActiveFrom = new(2000, 1, 1), ActiveTo = new(2099, 12, 31) }, ct);
-        await c.EnsureAsync<BankAccountTable>(x => x.AccountId == "APV2-USD", new() { AccountId = "APV2-USD", AccountNum = "000000009002", Name = "USD treasury account (demo)", CurrencyCode = "USD", LedgerDimension = dimension.RecId, BankAccountStatus = BankAccountStatus.Active, VendPaymentJournalName = "APV2-PAY", ActiveFrom = new(2000, 1, 1), ActiveTo = new(2099, 12, 31) }, ct);
+        var group = await c.RequireAsync<BankGroup>(x => x.BankGroupId == "APV2-BG", ct);
+        await c.EnsureAsync<BankAccountTable>(x => x.AccountId == "APV2-BANK", new() { AccountId = "APV2-BANK", AccountNum = "000000009001", Name = "Treasury operating account (demo)", CurrencyCode = "SAR", LedgerDimension = dimension.RecId, BankGroupId = group.BankGroupId, BankAccountStatus = BankAccountStatus.Active, VendPaymentJournalName = "APV2-PAY", ActiveFrom = new(2000, 1, 1), ActiveTo = new(2099, 12, 31) }, ct);
+        await c.EnsureAsync<BankAccountTable>(x => x.AccountId == "APV2-USD", new() { AccountId = "APV2-USD", AccountNum = "000000009002", Name = "USD treasury account (demo)", CurrencyCode = "USD", LedgerDimension = dimension.RecId, BankGroupId = group.BankGroupId, BankAccountStatus = BankAccountStatus.Active, VendPaymentJournalName = "APV2-PAY", ActiveFrom = new(2000, 1, 1), ActiveTo = new(2099, 12, 31) }, ct);
     }
 }

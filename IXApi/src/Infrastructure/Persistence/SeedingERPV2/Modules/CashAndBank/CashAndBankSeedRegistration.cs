@@ -6,6 +6,7 @@ public static class CashAndBankSeedRegistration
 {
     public static IServiceCollection AddCashAndBankSeeders(this IServiceCollection services)
     {
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, BankGroupSeeder>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, BankAccountTableSeeder>());
         return services;
     }

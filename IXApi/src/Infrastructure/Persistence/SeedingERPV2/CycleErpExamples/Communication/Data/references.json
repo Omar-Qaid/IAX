@@ -1,0 +1,8 @@
+[
+  { "entity": "SysNotificationTemplate", "field": "Code", "value": "WF_REQUEST_SUBMITTED" },
+  { "entity": "SysNotificationTemplate", "field": "Code", "value": "WF_REQUEST_APPROVED" },
+  { "entity": "SysNotificationTemplate", "field": "Code", "value": "WF_REQUEST_REJECTED" },
+  { "entity": "SysNotificationTemplate", "field": "Code", "value": "INV_LOW_STOCK" },
+  { "entity": "SysNotificationTemplate", "field": "Code", "value": "FIN_INVOICE_DUE" },
+  { "entity": "SysNotificationTemplate", "field": "Code", "value": "HR_LEAVE_APPROVED" }
+]

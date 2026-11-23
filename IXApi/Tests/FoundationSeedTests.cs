@@ -108,6 +108,41 @@ public sealed class FoundationSeedTests
         Assert.Equal(originalUnit, (await db.Set<IAX.IXApi.Modules.Finance.Foundation.Structure.HcmPosition>().SingleAsync(x => x.Code == "FNV2-BUYER")).OrganizationUnitId);
         Assert.False(await db.Set<IAX.IXApi.Modules.Finance.Foundation.OrganizationUnits.OrganizationUnit>().IgnoreQueryFilters().AnyAsync(x => x.Code == "FNV2-OTHER"));
     }
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Unavailable_parent_is_rejected_and_late_changes_roll_back(bool deleted)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:;Foreign Keys=True");
+        await connection.OpenAsync();
+        await using var db = new Fixture(new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlite(connection).Options);
+        await db.Database.ExecuteSqlRawAsync(db.Database.GenerateCreateScript().Replace("N'", "'"));
+        using var provider = new ServiceCollection().AddFoundationPhaseOneSeeding().BuildServiceProvider();
+        using var scope = provider.CreateScope();
+        var seeders = scope.ServiceProvider.GetServices<IDataSeeder>().ToArray();
+        var validators = scope.ServiceProvider.GetServices<ISeedValidator>().ToArray();
+        await new SeedRunner(db, seeders, validators).RunAsync(2026, "foundation-test");
+        db.ChangeTracker.Clear();
+        var runner = new SeedRunner(db, seeders.Append(new UnavailableParent(seeders.Select(x => x.Id).ToArray(), deleted)), validators);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => runner.RunAsync(2027, "foundation-test"));
+        db.ChangeTracker.Clear();
+        var unit = await db.Set<IAX.IXApi.Modules.Finance.Foundation.OrganizationUnits.OrganizationUnit>().IgnoreQueryFilters().SingleAsync(x => x.Code == "FNV2-FIN");
+        Assert.False(unit.IsDeleted);
+        Assert.True(unit.IsActive);
+        Assert.False(await db.Set<TaxReportPeriod>().AnyAsync(x => x.FromDate.Year == 2027));
+    }
+    private sealed class UnavailableParent(string[] dependencies, bool deleted) : IDataSeeder
+    {
+        public string Id => "ERPV2.Foundation.UnavailableParent";
+        public IReadOnlyCollection<string> Dependencies => dependencies;
+        public async Task SeedAsync(SeedContext c, CancellationToken ct)
+        {
+            var unit = await c.Rows<IAX.IXApi.Modules.Finance.Foundation.OrganizationUnits.OrganizationUnit>().SingleAsync(x => x.Code == "FNV2-FIN", ct);
+            unit.IsDeleted = deleted;
+            unit.IsActive = deleted;
+            await c.Db.SaveChangesAsync(ct);
+        }
+    }
     private sealed class CrossCompanyReference(string[] dependencies) : IDataSeeder
     {
         public string Id => "ERPV2.Foundation.TestCorruption";
@@ -138,6 +173,8 @@ public sealed class FoundationSeedTests
         var examples = scope.ServiceProvider.GetRequiredService<IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Foundation.FoundationTransactionExamples>();
         var result = await examples.RunAsync(new(2026, "foundation-test"));
         Assert.Equal("FoundationTransactions", result.Scope);
+        Assert.NotNull(result.Preparation?.MasterData);
+        Assert.False(result.Preparation!.TransactionsExecuted);
         Assert.Single(result.TaxJournalDetails);
         Assert.Equal(2, result.Scenarios.Count);
         Assert.All(result.Scenarios, x => Assert.True(x.PostedVouchers > 0));
@@ -238,7 +275,9 @@ public sealed class FoundationSeedTests
         Assert.NotNull(first.MasterData);
         Assert.All(await db.Set<TaxReportPeriod>().ToListAsync(), interval => Assert.Equal(0, interval.VersionNum));
         Assert.Equal(4, first.PreparationSteps.Count);
-        Assert.Equal(68, first.MasterData.Tables.Count);
+        Assert.Equal(69, first.MasterData.Tables.Count);
+        Assert.Equal(first.CompletedSeeders, first.SeederSteps.Select(x => x.SeederId));
+        Assert.Equal(Enumerable.Range(1, first.CompletedSeeders.Count), first.SeederSteps.Select(x => x.Order));
         Assert.Equal(13, first.MasterData.References.Count);
         Assert.All(first.MasterData.Tables, table => Assert.Equal(table.RowCount, table.RecordIds.Count));
         var currency = first.MasterData.References.Single(x => x.Entity == "Currency");

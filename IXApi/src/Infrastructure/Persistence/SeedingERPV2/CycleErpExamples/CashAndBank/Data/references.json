@@ -1,0 +1,5 @@
+[
+  { "entity": "BankGroup", "field": "BankGroupId", "value": "APV2-BG" },
+  { "entity": "BankAccountTable", "field": "AccountId", "value": "APV2-BANK" },
+  { "entity": "BankAccountTable", "field": "AccountId", "value": "APV2-USD" }
+]

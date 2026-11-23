@@ -38,6 +38,12 @@
     <EmbeddedResource Include="Persistence\Seeding\Data\LegacyWorkflowMasterData.json" />
     <EmbeddedResource Include="Persistence\SeedingERPV2\CycleErpExamples\GeneralLedger\Data\*.json" LogicalName="SeedingERPV2.GeneralLedger.%(Filename)%(Extension)" />
     <EmbeddedResource Include="Persistence\Seeding\Data\LegacyOrganizationEmployeeData.json" />
+    <EmbeddedResource Include="Persistence\SeedingERPV2\CycleErpExamples\CashAndBank\Data\*.json" LogicalName="SeedingERPV2.CashAndBank.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Persistence\SeedingERPV2\CycleErpExamples\Tax\Data\*.json" LogicalName="SeedingERPV2.Tax.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Persistence\SeedingERPV2\CycleErpExamples\Organization\Data\*.json" LogicalName="SeedingERPV2.Organization.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Persistence\SeedingERPV2\CycleErpExamples\Administration\Data\*.json" LogicalName="SeedingERPV2.Administration.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Persistence\SeedingERPV2\CycleErpExamples\Workflow\Data\*.json" LogicalName="SeedingERPV2.Workflow.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Persistence\SeedingERPV2\CycleErpExamples\Communication\Data\*.json" LogicalName="SeedingERPV2.Communication.%(Filename)%(Extension)" />
     <EmbeddedResource Include="Persistence\SeedingERPV2\CycleErpExamples\Foundation\Data\*.json" LogicalName="SeedingERPV2.Foundation.%(Filename)%(Extension)" />
     <EmbeddedResource Include="Persistence\SeedingERPV2\CycleErpExamples\AccountsPayable\Data\*.json"
                       LogicalName="SeedingERPV2.AccountsPayable.%(Filename)%(Extension)" />

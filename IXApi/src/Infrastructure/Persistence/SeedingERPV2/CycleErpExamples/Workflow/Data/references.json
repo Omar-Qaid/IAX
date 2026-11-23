@@ -1,0 +1,11 @@
+[
+  { "entity": "WfCategory", "field": "Code", "value": "CAT6" },
+  { "entity": "WfPriority", "field": "Code", "value": "MED" },
+  { "entity": "WfProcessType", "field": "Code", "value": "APP" },
+  { "entity": "WfActivityType", "field": "Code", "value": "NORMAL" },
+  { "entity": "WfPerformerType", "field": "Code", "value": "ORGANIZATIONAL" },
+  { "entity": "WfPerformer", "field": "Code", "value": "PERF12" },
+  { "entity": "WfOperator", "field": "Code", "value": "EQ" },
+  { "entity": "WfDataType", "field": "Code", "value": "STR" },
+  { "entity": "WfControl", "field": "Code", "value": "search" }
+]

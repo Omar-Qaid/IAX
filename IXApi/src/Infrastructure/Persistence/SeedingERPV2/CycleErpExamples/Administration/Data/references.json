@@ -1,0 +1,10 @@
+[
+  { "entity": "SysSettings", "field": "AppName", "value": "HBMC ERP" },
+  { "entity": "SysNumberSequence", "field": "NumberSequence", "value": "Voucher" },
+  { "entity": "SysNumberSequence", "field": "NumberSequence", "value": "LedgerJournalTable" },
+  { "entity": "SysNumberSequence", "field": "NumberSequence", "value": "PurchTable" },
+  { "entity": "SysNumberSequence", "field": "NumberSequence", "value": "VendInvoiceJour" },
+  { "entity": "SysNumberSequence", "field": "NumberSequence", "value": "SalesTable" },
+  { "entity": "SysNumberSequence", "field": "NumberSequence", "value": "CustInvoiceJour" },
+  { "entity": "SysBackgroundJob", "field": "JobKey", "value": "WfActivityAutoPass" }
+]

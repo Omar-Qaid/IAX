@@ -1,0 +1,6 @@
+[
+  { "entity": "DocuType", "field": "TypeId", "value": "File" },
+  { "entity": "DocuType", "field": "TypeId", "value": "Note" },
+  { "entity": "DocuType", "field": "TypeId", "value": "URL" },
+  { "entity": "DocuType", "field": "TypeId", "value": "Image" }
+]

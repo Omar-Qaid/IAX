@@ -1,0 +1,9 @@
+{
+  "masters": [
+    "BankAccountTable",
+    "BankGroup"
+  ],
+  "transactions": [
+    "BankAccountTrans"
+  ]
+}
