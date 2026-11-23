@@ -12,6 +12,8 @@ public sealed record TaxTransactionReport(string Company, int FiscalYear,
     FoundationTransactionReport InputTax,
     AccountsReceivableTransactionReport OutputTax)
 {
+    /// <summary>The zero-rated (03) and exempt (04) free text invoices.</summary>
+    public IReadOnlyList<string> VatTreatmentInvoices { get; init; } = [];
     public string Scope => "TaxTransactions";
     public bool TransactionsExecuted => true;
 }

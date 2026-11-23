@@ -45,7 +45,22 @@ public sealed class TaxScenarioTests
         Assert.Equal(-52.50m, await LedgerBalances.OfMainAccountAsync(db, Company, GeneralLedgerSeedExample.PayableSalesTax));
         var invoiceVoucher = output.Voucher;
         Assert.False(await db.Set<InventTrans>().AnyAsync(x => x.Voucher == invoiceVoucher));
+
+        // 03 zero-rated and 04 exempt (VAT-TREATMENTS.md): 2 x 200 each, base recorded, tax 0, distinguished by
+        // code and direction; neither adds to the payable sales tax account.
+        var zero = await db.Set<TaxTrans>().SingleAsync(x => x.TaxCode == "APV2-0");
+        Assert.Equal((TaxDirection.Outgoing, -400m, 0m), (zero.TaxDirection, zero.TaxBaseAmount, zero.TaxAmount));
+        var exempt = await db.Set<TaxTrans>().SingleAsync(x => x.TaxCode == "APV2-EX");
+        Assert.Equal((TaxDirection.TaxExemptSales, -400m, 0m), (exempt.TaxDirection, exempt.TaxBaseAmount, exempt.TaxAmount));
+        Assert.Equal(-52.50m, await LedgerBalances.OfMainAccountAsync(db, Company, GeneralLedgerSeedExample.PayableSalesTax));
+        Assert.Equal(-(350m + 400m + 400m), await LedgerBalances.OfMainAccountAsync(db, Company, GeneralLedgerSeedExample.SalesRevenue));
         await LedgerBalances.AssertEveryVoucherBalancesAsync(db, Company);
+
+        // Replay resolves every document by name and posts nothing.
+        var taxRows = await db.Set<TaxTrans>().CountAsync();
+        db.ChangeTracker.Clear();
+        await scope.ServiceProvider.GetRequiredService<TaxTransactionExamples>().RunAsync(new(2026, "tax-scenario-test"));
+        Assert.Equal(taxRows, await db.Set<TaxTrans>().CountAsync());
     }
 
     private static async Task<string> MainAccountAsync(ApplicationDbContext db, long ledgerDimension) =>
