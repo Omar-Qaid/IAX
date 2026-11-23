@@ -2,7 +2,7 @@
 
 ## Expected net result
 
-Advance clears against final invoice; bank total 10,000; final AP 0. Capture actual prepayment interim entries; no double expense/inventory. Add taxable case only with verified tax setup.
+Not implemented: the seeded examples have no purchase-order prepayment (AccountsPayableTransactionFlow defines no scenario 10). Payment-journal prepayment is scenario 11.
 
 ## Posting specification
 

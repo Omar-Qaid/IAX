@@ -92,7 +92,11 @@ public sealed class AccountsPayableReconciliationSnapshot
         var open = await db.Set<VendTransOpen>().Where(x => x.DataAreaId == area && ids.Contains(x.RefRecId)).ToListAsync(ct);
         var origins = await db.Set<InventTransOrigin>().Where(x => x.DataAreaId == area && purchaseOrders.Contains(x.ReferenceId) && x.ReferenceCategory == InventRefType.PurchaseOrder).Select(x => x.RecId).ToArrayAsync(ct);
         var inventory = await db.Set<InventTrans>().Where(x => x.DataAreaId == area && origins.Contains(x.InventTransOrigin)).ToListAsync(ct);
-        var receiptVouchers = await db.Set<VendPackingSlipJour>().Where(x => x.DataAreaId == area && purchaseOrders.Contains(x.PurchId)).Select(x => x.LedgerVoucher).ToArrayAsync(ct);
+        var receipts = await db.Set<VendPackingSlipJour>().Where(x => x.DataAreaId == area && purchaseOrders.Contains(x.PurchId)).Select(x => new { x.RecId, x.LedgerVoucher }).ToListAsync(ct);
+        var receiptIds = receipts.Select(x => x.RecId).ToArray();
+        // A receipt correction posts its own voucher, recorded on the receipt's version rather than its journal.
+        var correctionVouchers = await db.Set<VendPackingSlipVersion>().Where(x => receiptIds.Contains(x.VendPackingSlipJour)).Select(x => x.LedgerVoucher).ToArrayAsync(ct);
+        var receiptVouchers = receipts.Select(x => x.LedgerVoucher).Concat(correctionVouchers).Where(x => x.Length > 0).ToArray();
         var settlementRows = await db.Set<VendSettlement>().Where(x => x.DataAreaId == area && ids.Contains(x.InvoiceTransRecId)).ToListAsync(ct);
         var allVouchers = vendorVouchers.Concat(receiptVouchers).Concat(settlementRows.Select(x => x.Voucher)).Distinct().ToArray();
         var posted = await db.Set<GeneralJournalEntry>().Where(x => x.DataAreaId == area && allVouchers.Contains(x.SubledgerVoucher)).Select(x => x.RecId).ToArrayAsync(ct);

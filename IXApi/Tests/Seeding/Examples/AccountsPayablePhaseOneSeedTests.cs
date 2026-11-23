@@ -356,7 +356,7 @@ public sealed class AccountsPayablePhaseOneSeedTests
         using var scope = provider.CreateScope();
         var examples = scope.ServiceProvider.GetRequiredService<AccountsPayableTransactionExamples>();
         var result = await examples.RunAsync(new(2026, "cycle-test"));
-        Assert.Equal(19, result.Scenarios.Count);
+        Assert.Equal(20, result.Scenarios.Count);
         Assert.All(result.Scenarios, x => Assert.True(x.PostedVouchers > 0));
         var complete = result.Scenarios.Single(x => x.Id == "01");
         Assert.Equal(100m, complete.PhysicalQuantity);
@@ -389,7 +389,7 @@ public sealed class AccountsPayablePhaseOneSeedTests
             using var scope = provider.CreateScope();
             var examples = scope.ServiceProvider.GetRequiredService<AccountsPayableTransactionExamples>();
             var first = await examples.RunAsync(new(2026, "sql-cycle-test"));
-            Assert.Equal(19, first.Scenarios.Count);
+            Assert.Equal(20, first.Scenarios.Count);
             var counts = await CountsAsync(db);
             await examples.RunAsync(new(2026, "sql-cycle-test"));
             Assert.Equal(counts, await CountsAsync(db));
@@ -887,7 +887,7 @@ public sealed class AccountsPayablePhaseOneSeedTests
             ["04"]="فاتورة مصروف مباشرة", ["05"]="فاتورة مقابل عدة استلامات", ["06"]="مطابقة السعر والكمية ورفض المخالفة",
             ["07"]="مصاريف الشراء", ["08"]="دفعة جزئية", ["09"]="دفعة على الحساب ثم تسوية",
             ["11"]="دفعة مقدمة من يومية الدفع وتطبيقها", ["12"]="الخصم النقدي", ["13"]="عملة أجنبية وفروق صرف محققة",
-            ["14"]="مرتجع شراء وإشعار دائن", ["15"]="إشعار دائن مالي دون مخزون", ["16"]="إلغاء الكمية المتبقية",
+            ["14"]="مرتجع شراء وإشعار دائن", ["15"]="إشعار دائن مالي دون مخزون", ["16"]="إلغاء الكمية المتبقية", ["17"]="تصحيح إيصال الاستلام",
             ["18"]="عكس التسوية", ["19"]="عكس الدفعة", ["20"]="رفض العمليات غير الصحيحة والتراجع عن آثارها",
             ["21"]="استرداد إشعار دائن من المورد"
         };
@@ -1062,6 +1062,8 @@ public sealed class AccountsPayablePhaseOneSeedTests
             "14" => (90m,2250m,337.50m,-2587.50m,-2587.50m,0m,0m,0m,0m,0m,0m,0m),
             "15" => (0m,0m,37.50m,-287.50m,-287.50m,250m,0m,0m,0m,0m,0m,0m),
             "16" or "20" => (60m,1500m,225m,-1725m,-1725m,0m,0m,0m,0m,0m,0m,0m),
+            // Received 100, corrected to 50, never invoiced: only the physical quantity remains.
+            "17" => (50m,0m,0m,0m,0m,0m,0m,0m,0m,0m,0m,0m),
             "18" => (100m,2500m,375m,-2875m,-2875m,0m,0m,0m,0m,0m,2875m,2875m),
             "19" => (100m,2500m,375m,0m,0m,0m,0m,0m,0m,-2875m,0m,2875m),
             "02" or "05" or "06" or "09" or "11" => (100m,2500m,375m,-2875m,-2875m,0m,0m,0m,0m,0m,0m,0m),
@@ -1092,8 +1094,9 @@ public sealed class AccountsPayablePhaseOneSeedTests
             [GeneralLedgerSeedExample.RealizedExchangeLoss] = expected.FxLoss,
             [GeneralLedgerSeedExample.RealizedExchangeGain] = 0m,
             [GeneralLedgerSeedExample.VendorAdvance] = 0m,
-            [GeneralLedgerSeedExample.ReceivedNotInvoicedInterim] = 0m,
-            [GeneralLedgerSeedExample.ReceivedNotInvoiced] = 0m
+            // Only 17 stops at the receipt: its corrected 50 x 25 stays accrued until invoiced.
+            [GeneralLedgerSeedExample.ReceivedNotInvoicedInterim] = id == "17" ? 50 * 25m : 0m,
+            [GeneralLedgerSeedExample.ReceivedNotInvoiced] = id == "17" ? -50 * 25m : 0m
         };
         foreach (var (account, amount) in accounts)
             Assert.True(amount == actual.LedgerAmount(account),

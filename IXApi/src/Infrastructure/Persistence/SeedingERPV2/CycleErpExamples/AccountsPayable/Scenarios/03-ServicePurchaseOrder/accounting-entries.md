@@ -2,7 +2,7 @@
 
 ## Expected net result
 
-Expense 1,000; input tax 150; bank -1,150; no stocked on-hand movement. Service receipt accrual depends on configuration.
+Expense 700; input tax 105; bank -805; no stocked on-hand movement.
 
 ## Posting specification
 

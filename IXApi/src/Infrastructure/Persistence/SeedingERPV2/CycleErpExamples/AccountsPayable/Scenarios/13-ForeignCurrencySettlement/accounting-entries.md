@@ -2,7 +2,7 @@
 
 ## Expected net result
 
-Historical AP 3,750 SAR; bank 3,800 SAR; realized loss 50 SAR; USD balance 0. Aggregate across settlement/payment vouchers.
+Inventory 2,625 SAR; input tax 393.75 SAR; bank -805 USD = -3,059 SAR; realized exchange loss 40.25 SAR; USD vendor balance 0.
 
 ## Posting specification
 

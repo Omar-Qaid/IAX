@@ -2,11 +2,11 @@
 
 ## Numerical and behavioral assertions
 
-Net physically received 50; receipt asset/accrual 5,000 if enabled; no vendor invoice balance; rejected attempt has no extra effect.
+Physical 50 on hand; the open receipt accrual is 1,250 (50 x 25): received-not-invoiced interim 181003 debit 1,250 and accrual 281002 credit 1,250. No vendor transaction, tax or bank movement. The rejected correction to 110 posts nothing.
 
 ## Input basis
 
-Order 100 × 100; receive 60; none invoiced.
+Order 100 at 25; receive 100; correct to 50.
 
 ## Acceptance record
 

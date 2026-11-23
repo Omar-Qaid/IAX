@@ -2,11 +2,11 @@
 
 ## Numerical and behavioral assertions
 
-Physical delta from return -10; credit 1,150; remaining liability 10,350; inventory reduction 1,000 under stated original-cost assumptions.
+Physical 90; inventory 2,250; input tax 337.50; bank -2,587.50.
 
 ## Input basis
 
-Original 100 × 100 plus tax fully invoiced and unpaid; return 10 at original cost.
+100 units at 25 invoiced; 10 returned with a vendor credit.
 
 ## Acceptance record
 

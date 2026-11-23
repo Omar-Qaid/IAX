@@ -2,7 +2,7 @@
 
 ## Expected net result
 
-Remaining AP 1,035; expense reduced 100 and recoverable tax reduced 15; no stock movement.
+Net expense 250; input tax 37.50; bank -287.50; no stock movement.
 
 ## Posting specification
 

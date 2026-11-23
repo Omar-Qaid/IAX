@@ -2,11 +2,11 @@
 
 ## Numerical and behavioral assertions
 
-Invoice reopens 11,500; original and reversal payment net 0; bank original/reversal net 0. Verify no unintended unapplied credit remains.
+Invoice reopens: vendor control -2,875, open 2,875; bank original and reversal net 0.
 
 ## Input basis
 
-Invoice 11,500 settled by eligible bank payment 11,500.
+Invoice 2,875 paid, then the payment reversed.
 
 ## Acceptance record
 

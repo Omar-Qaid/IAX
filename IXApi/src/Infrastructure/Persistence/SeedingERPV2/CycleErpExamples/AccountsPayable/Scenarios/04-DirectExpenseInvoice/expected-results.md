@@ -2,11 +2,11 @@
 
 ## Numerical and behavioral assertions
 
-Expense debit 1,000; input tax debit 150; bank credit 1,150; AP closed; no PO receipt or stocked movement.
+Expense debit 350; input tax debit 52.50; bank credit 402.50; AP closed; no purchase order receipt or stock movement.
 
 ## Input basis
 
-Expense net 1,000; tax 150; total 1,150.
+Vendor journal: expense 350, tax group APV2.
 
 ## Acceptance record
 

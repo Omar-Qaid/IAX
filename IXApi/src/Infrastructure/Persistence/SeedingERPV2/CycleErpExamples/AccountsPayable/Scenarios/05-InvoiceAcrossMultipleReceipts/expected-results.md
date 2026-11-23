@@ -2,11 +2,11 @@
 
 ## Numerical and behavioral assertions
 
-First invoice gross 5,750; remaining uninvoiced receipt net 5,000; second invoice gross 5,750; no receipt quantity invoiced twice.
+Physical 100; inventory 2,500; input tax 375; bank -2,875; no receipt quantity invoiced twice.
 
 ## Input basis
 
-Order 100 × 100; receipts 30 and 70.
+100 units at 25 received in two receipts and invoiced against both.
 
 ## Acceptance record
 

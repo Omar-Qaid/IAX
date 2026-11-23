@@ -17,7 +17,7 @@ Run the dependency graph in [Dependencies](../../Documentation/02-Dependencies.m
 
 ## Expected result
 
-No inventory movement. Bank +115. The credit note and the refund are settled, so the vendor's open balance is 0.
+No inventory movement. The 115 credit note includes 15% tax, so the expense reverses by 100 and the input tax by 15. Bank +115. The credit note and the refund are settled, so the vendor control balance and the vendor's open balance are 0.
 
 ## Rerun
 

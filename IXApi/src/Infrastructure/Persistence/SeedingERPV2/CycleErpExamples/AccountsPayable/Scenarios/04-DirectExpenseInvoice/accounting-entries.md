@@ -2,7 +2,7 @@
 
 ## Expected net result
 
-Expense debit 1,000; input tax debit 150; bank credit 1,150; AP closed; no PO receipt or stocked movement.
+Expense debit 350; input tax debit 52.50; bank credit 402.50; AP closed; no purchase order receipt or stock movement.
 
 ## Posting specification
 

@@ -1,5 +1,7 @@
 # Receipt Correction
 
+> Implemented scenario `17`, executed by `AccountsPayableTransactionFlow`: order 100 at 25, receive 100 (`APV2-{year}-17-R1`), refuse a correction to 110, then correct the receipt to 50 through `IProductReceiptService.CorrectAsync`. No invoice follows.
+
 > Not implemented. `AccountsPayableTransactionFlow.Scenarios` has no ID 17; this page is a specification only.
 
 ## Purpose and inputs

@@ -1,5 +1,7 @@
 # Purchase Order Prepayment
 
+> **Not implemented.** `AccountsPayableTransactionFlow` has no scenario 10, so running the AP examples does not post this cycle. This page describes the intended behavior only.
+
 > Not implemented. `AccountsPayableTransactionFlow.Scenarios` has no ID 10; this page is a specification only.
 
 ## Purpose and inputs

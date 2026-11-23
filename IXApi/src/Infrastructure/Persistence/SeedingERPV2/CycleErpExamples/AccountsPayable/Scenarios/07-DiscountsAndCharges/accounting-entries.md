@@ -2,7 +2,7 @@
 
 ## Expected net result
 
-Net goods 9,000; capitalized cost 9,200; tax 1,380; payable 10,580. Verify receipt reversal uses receipt valuation and any supported invoice adjustment.
+Inventory 2,500; delivery expense 50; input tax 382.50 (15% of 2,550); bank -2,932.50.
 
 ## Posting specification
 

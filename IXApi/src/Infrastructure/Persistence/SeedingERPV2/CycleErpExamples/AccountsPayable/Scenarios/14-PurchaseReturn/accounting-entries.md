@@ -2,7 +2,7 @@
 
 ## Expected net result
 
-Physical delta from return -10; credit 1,150; remaining liability 10,350; inventory reduction 1,000 under stated original-cost assumptions.
+Physical 90; inventory 2,250; input tax 337.50; bank -2,587.50.
 
 ## Posting specification
 

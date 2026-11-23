@@ -2,7 +2,7 @@
 
 ## Expected net result
 
-First invoice gross 5,750; remaining uninvoiced receipt net 5,000; second invoice gross 5,750; no receipt quantity invoiced twice.
+Physical 100; inventory 2,500; input tax 375; bank -2,875; no receipt quantity invoiced twice.
 
 ## Posting specification
 

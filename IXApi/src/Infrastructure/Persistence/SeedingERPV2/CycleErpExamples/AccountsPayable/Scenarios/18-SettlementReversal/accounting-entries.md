@@ -2,7 +2,7 @@
 
 ## Expected net result
 
-Immediately after undo: invoice open 11,500, payment credit open 11,500, net AP 0; bank unchanged. Reapplication closes both.
+Invoice open 2,875 and payment open 2,875, net AP 0; bank -2,875 unchanged.
 
 ## Posting specification
 

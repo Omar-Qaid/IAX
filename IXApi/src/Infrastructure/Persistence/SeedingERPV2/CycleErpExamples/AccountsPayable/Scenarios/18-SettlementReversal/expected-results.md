@@ -2,11 +2,11 @@
 
 ## Numerical and behavioral assertions
 
-Immediately after undo: invoice open 11,500, payment credit open 11,500, net AP 0; bank unchanged. Reapplication closes both.
+Invoice open 2,875 and payment open 2,875, net AP 0; bank -2,875 unchanged.
 
 ## Input basis
 
-Invoice 11,500 and payment 11,500 already settled; no discount/FX.
+Invoice 2,875 paid, then the settlement undone.
 
 ## Acceptance record
 

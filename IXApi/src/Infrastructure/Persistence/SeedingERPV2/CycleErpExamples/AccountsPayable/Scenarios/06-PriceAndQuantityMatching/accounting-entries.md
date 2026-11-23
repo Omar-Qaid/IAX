@@ -2,7 +2,7 @@
 
 ## Expected net result
 
-Rejected attempts create no posted vendor/tax/GL effect; accepted invoice gross 6,900. Verify configured exceptions cannot bypass required approval.
+Both rejected attempts post nothing. The accepted invoice: inventory 2,500; input tax 375; bank -2,875.
 
 ## Posting specification
 

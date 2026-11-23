@@ -2,7 +2,7 @@
 
 ## Expected net result
 
-Invoice reopens 11,500; original and reversal payment net 0; bank original/reversal net 0. Verify no unintended unapplied credit remains.
+Invoice reopens: vendor control -2,875, open 2,875; bank original and reversal net 0.
 
 ## Posting specification
 

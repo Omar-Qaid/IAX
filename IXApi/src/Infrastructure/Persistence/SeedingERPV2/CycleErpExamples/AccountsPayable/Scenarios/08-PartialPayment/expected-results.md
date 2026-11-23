@@ -2,11 +2,11 @@
 
 ## Numerical and behavioral assertions
 
-Invoice remaining 5,500; payment unapplied 0; bank credit 6,000; net AP liability 5,500.
+Bank -1,000; vendor control -1,875; the invoice stays open for 1,875.
 
 ## Input basis
 
-Invoice 11,500; payment 6,000.
+Invoice 2,875 (100 at 25 plus tax); payment 1,000.
 
 ## Acceptance record
 

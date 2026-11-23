@@ -2,11 +2,11 @@
 
 ## Numerical and behavioral assertions
 
-Received/invoiced remain 60; receipt obligation 0; cancelled quantity 40; invoice total 6,900; no reversal of posted 60.
+Physical 60; inventory 1,500; input tax 225; bank -1,725; no reversal of the posted 60.
 
 ## Input basis
 
-Order 100 × 100; receive and invoice 60.
+Order of 100 at 25; 60 received and invoiced, the remaining 40 canceled.
 
 ## Acceptance record
 

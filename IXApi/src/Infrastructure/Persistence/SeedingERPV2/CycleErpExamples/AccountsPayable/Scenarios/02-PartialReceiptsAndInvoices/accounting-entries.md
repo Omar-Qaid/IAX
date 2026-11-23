@@ -2,7 +2,7 @@
 
 ## Expected net result
 
-Physical 100; financial quantity 100; gross payable 11,500 before payment; accrual 0. At first invoice uninvoiced receipt is 20 units/2,000.
+Physical 100; inventory 2,500; input tax 375; bank -2,875; accrual and open balances 0.
 
 ## Posting specification
 

@@ -2,7 +2,7 @@
 
 ## Expected net result
 
-Invoice remaining 5,500; payment unapplied 0; bank credit 6,000; net AP liability 5,500.
+Bank -1,000; vendor control -1,875; the invoice stays open for 1,875.
 
 ## Posting specification
 

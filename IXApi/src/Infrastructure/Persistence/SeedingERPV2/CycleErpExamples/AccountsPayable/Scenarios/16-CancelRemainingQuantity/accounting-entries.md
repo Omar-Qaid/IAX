@@ -2,7 +2,7 @@
 
 ## Expected net result
 
-Received/invoiced remain 60; receipt obligation 0; cancelled quantity 40; invoice total 6,900; no reversal of posted 60.
+Physical 60; inventory 1,500; input tax 225; bank -1,725; no reversal of the posted 60.
 
 ## Posting specification
 

@@ -2,11 +2,11 @@
 
 ## Numerical and behavioral assertions
 
-Advance asset initially debit 2,000; application credits advance 2,000/debits AP 2,000; final AP 0 and bank credit total 10,000.
+Inventory 2,500; input tax 375; bank -2,875; vendor advance 0; AP 0.
 
 ## Input basis
 
-No-tax final expense invoice 10,000; advance payment 2,000.
+Prepayment through a payment journal, applied to the 2,875 invoice.
 
 ## Acceptance record
 

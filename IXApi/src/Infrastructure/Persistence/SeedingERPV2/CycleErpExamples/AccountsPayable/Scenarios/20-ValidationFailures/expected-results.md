@@ -2,11 +2,11 @@
 
 ## Numerical and behavioral assertions
 
-No posted partial vendor/inventory/tax/bank/GL effects for rejected operation. Valid prior documents remain unchanged. A permissive configured duplicate policy must be reported rather than assumed strict.
+Rejected operations post nothing; the valid documents stand: physical 60; inventory 1,500; input tax 225; bank -1,725.
 
 ## Input basis
 
-Separate attempts: duplicate vendor invoice, blocked vendor, closed period, missing posting account, overreceipt/overinvoice.
+Same as 16, with invalid operations attempted.
 
 ## Acceptance record
 

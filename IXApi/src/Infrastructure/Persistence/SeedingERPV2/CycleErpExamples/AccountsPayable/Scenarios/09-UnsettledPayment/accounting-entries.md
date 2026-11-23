@@ -2,7 +2,7 @@
 
 ## Expected net result
 
-Before application invoice open 11,500 and payment credit open 6,000; net liability 5,500. After application invoice remaining 5,500 and payment remaining 0.
+Inventory 2,500; input tax 375; bank -2,875; nothing open after settlement.
 
 ## Posting specification
 

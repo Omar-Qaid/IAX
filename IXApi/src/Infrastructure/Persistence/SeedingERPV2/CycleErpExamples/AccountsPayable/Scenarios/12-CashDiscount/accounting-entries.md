@@ -2,7 +2,7 @@
 
 ## Expected net result
 
-Eligible: AP closes with bank 9,800 and discount 200. Ineligible: no discount; remaining 200 unless fully paid.
+Cash discount 57.50 (2% of 2,875) credited to 481001; bank -2,817.50; AP closed.
 
 ## Posting specification
 

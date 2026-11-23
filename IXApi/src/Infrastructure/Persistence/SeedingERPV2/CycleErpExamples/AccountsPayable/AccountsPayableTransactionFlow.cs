@@ -22,6 +22,7 @@ public sealed class AccountsPayableTransactionFlow(ApplicationDbContext db, IPur
         ["15"] = "Financial credit note without inventory", ["05"] = "Invoice across multiple receipts",
         ["06"] = "Price and quantity matching", ["08"] = "Partial payment", ["09"] = "On-account payment and later settlement",
         ["14"] = "Purchase return and vendor credit", ["16"] = "Cancel unreceived remainder",
+        ["17"] = "Product receipt correction",
         ["18"] = "Settlement reversal", ["19"] = "Payment reversal", ["20"] = "Validation failures and rollback",
         ["21"] = "Vendor refund of a financial credit note"
     };
@@ -87,6 +88,23 @@ public sealed class AccountsPayableTransactionFlow(ApplicationDbContext db, IPur
             var result = await charges.CreateAsync("purchase", order.RecId, new MarkupTransDto { MarkupCode = "APV2-FRT",
                 CurrencyCode = currency, Value = 50m, MarkupCategory = MarkupCategory.Fixed, TaxGroup = "APV2", TaxItemGroup = "APV2", TransDate = date }, cancellationToken: ct);
             if (result.Error != null) throw new InvalidOperationException("AP charge creation failed: " + result.Error.Message);
+        }
+        if (id == "17")
+        {
+            // Receive the full 100, then correct the receipt down to 50 through the receipt service. A correction
+            // above the received quantity is refused first and must leave nothing behind. No invoice follows.
+            await Receipt(order, key + "-R1", date.AddDays(-5), [new(lines[0].RecId, 100m)], ct);
+            var receipt = await db.Set<VendPackingSlipJour>().SingleAsync(x => x.DataAreaId == Area && x.PurchId == order.PurchId && x.PackingSlipId == key + "-R1", ct);
+            var receiptLine = await db.Set<VendPackingSlipTrans>().SingleAsync(x => x.DataAreaId == Area && x.VendPackingSlipJour == receipt.RecId, ct);
+            if (receiptLine.Qty != 50m)
+            {
+                var before = await PostingCounts(ct);
+                var excess = await receipts.CorrectAsync(receipt.RecId, new(receiptLine.RecId, 110m, date.AddDays(-4)), ct);
+                Check(excess.StatusCode == 422 && before == await PostingCounts(ct), "a correction above the ordered quantity was not rejected atomically.");
+                Success(await receipts.CorrectAsync(receipt.RecId, new(receiptLine.RecId, 50m, date.AddDays(-4)), ct), "receipt correction");
+            }
+            steps.Add(new("Receipt correction", key + "-R1", "Received 100, corrected to 50; excess correction rejected"));
+            return await Reconcile(key, id, 50m, 0m, 0m, ct);
         }
         if (id == "02")
         {

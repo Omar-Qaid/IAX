@@ -2,7 +2,7 @@
 
 ## Expected net result
 
-Physical +100; inventory 10,000; input tax 1,500; bank -11,500; payable/open/accrual 0.
+Physical +100; inventory 2,500; service expense 700; input tax 480 (15% of 3,200); bank -3,680; vendor, open and accrual balances 0.
 
 ## Posting specification
 
