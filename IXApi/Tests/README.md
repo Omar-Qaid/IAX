@@ -39,6 +39,10 @@ Inside a module the test type is a subfolder:
 | `Architecture` | Structural rules over assemblies, controllers, enums and table ids. |
 | `Acceptance` | Multi-stage business cycles from setup to posting, close and reconciliation. |
 
+Large test classes are `partial` and split by topic into `<Class>.<Topic>.cs` files next to the main file, which keeps
+the shared helpers and fixtures (for example `InventoryCycleTests.Close.cs`, `InventoryCycleTests.Sales.cs`,
+`LedgerJournalPostingTests.Reversal.cs`). Add a new test to the topic file it belongs to.
+
 All test files use the single namespace `IAX.IXApi.Tests`. Namespaces deliberately do not follow folders: a
 namespace such as `IAX.IXApi.Tests.Workflow` would shadow the production `Workflow.*` names inside test code.
 

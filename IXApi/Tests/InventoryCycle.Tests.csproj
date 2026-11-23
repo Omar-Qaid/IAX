@@ -8,7 +8,7 @@
     <OutputPath>bin/InventoryCycle.Tests/</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Finance/Inventory/Acceptance/InventoryCycleTests.cs" />
+    <Compile Include="Finance/Inventory/Acceptance/InventoryCycleTests*.cs" />
     <Compile Include="Finance/Inventory/Acceptance/InventoryAcceptanceTests.cs" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
