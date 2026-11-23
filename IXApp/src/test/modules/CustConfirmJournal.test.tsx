@@ -5,7 +5,8 @@ import { CustConfirmJournal } from '../../modules/finance/accounts-receivable/sa
 
 const journalState = vi.hoisted(() => ({ empty: false }));
 
-vi.mock('react-router-dom', () => ({
+vi.mock('react-router-dom', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react-router-dom')>()),
   useParams: () => ({ salesOrderId: '42' }),
   useNavigate: () => vi.fn(),
   // SimpleListPage reads pathname as the fallback grid filter-row storage key.
@@ -19,6 +20,9 @@ vi.mock('react-router-dom', () => ({
 }));
 vi.mock('@core/permissions/usePermission', () => ({
   usePermission: () => ({ hasPermission: true }),
+}));
+vi.mock('@core/auth/useAuth', () => ({
+  useAuth: () => ({ hasPermission: () => true }),
 }));
 vi.mock('@shared/components/documents', () => ({
   RecordAttachmentsButton: () => null,

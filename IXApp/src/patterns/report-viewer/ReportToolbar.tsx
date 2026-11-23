@@ -143,6 +143,10 @@ export function ReportToolbar(props: ReportToolbarProps): React.ReactElement {
                 size="small"
                 aria-label={t('reportViewer.actions.readingMode')}
                 color="primary"
+                onClick={() => {
+                  if (thumbnailsOpen) props.onToggleThumbnails();
+                  props.onZoomModeChange('Page Width');
+                }}
               >
                 <AutoStoriesOutlined sx={{ fontSize: 18 }} />
               </IconButton>
@@ -152,6 +156,7 @@ export function ReportToolbar(props: ReportToolbarProps): React.ReactElement {
                 size="small"
                 aria-label={t('reportViewer.actions.reload')}
                 color="primary"
+                disabled={!props.onReload}
                 onClick={() => void props.onReload?.()}
               >
                 <RefreshOutlined sx={{ fontSize: 18 }} />

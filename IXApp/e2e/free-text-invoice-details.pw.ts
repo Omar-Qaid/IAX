@@ -167,9 +167,7 @@ test('free text invoice details edits and saves the active line, cancels changes
   await page.getByRole('button', { name: 'New', exact: true }).click();
   await expect(page).toHaveURL(/free-text-invoices\/new\?customerAccount=C-001$/);
   await page.getByRole('button', { name: 'Save', exact: true }).click();
-  await expect(
-    page.getByRole('alert').filter({ hasText: 'Select a customer and invoice date' })
-  ).toBeVisible();
+  await expect(page.getByRole('alert').filter({ hasText: 'Enter a description.' })).toBeVisible();
   expect(creates).toBe(0);
   await page.getByRole('button', { name: 'Add line', exact: true }).click();
   await expect(page.locator('[data-row-id]')).toHaveCount(2);

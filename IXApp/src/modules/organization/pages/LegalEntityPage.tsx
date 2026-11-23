@@ -1,4 +1,4 @@
-import { FOUNDATION_ROUTE_PATHS as MASTER_FOUNDATION_ROUTES } from '@modules/finance/foundation/routes/foundationRoutePaths';
+import { getRecordPreview } from '@shared/components/record-preview/recordPreviewRegistry';
 import { localizedName } from '@shared/utilities/localizedName';
 import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -258,7 +258,13 @@ export function LegalEntityPage(): React.ReactElement {
             {
               id: 'currency',
               title: t('legalEntities.sections.general'),
-              fields: [{ masterRoute: MASTER_FOUNDATION_ROUTES.CURRENCIES,  name: 'currencyCode', label: t('legalEntities.fields.currency') }],
+              fields: [
+                {
+                  masterRoute: getRecordPreview('currency')?.masterRoute,
+                  name: 'currencyCode',
+                  label: t('legalEntities.fields.currency'),
+                },
+              ],
             },
             {
               id: 'bankAccount',

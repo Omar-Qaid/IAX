@@ -28,6 +28,15 @@ test('packing slip displays the stock rejection returned by the API', async ({ p
           documentStatus: 'None',
         },
       ];
+    } else if (path.endsWith('/1/details')) {
+      data = {
+        recId: 1,
+        salesId: 'SO-PACK-001',
+        customerName: 'Test customer',
+        currencyCode: 'SAR',
+        salesStatus: 'Backorder',
+        documentStatus: 'None',
+      };
     } else if (path.endsWith('/posting-preview')) {
       data = {
         header: {
@@ -119,7 +128,21 @@ for (const language of ['en', 'ar']) {
           },
         ];
       else if (path.endsWith('/1/details'))
-        data = { recId: 1, salesId: 'SO-GRID-001', customerAccount: 'C-001', customerName: 'Grid test customer', invoiceAccount: 'C-001', currencyCode: 'SAR', customerGroup: 'RETAIL', salesStatus: 'Backorder', documentStatus: 'None', deliveryDate: '2026-09-09', paymentTerms: 'Net 30', deliveryMode: 'Road', orderTotal: 15000 };
+        data = {
+          recId: 1,
+          salesId: 'SO-GRID-001',
+          customerAccount: 'C-001',
+          customerName: 'Grid test customer',
+          invoiceAccount: 'C-001',
+          currencyCode: 'SAR',
+          customerGroup: 'RETAIL',
+          salesStatus: 'Backorder',
+          documentStatus: 'None',
+          deliveryDate: '2026-09-09',
+          paymentTerms: 'Net 30',
+          deliveryMode: 'Road',
+          orderTotal: 15000,
+        };
       else if (path.endsWith('/units'))
         data = {
           data: [{ symbol: 'Pcs' }, { symbol: 'BOX' }],
@@ -246,12 +269,13 @@ for (const language of ['en', 'ar']) {
       )
     ).toBe('none');
     await quantity.fill('0');
-    await quantity.press('Tab');
+    await quantity.press('Control+s');
     await expect(quantity).toHaveAttribute('aria-invalid', 'true');
-    await grid.locator('[data-row-id="1"] [data-field="unitPrice"]').click();
+    await grid.locator('[data-row-id="2"] [data-field="unitPrice"]').click();
     await expect(quantity).toBeFocused();
     expect(writes).toBe(0);
     await quantity.fill('12.75');
+    await quantity.press('Control+s');
     await quantity.press('Tab');
     await expect(
       grid.locator('[data-row-id="1"] [data-field="unit"]').getByRole('combobox')
@@ -262,6 +286,9 @@ for (const language of ['en', 'ar']) {
     await unit.press('ArrowDown');
     await page.getByRole('option', { name: 'BOX', exact: true }).click();
     await expect(unit).toBeEnabled();
+    expect(writes).toBe(1);
+    await unit.press('Control+s');
+    await expect.poll(() => writes).toBe(2);
     expect(writes).toBe(2);
     await unit.press('Control+f');
     const itemFilter = grid.locator('[data-grid-filter-field="itemNumber"]');
@@ -305,7 +332,12 @@ for (const language of ['en', 'ar']) {
       const addedQuantity = grid.locator('[data-row-id="new-sales-line"]').getByRole('spinbutton');
       await expect(addedQuantity).toBeFocused();
       await addedQuantity.fill('4.25');
-      await addedQuantity.press('Tab');
+      await addedQuantity.press('Control+s');
+      await expect.poll(() => adds).toBe(1);
+      await grid
+        .locator('[data-row-id="1501"] [data-field="quantity"]')
+        .getByRole('spinbutton')
+        .press('Tab');
       const addedUnit = grid
         .locator('[data-row-id="1501"] [data-field="unit"]')
         .getByRole('combobox');
@@ -320,10 +352,12 @@ for (const language of ['en', 'ar']) {
       await retryCell.click();
       const retryInput = retryCell.getByRole('spinbutton');
       await retryInput.fill('7.25');
-      await retryInput.press('Tab');
+      await retryInput.press('Control+s');
       await expect(page.getByRole('alert')).toContainText('Test save failed. Please retry.');
       await expect(retryInput).toHaveValue('7.25');
       await expect(retryInput).toBeFocused();
+      await retryInput.press('Control+s');
+      await expect(retryInput).toBeEnabled();
       await retryInput.press('Tab');
       await expect(
         grid.locator('[data-row-id="1500"] [data-field="unit"]').getByRole('combobox')

@@ -2,7 +2,8 @@ import React from 'react';
 import { Box, Checkbox, FormControlLabel, MenuItem, Stack, TextField } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ROUTE_PATHS } from '@app/routes/routePaths';
+import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../../routes/accountsReceivableRoutePaths';
+import { GENERAL_LEDGER_ROUTE_PATHS } from '../../../general-ledger/routes/generalLedgerRoutePaths';
 import { apiClient } from '@core/api/apiClient';
 import type { ApiResponse } from '@core/api/apiResponse';
 import { useCompanyStore } from '@core/company/useCompanyStore';
@@ -126,7 +127,7 @@ export function CustTrans(): React.ReactElement {
         disabled={!selected?.voucher}
         onClick={() =>
           navigate(
-            `${ROUTE_PATHS.GENERAL_LEDGER.VOUCHER_TRANSACTIONS}?voucher=${encodeURIComponent(
+            `${GENERAL_LEDGER_ROUTE_PATHS.VOUCHER_TRANSACTIONS}?voucher=${encodeURIComponent(
               selected?.voucher ?? ''
             )}&reference=${encodeURIComponent(
               selected?.invoice ? `${selected.invoice} : ${accountNum ?? ''}` : (accountNum ?? '')
@@ -142,7 +143,7 @@ export function CustTrans(): React.ReactElement {
         disabled={!accountNum}
         onClick={() =>
           navigate(
-            ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_OPEN_TRANSACTIONS.replace(
+            ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_OPEN_TRANSACTIONS.replace(
               ':accountNum',
               encodeURIComponent(accountNum ?? '')
             )

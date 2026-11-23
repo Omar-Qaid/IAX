@@ -112,6 +112,7 @@ describe('list details form surface', () => {
   it('steps the selection with the list pager and stops at both ends', async () => {
     const onSelectionChange = vi.fn();
     renderPage(baseConfig({ listPager: {}, onSelectionChange }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Toggle record list' }));
 
     // The list pane is laid out responsively, so jsdom computes it as hidden; the
     // pager is queried accordingly rather than being skipped by the role query.

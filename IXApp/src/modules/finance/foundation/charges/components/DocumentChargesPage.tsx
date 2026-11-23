@@ -192,7 +192,7 @@ export function DocumentChargesPage({
         editable: true,
       },
     ],
-    [codeOptions, currencyOptions, taxGroupOptions, taxItemGroupOptions, t]
+    [codeOptions, currencyOptions, taxGroupOptions, taxItemGroupOptions, documentType, t]
   );
   const refresh = () => queryClient.invalidateQueries({ queryKey });
   const config: EnterpriseListConfig<MarkupTransRecord> = {

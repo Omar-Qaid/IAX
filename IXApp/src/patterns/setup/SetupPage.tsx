@@ -139,6 +139,20 @@ export function SetupPage({
   const [saving, setSaving] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const query = search.trim().toLocaleLowerCase();
+  const visibleSections = useMemo(
+    () =>
+      sections.flatMap((section) => {
+        if (!query || section.title.toLocaleLowerCase().includes(query)) return [section];
+        const fields = section.fields.filter((field) =>
+          field.label.toLocaleLowerCase().includes(query)
+        );
+        return fields.length ? [{ ...section, fields }] : [];
+      }),
+    [sections, query]
+  );
   const [activeId, setActiveId] = useState(navigationItems[0]?.id ?? sections[0]?.id ?? '');
   const dirty = useMemo(() => !deepEqual(values, savedValues), [savedValues, values]);
   const { t } = useAppTranslation();
@@ -151,10 +165,11 @@ export function SetupPage({
       ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
   const save = async () => {
+    if (!onSave) return;
     setSaving(true);
     setSaveError(null);
     try {
-      await onSave?.(values);
+      await onSave(values);
       setSavedValues(values);
       setShowSaved(true);
     } catch (error) {
@@ -196,12 +211,19 @@ export function SetupPage({
           <ActionPaneButton
             label={saveLabel}
             icon={<SaveOutlinedIcon />}
-            disabled={!dirty || saving}
+            disabled={!onSave || !dirty || saving}
             onClick={save}
           />
         </ActionPaneGroup>
         <ActionPaneGroup>
-          <ActionPaneButton label={t('actions.search', 'Search')} icon={<SearchIcon />} />
+          <ActionPaneButton
+            label={t('actions.search', 'Search')}
+            icon={<SearchIcon />}
+            onClick={() => {
+              setSearchOpen((open) => !open);
+              setSearch('');
+            }}
+          />
           <OptionsMenu
             record={values}
             tableName={title}
@@ -217,6 +239,21 @@ export function SetupPage({
           {title}
         </Typography>
         {headerContent}
+        {!onSave && (
+          <Alert severity="info" sx={{ mt: 1 }}>
+            {t('workspaceHelp.previewOnly')}
+          </Alert>
+        )}
+        {searchOpen && (
+          <TextField
+            autoFocus
+            size="small"
+            label={t('actions.search', 'Search')}
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            sx={{ mt: 1 }}
+          />
+        )}
       </Box>
 
       <Box
@@ -235,18 +272,34 @@ export function SetupPage({
           boxShadow: '0 1px 4px rgba(0,0,0,.12)',
         }}
       >
-        <SetupNavigation items={navigationItems} activeId={activeId} onSelect={selectSection} />
+        <SetupNavigation
+          items={
+            query
+              ? navigationItems.filter((item) =>
+                  visibleSections.some((section) => section.id === item.id)
+                )
+              : navigationItems
+          }
+          activeId={activeId}
+          onSelect={selectSection}
+        />
         <Box
           sx={{ width: 7, display: { xs: 'none', md: 'block' }, bgcolor: 'divider', flexShrink: 0 }}
         />
         <Box sx={{ minWidth: 0, flex: 1, overflowY: 'auto', px: 1.25, py: 0.25 }}>
-          {sections.map((section) => (
+          {visibleSections.length === 0 && (
+            <Typography role="status" sx={{ p: 2 }}>
+              {t('common.noResults', 'No results found.')}
+            </Typography>
+          )}
+          {visibleSections.map((section) => (
             <FastTab
               key={section.id}
               id={`setup-section-${section.id}`}
               title={section.title}
               appearance="enterprise"
               defaultExpanded={section.defaultExpanded ?? true}
+              expanded={query ? true : undefined}
               sx={{ scrollMarginTop: 8 }}
               detailsSx={{ px: 1, py: 1.25 }}
             >
@@ -266,7 +319,7 @@ export function SetupPage({
                 {section.fields.map((field) => (
                   <SetupField
                     key={field.name}
-                    field={field}
+                    field={onSave ? field : { ...field, disabled: true }}
                     value={values[field.name]}
                     yesLabel={yesLabel}
                     noLabel={noLabel}

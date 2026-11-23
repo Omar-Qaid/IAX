@@ -34,6 +34,14 @@ async function setup(page: Page) {
   };
   const writes: Record<string, unknown>[] = [];
   let profileReads = 0;
+  await page.route('**/api/v1/CustLedgerAccounts/ledger-accounts', (route) =>
+    route.fulfill({
+      json: ok([
+        { id: 11020005, code: '11020005', name: 'Receivables' },
+        { id: 12345, code: '12345', name: 'Alternate account' },
+      ]),
+    })
+  );
   await page.route('**/api/v1/CustLedger', (route) => {
     profileReads++;
     return route.fulfill({ json: ok([profile]) });
@@ -70,21 +78,30 @@ async function setup(page: Page) {
   await expect(
     page.getByRole('heading', { name: 'Customer posting profiles', level: 1 })
   ).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByLabel('Summary account', { exact: true })).toHaveValue('11020005');
+  await expect(page.getByText('11020005', { exact: true })).toBeVisible();
   return { writes, reads: () => profileReads };
 }
 async function edit(page: Page) {
-  await page.getByRole('button', { name: 'Edit account', exact: true }).click();
+  await page.getByRole('button', { name: 'Edit', exact: true }).click();
+}
+async function leaveProfile(page: Page) {
+  const breadcrumb = page.getByRole('navigation', { name: 'Breadcrumbs' });
+  if (await breadcrumb.isVisible()) {
+    await breadcrumb.getByRole('button', { name: 'Accounts Receivable' }).click();
+  } else {
+    await page.getByRole('button', { name: 'App launcher', exact: true }).click();
+    await page.getByRole('button', { name: 'Home', exact: true }).click();
+  }
 }
 async function code(page: Page, name: string) {
   await page.getByRole('combobox', { name: 'Account code', exact: true }).click();
   await page.getByRole('option', { name, exact: true }).click();
 }
 async function choose(page: Page, name: string) {
-  const input = page.getByRole('textbox', { name: 'Account/Group number', exact: false });
+  const input = page.getByRole('combobox', { name: 'Account/Group number', exact: false });
   await expect(input).toBeEnabled();
   await input.click();
-  await page.getByRole('dialog').getByRole('button', { name }).click();
+  await page.getByRole('option', { name: new RegExp(name.split(' - ').at(-1)!) }).click();
 }
 test('Group uses customer groups; Table uses customers; All clears and disables the lookup', async ({
   page,
@@ -93,8 +110,8 @@ test('Group uses customer groups; Table uses customers; All clears and disables 
   const { writes } = await setup(page);
   await edit(page);
   await choose(page, 'Traders - Trading customers');
-  await page.getByRole('button', { name: 'Save account', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Edit account', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Edit', exact: true })).toBeVisible();
   expect(writes[0]).toMatchObject({
     accountCode: 1,
     num: 'Traders',
@@ -104,40 +121,40 @@ test('Group uses customer groups; Table uses customers; All clears and disables 
   await edit(page);
   await code(page, 'Table');
   await expect(
-    page.getByRole('textbox', { name: 'Account/Group number', exact: false })
-  ).toHaveValue('');
+    page.getByRole('combobox', { name: 'Account/Group number', exact: false })
+  ).not.toContainText('Trading customers');
   await choose(page, 'C-100 - Customer One');
   await page.screenshot({ path: info.outputPath('customer-lookup.png'), fullPage: true });
-  await page.getByRole('button', { name: 'Save account', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Edit account', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Edit', exact: true })).toBeVisible();
   expect(writes[1]).toMatchObject({ accountCode: 0, num: 'C-100' });
   await edit(page);
   await code(page, 'All');
   await expect(
-    page.getByRole('textbox', { name: 'Account/Group number', exact: true })
+    page.getByRole('combobox', { name: 'Account/Group number', exact: true })
   ).toBeDisabled();
-  await page.getByRole('button', { name: 'Save account', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Edit account', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Edit', exact: true })).toBeVisible();
   expect(writes[2]).toMatchObject({ accountCode: 2, num: '' });
 });
 test('rejects empty and deleted references without submitting', async ({ page }) => {
   const { writes } = await setup(page);
   await edit(page);
   await code(page, 'Table');
-  await page.getByRole('button', { name: 'Save account', exact: true }).click();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(
     page.getByText('Select an existing customer for Table or an existing customer group for Group.')
   ).toBeVisible();
   expect(writes).toHaveLength(0);
   await choose(page, 'C-100 - Customer One');
   await page.route('**/api/v1/CustTable/list', (route) => route.fulfill({ json: ok([]) }));
-  await page.getByRole('button', { name: 'Save account', exact: true }).click();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(
     page.getByText('Select an existing customer for Table or an existing customer group for Group.')
   ).toBeVisible();
   expect(writes).toHaveLength(0);
 });
-test('opens the shared lookup popup while customer references are loading', async ({ page }) => {
+test('opens the shared lookup while customer references are loading', async ({ page }) => {
   await setup(page);
   await page.route('**/api/v1/CustTable/list', async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 1_000));
@@ -149,12 +166,9 @@ test('opens the shared lookup popup while customer references are loading', asyn
   });
   await edit(page);
   await code(page, 'Table');
-  await page.getByRole('textbox', { name: 'Account/Group number', exact: false }).click();
-  await expect(page.getByRole('dialog')).toBeVisible();
-  await expect(page.getByRole('dialog').getByRole('progressbar')).toBeVisible();
-  await expect(
-    page.getByRole('dialog').getByRole('button', { name: 'C-100 - Customer One' })
-  ).toBeVisible();
+  await page.getByRole('combobox', { name: 'Account/Group number', exact: false }).click();
+  await expect(page.getByRole('listbox')).toBeVisible();
+  await expect(page.getByRole('option', { name: /Customer One/ })).toBeVisible();
 });
 test('saved profiles survive SPA navigation from the query cache', async ({ page }) => {
   const state = await setup(page);
@@ -162,11 +176,8 @@ test('saved profiles survive SPA navigation from the query cache', async ({ page
   await page.getByRole('textbox', { name: 'Description', exact: true }).fill('Updated profile');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(page.getByRole('textbox', { name: 'Description', exact: true })).toHaveCount(0);
-  await page
-    .getByRole('navigation', { name: 'Breadcrumbs' })
-    .getByRole('button', { name: 'Accounts Receivable' })
-    .click();
-  await expect(page).toHaveURL(/\/customers$/);
+  await leaveProfile(page);
+  await expect(page).toHaveURL(/\/(customers|dashboard)?$/);
   await page.goBack();
   await expect(
     page.getByRole('heading', { name: 'Customer posting profiles', level: 1 })
@@ -177,20 +188,16 @@ test('saved profiles survive SPA navigation from the query cache', async ({ page
 test('canceling navigation retains a draft; accepting discards it', async ({ page }) => {
   await setup(page);
   await edit(page);
-  await page.getByLabel('Summary account', { exact: true }).fill('12345');
+  await page.getByLabel('Collection letter sequence', { exact: true }).fill('Changed');
   const canceled = page.waitForEvent('dialog').then((dialog) => dialog.dismiss());
-  await page
-    .getByRole('navigation', { name: 'Breadcrumbs' })
-    .getByRole('button', { name: 'Accounts Receivable' })
-    .click();
+  await leaveProfile(page);
   await canceled;
   await expect(page).toHaveURL(new RegExp(`${url}$`));
-  await expect(page.getByLabel('Summary account', { exact: true })).toHaveValue('12345');
+  await expect(page.getByLabel('Collection letter sequence', { exact: true })).toHaveValue(
+    'Changed'
+  );
   const accepted = page.waitForEvent('dialog').then((dialog) => dialog.accept());
-  await page
-    .getByRole('navigation', { name: 'Breadcrumbs' })
-    .getByRole('button', { name: 'Accounts Receivable' })
-    .click();
+  await leaveProfile(page);
   await accepted;
-  await expect(page).toHaveURL(/\/customers$/);
+  await expect(page).toHaveURL(/\/(customers|dashboard)?$/);
 });

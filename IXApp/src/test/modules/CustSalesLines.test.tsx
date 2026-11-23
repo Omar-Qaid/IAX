@@ -4,7 +4,8 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { CustSalesLines } from '@modules/finance/accounts-receivable/invoice/pages/CustSalesLines';
 
 const state = vi.hoisted(() => ({ empty: false, permitted: true, account: 'C-1', enabled: false }));
-vi.mock('react-router-dom', () => ({
+vi.mock('react-router-dom', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react-router-dom')>()),
   useParams: () => ({ accountNum: state.account }),
   useNavigate: () => vi.fn(),
   useLocation: () => ({

@@ -12,7 +12,28 @@ export function PatternDataGrid<T>({
 }: DataGridProps<T> & { ref?: React.Ref<DataGridHandle> }): React.ReactElement {
   const session = React.useContext(PageEditSessionContext);
   const gridRef = React.useRef<DataGridHandle>(null);
-  React.useImperativeHandle(ref, () => gridRef.current!);
+  // The child grid re-renders while a cell is typed into, without re-rendering
+  // this wrapper. Forward commands to its current handle instead of retaining
+  // the handle (and draft) from the wrapper's last render.
+  React.useImperativeHandle(
+    ref,
+    () => ({
+      cancelPendingFocus: () => gridRef.current?.cancelPendingFocus(),
+      focusCell: (row, column) => gridRef.current?.focusCell(row, column) ?? Promise.resolve(),
+      getCellAddress: (row, column) => gridRef.current?.getCellAddress(row, column),
+      focusRecordCell: (address) => gridRef.current?.focusRecordCell(address) ?? Promise.resolve(),
+      clearFilters: () => gridRef.current?.clearFilters(),
+      focusFilter: () => gridRef.current?.focusFilter(),
+      scrollToTop: () => gridRef.current?.scrollToTop(),
+      scrollToRow: (id) => gridRef.current?.scrollToRow(id) ?? false,
+      startAddRow: () => gridRef.current?.startAddRow(),
+      startEditRow: (id) => gridRef.current?.startEditRow(id),
+      saveEdit: () => gridRef.current?.saveEdit() ?? Promise.resolve(true),
+      cancelEdit: () => gridRef.current?.cancelEdit(),
+      toggleSidebar: (tab) => gridRef.current?.toggleSidebar(tab),
+    }),
+    []
+  );
   const editable = Boolean(props.onRowSave || props.masterForm || props.onCellEditRequest);
   const registerEditor = session?.registerEditor;
   React.useEffect(() => {

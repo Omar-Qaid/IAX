@@ -4,6 +4,30 @@ import { SetupPage } from '@patterns/setup/SetupPage';
 import { FastTabsDialog } from '@patterns/dialog-fast-tabs/FastTabsDialog';
 
 describe('Setup and dialog shared sections', () => {
+  it('does not offer editing or claim a save without a persistence action', () => {
+    render(
+      <SetupPage
+        title="Preview"
+        viewLabel="Standard"
+        optionsLabel="Options"
+        saveLabel="Save settings"
+        yesLabel="Yes"
+        noLabel="No"
+        navigationItems={[]}
+        initialValues={{ name: 'Preview value' }}
+        sections={[
+          {
+            id: 'general',
+            title: 'General',
+            fields: [{ name: 'name', label: 'Name', type: 'text' }],
+          },
+        ]}
+      />
+    );
+    expect(screen.getByRole('textbox', { name: 'Name' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save settings' })).toBeDisabled();
+    expect(screen.getByRole('alert')).toHaveTextContent('read-only preview');
+  });
   it('preserves setup anchors, independent expansion and saved field values', async () => {
     const save = vi.fn();
     render(
@@ -41,6 +65,16 @@ describe('Setup and dialog shared sections', () => {
       'false'
     );
     fireEvent.click(screen.getByRole('button', { name: 'General settings' }));
+    expect(screen.getByRole('textbox', { name: 'Setting name' })).toHaveValue('Updated');
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    const search = screen.getByRole('textbox', { name: 'Search' });
+    fireEvent.change(search, { target: { value: 'Setting name' } });
+    expect(screen.queryByRole('button', { name: 'Advanced settings' })).toBeNull();
+    expect(screen.getByRole('textbox', { name: 'Setting name' })).toHaveValue('Updated');
+    fireEvent.change(search, { target: { value: 'unmatched' } });
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    expect(screen.queryByRole('textbox', { name: 'Search' })).toBeNull();
     expect(screen.getByRole('textbox', { name: 'Setting name' })).toHaveValue('Updated');
     fireEvent.click(screen.getByRole('button', { name: 'Save settings' }));
     await waitFor(() => expect(save).toHaveBeenCalledWith({ name: 'Updated' }));

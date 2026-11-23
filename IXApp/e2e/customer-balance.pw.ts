@@ -166,7 +166,7 @@ test('customer tab exposes confirmed basic actions and opens the screenshot-alig
   await expect(page.getByText('C-001 : Example customer')).toBeVisible();
   await page.getByRole('button', { name: 'Sell', exact: true }).click();
   await page.getByRole('button', { name: 'Orders', exact: true }).click();
-  await page.getByRole('menuitem', { name: 'Sales orders', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'All sales orders', exact: true }).click();
   await expect(page).toHaveURL(/sales-orders\?customerAccount=C-001$/);
   await expect(page.getByText('SO-C001', { exact: true })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText('SO-C002', { exact: true })).toHaveCount(0);

@@ -68,16 +68,18 @@ export function ReportThumbnailPanel({
               size="small"
               color="primary"
               aria-label={t('reportViewer.thumbnails.pages')}
+              onClick={() => virtualizer.scrollToIndex(currentPage - 1, { align: 'auto' })}
+              disabled={totalPages === 0}
             >
               <GridViewOutlined sx={{ fontSize: 17 }} />
             </IconButton>
-            <IconButton size="small" aria-label={t('reportViewer.thumbnails.outline')}>
+            <IconButton disabled size="small" aria-label={t('reportViewer.thumbnails.outline')}>
               <ListOutlined sx={{ fontSize: 17 }} />
             </IconButton>
-            <IconButton size="small" aria-label={t('reportViewer.thumbnails.attachments')}>
+            <IconButton disabled size="small" aria-label={t('reportViewer.thumbnails.attachments')}>
               <AttachFileOutlined sx={{ fontSize: 17 }} />
             </IconButton>
-            <IconButton size="small" aria-label={t('reportViewer.thumbnails.layers')}>
+            <IconButton disabled size="small" aria-label={t('reportViewer.thumbnails.layers')}>
               <LayersOutlined sx={{ fontSize: 17 }} />
             </IconButton>
           </Stack>

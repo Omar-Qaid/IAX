@@ -128,6 +128,7 @@ const LIST_VISIBLE_KEY = 'ixapp.master-detail.SalesTable.list-visible';
 
 beforeEach(() => {
   vi.clearAllMocks();
+  queryClient.clear();
   globalThis.localStorage.setItem(LIST_VISIBLE_KEY, 'true');
 });
 
@@ -168,6 +169,7 @@ it('enables Invoice after full delivery while keeping header editing disabled', 
   );
   openOrder('1');
   await screen.findByText('SO-LIVE-001 : Live customer');
+  await waitFor(() => expect(screen.getByRole('button', { name: /^Edit$/i })).toBeDisabled());
   const invoiceTab = screen.getByRole('button', { name: /^Invoice$/i });
   expect(invoiceTab).toBeEnabled();
   fireEvent.click(invoiceTab);
@@ -302,7 +304,7 @@ it('reviews the confirmation and only posts when Posting is enabled', async () =
   fireEvent.click(screen.getByRole('button', { name: 'Close preview' }));
   expect(salesOrderConfirmationApi.post).not.toHaveBeenCalled();
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-  if (!screen.queryByRole('button', { name: '' }))
+  if (!screen.queryByRole('button', { name: 'Confirmation' }))
     fireEvent.click(screen.getByRole('button', { name: 'Sell' }));
   fireEvent.click(screen.getByRole('button', { name: 'Confirmation' }));
   const submit = await screen.findByRole('button', { name: 'OK' });
@@ -370,7 +372,7 @@ it('toggles line filters through Search without opening the advanced panel', asy
   expect(screen.queryByPlaceholderText('Filter value')).toBeNull();
 });
 
-it('saves on cell blur, locks item identity and names, and removes the line', async () => {
+it('saves with Ctrl+S, locks item identity and names, and removes the line', async () => {
   openOrder('1');
   await screen.findByText('SO-LIVE-001 : Live customer');
   fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
@@ -391,6 +393,8 @@ it('saves on cell blur, locks item identity and names, and removes the line', as
   fireEvent.change(quantity, { target: { value: '3' } });
   expect(salesOrderLinesApi.add).not.toHaveBeenCalled();
   fireEvent.blur(quantity);
+  expect(salesOrderLinesApi.add).not.toHaveBeenCalled();
+  fireEvent.keyDown(quantity, { key: 's', ctrlKey: true });
   await waitFor(() =>
     expect(salesOrderLinesApi.add).toHaveBeenCalledWith(
       '1',
@@ -403,7 +407,10 @@ it('saves on cell blur, locks item identity and names, and removes the line', as
   fireEvent.change(grid.getByRole('spinbutton', { name: 'Quantity' }), {
     target: { value: '4' },
   });
-  fireEvent.blur(grid.getByRole('spinbutton', { name: 'Quantity' }));
+  fireEvent.keyDown(grid.getByRole('spinbutton', { name: 'Quantity' }), {
+    key: 's',
+    ctrlKey: true,
+  });
   await waitFor(() =>
     expect(salesOrderLinesApi.update).toHaveBeenCalledWith(
       '1',
@@ -415,7 +422,7 @@ it('saves on cell blur, locks item identity and names, and removes the line', as
   await waitFor(() => expect(grid.getByRole('combobox', { name: 'Unit' })).not.toBeDisabled());
   fireEvent.keyDown(grid.getByRole('combobox', { name: 'Unit' }), { key: 'ArrowDown' });
   fireEvent.click(await screen.findByRole('option', { name: /BOX/ }));
-  fireEvent.blur(grid.getByRole('combobox', { name: 'Unit' }));
+  fireEvent.keyDown(grid.getByRole('combobox', { name: 'Unit' }), { key: 's', ctrlKey: true });
   await waitFor(() =>
     expect(salesOrderLinesApi.update).toHaveBeenCalledWith(
       '1',
@@ -508,7 +515,7 @@ it('keeps page and line in edit mode on invalid Save, then closes both after a v
   expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull();
 });
 
-it('keeps invalid cell edits focused and moves to Unit after a successful Tab save', async () => {
+it('validates on save and preserves the row draft while Tab moves to Unit', async () => {
   queryClient.removeQueries({ queryKey: salesOrderQueryKeys.all });
   vi.mocked(salesOrderLinesApi.update).mockClear();
   vi.mocked(salesOrderLinesApi.list).mockResolvedValueOnce([
@@ -530,18 +537,12 @@ it('keeps invalid cell edits focused and moves to Unit after a successful Tab sa
   fireEvent.click(screen.getByLabelText('Quantity'));
   const quantity = screen.getByRole('spinbutton', { name: 'Quantity' });
   fireEvent.change(quantity, { target: { value: '0' } });
-  fireEvent.keyDown(quantity, { key: 'Tab' });
+  fireEvent.keyDown(quantity, { key: 's', ctrlKey: true });
   await waitFor(() => expect(quantity).toHaveAttribute('aria-invalid', 'true'));
   expect(salesOrderLinesApi.update).not.toHaveBeenCalled();
   expect(quantity).toHaveFocus();
   fireEvent.change(quantity, { target: { value: '3' } });
   fireEvent.keyDown(quantity, { key: 'Tab' });
-  await waitFor(() =>
-    expect(salesOrderLinesApi.update).toHaveBeenCalledWith(
-      '1',
-      expect.objectContaining({ id: '42', quantity: 3 })
-    )
-  );
   await waitFor(
     () =>
       expect(
@@ -552,8 +553,14 @@ it('keeps invalid cell edits focused and moves to Unit after a successful Tab sa
   // The focused Unit editor must keep showing the line's unit, not go blank.
   const unitEditor = within(screen.getByRole('grid')).getByRole('combobox', { name: 'Unit' });
   expect(unitEditor).toHaveValue('Pcs');
-  fireEvent.mouseDown(unitEditor);
-  expect(unitEditor).toHaveValue('Pcs');
+  expect(salesOrderLinesApi.update).not.toHaveBeenCalled();
+  fireEvent.keyDown(unitEditor, { key: 's', ctrlKey: true });
+  await waitFor(() =>
+    expect(salesOrderLinesApi.update).toHaveBeenCalledWith(
+      '1',
+      expect.objectContaining({ id: '42', quantity: 3 })
+    )
+  );
   expect(salesOrderLinesApi.update).toHaveBeenCalledTimes(1);
 });
 

@@ -40,8 +40,8 @@ export interface AppDrawerNotification {
   archived: boolean;
   priority?: 'Critical' | 'High' | 'Medium' | 'Low';
   category?: string;
-  actions?: { label: string; variant: 'contained' | 'outlined' }[];
-  attachment?: { name: string; size: string };
+  actions?: { label: string; variant: 'contained' | 'outlined'; onClick?: () => void }[];
+  attachment?: { name: string; size: string; onDownload?: () => void };
 }
 
 function timeAgo(dateStr: string, language: string): string {
@@ -133,6 +133,8 @@ const NotificationItem: React.FC<{
             {n.actions.map((action) => (
               <Button
                 key={action.label}
+                onClick={action.onClick}
+                disabled={!action.onClick}
                 variant={action.variant}
                 size="small"
                 sx={{
@@ -198,6 +200,8 @@ const NotificationItem: React.FC<{
             </Box>
             <Button
               variant="outlined"
+              onClick={n.attachment.onDownload}
+              disabled={!n.attachment.onDownload}
               size="small"
               sx={{
                 textTransform: 'none',
@@ -284,6 +288,7 @@ export const AppNotificationDrawer: React.FC = () => {
   const { t } = useTranslation();
   const notificationDrawerOpen = useNavigationStore((s) => s.notificationDrawerOpen);
   const setNotificationDrawerOpen = useNavigationStore((s) => s.setNotificationDrawerOpen);
+  const setSettingsPanelOpen = useNavigationStore((s) => s.setSettingsPanelOpen);
 
   const [tab, setTab] = useState(0);
   const [page, setPage] = useState(1);
@@ -384,7 +389,14 @@ export const AppNotificationDrawer: React.FC = () => {
             </IconButton>
           </Tooltip>
           <Tooltip title={t('common.settings', 'Settings')}>
-            <IconButton size="small" sx={{ color: 'text.secondary' }}>
+            <IconButton
+              size="small"
+              onClick={() => {
+                handleClose();
+                setSettingsPanelOpen(true);
+              }}
+              sx={{ color: 'text.secondary' }}
+            >
               <SettingsIcon sx={{ fontSize: 20 }} />
             </IconButton>
           </Tooltip>

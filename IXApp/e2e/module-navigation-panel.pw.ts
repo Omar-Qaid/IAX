@@ -5,6 +5,7 @@ test('renders the D365 two-column module navigation surface', async ({ page }, t
   await page.goto('/dashboard');
 
   const appNavigation = page.getByRole('navigation', { name: 'Application navigation' });
+  await appNavigation.getByRole('button', { name: 'Toggle navigation' }).click();
   await appNavigation.getByText('Modules', { exact: true }).click();
   await appNavigation.getByText('Accounts Receivable', { exact: true }).click();
 

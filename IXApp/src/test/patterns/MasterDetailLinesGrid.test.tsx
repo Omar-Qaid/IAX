@@ -12,6 +12,21 @@ const columns: ColumnDef<Line>[] = [
 ];
 
 describe('master-detail page and grid edit mode', () => {
+  it('saves the current cell through the page ref without a parent render', async () => {
+    const ref = React.createRef<DataGridHandle>();
+    const onRowSave = vi.fn();
+    render(
+      <AppProviders>
+        <MasterDetailLinesGrid ref={ref} editing canEdit onEdit={vi.fn()}
+          rows={rows} columns={columns} onRowSave={onRowSave} />
+      </AppProviders>
+    );
+    act(() => ref.current!.startEditRow('1'));
+    fireEvent.change(screen.getByDisplayValue('Consulting'), { target: { value: 'Updated consulting' } });
+    await act(async () => { expect(await ref.current!.saveEdit()).toBe(true); });
+    expect(onRowSave).toHaveBeenCalledWith(expect.objectContaining({ description: 'Updated consulting' }), false);
+  });
+
   it('keeps a failed row draft through busy state and discards it on page cancellation', async () => {
     const ref = React.createRef<DataGridHandle>();
     const onRowSave = vi.fn(async () => {

@@ -33,22 +33,28 @@ test('renders Exchange rate types with the D365 list-page layout', async ({ page
   await page.goto('/foundation/exchange-rate-types');
 
   await expect(page.getByRole('button', { name: 'Back' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Edit' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Edit', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'New', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Delete' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Exchange rates' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Options' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Search', exact: true }).last()).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Standard view' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Exchange rate types', exact: true })
+  ).toBeVisible();
 
   const filter = page.getByRole('textbox', { name: 'Filter' });
   await expect(filter).toBeVisible();
-  await expect(filter.locator('..')).toHaveCSS('height', '37px');
+  await expect(filter.locator('..')).toHaveCSS('height', '28px');
 
   const grid = page.getByRole('grid');
   await expect(grid).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Choose columns' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Features' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Show grid sidebar' })).toBeVisible();
+  await filter.fill('Budget');
+  await expect(grid.getByRole('row')).toHaveCount(1);
+  await expect(grid.getByRole('row')).toContainText('Budget');
+  await filter.clear();
+  await expect(grid.getByRole('row')).toHaveCount(2);
   await grid.screenshot({ path: 'test-results/exchange-rate-types-grid.png' });
   await page.screenshot({ path: 'test-results/exchange-rate-types-page.png', fullPage: true });
 });

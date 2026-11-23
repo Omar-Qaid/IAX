@@ -357,11 +357,10 @@ export const AppSettingsDrawer: React.FC = () => {
           {t('settings.title', 'Settings')}
         </Typography>
         <Box sx={{ display: 'flex', gap: 0.25 }}>
-          <Tooltip title={t('settings.title', 'Settings')}>
-            <IconButton size="small" sx={{ color: 'text.secondary' }}>
-              <SettingsIcon sx={{ fontSize: 18 }} />
-            </IconButton>
-          </Tooltip>
+          <SettingsIcon
+            aria-hidden="true"
+            sx={{ fontSize: 18, color: 'text.secondary', alignSelf: 'center', mx: 0.75 }}
+          />
           <Tooltip title={t('settings.reset', 'Reset')}>
             <IconButton size="small" onClick={resetSettings} sx={{ color: 'text.secondary' }}>
               <RefreshIcon sx={{ fontSize: 18 }} />

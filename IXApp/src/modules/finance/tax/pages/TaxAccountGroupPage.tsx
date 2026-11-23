@@ -153,7 +153,15 @@ export function TaxAccountGroupPage(): React.ReactElement {
         recordHeaderMinHeight: 124,
       },
     };
-  }, [accounts.data, accounts.isError, accounts.isPending, company, t]);
+  }, [
+    accounts.data,
+    accounts.error?.message,
+    accounts.isError,
+    accounts.isFetching,
+    accounts.isPending,
+    company,
+    t,
+  ]);
   return (
     <>
       {accounts.isError && (

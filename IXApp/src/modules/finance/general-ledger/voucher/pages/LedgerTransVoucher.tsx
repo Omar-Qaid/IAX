@@ -3,7 +3,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import { Alert, Box, Button, Stack, Tab, Tabs, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ROUTE_PATHS } from '@app/routes/routePaths';
+import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../../../accounts-receivable/routes/accountsReceivableRoutePaths';
 import { useAuth } from '@core/auth/useAuth';
 import { useCompanyStore } from '@core/company/useCompanyStore';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
@@ -123,7 +123,7 @@ export function LedgerTransVoucher(): React.ReactElement {
         disabled={!selected}
         onClick={() =>
           navigate(
-            `${ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUST_INVOICE_JOURNAL}?voucher=${encodeURIComponent(selected?.voucher ?? '')}`
+            `${ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUST_INVOICE_JOURNAL}?voucher=${encodeURIComponent(selected?.voucher ?? '')}`
           )
         }
       />

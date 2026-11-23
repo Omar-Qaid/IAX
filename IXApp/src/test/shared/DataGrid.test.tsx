@@ -63,7 +63,12 @@ describe('AppDataGrid', () => {
 
     render(
       <AppProviders>
-        <AppDataGrid<TestRow> columns={testColumns} rows={testRows} getRowId={(row) => row.id} />
+        <AppDataGrid<TestRow>
+          columns={testColumns}
+          rows={testRows}
+          getRowId={(row) => row.id}
+          hideFilterRow={false}
+        />
       </AppProviders>
     );
 

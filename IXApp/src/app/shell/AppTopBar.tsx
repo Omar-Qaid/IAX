@@ -25,6 +25,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import NotificationsIcon from '@mui/icons-material/NotificationsNoneOutlined';
 import SettingsIcon from '@mui/icons-material/Settings';
 import HelpIcon from '@mui/icons-material/HelpOutlined';
+import { WorkspaceHelpDialog } from './WorkspaceHelpDialog';
 import AccountIcon from '@mui/icons-material/AccountCircle';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -134,6 +135,7 @@ export const AppTopBar: React.FC = memo(() => {
   const userName = user?.displayName || user?.username || user?.email;
   const isAdmin = user?.roles.some((role) => role === 'Admin' || role === 'SystemAdmin') ?? false;
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
   const isMenuOpen = Boolean(anchorEl);
   const [companyAnchorEl, setCompanyAnchorEl] = useState<null | HTMLElement>(null);
   const legalEntities = useQuery({
@@ -230,7 +232,12 @@ export const AppTopBar: React.FC = memo(() => {
             borderInlineEnd: `1px solid ${topBar.divider}`,
           }}
         >
-          <IconButton size="small" onClick={openSidebar} sx={hamburgerSx}>
+          <IconButton
+            size="small"
+            onClick={openSidebar}
+            sx={hamburgerSx}
+            aria-label={t('nav.app_launcher')}
+          >
             <MenuIcon sx={{ fontSize: topBar.iconSize }} />
           </IconButton>
           <IconButton
@@ -538,7 +545,12 @@ export const AppTopBar: React.FC = memo(() => {
 
           {/* Help - hidden on mobile */}
           <Tooltip title={t('common.help', 'Help')}>
-            <IconButton size="small" sx={helpSx}>
+            <IconButton
+              size="small"
+              sx={helpSx}
+              onClick={() => setHelpOpen(true)}
+              aria-haspopup="dialog"
+            >
               <HelpIcon sx={{ fontSize: 23 }} />
             </IconButton>
           </Tooltip>
@@ -632,6 +644,12 @@ export const AppTopBar: React.FC = memo(() => {
                 secondary={t('common.language', 'Language')}
               />
             </MenuItem>
+            <MenuItem onClick={() => setHelpOpen(true)} aria-haspopup="dialog">
+              <ListItemIcon>
+                <HelpIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary={t('common.help', 'Help')} />
+            </MenuItem>
             <MenuItem onClick={handleLogout}>
               <ListItemIcon>
                 <LogoutIcon fontSize="small" color="error" />
@@ -641,6 +659,7 @@ export const AppTopBar: React.FC = memo(() => {
           </Menu>
         </Box>
       </Toolbar>
+      <WorkspaceHelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
 
       {/* Popover Mega-menu for Horizontal Layout */}
       {isHorizontal && !isMobile && activeModule && (

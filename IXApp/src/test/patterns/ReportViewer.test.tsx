@@ -8,8 +8,37 @@ import {
 } from '@patterns/report-viewer/ReportViewer';
 import { ReportViewerDocument } from '@shared/components/report-viewer/ReportViewerDocument';
 import { calculatePdfPageLayout } from '@patterns/report-viewer/exportReport';
+import { ReportToolbar } from '@patterns/report-viewer/ReportToolbar';
 
 describe('ReportViewer', () => {
+  it('opens reading mode and disables reload when no reload action is supplied', () => {
+    const toggleThumbnails = vi.fn();
+    const changeZoomMode = vi.fn();
+    render(
+      <ReportToolbar
+        compact={false}
+        currentPage={1}
+        totalPages={2}
+        thumbnailsOpen
+        zoom={100}
+        zoomMode="100%"
+        exportFormats={REPORT_EXPORT_FORMATS}
+        onClose={vi.fn()}
+        onPrint={vi.fn()}
+        onExport={vi.fn()}
+        onFullscreen={vi.fn()}
+        onToggleThumbnails={toggleThumbnails}
+        onPageChange={vi.fn()}
+        onZoomChange={vi.fn()}
+        onZoomModeChange={changeZoomMode}
+        onSearch={vi.fn()}
+      />
+    );
+    expect(screen.getByRole('button', { name: 'Reload' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Reading mode' }));
+    expect(toggleThumbnails).toHaveBeenCalledOnce();
+    expect(changeZoomMode).toHaveBeenCalledWith('Page Width');
+  });
   it('does not create a blank page for small preview-versus-print height differences', () => {
     expect(calculateReportPageCount(1_225, 1_123)).toBe(1);
     expect(calculateReportPageCount(1_400, 1_123)).toBe(2);

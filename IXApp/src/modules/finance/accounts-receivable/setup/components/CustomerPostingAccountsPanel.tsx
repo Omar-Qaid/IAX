@@ -198,9 +198,12 @@ export function CustomerPostingAccountsPanel({
     }
   };
   const session = useListGridEditor({ saveEdit: save, cancelEdit: cancel });
-  React.useEffect(() => {
+  const enterSelectedRule = React.useEffectEvent(() => {
     if (masterEditing && selected && !draft) setDraft({ ...selected });
-    // Enter the selected rule when Edit is requested from the action pane.
+  });
+  React.useEffect(() => {
+    // Enter on an Edit request or selection change, not when Save clears the draft.
+    enterSelectedRule();
   }, [masterEditing, selected?.id]);
   const remove = async () => {
     if (!selected || busy || operationLock.current) return;

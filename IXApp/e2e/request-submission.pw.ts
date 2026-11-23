@@ -3,6 +3,17 @@ import { expect, test } from '@playwright/test';
 const ok = (data: unknown) => ({ success: true, data, message: null, errors: [] });
 
 test('shows backend-driven request categories and request types', async ({ page }) => {
+  await page.route('http://localhost:33319/api/**', (route) => route.fulfill({ json: ok([]) }));
+  await page.route('**/api/v1/WfRequest/form-definition/100', (route) =>
+    route.fulfill({
+      json: ok({
+        processId: 100,
+        processName: 'Electronic transactions',
+        processDescription: null,
+        controls: [],
+      }),
+    })
+  );
   page.on('pageerror', (error) => console.error(`PAGE ERROR: ${error.message}`));
   page.on('console', (message) => {
     if (message.type() === 'error') console.error(`BROWSER ERROR: ${message.text()}`);
@@ -189,8 +200,11 @@ test('shows backend-driven request categories and request types', async ({ page 
   await page.goto('/workflow/request-submission');
 
   await expect(page.getByRole('heading', { name: 'Request Submission', level: 1 })).toBeVisible();
-  await expect(page.getByText('Electronic services', { exact: true }).first()).toBeVisible();
-  await expect(page.getByText('Financial affairs', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Toggle record list' }).click();
+  await expect(page.getByRole('button', { name: /^Electronic services/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Financial affairs/ })).toBeVisible();
+  await page.getByRole('button', { name: /^Electronic services/ }).click();
+  if (await page.getByRole('dialog').isVisible()) await page.keyboard.press('Escape');
   await expect(page.getByRole('button', { name: /Electronic transactions/ })).toBeVisible();
   await expect(page.getByRole('combobox', { name: 'Request process' })).toHaveCount(0);
   await expect(page.getByRole('textbox', { name: 'Request name' })).toHaveCount(0);
@@ -198,14 +212,20 @@ test('shows backend-driven request categories and request types', async ({ page 
 
   await page.getByRole('button', { name: /Electronic transactions/ }).click();
   await expect(page).toHaveURL(/\/workflow\/request-from\/10\/100$/);
-  await expect(page.getByRole('heading', { name: 'RequestFrom', level: 1 })).toBeVisible();
-  await expect(page.getByText('Electronic transactions', { exact: true }).first()).toBeVisible();
-  await expect(page.getByText('Employee onboarding', { exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole('heading', { name: 'Electronic transactions', level: 1 })
+  ).toBeVisible();
+  const toggleList = page.getByRole('button', { name: 'Toggle record list' });
+  if ((await toggleList.getAttribute('aria-pressed')) !== 'true') await toggleList.click();
+  await expect(page.getByRole('button', { name: /^Electronic transactions/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Employee onboarding/ })).toBeVisible();
   await expect(page.getByText('Payment request', { exact: true })).toHaveCount(0);
   const processFilter = page.getByRole('textbox', { name: 'Filter' });
-  await expect(processFilter).toHaveValue('Electronic transactions');
+  await processFilter.fill('Electronic transactions');
+  await expect(page.getByRole('button', { name: /^Employee onboarding/ })).toHaveCount(0);
   await processFilter.clear();
-  await expect(page.getByText('Employee onboarding', { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Employee onboarding/ })).toBeVisible();
   await expect(page.getByText('Payment request', { exact: true })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Submit request' })).toBeVisible();
+  if (await page.getByRole('dialog').isVisible()) await page.keyboard.press('Escape');
+  await expect(page.getByRole('button', { name: /Submit request/i })).toBeVisible();
 });

@@ -63,6 +63,7 @@ export interface FastTabsDialogProps<TValues extends Record<string, FastTabValue
   cancelLabel: string;
   closeLabel?: string;
   helpLabel?: string;
+  onHelp?: () => void;
   placement?: 'center' | 'top-start';
   embedded?: boolean;
   loading?: boolean;
@@ -85,6 +86,7 @@ export function FastTabsDialog<TValues extends Record<string, FastTabValue>>({
   cancelLabel,
   closeLabel = 'Close',
   helpLabel = 'Help',
+  onHelp,
   placement = 'center',
   embedded = false,
   loading = false,
@@ -143,9 +145,11 @@ export function FastTabsDialog<TValues extends Record<string, FastTabValue>>({
     <>
       <Box sx={{ px: { xs: 1.5, sm: 3 }, pt: 1, pb: 1.75, flexShrink: 0 }}>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.25 }}>
-          <IconButton size="small" aria-label={helpLabel}>
-            <HelpOutlineIcon sx={{ fontSize: 18 }} />
-          </IconButton>
+          {onHelp && (
+            <IconButton size="small" aria-label={helpLabel} onClick={onHelp}>
+              <HelpOutlineIcon sx={{ fontSize: 18 }} />
+            </IconButton>
+          )}
           <IconButton size="small" aria-label={closeLabel} disabled={saving} onClick={onCancel}>
             <CloseIcon sx={{ fontSize: 18 }} />
           </IconButton>

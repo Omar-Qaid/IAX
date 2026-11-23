@@ -1,4 +1,14 @@
 {
+  "workspaceHelp": {
+    "previewOnly": "Saving is unavailable on this screen. Displayed values are a read-only preview, not confirmed saved settings.",
+    "title": "Workspace help",
+    "navigationTitle": "Find a page",
+    "navigation": "Open the application menu and choose a module. On larger screens, use the page search in the top bar. Toggle the record list to browse records within a page.",
+    "editingTitle": "Edit and save",
+    "editing": "Choose Edit or New, enter your changes, then choose Save. Cancel discards unsaved changes. Escape closes an open menu or dialog before cancelling page edits. Available actions depend on your permissions and the record status.",
+    "gridTitle": "Work with document lines",
+    "grid": "Tab moves between cells. Use the page Save action to save changes. In sales order line editors, Ctrl+S saves the active line; moving within the same row keeps its draft. Review validation messages before retrying a failed save."
+  },
   "customerPostingProfiles": {
     "title": "Customer posting profiles",
     "setup": "Setup",

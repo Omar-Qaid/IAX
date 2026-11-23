@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef } from 'react';
+import { useContext, useEffect, useLayoutEffect, useRef } from 'react';
 import {
   PageEditSessionContext,
   type PageEditor,
@@ -8,7 +8,9 @@ import {
 export function useListGridEditor(editor: PageEditor) {
   const session = useContext(PageEditSessionContext);
   const latest = useRef(editor);
-  latest.current = editor;
+  useLayoutEffect(() => {
+    latest.current = editor;
+  }, [editor]);
   const register = session?.registerEditor;
   useEffect(
     () =>

@@ -1,9 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useEffectEvent } from 'react';
 
 /** Cancel the page only after nested editors and overlays have handled Escape. */
 export function useEscapeCancel(enabled: boolean, onCancel?: () => void): void {
+  const cancel = useEffectEvent(() => onCancel?.());
+  const hasCancel = Boolean(onCancel);
   useEffect(() => {
-    if (!enabled || !onCancel) return;
+    if (!enabled || !hasCancel) return;
     const pending = new Set<ReturnType<typeof setTimeout>>();
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
@@ -29,7 +31,7 @@ export function useEscapeCancel(enabled: boolean, onCancel?: () => void): void {
         pending.delete(timer);
         if (event.defaultPrevented) return;
         event.preventDefault();
-        onCancel();
+        cancel();
       }, 0);
       pending.add(timer);
     };
@@ -38,5 +40,5 @@ export function useEscapeCancel(enabled: boolean, onCancel?: () => void): void {
       window.removeEventListener('keydown', handleKeyDown, true);
       pending.forEach(clearTimeout);
     };
-  }, [enabled, onCancel]);
+  }, [enabled, hasCancel]);
 }

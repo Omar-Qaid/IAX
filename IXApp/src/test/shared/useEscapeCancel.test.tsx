@@ -9,6 +9,16 @@ function Page({ enabled = true, onCancel }: { enabled?: boolean; onCancel: () =>
 }
 
 describe('generic Escape cancellation', () => {
+  it('keeps a pending cancellation across a render and calls the latest handler', async () => {
+    const previous = vi.fn();
+    const current = vi.fn();
+    const view = render(<Page onCancel={previous} />);
+    fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Escape' });
+    view.rerender(<Page onCancel={current} />);
+    await waitFor(() => expect(current).toHaveBeenCalledOnce());
+    expect(previous).not.toHaveBeenCalled();
+  });
+
   it('ignores overlays that are kept mounted but hidden', async () => {
     const onCancel = vi.fn();
     render(

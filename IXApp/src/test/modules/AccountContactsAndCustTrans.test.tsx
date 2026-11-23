@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
@@ -261,9 +261,14 @@ describe('account inquiries', () => {
         'aria-pressed',
         'false'
       );
-      if (method === 'Escape')
-        fireEvent.keyDown(screen.getByLabelText('First name'), { key: 'Escape' });
-      else fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+      if (method === 'Escape') {
+        await act(async () => {
+          fireEvent.keyDown(screen.getByLabelText('First name'), { key: 'Escape' });
+          // Page cancellation runs after nested editors have handled the key.
+          // Flush that task before an expensive whole-page role query in jsdom.
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        });
+      } else fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
       expect(await screen.findByRole('button', { name: 'New contact' })).toBeInTheDocument();
       expect(apiClient.post).toHaveBeenCalledTimes(saveCalls);
     }

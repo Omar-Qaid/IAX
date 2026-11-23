@@ -23,7 +23,9 @@ describe('Tax module routing', () => {
     expect(tax.defaultPath).toBe(TAX_ROUTE_PATHS.TAX_CODES);
     expect(tax.matchPath).toBe('/tax');
     const taxPaths = tax.sections.flatMap((section) => section.links.map((link) => link.path));
-    expect(taxPaths).toHaveLength(5);
+    const setupPaths = Object.values(TAX_ROUTE_PATHS).filter((path) => path !== TAX_ROUTE_PATHS.ROOT);
+    expect(taxPaths).toEqual(expect.arrayContaining(setupPaths));
+    expect(new Set(taxPaths).size).toBe(setupPaths.length);
     for (const path of taxPaths) expect(getPageDefinition(path!)?.permission).toMatch(/^Tax\./);
     const ledgerPaths = AVAILABLE_MODULE_NAV_CONFIGS['mod-GeneralLedger'].sections.flatMap(
       (section) => section.links.map((link) => link.path)
