@@ -18,6 +18,8 @@ public sealed class VendParametersSeeder : IDataSeeder
     public async Task SeedAsync(SeedContext c, CancellationToken ct)
     {
 
-        await c.EnsureAsync<VendParameters>(x => x.Key == 0, new() { Key = 0, VendPostingProfile = "APV2" }, ct);
+        // Only the fields this seeder sets are compared, so later setup (the advance profile filled in by
+        // VendPrepaymentSetupSeeder, or an operator's own parameters) is not mistaken for a conflict.
+        await c.EnsureAsync<VendParameters>(x => x.Key == 0, new() { Key = 0, VendPostingProfile = "APV2" }, ct, nameof(VendParameters.VendPostingProfile));
     }
 }

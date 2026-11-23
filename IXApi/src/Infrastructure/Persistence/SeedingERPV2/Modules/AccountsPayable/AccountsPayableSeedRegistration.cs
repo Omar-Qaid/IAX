@@ -18,6 +18,7 @@ public static class AccountsPayableSeedRegistration
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, LogisticsElectronicAddressSeeder>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, LogisticsPostalAddressSeeder>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, VendTableSeeder>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, VendPrepaymentSetupSeeder>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, InvoiceMatchingPolicySeeder>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, PriceDiscTableSeeder>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, VendBankAccountSeeder>());
