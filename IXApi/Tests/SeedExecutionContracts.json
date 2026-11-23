@@ -129,7 +129,8 @@
     "Policy": "Repeatable",
     "Scope": "dat",
     "Dependencies": [
-      "Finance.Foundation.FinancialDimensions"
+      "Finance.Foundation.FinancialDimensions",
+      "Finance.GeneralLedger.Ledger"
     ],
     "Registered": true,
     "OwnerModule": "Finance",
@@ -372,5 +373,21 @@
     "Registered": true,
     "OwnerModule": "Workflow",
     "Source": "src/Infrastructure/Persistence/Seeding/Modules/Workflow/WfProcessSeedData.cs"
+  },
+  {
+    "Type": "LedgerSeeder",
+    "Id": "Finance.GeneralLedger.Ledger",
+    "Version": 1,
+    "Category": "Reference",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.Foundation.CompanyInfo",
+      "Finance.GeneralLedger.FiscalCalendars",
+      "Finance.GeneralLedger.Currencies"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "src/Infrastructure/Persistence/Seeding/Modules/Finance/LedgerSeeder.cs"
   }
 ]

@@ -41,7 +41,8 @@ public sealed class AccountsPayablePhaseOneSeedTests
         using var provider = services.BuildServiceProvider();
         using var scope = provider.CreateScope();
         var ordered = new SeedDependencyResolver().Resolve(scope.ServiceProvider.GetServices<IDataSeeder>());
-        Assert.Equal(61, ordered.Count);
+        Assert.Equal(63, ordered.Count);
+        Assert.Single(ordered, x => x.Id == "ERPV2.TaxVatCategorySeeder");
         Assert.Single(ordered, x => x.Id == "ERPV2.InventoryNumberSequenceSeeder");
         // The inventory journal setup: its own account structure for the profit and loss codes, and
         // the journal names the journal services cannot create or post without.

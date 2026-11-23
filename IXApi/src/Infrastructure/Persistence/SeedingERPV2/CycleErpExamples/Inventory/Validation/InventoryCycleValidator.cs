@@ -99,7 +99,7 @@ public sealed class InventoryCycleValidator : ISeedValidator
                 $"persisted item {itemId} differs from items.json.");
 
             // The whole cycle is asserted in weighted-average terms, and only the stocked item may carry stock.
-            Check(modelGroup.InventModel == InventModel.WeightedAvg
+            Check(modelGroup.InventModel == (assignment.ModelGroupId == InventoryCycleSeedExample.FifoModelGroup ? InventModel.FIFO : InventModel.WeightedAvg)
                 && modelGroup.StockedProduct == (service ? NoYes.No : NoYes.Yes),
                 $"item model group {assignment.ModelGroupId} is not the weighted-average policy this cycle asserts.");
 

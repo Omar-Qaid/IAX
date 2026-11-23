@@ -752,4 +752,3 @@ ORDER BY ma.MAINACCOUNTID;
 | E2E-03 | Traceability: PO → PR → VI → Payment | كل الـ vouchers مرتبطة |
 | E2E-04 | Traceability: SO → PS → INV → Payment | كل الـ vouchers مرتبطة |
 | E2E-05 | Period close | لا ترحيل بعد الإقفال |
-

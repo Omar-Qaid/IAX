@@ -20,10 +20,14 @@ public static class InventoryCycleSeedExample
     public const string TransferJournalSuffix = "TJOUR";
     public const string MovementSuffix = "MOVE";
     public const string RecalculationSuffix = "RECALC";
-    public static IReadOnlyList<string> ItemSuffixes { get; } = [StockSuffix, ServiceSuffix, AdjustmentSuffix, CountSuffix, CountOverageSuffix, CountMatchSuffix, TransferSuffix, TransferJournalSuffix, MovementSuffix, RecalculationSuffix];
+    /// <summary>The stocked item of the General Ledger reference cycle (GL-02), kept apart so its close is its own.</summary>
+    public const string GlReferenceSuffix = "GLREF";
+    public const string FifoSuffix = "FIFO";
+    public static IReadOnlyList<string> ItemSuffixes { get; } = [StockSuffix, ServiceSuffix, AdjustmentSuffix, CountSuffix, CountOverageSuffix, CountMatchSuffix, TransferSuffix, TransferJournalSuffix, MovementSuffix, RecalculationSuffix, GlReferenceSuffix, FifoSuffix];
     public const string ItemGroup = "APV2";
     public const string StockModelGroup = "APV2";
     public const string ServiceModelGroup = "APV2-SVC";
+    public const string FifoModelGroup = "APV2-FIFO";
     public const string ItemTaxGroup = "IV2-ZERO";
     public const string Unit = "EA";
     public const decimal PriceUnit = 1m;
@@ -45,6 +49,8 @@ public static class InventoryCycleSeedExample
         TransferJournalSuffix => "Inventory transfer journal item",
         MovementSuffix => "Inventory movement journal item",
         RecalculationSuffix => "Inventory recalculation item",
+        GlReferenceSuffix => "General ledger reference cycle item",
+        FifoSuffix => "Inventory FIFO close item",
         _ => throw new ArgumentOutOfRangeException(nameof(suffix))
     };
 
@@ -52,7 +58,7 @@ public static class InventoryCycleSeedExample
         suffix == ServiceSuffix ? ItemType.Service : ItemType.Item;
 
     public static string ModelGroup(string suffix) =>
-        suffix == ServiceSuffix ? ServiceModelGroup : StockModelGroup;
+        suffix == ServiceSuffix ? ServiceModelGroup : suffix == FifoSuffix ? FifoModelGroup : StockModelGroup;
 
     /// <summary>The module price the seeder writes. Only the stocked item is priced differently to sell.</summary>
     public static decimal Price(string suffix, ModuleInventPurchSales module) => suffix == ServiceSuffix

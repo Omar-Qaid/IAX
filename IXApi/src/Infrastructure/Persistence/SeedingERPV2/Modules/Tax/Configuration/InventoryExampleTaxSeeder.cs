@@ -20,6 +20,6 @@ public sealed class InventoryExampleTaxSeeder : IDataSeeder
         await c.EnsureAsync<TaxItemGroupHeading>(x => x.TaxItemGroup == TaxSeedCatalog.InventoryZeroItemGroup,
             new() { TaxItemGroup = TaxSeedCatalog.InventoryZeroItemGroup, Name = "Inventory reference zero rate" }, ct);
         await c.EnsureAsync<TaxOnItem>(x => x.TaxItemGroup == TaxSeedCatalog.InventoryZeroItemGroup && x.TaxCode == TaxSeedCatalog.ZeroRated,
-            new() { TaxItemGroup = TaxSeedCatalog.InventoryZeroItemGroup, TaxCode = TaxSeedCatalog.ZeroRated }, ct);
+            new() { TaxItemGroup = TaxSeedCatalog.InventoryZeroItemGroup, TaxCode = TaxSeedCatalog.ZeroRated, TaxExemptCode = TaxSeedCatalog.NoExemption }, ct);
     }
 }

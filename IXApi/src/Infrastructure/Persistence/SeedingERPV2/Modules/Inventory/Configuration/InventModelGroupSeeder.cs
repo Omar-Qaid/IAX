@@ -19,6 +19,7 @@ public sealed class InventModelGroupSeeder : IDataSeeder
     {
 
         await c.EnsureAsync<InventModelGroup>(x => x.ModelGroupId == "APV2", new() { ModelGroupId = "APV2", Name = "AP example weighted average stocked", InventModel = InventModel.WeightedAvg, StockedProduct = NoYes.Yes, PostOnHandPhysical = NoYes.Yes, PostOnHandFinancial = NoYes.Yes, PostPhysicalPurchase = NoYes.Yes }, ct);
+        await c.EnsureAsync<InventModelGroup>(x => x.ModelGroupId == "APV2-FIFO", new() { ModelGroupId = "APV2-FIFO", Name = "Inventory example FIFO stocked", InventModel = InventModel.FIFO, StockedProduct = NoYes.Yes, PostOnHandPhysical = NoYes.Yes, PostOnHandFinancial = NoYes.Yes, PostPhysicalPurchase = NoYes.Yes }, ct);
         await c.EnsureAsync<InventModelGroup>(x => x.ModelGroupId == "APV2-SVC",
             new() { ModelGroupId = "APV2-SVC", Name = "AP example nonstocked service", InventModel = InventModel.WeightedAvg, StockedProduct = NoYes.No }, ct);
     }

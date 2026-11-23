@@ -23,12 +23,13 @@ public static class TaxSeedCatalog
     public const string Exempt = "APV2-EX";
 
     // Exemption reasons (TaxExemptCodeTable).
-    public const string ExemptReason = "VATEX-SA-29";
+    public const string NoExemption = "APV2-NONE"; // TaxExemptCode is a required FK, so non-exempt rows carry this code.
+    public const string ExemptReason = "VATEX-SA29"; // ZATCA VATEX-SA-29; ExemptCode is mapped to 10 characters.
 
     // Item sales tax groups (TaxItemGroupHeading / TaxOnItem).
     public const string StandardItemGroup = "APV2";
     public const string ZeroItemGroup = "APV2-ZERO";
-    public const string ExemptItemGroup = "APV2-EXEMPT";
+    public const string ExemptItemGroup = "APV2-EXMPT";
     public const string OutOfScopeItemGroup = "APV2-OOS";
     /// <summary>The inventory cycle's item group; it holds the shared zero-rated code.</summary>
     public const string InventoryZeroItemGroup = "IV2-ZERO";

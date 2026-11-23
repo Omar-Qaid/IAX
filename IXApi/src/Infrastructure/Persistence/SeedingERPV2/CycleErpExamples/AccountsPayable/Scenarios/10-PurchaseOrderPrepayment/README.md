@@ -1,6 +1,6 @@
 # Purchase Order Prepayment
 
-> Future transaction specification only. Current CycleErpExamples prepares configuration/master data and does not execute these steps.
+> Not implemented. `AccountsPayableTransactionFlow.Scenarios` has no ID 10; this page is a specification only.
 
 ## Purpose and inputs
 

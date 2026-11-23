@@ -108,6 +108,18 @@
     "salesPrice": 25
   },
   {
+    "suffix": "GLREF",
+    "name": "General ledger reference cycle item",
+    "productType": "Item",
+    "unit": "EA",
+    "modelGroup": "APV2",
+    "itemGroup": "APV2",
+    "itemTaxGroup": "IV2-ZERO",
+    "stocked": true,
+    "purchasePrice": 10,
+    "salesPrice": 25
+  },
+  {
     "suffix": "SVC",
     "name": "Inventory cycle service",
     "productType": "Service",
@@ -118,5 +130,17 @@
     "stocked": false,
     "purchasePrice": 300,
     "salesPrice": 300
+  },
+  {
+    "suffix": "FIFO",
+    "name": "Inventory FIFO close item",
+    "productType": "Service",
+    "unit": "EA",
+    "modelGroup": "APV2-FIFO",
+    "itemGroup": "APV2",
+    "itemTaxGroup": "IV2-ZERO",
+    "stocked": false,
+    "purchasePrice": 60,
+    "salesPrice": 90
   }
 ]

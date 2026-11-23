@@ -96,7 +96,7 @@ public sealed class TaxSeedTests
         Assert.Single(first.InputTax.TaxJournalDetails);
         Assert.Single(first.InputTax.TaxAccountingAssociationIds);
         var output = Assert.Single(first.OutputTax.Scenarios);
-        Assert.Equal(52.50m, output.TaxAmount);
+        Assert.Equal(-52.50m, output.TaxAmount); // Output tax is a credit, as in AR scenario 04.
         Assert.True(output.PostedVouchers > 0);
         var ids = await db.Set<TaxTrans>().OrderBy(x => x.RecId).Select(x => x.RecId).ToArrayAsync();
         db.ChangeTracker.Clear();
@@ -111,6 +111,21 @@ public sealed class TaxSeedTests
         public string GetCurrentUserId() => "foundation-test";
         public string GetOwnerAccountId() => "foundation-test";
     }
+    [Fact]
+    public void Catalog_exemption_codes_fit_the_mapped_exempt_code_length()
+    {
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        using var db = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlite(connection).Options);
+        var max = db.Model.FindEntityType(typeof(TaxExemptCodeTable))!.FindProperty(nameof(TaxExemptCodeTable.ExemptCode))!.GetMaxLength()!.Value;
+        Assert.All(new[] { TaxSeedCatalog.ExemptReason, TaxSeedCatalog.NoExemption }, code => Assert.InRange(code.Length, 1, max));
+        int Max<T>(string field) => db.Model.FindEntityType(typeof(T))!.FindProperty(field)!.GetMaxLength() ?? int.MaxValue;
+        Assert.All(new[] { TaxSeedCatalog.StandardItemGroup, TaxSeedCatalog.ZeroItemGroup, TaxSeedCatalog.ExemptItemGroup,
+                TaxSeedCatalog.OutOfScopeItemGroup, TaxSeedCatalog.InventoryZeroItemGroup },
+            code => Assert.InRange(code.Length, 1, Max<TaxItemGroupHeading>(nameof(TaxItemGroupHeading.TaxItemGroup))));
+        Assert.All(new[] { TaxSeedCatalog.StandardPurchase, TaxSeedCatalog.StandardSales, TaxSeedCatalog.ZeroRated, TaxSeedCatalog.Exempt },
+            code => Assert.InRange(code.Length, 1, Max<TaxTable>(nameof(TaxTable.TaxCode))));
+    }
+
     private sealed class Fixture(DbContextOptions<ApplicationDbContext> options) : ApplicationDbContext(options)
     {
         protected override void OnModelCreating(ModelBuilder builder)

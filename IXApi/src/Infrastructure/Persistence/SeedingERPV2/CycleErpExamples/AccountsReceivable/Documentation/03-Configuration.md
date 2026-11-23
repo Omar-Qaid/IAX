@@ -24,7 +24,7 @@ Every row below is written by its owning module seeder and verified before commi
 | Sales cash discount | 2 percent in 10 days | `ARV2-2` |
 | Number sequences | Customer, order, confirmation, packing slip, free text and invoice IDs | `ARV2-*` and the document tables |
 | Sales inventory posting | Delivery, issue, cost, revenue and discount accounts | item group `APV2` |
-| Return handling | One reason code and one crediting disposition | `ARV2-WRONG` / `ARV2-RETURN` |
+| Return handling | One reason code and one crediting disposition | `ARV2-WRONG` / `ARV2-RET` |
 
 ## Posting rules this configuration implies
 

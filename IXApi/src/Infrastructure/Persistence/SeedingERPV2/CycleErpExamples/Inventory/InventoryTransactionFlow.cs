@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.Data;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.Reports;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.Inventory.Validation;
@@ -42,7 +42,8 @@ public sealed partial class InventoryTransactionFlow(ApplicationDbContext db, IP
         ["06"] = "Transfer order shipment, partial receipt, transit balance and final receipt",
         ["07"] = "Same-site transfer journal conserving quantity and value",
         ["08"] = "Movement journal receipt and issue with explicit offset account",
-        ["09"] = "Weighted-average recalculation and subsequent posting within its cutoff"
+        ["09"] = "Weighted-average recalculation and subsequent posting within its cutoff",
+        ["10"] = "FIFO close adjusting a running-average sale of 150 from 9,450 to 9,300"
     };
 
     private string Area => db.GetDataAreaId();
@@ -65,6 +66,7 @@ public sealed partial class InventoryTransactionFlow(ApplicationDbContext db, IP
         if (id == "07") return await TransferJournalCycleAsync(options, ct);
         if (id == "08") return await MovementCycleAsync(options, ct);
         if (id == "09") return await RecalculationCycleAsync(options, ct);
+        if (id == "10") return await FifoCloseCycleAsync(options, ct);
         var item = ExampleIdentifiers.StockItem(options.FiscalYear);
         var service = ExampleIdentifiers.ServiceItem(options.FiscalYear);
         var key = ExampleIdentifiers.ScenarioKey(options.FiscalYear, id);

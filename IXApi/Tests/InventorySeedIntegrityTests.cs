@@ -1,4 +1,4 @@
-﻿using IAX.IXApi.Infrastructure.Persistence;
+using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Finance.Inventory;
@@ -84,6 +84,34 @@ public sealed class InventorySeedIntegrityTests(Xunit.Abstractions.ITestOutputHe
         var replay = await runner.RunAsync(new(2026, "inventory-test", ["01"]));
         output.WriteLine(System.Text.Json.JsonSerializer.Serialize(replay));
         Assert.Equal(scenario.InventoryValue, Assert.Single(replay.Scenarios).InventoryValue);
+        Assert.Equal(movements, await db.Set<InventTrans>().CountAsync());
+        Assert.Equal(vouchers, await db.Set<GeneralJournalEntry>().CountAsync());
+    }
+
+    [Fact]
+    public async Task Fifo_close_adjusts_the_running_average_sale_to_fifo_cost_and_replays_without_new_postings()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:;Foreign Keys=True");
+        await connection.OpenAsync();
+        await using var db = new Fixture(new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlite(connection).Options);
+        await db.Database.ExecuteSqlRawAsync(db.Database.GenerateCreateScript().Replace("N'", "'"));
+        TypeAdapterConfig.GlobalSettings.Scan(typeof(FinanceModule).Assembly);
+        var actor = new Identity();
+        using var provider = new ServiceCollection().AddSingleton<ApplicationDbContext>(db)
+            .AddSingleton<ICompanyExecutionContext>(actor).AddSingleton<ICurrentUserService>(actor)
+            .AddLogging().AddInventoryTransactionExamples().BuildServiceProvider();
+        using var scope = provider.CreateScope();
+        var runner = scope.ServiceProvider.GetRequiredService<InventoryTransactionExamples>();
+        var scenario = Assert.Single((await runner.RunAsync(new(2026, "inventory-test", ["10"]))).Scenarios);
+        Assert.Equal(50m, scenario.PhysicalQuantity);
+        Assert.Equal(3300m, scenario.InventoryValue);
+        Assert.Equal(9300m, scenario.CostOfGoodsSold);
+        Assert.Equal(150m, scenario.CloseAdjustment);
+        Assert.All(scenario.Stages, stage => Assert.Equal(stage.ExpectedValue, stage.ActualValue));
+        var movements = await db.Set<InventTrans>().CountAsync();
+        var vouchers = await db.Set<GeneralJournalEntry>().CountAsync();
+        db.ChangeTracker.Clear();
+        await runner.RunAsync(new(2026, "inventory-test", ["10"]));
         Assert.Equal(movements, await db.Set<InventTrans>().CountAsync());
         Assert.Equal(vouchers, await db.Set<GeneralJournalEntry>().CountAsync());
     }

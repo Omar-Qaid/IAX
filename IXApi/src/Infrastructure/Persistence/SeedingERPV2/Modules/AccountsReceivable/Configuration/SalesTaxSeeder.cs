@@ -49,7 +49,7 @@ public sealed class SalesTaxSeeder : IDataSeeder
         // The zero-rated and exempt codes are shared with purchasing (Tax owns them), so customers
         // reach the same codes through their own tax group instead of a sales copy of each.
         await c.EnsureAsync<TaxGroupData>(x => x.TaxGroup == TaxSeedCatalog.CustomerTaxGroup && x.TaxCode == TaxSeedCatalog.ZeroRated,
-            new() { TaxGroup = TaxSeedCatalog.CustomerTaxGroup, TaxCode = TaxSeedCatalog.ZeroRated }, ct);
+            new() { TaxGroup = TaxSeedCatalog.CustomerTaxGroup, TaxCode = TaxSeedCatalog.ZeroRated, TaxExemptCode = TaxSeedCatalog.NoExemption }, ct);
         await c.EnsureAsync<TaxGroupData>(x => x.TaxGroup == TaxSeedCatalog.CustomerTaxGroup && x.TaxCode == TaxSeedCatalog.Exempt,
             new() { TaxGroup = TaxSeedCatalog.CustomerTaxGroup, TaxCode = TaxSeedCatalog.Exempt,
                 ExemptTax = NoYes.Yes, TaxExemptCode = TaxSeedCatalog.ExemptReason }, ct);

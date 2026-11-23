@@ -8,7 +8,7 @@ The standard D365 sales tax engine applies the tax codes that two groups share: 
 |---|---|---:|---|---|---|
 | Standard | `APV2-15` | 15 | normal | `APV2`, holding `APV2-15` | Outgoing or Incoming, tax = 15% of the base |
 | Zero-rated | `APV2-0` | 0 | normal (in `APV2` and `ARV2`) | `APV2-ZERO`, holding `APV2-0` | Outgoing or Incoming, base recorded, tax 0 |
-| Exempt | `APV2-EX` | 0 | `ExemptTax = Yes`, `TaxExemptCode = VATEX-SA-29` | `APV2-EXEMPT`, holding `APV2-EX` | `TaxExemptSales` or `TaxExemptPurchase`, base recorded, tax 0 |
+| Exempt | `APV2-EX` | 0 | `ExemptTax = Yes`, `TaxExemptCode = VATEX-SA29` (ZATCA reason VATEX-SA-29, shortened to the 10-character ExemptCode) | `APV2-EXMPT`, holding `APV2-EX` | `TaxExemptSales` or `TaxExemptPurchase`, base recorded, tax 0 |
 | Out of scope | none | none | none | `APV2-OOS`, holding no code | no row |
 
 All identifiers come from `Modules/Tax/TaxSeedCatalog`, so the codes are defined once and shared:
@@ -36,7 +36,7 @@ An exempt code applies at rate zero even if its rate row says otherwise. Settlem
 |---|---:|---:|---:|---|---:|
 | Stocked item | 10 × 100 | 100 | 900 | `APV2` | 135 |
 | Zero-rated supply | 2 × 200 | 0 | 400 | `APV2-ZERO` | 0 |
-| Exempt service | 1 × 300 | 0 | 300 | `APV2-EXEMPT` | 0 |
+| Exempt service | 1 × 300 | 0 | 300 | `APV2-EXMPT` | 0 |
 | **Total** | | | **1,600** | | **135** |
 
 Expected after posting:

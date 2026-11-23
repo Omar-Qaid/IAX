@@ -42,7 +42,7 @@ public sealed class TaxVatCategorySeeder : IDataSeeder
                 new() { TaxCode = code, TaxValue = 0m, TaxFromDate = from, TaxToDate = to }, ct);
         }
         await c.EnsureAsync<TaxGroupData>(x => x.TaxGroup == TaxSeedCatalog.VendorTaxGroup && x.TaxCode == TaxSeedCatalog.ZeroRated,
-            new() { TaxGroup = TaxSeedCatalog.VendorTaxGroup, TaxCode = TaxSeedCatalog.ZeroRated }, ct);
+            new() { TaxGroup = TaxSeedCatalog.VendorTaxGroup, TaxCode = TaxSeedCatalog.ZeroRated, TaxExemptCode = TaxSeedCatalog.NoExemption }, ct);
         await c.EnsureAsync<TaxGroupData>(x => x.TaxGroup == TaxSeedCatalog.VendorTaxGroup && x.TaxCode == TaxSeedCatalog.Exempt,
             new() { TaxGroup = TaxSeedCatalog.VendorTaxGroup, TaxCode = TaxSeedCatalog.Exempt, ExemptTax = NoYes.Yes, TaxExemptCode = TaxSeedCatalog.ExemptReason }, ct);
         await c.EnsureAsync<TaxItemGroupHeading>(x => x.TaxItemGroup == TaxSeedCatalog.ZeroItemGroup,
@@ -52,8 +52,8 @@ public sealed class TaxVatCategorySeeder : IDataSeeder
         await c.EnsureAsync<TaxItemGroupHeading>(x => x.TaxItemGroup == TaxSeedCatalog.OutOfScopeItemGroup,
             new() { TaxItemGroup = TaxSeedCatalog.OutOfScopeItemGroup, Name = "AP example out-of-scope items" }, ct);
         await c.EnsureAsync<TaxOnItem>(x => x.TaxItemGroup == TaxSeedCatalog.ZeroItemGroup && x.TaxCode == TaxSeedCatalog.ZeroRated,
-            new() { TaxItemGroup = TaxSeedCatalog.ZeroItemGroup, TaxCode = TaxSeedCatalog.ZeroRated }, ct);
+            new() { TaxItemGroup = TaxSeedCatalog.ZeroItemGroup, TaxCode = TaxSeedCatalog.ZeroRated, TaxExemptCode = TaxSeedCatalog.NoExemption }, ct);
         await c.EnsureAsync<TaxOnItem>(x => x.TaxItemGroup == TaxSeedCatalog.ExemptItemGroup && x.TaxCode == TaxSeedCatalog.Exempt,
-            new() { TaxItemGroup = TaxSeedCatalog.ExemptItemGroup, TaxCode = TaxSeedCatalog.Exempt }, ct);
+            new() { TaxItemGroup = TaxSeedCatalog.ExemptItemGroup, TaxCode = TaxSeedCatalog.Exempt, TaxExemptCode = TaxSeedCatalog.NoExemption }, ct);
     }
 }

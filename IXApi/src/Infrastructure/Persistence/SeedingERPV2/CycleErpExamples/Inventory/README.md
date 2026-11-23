@@ -53,13 +53,17 @@ under `ADJ-01` in the acceptance register; implemented code alone does not certi
 
 Scenario `03` generates a counting journal from an independent opening balance of 90 at cost 12, freezes and
 confirms a count of 88, then reconciles the -2 difference, inventory value 1,056 and loss expense 24. Consult
-`CNT-01` in the acceptance register for verification evidence. Overage and matching-count cases remain separate.
+`CNT-01` in the acceptance register for verification evidence.
 
-The other reference acceptance cases — movement/counting journals, transfer, corrections, batch and serial, physical-value costing —
-are **not** certified by scenario `01`. Their setup is now seeded (journal names and their voucher sequence, the four
-inventory posting profiles, the inventory profit and loss accounts, the destination and transit warehouses, the
-counting group), so what they still need is scenario code; `PHASE-TWO.md` records what landed and what remains. Do not read a successful preparation or a
-green scenario `01` as full Inventory acceptance. `Data/acceptance-status.json` is the authority per case id.
+Scenarios `04` and `05` are the overage (93) and matching (90) counts. `06` is a transfer order with a partial
+receipt, `07` a same-site transfer journal, `08` a movement journal with an explicit offset account, and `09` a
+weighted-average recalculation that leaves the period open. `10` is the catalog's INV-21 FIFO close, which
+adjusts a running-average sale of 150 from 9,450 to 9,300 and leaves 50 at 66.
+
+[Scenarios/README.md](Scenarios/README.md) maps each catalog row (INV-01 … INV-30 in `AllModules/Secnarios.md`,
+I1 … I5 in `AllModules/FullExample.md`) to its seeded scenario or covering test, and lists the rows not seeded.
+Do not read a successful preparation or green scenarios as full Inventory acceptance. `Data/acceptance-status.json`
+is the authority per case id, and `PHASE-TWO.md` records what remains.
 
 ## Documentation
 
