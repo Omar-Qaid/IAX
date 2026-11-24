@@ -28,7 +28,7 @@ that happens, note the affected modules in the *Changelog* line and update their
 
 | Area | Existing behavior | Expected behavior | Missing | Affected components | Priority |
 | --- | --- | --- | --- | --- | --- |
-| Posting lock verification | One application-lock namespace (`FinancePosting:`) guards posting keys so unrelated keys cannot alias. | Concurrent posting of the same key must serialize; distinct keys must not block each other. | Verification under SQL Server. SQLite in-memory tests cannot exercise application locks meaningfully, so the concurrency guarantee is **asserted, not proven**. | `SubledgerPostingSupport`, every posting flow | **Critical** |
+| Posting lock verification | Verified 2026-11-24: `Run-FullExampleValidation.ps1` ran the whole test suite with SQL Server enabled (1,192 passed, 0 skipped, evidence `TestResults/FullExampleEnabled/20261124-015708`). `PostingConcurrencyTests` on SQL Server: a second poster of the same key waits until the first commits, a different key is not blocked, and a rolled-back poster releases the lock. | Concurrent posting of the same key must serialize; distinct keys must not block each other. | - | `SubledgerPostingSupport`, every posting flow | Closed |
 
 | Error surface consistency | Posting failures raise `SubledgerPostingException` or `PostingValidationException`; callers map them to 422. | — | The two exception types overlap and the choice between them is not documented, so similar failures surface differently across modules. | `SubledgerPostingSupport`, `PostingValidationException`, all posting services | Low |
 
