@@ -1762,6 +1762,83 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("SysScheduledNotifications");
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsPayable.CurrencyRevaluation.VendExchRateAdjustment", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<DateTime?>("ConsideredDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<DateTime?>("DateOfRate")
+                        .HasColumnType("date");
+
+                    b.Property<int?>("Dimensions")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ExchPrinciple")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ExecutedDate")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PostingProfile")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Reviewed")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int?>("UseProfile")
+                        .HasColumnType("int");
+
+                    b.HasKey("RecId");
+
+                    b.ToTable("VendExchRateAdjustment", (string)null);
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsPayable.PurchLine", b =>
                 {
                     b.Property<long>("RecId")
@@ -3912,6 +3989,14 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime>("LastExchAdj")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastExchAdjVoucher")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<DateTime?>("LastModifiedAt")
                         .HasColumnType("datetime2");
 
@@ -3923,6 +4008,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<int>("RecVersion")
                         .HasColumnType("int");
+
+                    b.Property<decimal>("ReportingExchAdjustmentUnrealized")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -3949,6 +4038,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("VendExchAdjustmentRealized")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("VendExchAdjustmentUnrealized")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 

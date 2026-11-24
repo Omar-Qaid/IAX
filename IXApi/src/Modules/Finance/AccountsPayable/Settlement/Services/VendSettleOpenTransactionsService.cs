@@ -176,6 +176,9 @@ public sealed class VendSettleOpenTransactionsService : BaseService<VendSettleme
                                     "Clear vendor prepayment account", 0m, ledger.Ledger.AccountingCurrency));
                         }
                     }
+                    if (invoice.Trans.VendExchAdjustmentUnrealized != 0m || invoice.Trans.ReportingExchAdjustmentUnrealized != 0m)
+                        await new CurrencyRevaluation.VendCurrencyRevaluationService(_unitOfWork, _currentUser, _numbers)
+                            .ReverseForSettlementAsync(area, invoice.Trans, invoice.Open, date, ct);
                     ApplyPair(Db, area, account, date, voucher, invoice.Trans, invoice.Open, offset.Trans, offset.Open, amount);
 
                     totalSettled += amount;
@@ -218,6 +221,9 @@ public sealed class VendSettleOpenTransactionsService : BaseService<VendSettleme
     internal static void ApplyPair(DbContext db, string area, string account, DateTime date, string voucher,
         VendTrans invoice, VendTransOpen invoiceOpen, VendTrans offset, VendTransOpen offsetOpen, decimal amount)
     {
+        if (invoice.VendExchAdjustmentUnrealized != 0m || invoice.ReportingExchAdjustmentUnrealized != 0m
+            || offset.VendExchAdjustmentUnrealized != 0m || offset.ReportingExchAdjustmentUnrealized != 0m)
+            throw new SubledgerPostingException("Reverse the unrealized currency revaluation before settling these transactions.");
         var accounting = Accounting(invoice, amount);
         db.Set<VendSettlement>().Add(new VendSettlement
         {

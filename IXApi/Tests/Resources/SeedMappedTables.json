@@ -249,6 +249,7 @@
   "UnitOfMeasureConversionCache",
   "UnitOfMeasureInternalCode",
   "VendBankAccount",
+  "VendExchRateAdjustment",
   "VendGroup",
   "VendInvoiceInfoLine",
   "VendInvoiceInfoSubLine",

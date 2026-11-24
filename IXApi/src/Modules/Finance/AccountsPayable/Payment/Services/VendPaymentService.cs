@@ -177,6 +177,11 @@ public sealed partial class VendPaymentService(IUnitOfWork work, ICurrentUserSer
                 // payment has left to apply.
                 var settled = discount > 0m ? openAmount : Math.Min(remaining, openAmount);
                 var cash = settled - discount;
+                // As in D365, an unrealized revaluation is reversed before the invoice settles, so the realized
+                // difference below is measured against the invoice's original accounting value.
+                if (invoice.Trans.VendExchAdjustmentUnrealized != 0m || invoice.Trans.ReportingExchAdjustmentUnrealized != 0m)
+                    await new CurrencyRevaluation.VendCurrencyRevaluationService(_unitOfWork, _currentUser, numbers)
+                        .ReverseForSettlementAsync(area, invoice.Trans, invoice.Open, date, ct);
                 // The payable clears at the accounting value the invoice itself carried, while the
                 // cash and discount leave at the payment date's rate. The difference between the
                 // two is the realized exchange gain or loss on this settlement.

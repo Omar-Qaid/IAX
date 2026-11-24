@@ -22,6 +22,18 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
         public decimal VendExchAdjustmentRealized { get; set; }
         public decimal SettleAmountCur { get; set; }
         public decimal SettleAmountMst { get; set; }
+
+        // D365 VendTrans exchange-adjustment columns (same names as the D365 table), maintained by the vendor
+        // foreign-currency revaluation. Reporting-currency amounts are not tracked on the vendor side yet, so
+        // revaluation refuses a ledger whose reporting currency differs from its accounting currency.
+        /// <summary>Unrealized revaluation currently carried on the open amount, accounting currency.</summary>
+        public decimal VendExchAdjustmentUnrealized { get; set; }
+        /// <summary>Unrealized revaluation currently carried on the open amount, reporting currency.</summary>
+        public decimal ReportingExchAdjustmentUnrealized { get; set; }
+        /// <summary>Date of the last revaluation.</summary>
+        public DateTime LastExchAdj { get; set; }
+        [StringLength(FieldLengths.Voucher)]
+        public string LastExchAdjVoucher { get; set; } = string.Empty;
         public DateTime DueDate { get; set; }
         public DateTime Closed { get; set; }
         public LedgerTransType TransType { get; set; }

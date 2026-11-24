@@ -427,6 +427,11 @@
       "action": "Post"
     },
     {
+      "module": "AccountsPayable",
+      "resource": "CurrencyRevaluation",
+      "action": "Post"
+    },
+    {
       "module": "AccountsReceivable",
       "resource": "CollectionLetters",
       "action": "Create"

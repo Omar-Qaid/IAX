@@ -24,5 +24,7 @@ public sealed class VendTransConfiguration : IEntityTypeConfiguration<VendTrans>
         b.Property(x => x.SettleAmountCur).HasPrecision(18, 4);
         b.Property(x => x.SettleAmountMst).HasPrecision(18, 4);
         b.Property(x => x.VendExchAdjustmentRealized).HasPrecision(18, 4);
+        b.Property(x => x.VendExchAdjustmentUnrealized).HasPrecision(18, 4);
+        b.Property(x => x.ReportingExchAdjustmentUnrealized).HasPrecision(18, 4);
     }
 }
