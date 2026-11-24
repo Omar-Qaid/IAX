@@ -1346,10 +1346,12 @@ namespace IAX.IXApi.Modules.Finance.Common
     {
         Incoming = 0,
         Outgoing = 1,
+        /// <summary>D365 UseTax. Kept for value parity with D365; no use tax posting is implemented.</summary>
+        UseTax = 2,
         /// <summary>D365 TaxExemptPurchase: an exempt purchase, posted with a zero tax amount for reporting.</summary>
-        TaxExemptPurchase = 2,
+        TaxExemptPurchase = 3,
         /// <summary>D365 TaxExemptSales: an exempt sale, posted with a zero tax amount for reporting.</summary>
-        TaxExemptSales = 3
+        TaxExemptSales = 4
     }
     public enum TaxCountryRegionType
     {
