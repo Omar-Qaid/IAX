@@ -20,7 +20,7 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // Installment Weight & Value Allocation Controls
         // ==========================================================
         // Basic Properties
-        public int PercentAmount { get; set; } // Percentage portion of the total invoice assigned to this specific line step
+        public PercentAmount PercentAmount { get; set; } // Percentage portion of the total invoice assigned to this specific line step
         public decimal Value { get; set; }     // Explicit flat amount threshold allocated if a percentage allocation is not utilized
 
         // ==========================================================

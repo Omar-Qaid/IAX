@@ -7,7 +7,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.PaymentSchedules
     {
         public string Name { get; set; } = string.Empty;
         public decimal LineNum { get; set; }
-        public int PercentAmount { get; set; }
+        public PercentAmount PercentAmount { get; set; }
         public decimal Value { get; set; }
         public int Qty { get; set; }
         public NoYes CfmPrepayment { get; set; }

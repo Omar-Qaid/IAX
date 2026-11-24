@@ -1531,9 +1531,18 @@ namespace IAX.IXApi.Modules.Finance.Common
         None = 0,
         Proportionate = 1
     }
-    public enum PaymSchedAllocateMethod
+    /// <summary>D365 PaymSchedBy: how a payment schedule allocates the invoice into installments.</summary>
+    public enum PaymSchedBy
     {
-        Equal = 0,
+        Total = 0,
+        AmountByPayment = 1,
+        NumOfPayment = 2,
+        Specified = 3
+    }
+    /// <summary>D365 PercentAmount: whether a payment schedule line's value is a percentage or an amount.</summary>
+    public enum PercentAmount
+    {
+        Percent = 0,
         Amount = 1
     }
     public enum OrganizationType

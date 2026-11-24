@@ -27,7 +27,7 @@ namespace IAX.IXApi.Modules.Finance.Entities
         public decimal LowestAmount { get; set; } // Minimal calculated value threshold tolerated per installment step
 
         // Enum Properties
-        public PaymSchedAllocateMethod PayBy { get; set; } // Allocation basis context (e.g., Specified Amount vs. Equal Parts)
+        public PaymSchedBy PayBy { get; set; } // Allocation basis context (D365 PaymSchedBy)
         public PeriodUnit PeriodUnit { get; set; }          // Frequency interval metric spacing (Days, Months, Years)
         public int QtyUnit { get; set; }                    // Interval numeric multiplier count (e.g., every '2' Months)
 

@@ -10,7 +10,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.PaymentSchedules
         public int NumOfPayment { get; set; }
         public decimal AmountCur { get; set; }
         public decimal LowestAmount { get; set; }
-        public PaymSchedAllocateMethod PayBy { get; set; }
+        public PaymSchedBy PayBy { get; set; }
         public PeriodUnit PeriodUnit { get; set; }
         public int QtyUnit { get; set; }
         public PaymSchedTaxDist TaxDistribution { get; set; }

@@ -15,6 +15,6 @@ public sealed class PaymSchedSeeder : IDataSeeder
     public IReadOnlyCollection<string> Dependencies => [];
     public async Task SeedAsync(SeedContext c, CancellationToken ct)
     {
-        await c.EnsureAsync<PaymSched>(x => x.Name == "FNV2", new() { Name = "FNV2", Description = "Two equal installments", NumOfPayment = 2, PayBy = PaymSchedAllocateMethod.Equal, QtyUnit = 30 }, ct);
+        await c.EnsureAsync<PaymSched>(x => x.Name == "FNV2", new() { Name = "FNV2", Description = "Two equal installments", NumOfPayment = 2, PayBy = PaymSchedBy.NumOfPayment, QtyUnit = 30 }, ct);
     }
 }

@@ -201,7 +201,7 @@
       "name": "3 Instal",
       "description": "3 Installments (Equal)",
       "numOfPayment": 3,
-      "payBy": "Equal",
+      "payBy": "NumOfPayment",
       "periodUnit": "Month",
       "qtyUnit": 1,
       "taxDistribution": "Proportionate",
@@ -213,8 +213,8 @@
       "name": "3 Instal",
       "lineNum": 1,
       "qty": 0,
-      "percentAmount": 34,
-      "value": 0,
+      "percentAmount": "Percent",
+      "value": 34,
       "cfmPrepayment": "Yes",
       "mcrShipping": "Yes"
     },
@@ -222,8 +222,8 @@
       "name": "3 Instal",
       "lineNum": 2,
       "qty": 1,
-      "percentAmount": 33,
-      "value": 0,
+      "percentAmount": "Percent",
+      "value": 33,
       "cfmPrepayment": "No",
       "mcrShipping": "No"
     },
@@ -231,8 +231,8 @@
       "name": "3 Instal",
       "lineNum": 3,
       "qty": 2,
-      "percentAmount": 33,
-      "value": 0,
+      "percentAmount": "Percent",
+      "value": 33,
       "cfmPrepayment": "No",
       "mcrShipping": "No"
     }
