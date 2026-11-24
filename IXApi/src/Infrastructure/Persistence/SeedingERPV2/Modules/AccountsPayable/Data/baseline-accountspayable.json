@@ -1,0 +1,26 @@
+{
+  "vendGroups": [
+    { "vendGroupCode": "40", "name": "Local vendors", "paymTermId": "Net 30" },
+    { "vendGroupCode": "50", "name": "Foreign vendors", "paymTermId": "Net 30" }
+  ],
+  "postingProfiles": [
+    { "postingProfile": "GEN", "name": "General vendors", "settlement": "Yes", "cancel": "Yes", "postingProfileClose": "" },
+    { "postingProfile": "PRE", "name": "Vendor prepayments", "settlement": "Yes", "cancel": "Yes", "postingProfileClose": "" }
+  ],
+  "postingProfileAccounts": [
+    { "postingProfile": "GEN", "accountCode": "Group", "num": "40", "summaryLedgerDimension": 0, "clearingLedgerDimension": 0, "purchasingLedgerDimension": 0, "purchasingOffsetLedgerDimension": 0 },
+    { "postingProfile": "GEN", "accountCode": "Group", "num": "50", "summaryLedgerDimension": 0, "clearingLedgerDimension": 0, "purchasingLedgerDimension": 0, "purchasingOffsetLedgerDimension": 0 },
+    { "postingProfile": "GEN", "accountCode": "All", "num": "", "summaryLedgerDimension": 0, "clearingLedgerDimension": 0, "purchasingLedgerDimension": 0, "purchasingOffsetLedgerDimension": 0 },
+    { "postingProfile": "PRE", "accountCode": "All", "num": "", "summaryLedgerDimension": 0, "clearingLedgerDimension": 0, "purchasingLedgerDimension": 0, "purchasingOffsetLedgerDimension": 0 }
+  ],
+  "paymentModes": [
+    { "paymMode": "Cash", "name": "Cash payment", "accountType": "Ledger", "paymJournalNameId": "VendPaym" },
+    { "paymMode": "Check", "name": "Vendor check", "accountType": "Bank", "paymJournalNameId": "VendPaym" },
+    { "paymMode": "Electronic", "name": "Electronic transfer", "accountType": "Bank", "paymJournalNameId": "VendPaym" }
+  ],
+  "journalNames": [
+    { "journalName": "APInvReg", "name": "Vendor invoice register", "journalType": "PurchaseLedger", "isActive": true },
+    { "journalName": "APInvApp", "name": "Vendor invoice approval", "journalType": "Approval", "isActive": true },
+    { "journalName": "VendPaym", "name": "Vendor payments", "journalType": "Payment", "isActive": true }
+  ]
+}

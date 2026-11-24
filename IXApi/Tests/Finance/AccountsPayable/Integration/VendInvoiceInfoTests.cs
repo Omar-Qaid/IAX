@@ -308,7 +308,7 @@ public class VendInvoiceInfoTests
         protected override void OnModelCreating(ModelBuilder builder)
         {
             Type[] types = [typeof(PurchTable), typeof(PurchLine), typeof(VendTable),
-                typeof(VendInvoiceJour), typeof(VendInvoiceInfoTable), typeof(VendInvoiceInfoLine), typeof(VendInvoiceInfoSubLine),
+                typeof(VendInvoiceJour), typeof(VendInvoiceInfoTable), typeof(VendInvoiceInfoLine), typeof(VendInvoiceInfoSubLine), typeof(VendInvoiceInfoSubTable),
                 typeof(SourceDocumentHeader), typeof(SourceDocumentLine), typeof(VendPackingSlipTrans), typeof(VendInvoicePackingSlipQuantityMatch)];
 
             // VendTable reaches the party and address graph, so everything not named here is

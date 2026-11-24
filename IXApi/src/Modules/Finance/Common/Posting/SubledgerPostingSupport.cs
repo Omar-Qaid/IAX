@@ -150,6 +150,20 @@ internal sealed class SubledgerPostingSupport(DbContext db)
         CancellationToken ct, string? postingProfile = null, bool prepayment = false,
         Func<DimensionAttributeValueCombination, Task<DimensionAttributeValueCombination>>? applyDefaults = null)
     {
+        var rule = await ResolveVendorPostingRuleAsync(area, vendor, ct, postingProfile);
+        var dimension = prepayment ? rule?.ClearingLedgerDimension : rule?.SummaryLedgerDimension;
+        if (dimension is null or 0)
+            throw new SubledgerPostingException($"Vendor posting profile {(prepayment ? "advance" : "summary")} account is missing for vendor '{vendor.AccountNum}'.");
+        return await LoadDimensionAsync(area, dimension.Value, prepayment ? "vendor advance" : "vendor summary", ct, applyDefaults);
+    }
+
+    /// <summary>
+    /// The vendor posting profile line for a vendor: the vendor's own line, else its group's, else the all-vendors
+    /// line (D365 search order), within the given profile or the company default from VendParameters.
+    /// </summary>
+    public async Task<VendLedgerAccounts?> ResolveVendorPostingRuleAsync(string area, VendTable vendor, CancellationToken ct,
+        string? postingProfile = null)
+    {
         // The company's default profile from VendParameters, the payable mirror of the customer
         // path. Without it every rule in the company is a candidate and two posting profiles mix.
         var profile = !string.IsNullOrWhiteSpace(postingProfile) ? postingProfile : await db.Set<VendParameters>().AsNoTracking().Where(x => x.DataAreaId == area)
@@ -159,13 +173,9 @@ internal sealed class SubledgerPostingSupport(DbContext db)
             throw new SubledgerPostingException($"Vendor posting profile '{profile}' was not found in this company.");
         if (!string.IsNullOrWhiteSpace(profile))
             rules = rules.Where(x => x.PostingProfile == profile).ToList();
-        var rule = rules.Where(x => x.AccountCode == AccountCode.Table && x.Num == vendor.AccountNum).OrderBy(x => x.RecId).FirstOrDefault()
+        return rules.Where(x => x.AccountCode == AccountCode.Table && x.Num == vendor.AccountNum).OrderBy(x => x.RecId).FirstOrDefault()
             ?? rules.Where(x => x.AccountCode == AccountCode.Group && x.Num == vendor.VendGroup).OrderBy(x => x.RecId).FirstOrDefault()
             ?? rules.Where(x => x.AccountCode == AccountCode.All).OrderBy(x => x.RecId).FirstOrDefault();
-        var dimension = prepayment ? rule?.ClearingLedgerDimension : rule?.SummaryLedgerDimension;
-        if (dimension is null or 0)
-            throw new SubledgerPostingException($"Vendor posting profile {(prepayment ? "advance" : "summary")} account is missing for vendor '{vendor.AccountNum}'.");
-        return await LoadDimensionAsync(area, dimension.Value, prepayment ? "vendor advance" : "vendor summary", ct, applyDefaults);
     }
 
     /// <summary>

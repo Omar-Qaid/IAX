@@ -20,8 +20,12 @@ public sealed class VendPostingSeeder : IDataSeeder
 
         var summary = await c.RequireAsync<DimensionAttributeValueCombination>(x => x.MainAccountValue == "281001", ct);
         var advance = await c.RequireAsync<DimensionAttributeValueCombination>(x => x.MainAccountValue == "181005", ct);
-        // The supplied VendPosting concept is represented by VendLedgerAccounts in this repository.
+        // D365 VendLedger is the posting profile header; VendLedgerAccounts holds its account lines.
+        await c.EnsureAsync<VendLedger>(x => x.PostingProfile == "APV2",
+            new() { PostingProfile = "APV2", Name = "AP example posting profile", Settlement = NoYes.Yes }, ct);
         await c.EnsureAsync<VendLedgerAccounts>(x => x.PostingProfile == "APV2" && x.AccountCode == AccountCode.Group && x.Num == "APV2",
-            new() { PostingProfile = "APV2", AccountCode = AccountCode.Group, Num = "APV2", SummaryLedgerDimension = summary.RecId, ClearingLedgerDimension = advance.RecId }, ct);
+            new() { PostingProfile = "APV2", AccountCode = AccountCode.Group, Num = "APV2", SummaryLedgerDimension = summary.RecId, ClearingLedgerDimension = advance.RecId },
+            // Arrival and Offset are filled by VendInvoiceRegisterSeeder, so only this seeder's own fields are compared.
+            ct, nameof(VendLedgerAccounts.SummaryLedgerDimension), nameof(VendLedgerAccounts.ClearingLedgerDimension));
     }
 }

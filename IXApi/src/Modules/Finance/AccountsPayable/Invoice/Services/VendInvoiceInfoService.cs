@@ -144,6 +144,12 @@ public sealed class VendInvoiceInfoService : BaseService<VendInvoiceInfoTable>, 
             };
             header.SourceDocumentHeader = await new PurchaseSourceAccounting(Db).HeaderAsync(area, FinanceTableNumbers.VendInvoiceInfoTable, ct);
             Db.Set<VendInvoiceInfoTable>().Add(header);
+            // D365 VendInvoiceInfoSubTable: the purchase order this pending invoice covers.
+            Db.Add(new VendInvoiceInfoSubTable
+            {
+                DataAreaId = area, ParmId = parmId, TableRefId = header.TableRefId.ToString(),
+                OrigPurchId = order.PurchId, PurchName = order.PurchName
+            });
 
             var lines = new List<VendInvoiceInfoLine>();
             foreach (var (line, qty, price) in selections)

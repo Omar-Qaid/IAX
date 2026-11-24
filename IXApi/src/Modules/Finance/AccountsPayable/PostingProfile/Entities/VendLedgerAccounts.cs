@@ -17,5 +17,9 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
         /// <summary>Vendor summary (accounts payable control) account.</summary>
         public long SummaryLedgerDimension { get; set; }
         public long ClearingLedgerDimension { get; set; }
+        /// <summary>D365 "Arrival": where the invoice register posts an unapproved invoice's vendor amount.</summary>
+        public long PurchasingLedgerDimension { get; set; }
+        /// <summary>D365 "Offset account": the counter-account of Arrival, holding purchases not yet approved.</summary>
+        public long PurchasingOffsetLedgerDimension { get; set; }
     }
 }

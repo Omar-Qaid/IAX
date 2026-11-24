@@ -59,7 +59,7 @@ public sealed class VendPaymentProposalService(IUnitOfWork unitOfWork, ICompanyE
         // balance is what is owed; see the remarks on why debit rows are excluded.
         var open = await (from row in Db.Set<VendTransOpen>().AsNoTracking()
                           join trans in Db.Set<VendTrans>().AsNoTracking() on row.RefRecId equals trans.RecId
-                          where row.DataAreaId == area && trans.DataAreaId == area && row.AmountCur < 0m
+                          where row.DataAreaId == area && trans.DataAreaId == area && row.AmountCur < 0m && trans.Approved == NoYes.Yes
                             && (vendAccount == null || vendAccount == "" || trans.AccountNum == vendAccount)
                             && (currency == null || currency == "" || trans.CurrencyCode == currency)
                           select new { Open = row, Trans = trans }).ToListAsync(ct);

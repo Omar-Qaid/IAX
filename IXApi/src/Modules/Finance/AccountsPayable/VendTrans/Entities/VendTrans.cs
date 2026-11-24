@@ -39,6 +39,12 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
         public LedgerTransType TransType { get; set; }
 
         /// <summary>
+        /// D365 VendTrans.Approved. An invoice registered through the invoice register is posted unapproved and
+        /// cannot be paid until the invoice approval journal approves it; every other vendor transaction is approved.
+        /// </summary>
+        public NoYes Approved { get; set; } = NoYes.Yes;
+
+        /// <summary>
         /// Cash discount code, the payable counterpart of <c>CustTrans.CashDiscCode</c>. Settlement
         /// reads it from here rather than chasing back to the purchase order.
         /// </summary>

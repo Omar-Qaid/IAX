@@ -1,4 +1,4 @@
-﻿[
+[
   "AccountingDistribution",
   "AccountingEvent",
   "Announcements",
@@ -253,10 +253,12 @@
   "VendGroup",
   "VendInvoiceInfoLine",
   "VendInvoiceInfoSubLine",
+  "VendInvoiceInfoSubTable",
   "VendInvoiceInfoTable",
   "VendInvoiceJour",
   "VendInvoicePackingSlipQuantityMatch",
   "VendInvoiceTrans",
+  "VendLedger",
   "VendLedgerAccounts",
   "VendPackingSlipJour",
   "VendPackingSlipTrans",

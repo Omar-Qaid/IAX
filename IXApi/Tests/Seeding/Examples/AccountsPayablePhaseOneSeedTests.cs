@@ -39,7 +39,7 @@ public sealed partial class AccountsPayablePhaseOneSeedTests
         using var provider = services.BuildServiceProvider();
         using var scope = provider.CreateScope();
         var ordered = new SeedDependencyResolver().Resolve(scope.ServiceProvider.GetServices<IDataSeeder>());
-        Assert.Equal(64, ordered.Count); // includes VendPrepaymentSetupSeeder
+        Assert.Equal(65, ordered.Count); // includes VendPrepaymentSetupSeeder and VendInvoiceRegisterSeeder
         Assert.Single(ordered, x => x.Id == "ERPV2.TaxVatCategorySeeder");
         Assert.Single(ordered, x => x.Id == "ERPV2.InventoryNumberSequenceSeeder");
         // The inventory journal setup: its own account structure for the profit and loss codes, and

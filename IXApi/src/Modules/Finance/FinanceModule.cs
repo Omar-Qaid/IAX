@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace IAX.IXApi.Modules.Finance
@@ -72,6 +72,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<AccountsReceivable.Invoice.IFreeTextInvoiceService, AccountsReceivable.Invoice.FreeTextInvoiceService>();
             services.AddScoped<AccountsReceivable.CurrencyRevaluation.ICustCurrencyRevaluationService, AccountsReceivable.CurrencyRevaluation.CustCurrencyRevaluationService>();
             services.AddScoped<AccountsPayable.CurrencyRevaluation.IVendCurrencyRevaluationService, AccountsPayable.CurrencyRevaluation.VendCurrencyRevaluationService>();
+            services.AddScoped<AccountsPayable.InvoiceRegister.IVendInvoiceRegisterService, AccountsPayable.InvoiceRegister.VendInvoiceRegisterService>();
             services.AddScoped<AccountsReceivable.CollectionLetters.ICustCollectionLetterService, AccountsReceivable.CollectionLetters.CustCollectionLetterService>();
             services.AddScoped<AccountsReceivable.ICustTransService, AccountsReceivable.CustTransService>();
             services.AddScoped<AccountsReceivable.Payment.ICustPaymentService, AccountsReceivable.Payment.CustPaymentService>();
@@ -132,6 +133,8 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<FluentValidation.IValidator<AccountsPayable.VendorDto>, AccountsPayable.VendorDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsPayable.VendorGroupDto>, AccountsPayable.VendorGroupDtoValidator>();
             services.AddScoped<AccountsPayable.IVendLedgerAccountsService, AccountsPayable.VendLedgerAccountsService>();
+            services.AddScoped<AccountsPayable.IVendLedgerService, AccountsPayable.VendLedgerService>();
+            services.AddScoped<FluentValidation.IValidator<AccountsPayable.VendLedgerDto>, AccountsPayable.VendLedgerDtoValidator>();
             services.AddScoped<AccountsPayable.IVendParametersService, AccountsPayable.VendParametersService>();
             services.AddScoped<AccountsPayable.IVendPaymModeService, AccountsPayable.VendPaymModeService>();
             services.AddScoped<FluentValidation.IValidator<AccountsPayable.VendPaymModeDto>, AccountsPayable.VendPaymModeDtoValidator>();

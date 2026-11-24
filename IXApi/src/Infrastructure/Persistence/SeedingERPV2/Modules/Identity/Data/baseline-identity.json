@@ -432,6 +432,11 @@
       "action": "Post"
     },
     {
+      "module": "AccountsPayable",
+      "resource": "InvoiceRegister",
+      "action": "Post"
+    },
+    {
       "module": "AccountsReceivable",
       "resource": "CollectionLetters",
       "action": "Create"

@@ -1,4 +1,4 @@
-﻿using IAX.IXApi.Modules.Finance.Common;
+using IAX.IXApi.Modules.Finance.Common;
 
 namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.GeneralLedger;
 
@@ -34,6 +34,11 @@ public static class GeneralLedgerSeedExample
     public const string InventoryProfit = "481004";
     public const string InventoryLoss = "681006";
 
+    // Invoice register side of the demo chart: the vendor posting profile's Arrival and Offset accounts, which the
+    // invoice register posts an unapproved invoice to and the approval journal clears (D365 USMF 200130 / 200125).
+    public const string InvoiceRegisterArrival = "281006";
+    public const string InvoiceRegisterOffset = "281007";
+
     public static IReadOnlyList<(string Code, string Name, MainAccountType Type)> MainAccounts { get; } =
     [
         (Bank, "Treasury bank (demo)", MainAccountType.Asset),
@@ -57,7 +62,9 @@ public static class GeneralLedgerSeedExample
         (CostOfGoodsSold, "Cost of office paper sold (demo)", MainAccountType.Expense),
         (SalesCashDiscount, "Sales cash discounts (demo)", MainAccountType.Expense),
         (InventoryProfit, "Inventory profit (demo)", MainAccountType.Revenue),
-        (InventoryLoss, "Inventory loss (demo)", MainAccountType.Expense)
+        (InventoryLoss, "Inventory loss (demo)", MainAccountType.Expense),
+        (InvoiceRegisterArrival, "Vendor invoices pending approval - arrival (demo)", MainAccountType.Liability),
+        (InvoiceRegisterOffset, "Vendor invoices pending approval - offset (demo)", MainAccountType.Liability)
     ];
 
     /// <summary>The receivable codes, in the order the sales account structure allows them.</summary>
@@ -67,4 +74,7 @@ public static class GeneralLedgerSeedExample
 
     /// <summary>The inventory journal codes, in the order the inventory account structure allows them.</summary>
     public static IReadOnlyList<string> InventoryJournalAccounts { get; } = [InventoryProfit, InventoryLoss];
+
+    /// <summary>The invoice register codes, in the order the invoice register account structure allows them.</summary>
+    public static IReadOnlyList<string> InvoiceRegisterAccounts { get; } = [InvoiceRegisterArrival, InvoiceRegisterOffset];
 }

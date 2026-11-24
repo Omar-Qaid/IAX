@@ -77,6 +77,8 @@ public sealed partial class VendPaymentService(IUnitOfWork work, ICurrentUserSer
             var invoices = await (from open in Db.Set<VendTransOpen>() join trans in Db.Set<VendTrans>() on open.RefRecId equals trans.RecId
                 where open.DataAreaId == area && trans.DataAreaId == area && open.AccountNum == input.VendAccount && trans.AccountNum == input.VendAccount
                     && open.AmountCur < 0 && trans.CurrencyCode == currency
+                    // D365: an invoice from the invoice register is paid only once the approval journal approves it.
+                    && trans.Approved == NoYes.Yes
                 select new
                 {
                     Open = open,

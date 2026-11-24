@@ -10,6 +10,7 @@ public static class AccountsPayableSeedRegistration
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, AccountsPayableNumberSequenceSeeder>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, VendGroupSeeder>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, VendPostingSeeder>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, VendInvoiceRegisterSeeder>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, VendParametersSeeder>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, VendPaymModeTableSeeder>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, DirPartyTableSeeder>());

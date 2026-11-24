@@ -43,6 +43,8 @@ public sealed class VendPrepaymentSetupSeeder : IDataSeeder
 
         var payable = await c.RequireAsync<DimensionAttributeValueCombination>(x => x.MainAccountValue == GeneralLedgerSeedExample.VendorControl, ct);
         var advance = await c.RequireAsync<DimensionAttributeValueCombination>(x => x.MainAccountValue == GeneralLedgerSeedExample.VendorAdvance, ct);
+        await c.EnsureAsync<VendLedger>(x => x.PostingProfile == PostingProfile,
+            new() { PostingProfile = PostingProfile, Name = "AP example prepayment posting profile", Settlement = NoYes.Yes }, ct);
         await c.EnsureAsync<VendLedgerAccounts>(x => x.PostingProfile == PostingProfile && x.AccountCode == AccountCode.All,
             new() { PostingProfile = PostingProfile, AccountCode = AccountCode.All, Num = string.Empty, SummaryLedgerDimension = payable.RecId },
             ct, nameof(VendLedgerAccounts.SummaryLedgerDimension));

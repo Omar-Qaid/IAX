@@ -10,4 +10,6 @@ public class VendLedgerAccountsDto : EntityDto<long>
     public string Num { get; set; } = string.Empty;
     public long SummaryLedgerDimension { get; set; }
     public long ClearingLedgerDimension { get; set; }
+    public long PurchasingLedgerDimension { get; set; }
+    public long PurchasingOffsetLedgerDimension { get; set; }
 }

@@ -97,6 +97,8 @@ public sealed class VendSettleOpenTransactionsService : BaseService<VendSettleme
             var missing = selected.Except(marked.Select(x => x.Trans.RecId)).ToList();
             if (missing.Count > 0)
                 return await Fail(422, $"Transaction {missing[0]} is not an open transaction of vendor '{account}'.", ct);
+            if (marked.Any(x => x.Trans.Approved == NoYes.No))
+                return await Fail(422, "An invoice from the invoice register must be approved before it can be settled.", ct);
             if (await Db.Set<VendTrans>().Where(x => x.DataAreaId == area && x.AccountNum == account && selected.Contains(x.RecId))
                 .AnyAsync(trans => Db.Set<VendInvoiceJour>().Any(invoice => invoice.DataAreaId == area
                     && invoice.InvoiceAccount == account && invoice.InvoiceId == trans.Invoice

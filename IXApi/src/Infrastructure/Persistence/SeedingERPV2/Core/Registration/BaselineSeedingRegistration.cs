@@ -1,3 +1,4 @@
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.AccountsPayable;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Models;
@@ -89,6 +90,12 @@ public static class BaselineSeedingRegistration
         Add<BaselinePriceDiscSeeder>(services);
         Add<BaselineDeliverySetupSeeder>(services);
         Add<BaselineChargeSeeder>(services);
+
+        // Accounts payable.
+        Add<BaselineVendGroupSeeder>(services);
+        Add<BaselineVendPostingProfileSeeder>(services);
+        Add<BaselineVendJournalNameSeeder>(services);
+        Add<BaselineVendPaymModeSeeder>(services);
         return services;
     }
 
