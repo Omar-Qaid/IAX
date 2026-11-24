@@ -1,4 +1,37 @@
 {
+  "customerParameterSettings": {
+    "defaults": "الإعدادات الافتراضية للعملاء",
+    "invoicing": "الفوترة",
+    "pricing": "البحث في الاتفاقيات التجارية",
+    "notConfigured": "لم يتم إعداد معلمات العملاء لهذه الشركة.",
+    "readOnly": "يمكنك عرض هذه الإعدادات، لكن لا تملك صلاحية تعديلها.",
+    "tooLong": "يجب ألا يتجاوز {{field}} عدد {{max}} من الأحرف.",
+    "invalidCreditLimit": "أدخل حدًا ائتمانيًا صالحًا.",
+    "fields": {
+      "custPostingProfile": "ملف تعريف ترحيل العملاء",
+      "prepaymentPostingProfile": "ملف تعريف ترحيل الدفعات المقدمة",
+      "taxOnPrepayment": "ضريبة المبيعات على الدفعات المقدمة",
+      "creditLimit": "الحد الائتماني",
+      "paymTermId": "شروط الدفع",
+      "paymMode": "طريقة الدفع",
+      "dlvMode": "طريقة التسليم",
+      "dlvReasonId": "سبب التسليم",
+      "currencyCode": "العملة",
+      "taxGroup": "مجموعة ضريبة المبيعات",
+      "invoiceJournalName": "اسم دفتر يومية الفاتورة",
+      "packingSlipJournalName": "اسم دفتر يومية إيصال التعبئة",
+      "custNumSeqGroup": "مجموعة التسلسل الرقمي",
+      "priceDiscSearchPrice": "البحث عن الأسعار",
+      "priceDiscSearchLineDisc": "البحث عن خصومات السطر",
+      "priceDiscSearchMultilineDisc": "البحث عن خصومات متعددة الأسطر",
+      "priceDiscSearchTotalDisc": "البحث عن الخصومات الإجمالية",
+      "priceDiscMandatory": "اشتراط الاتفاقيات التجارية",
+      "priceDiscJournalNamePrice": "اسم دفتر يومية الأسعار",
+      "priceDiscJournalNameLineDisc": "اسم دفتر يومية خصومات السطر",
+      "priceDiscJournalNameMultilineDisc": "اسم دفتر يومية الخصومات متعددة الأسطر",
+      "priceDiscJournalNameTotalDisc": "اسم دفتر يومية الخصومات الإجمالية"
+    }
+  },
   "workspaceHelp": {
     "previewOnly": "الحفظ غير متاح في هذه الشاشة. القيم المعروضة معاينة للقراءة فقط، وليست إعدادات محفوظة مؤكدة.",
     "title": "مساعدة مساحة العمل",

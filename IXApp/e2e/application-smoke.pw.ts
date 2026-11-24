@@ -19,7 +19,9 @@ test('opens the authenticated development workspace and customers list', async (
   if (testInfo.project.name === 'mobile-chromium') return;
 
   await page.goto('/accounts-receivable/customers');
-  await expect(page.getByRole('heading', { name: 'All customers', exact: true })).toBeVisible({
+  await expect(
+    page.getByRole('heading', { name: 'C-001 | Contoso Retail Americas', exact: true })
+  ).toBeVisible({
     timeout: 30_000,
   });
   await expect(page.getByText('Contoso Retail Americas').first()).toBeVisible({ timeout: 30_000 });

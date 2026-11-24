@@ -45,5 +45,6 @@ export interface SetupPageProps {
   noLabel: string;
   savedMessage?: string;
   headerContent?: ReactNode;
+  readOnly?: boolean;
   onSave?: (values: SetupValues) => void | Promise<void>;
 }

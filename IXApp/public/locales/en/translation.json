@@ -1,4 +1,37 @@
 {
+  "customerParameterSettings": {
+    "defaults": "Customer defaults",
+    "invoicing": "Invoicing",
+    "pricing": "Trade agreement search",
+    "notConfigured": "Customer parameters have not been configured for this company.",
+    "readOnly": "You can view these settings but do not have permission to change them.",
+    "tooLong": "{{field}} must be at most {{max}} characters.",
+    "invalidCreditLimit": "Enter a valid credit limit.",
+    "fields": {
+      "custPostingProfile": "Customer posting profile",
+      "prepaymentPostingProfile": "Prepayment posting profile",
+      "taxOnPrepayment": "Sales tax on prepayments",
+      "creditLimit": "Credit limit",
+      "paymTermId": "Terms of payment",
+      "paymMode": "Method of payment",
+      "dlvMode": "Mode of delivery",
+      "dlvReasonId": "Delivery reason",
+      "currencyCode": "Currency",
+      "taxGroup": "Sales tax group",
+      "invoiceJournalName": "Invoice journal name",
+      "packingSlipJournalName": "Packing slip journal name",
+      "custNumSeqGroup": "Number sequence group",
+      "priceDiscSearchPrice": "Find prices",
+      "priceDiscSearchLineDisc": "Find line discounts",
+      "priceDiscSearchMultilineDisc": "Find multiline discounts",
+      "priceDiscSearchTotalDisc": "Find total discounts",
+      "priceDiscMandatory": "Require trade agreements",
+      "priceDiscJournalNamePrice": "Price journal name",
+      "priceDiscJournalNameLineDisc": "Line discount journal name",
+      "priceDiscJournalNameMultilineDisc": "Multiline discount journal name",
+      "priceDiscJournalNameTotalDisc": "Total discount journal name"
+    }
+  },
   "workspaceHelp": {
     "previewOnly": "Saving is unavailable on this screen. Displayed values are a read-only preview, not confirmed saved settings.",
     "title": "Workspace help",

@@ -62,6 +62,11 @@ const emptyProcess = (): WfProcessRecord => ({
 });
 
 export function RequestFromPage(): React.ReactElement {
+  const company = useCompanyStore((state) => state.currentCompany);
+  return <CompanyRequestFromPage key={company} />;
+}
+
+function CompanyRequestFromPage(): React.ReactElement {
   const { t, currentLanguage, isRtl } = useAppTranslation();
   const formRef = React.useRef<DynamicFormHandle>(null);
   const requestFileInputRef = React.useRef<HTMLInputElement>(null);
@@ -95,7 +100,13 @@ export function RequestFromPage(): React.ReactElement {
   );
   const currentCompany = useCompanyStore((state) => state.currentCompany);
   const processes = useQuery({
-    queryKey: ['workflow', 'request-from-processes', categoryId, requestedProcessId],
+    queryKey: [
+      'workflow',
+      'request-from-processes',
+      currentCompany,
+      categoryId,
+      requestedProcessId,
+    ],
     queryFn: async ({ signal }) =>
       (await wfProcessApi.list(signal))
         .filter((process) => !hasCategoryFilter || process.categoryId === categoryId)
@@ -126,7 +137,7 @@ export function RequestFromPage(): React.ReactElement {
     [currentLanguage.code, requestDate]
   );
   const publishedTemplates = useQuery({
-    queryKey: ['workflow', 'request-from-published-templates', effectiveProcessId],
+    queryKey: ['workflow', 'request-from-published-templates', currentCompany, effectiveProcessId],
     queryFn: ({ signal }) =>
       reportDesignerApi.listPublished(recordTableId('WfProcesses'), effectiveProcessId, signal),
     enabled: effectiveProcessId > 0,
@@ -141,6 +152,7 @@ export function RequestFromPage(): React.ReactElement {
     queryKey: [
       'workflow',
       'request-from-published-template',
+      currentCompany,
       effectiveProcessId,
       selectedTemplate?.templateId,
     ],

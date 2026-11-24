@@ -131,6 +131,7 @@ export function SetupPage({
   noLabel,
   savedMessage,
   headerContent,
+  readOnly = false,
   onSave,
 }: SetupPageProps): React.ReactElement {
   const navigate = useNavigate();
@@ -165,7 +166,7 @@ export function SetupPage({
       ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
   const save = async () => {
-    if (!onSave) return;
+    if (!onSave || readOnly) return;
     setSaving(true);
     setSaveError(null);
     try {
@@ -211,7 +212,7 @@ export function SetupPage({
           <ActionPaneButton
             label={saveLabel}
             icon={<SaveOutlinedIcon />}
-            disabled={!onSave || !dirty || saving}
+            disabled={readOnly || !onSave || !dirty || saving}
             onClick={save}
           />
         </ActionPaneGroup>
@@ -319,7 +320,7 @@ export function SetupPage({
                 {section.fields.map((field) => (
                   <SetupField
                     key={field.name}
-                    field={onSave ? field : { ...field, disabled: true }}
+                    field={onSave && !readOnly ? field : { ...field, disabled: true }}
                     value={values[field.name]}
                     yesLabel={yesLabel}
                     noLabel={noLabel}

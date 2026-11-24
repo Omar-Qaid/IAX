@@ -1,12 +1,13 @@
 import { alpha } from '@mui/material/styles';
 import React from 'react';
-import { Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
 import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined';
 import CalendarMonthOutlined from '@mui/icons-material/CalendarMonthOutlined';
 import StarBorderOutlined from '@mui/icons-material/StarBorderOutlined';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import { useCompanyStore } from '@core/company/useCompanyStore';
 import { localizedName } from '@shared/utilities/localizedName';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
 import type {
@@ -39,8 +40,9 @@ const processIcon = (index: number) => {
 function CategoryRequestForm({ category }: { category: WfCategoryRecord }) {
   const navigate = useNavigate();
   const { t, isRtl } = useAppTranslation();
+  const company = useCompanyStore((state) => state.currentCompany);
   const processes = useQuery({
-    queryKey: ['workflow', 'request-submission-processes', category.recId],
+    queryKey: ['workflow', 'request-submission-processes', company, category.recId],
     queryFn: async ({ signal }) =>
       (await wfProcessApi.list(signal))
         .filter((process) => process.isActive && process.categoryId === category.recId)
@@ -55,6 +57,17 @@ function CategoryRequestForm({ category }: { category: WfCategoryRecord }) {
         </Typography>
         {processes.isLoading ? (
           <CircularProgress size={22} aria-label={t('pages.requestSubmission.loadingTypes')} />
+        ) : processes.isError ? (
+          <Alert
+            severity="error"
+            action={
+              <Button disabled={processes.isFetching} onClick={() => void processes.refetch()}>
+                {t('actions.refresh', 'Refresh')}
+              </Button>
+            }
+          >
+            {processes.error instanceof Error ? processes.error.message : t('errors.generic')}
+          </Alert>
         ) : (
           <Box
             sx={{
@@ -107,7 +120,7 @@ function CategoryRequestForm({ category }: { category: WfCategoryRecord }) {
             })}
           </Box>
         )}
-        {!processes.isLoading && (processes.data ?? []).length === 0 && (
+        {processes.isSuccess && processes.data.length === 0 && (
           <Typography color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>
             {t('pages.requestSubmission.noActiveTypes')}
           </Typography>
@@ -119,8 +132,9 @@ function CategoryRequestForm({ category }: { category: WfCategoryRecord }) {
 
 export function RequestSubmissionPage(): React.ReactElement {
   const { t, isRtl } = useAppTranslation();
+  const company = useCompanyStore((state) => state.currentCompany);
   const categories = useQuery({
-    queryKey: ['workflow', 'request-submission-categories'],
+    queryKey: ['workflow', 'request-submission-categories', company],
     queryFn: ({ signal }) => wfCategoryApi.list(signal),
   });
   const records = React.useMemo(

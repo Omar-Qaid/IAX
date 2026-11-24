@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { writeFile } from 'node:fs/promises';
 
 // This is deliberately an unavailable-API check, not proof that a business
 // operation succeeds. Specific CRUD/posting tests supply their own API fixtures.
@@ -39,7 +40,17 @@ test('every registered screen handles an unavailable API without crashing', asyn
       await expect(page.locator('main').getByText(/Loading page/i)).toHaveCount(0, {
         timeout: 30_000,
       });
-      buttons = await page.locator('main button').allTextContents();
+      buttons = await page
+        .locator('main button')
+        .evaluateAll((elements) =>
+          elements.map(
+            (element) =>
+              element.getAttribute('aria-label') ||
+              element.textContent?.trim() ||
+              element.getAttribute('title') ||
+              '(unlabelled button)'
+          )
+        );
       const content = await page.locator('main').innerText();
       if (
         /Something went wrong|Unexpected Application Error|Cannot read properties|is not a function/.test(
@@ -57,8 +68,17 @@ test('every registered screen handles an unavailable API without crashing', asyn
     );
     expect.soft(errors, `${definition.id}: ${path}`).toEqual([]);
   }
+  const inventoryPath = testInfo.outputPath('registered-screen-error-state-audit.json');
+  await writeFile(
+    inventoryPath,
+    JSON.stringify(
+      { mode: 'unavailable-api-smoke-only', actionBehaviorVerified: false, screens: results },
+      null,
+      2
+    )
+  );
   await testInfo.attach('registered-screen-error-state-audit', {
-    body: JSON.stringify(results, null, 2),
+    path: inventoryPath,
     contentType: 'application/json',
   });
 });

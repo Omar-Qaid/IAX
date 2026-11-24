@@ -16,6 +16,7 @@ import {
 import { DynamicControlRenderer, readMultiValue } from './DynamicControlRenderer';
 import { readFileMetadata } from './DynamicSpecialControls';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import { useCompanyStore } from '@core/company/useCompanyStore';
 import {
   ReportTemplateRenderer,
   requestControlTemplateBindings,
@@ -288,8 +289,10 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, DynamicFormProps>
   ): React.ReactElement {
     const { t, isRtl, currentLanguage } = useAppTranslation();
     const { notifyError, notifySuccess } = useNotifications();
+    const company = useCompanyStore((state) => state.currentCompany);
+    const formKey = `${company}:${processId}`;
     const definition = useQuery({
-      queryKey: ['workflow', 'dynamic-request-form', processId],
+      queryKey: ['workflow', 'dynamic-request-form', company, processId],
       queryFn: ({ signal }) => dynamicRequestFormApi.getDefinition(processId, signal),
       enabled: Number.isSafeInteger(processId) && processId > 0,
     });
@@ -304,11 +307,11 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, DynamicFormProps>
     const [saving, setSaving] = React.useState(false);
     const [savedRequestId, setSavedRequestId] = React.useState<number | null>(null);
     const submittingRef = React.useRef(false);
-    const initializedProcess = React.useRef<number | null>(null);
+    const initializedProcess = React.useRef<string | null>(null);
 
     React.useEffect(() => {
-      if (!definition.data || initializedProcess.current === processId) return;
-      initializedProcess.current = processId;
+      if (!definition.data || initializedProcess.current === formKey) return;
+      initializedProcess.current = formKey;
       setErrors({});
       setFormError('');
       setOptionFeatureValues({});
@@ -316,7 +319,7 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, DynamicFormProps>
       setOptionFiles({});
       setSavedRequestId(null);
       setValues(initialValues(definition.data.controls));
-    }, [definition.data, processId]);
+    }, [definition.data, formKey]);
 
     const sortedControls = React.useMemo(
       () =>

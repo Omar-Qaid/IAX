@@ -239,7 +239,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
   {
     id: 'customer-parameters',
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PARAMETERS,
-    permission: PERMISSIONS.CUSTOMER_VIEW,
+    permission: PERMISSIONS.CUSTOMER_PARAMETERS_VIEW,
     component: lazyPage(
       () => import('@modules/finance/accounts-receivable/setup/pages/CustParametersPage'),
       (module) => module.CustParametersPage

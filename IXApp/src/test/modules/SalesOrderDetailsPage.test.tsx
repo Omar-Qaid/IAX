@@ -203,14 +203,14 @@ it('guards order cancellation while header edits are unsaved or cancellation is 
 
     // Order cancellation lives in the Maintain group of the Sales order ribbon. Unsaved header
     // edits disable that ribbon, so the action cannot be reached at all while editing.
-    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    fireEvent.click(screen.getByLabelText('Edit', { selector: 'button' }));
     expect(screen.getByRole('button', { name: 'Sales order' })).toBeDisabled();
     expect(salesOrderListApi.cancel).not.toHaveBeenCalled();
     // Discard the header edits; this Cancel is the edit-mode one beside Save.
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    fireEvent.click(screen.getByLabelText('Cancel', { selector: 'button' }));
 
     fireEvent.click(screen.getByRole('button', { name: 'Sales order' }));
-    const cancelOrder = () => screen.getByRole('button', { name: 'Cancel' });
+    const cancelOrder = () => screen.getByLabelText('Cancel', { selector: 'button' });
     fireEvent.click(cancelOrder());
     fireEvent.click(cancelOrder());
     fireEvent.click(cancelOrder());
@@ -372,10 +372,10 @@ it('toggles line filters through Search without opening the advanced panel', asy
   expect(screen.queryByPlaceholderText('Filter value')).toBeNull();
 });
 
-it('saves with Ctrl+S, locks item identity and names, and removes the line', async () => {
+it('saves a new line with Ctrl+S and locks item identity and names', async () => {
   openOrder('1');
   await screen.findByText('SO-LIVE-001 : Live customer');
-  fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+  fireEvent.click(screen.getByLabelText('Edit', { selector: 'button' }));
   // Query inside the lines toolbar and grid: whole-page role queries over the
   // order form made this flow take ~50 s in jsdom.
   const toolbar = within(screen.getByRole('toolbar', { name: 'Sales order line actions' }));
@@ -387,8 +387,8 @@ it('saves with Ctrl+S, locks item identity and names, and removes the line', asy
   await waitFor(() => expect(grid.queryByRole('textbox', { name: 'Item number' })).toBeNull());
   expect(grid.queryByRole('textbox', { name: 'Product name' })).toBeNull();
   expect(grid.queryByRole('textbox', { name: 'Arabic name' })).toBeNull();
-  expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
-  expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
+  expect(screen.getByLabelText('Save', { selector: 'button' })).toBeEnabled();
+  expect(screen.getByLabelText('Cancel', { selector: 'button' })).toBeEnabled();
   const quantity = grid.getByRole('spinbutton', { name: 'Quantity' });
   fireEvent.change(quantity, { target: { value: '3' } });
   expect(salesOrderLinesApi.add).not.toHaveBeenCalled();
@@ -401,6 +401,28 @@ it('saves with Ctrl+S, locks item identity and names, and removes the line', asy
       expect.objectContaining({ itemNumber: 'ITEM-1', quantity: 3 })
     )
   );
+});
+
+it('updates a saved line with Ctrl+S, changes its unit and removes it', async () => {
+  vi.mocked(salesOrderLinesApi.list).mockResolvedValueOnce([
+    {
+      id: '10',
+      lineNumber: 1,
+      itemNumber: 'ITEM-1',
+      description: 'Test item',
+      quantity: 3,
+      unit: 'Pcs',
+      unitPrice: 5,
+      lineTotal: 15,
+      deliveryDate: '2026-09-09',
+    },
+  ]);
+  openOrder('1');
+  await screen.findAllByText('ITEM-1');
+  fireEvent.click(screen.getByLabelText('Edit', { selector: 'button' }));
+  const toolbar = within(screen.getByRole('toolbar', { name: 'Sales order line actions' }));
+  const grid = within(screen.getByRole('grid'));
+  fireEvent.click(grid.getByRole('button', { name: 'Edit Quantity' }));
   await waitFor(() =>
     expect(grid.getByRole('spinbutton', { name: 'Quantity' })).not.toBeDisabled()
   );
@@ -437,24 +459,26 @@ it('saves with Ctrl+S, locks item identity and names, and removes the line', asy
 it('edits the header and saves only from the action pane', async () => {
   openOrder('1');
   await screen.findByText('SO-LIVE-001 : Live customer');
-  expect(screen.queryByRole('button', { name: 'Save' })).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
-  expect(screen.queryByRole('button', { name: 'Edit' })).toBeNull();
-  expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
-  fireEvent.change(screen.getByRole('textbox', { name: 'Customer reference' }), {
+  expect(screen.queryByLabelText('Save', { selector: 'button' })).toBeNull();
+  fireEvent.click(screen.getByLabelText('Edit', { selector: 'button' }));
+  expect(screen.queryByLabelText('Edit', { selector: 'button' })).toBeNull();
+  expect(screen.getByLabelText('Cancel', { selector: 'button' })).toBeEnabled();
+  fireEvent.change(screen.getByLabelText('Customer reference', { selector: 'input' }), {
     target: { value: 'PO-UPDATED' },
   });
   expect(salesOrderListApi.updateHeader).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('tab', { name: 'Header' }));
-  expect(screen.getByRole('textbox', { name: 'Customer reference' })).toHaveValue('PO-UPDATED');
-  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  expect(screen.getByLabelText('Customer reference', { selector: 'input' })).toHaveValue(
+    'PO-UPDATED'
+  );
+  fireEvent.click(screen.getByLabelText('Save', { selector: 'button' }));
   await waitFor(() =>
     expect(salesOrderListApi.updateHeader).toHaveBeenCalledWith(
       '1',
       expect.objectContaining({ customerReference: 'PO-UPDATED', invoiceAccount: 'C-002' })
     )
   );
-  await waitFor(() => expect(screen.queryByRole('button', { name: 'Save' })).toBeNull());
+  await waitFor(() => expect(screen.queryByLabelText('Save', { selector: 'button' })).toBeNull());
 });
 
 it('keeps header changes available after a failed save and supports cancel', async () => {
@@ -494,25 +518,25 @@ it('keeps page and line in edit mode on invalid Save, then closes both after a v
   ]);
   openOrder('1');
   await screen.findAllByText('ITEM-42');
-  fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+  fireEvent.click(screen.getByLabelText('Edit', { selector: 'button' }));
   fireEvent.click(screen.getByLabelText('Quantity'));
   const quantity = screen.getByRole('spinbutton', { name: 'Quantity' });
   fireEvent.change(quantity, { target: { value: '0' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  fireEvent.click(screen.getByLabelText('Save', { selector: 'button' }));
   await waitFor(() => expect(quantity).toHaveAttribute('aria-invalid', 'true'));
-  expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
+  expect(screen.getByLabelText('Cancel', { selector: 'button' })).toBeEnabled();
   expect(salesOrderListApi.updateHeader).not.toHaveBeenCalled();
   fireEvent.change(quantity, { target: { value: '3' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  fireEvent.click(screen.getByLabelText('Save', { selector: 'button' }));
   await waitFor(() =>
     expect(salesOrderLinesApi.update).toHaveBeenCalledWith(
       '1',
       expect.objectContaining({ id: '42', quantity: 3 })
     )
   );
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Edit' })).toBeEnabled());
+  await waitFor(() => expect(screen.getByLabelText('Edit', { selector: 'button' })).toBeEnabled());
   expect(within(screen.getByRole('grid')).queryByRole('spinbutton')).toBeNull();
-  expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull();
+  expect(screen.queryByLabelText('Cancel', { selector: 'button' })).toBeNull();
 });
 
 it('validates on save and preserves the row draft while Tab moves to Unit', async () => {
@@ -533,7 +557,7 @@ it('validates on save and preserves the row draft while Tab moves to Unit', asyn
   ]);
   openOrder('1');
   await screen.findAllByText('ITEM-42');
-  fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+  fireEvent.click(screen.getByLabelText('Edit', { selector: 'button' }));
   fireEvent.click(screen.getByLabelText('Quantity'));
   const quantity = screen.getByRole('spinbutton', { name: 'Quantity' });
   fireEvent.change(quantity, { target: { value: '0' } });
@@ -594,17 +618,17 @@ it('preserves an unfinished new line when switching between Lines and Header', a
 it('adds a line from view mode and switches the page to edit mode', async () => {
   openOrder('1');
   await screen.findByText('SO-LIVE-001 : Live customer');
-  expect(screen.queryByRole('button', { name: 'Save' })).toBeNull();
+  expect(screen.queryByLabelText('Save', { selector: 'button' })).toBeNull();
   await waitFor(() => expect(screen.getByRole('button', { name: 'Add line' })).toBeEnabled());
   fireEvent.click(screen.getByRole('button', { name: 'Add line' }));
-  expect(await screen.findByRole('button', { name: 'Save' })).toBeDefined();
+  expect(await screen.findByLabelText('Save', { selector: 'button' })).toBeDefined();
   expect(await screen.findByRole('textbox', { name: 'Item number' })).toBeDefined();
 });
 
 it('keeps header tab dropdowns editable in edit mode', async () => {
   openOrder('1');
   await screen.findByText('SO-LIVE-001 : Live customer');
-  fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+  fireEvent.click(screen.getByLabelText('Edit', { selector: 'button' }));
   fireEvent.click(screen.getByRole('tab', { name: 'Header' }));
   const combos = await screen.findAllByRole('combobox');
   expect(combos.length).toBeGreaterThan(0);
@@ -635,11 +659,11 @@ it('edits a line cell from view mode with the cell pencil (D365 edit from view)'
   ]);
   openOrder('1');
   await screen.findAllByText('ITEM-43');
-  expect(screen.queryByRole('button', { name: 'Save' })).toBeNull();
+  expect(screen.queryByLabelText('Save', { selector: 'button' })).toBeNull();
   const grid = within(screen.getByRole('grid'));
   fireEvent.click(grid.getByRole('button', { name: 'Edit Quantity' }));
   // The page switches to edit mode and the clicked cell is being edited.
-  expect(await screen.findByRole('button', { name: 'Save' })).toBeEnabled();
+  expect(await screen.findByLabelText('Save', { selector: 'button' })).toBeEnabled();
   await waitFor(() => expect(grid.getByRole('spinbutton', { name: 'Quantity' })).toHaveFocus());
 });
 
@@ -664,8 +688,8 @@ it('renders sales order in the master-details pattern', async () => {
   expect(lineTabs.getAllByRole('tab')).toHaveLength(12);
   fireEvent.click(lineTabs.getByRole('tab', { name: 'Setup' }));
   expect(screen.getByRole('tabpanel', { name: 'Setup' })).toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
-  expect(await screen.findByRole('button', { name: 'Cancel' })).toBeDefined();
-  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
-  expect(await screen.findByRole('button', { name: 'Edit' })).toBeDefined();
+  fireEvent.click(screen.getByLabelText('Edit', { selector: 'button' }));
+  expect(await screen.findByLabelText('Cancel', { selector: 'button' })).toBeDefined();
+  fireEvent.click(screen.getByLabelText('Cancel', { selector: 'button' }));
+  expect(await screen.findByLabelText('Edit', { selector: 'button' })).toBeDefined();
 });

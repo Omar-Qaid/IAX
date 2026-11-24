@@ -24,19 +24,23 @@ describe('LegalEntityPage', () => {
     expect(screen.getByText('Dashboard image')).toBeInTheDocument();
     expect(screen.getByText('Report company logo image')).toBeInTheDocument();
     expect(screen.getByText('Dashboard company image type')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'View in hierarchy' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Registration IDs' })).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: 'Registration ID search' })
+      screen.queryByRole('button', { name: 'View in hierarchy', hidden: true })
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: 'Electronic document properties' })
+      screen.queryByRole('button', { name: 'Registration IDs', hidden: true })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Registration ID search', hidden: true })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Electronic document properties', hidden: true })
     ).not.toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'Options' })).toHaveLength(1);
     await user.click(screen.getByRole('button', { name: 'Edit' }));
     const name = screen.getByDisplayValue('AlHayat Building Materials Company');
-    await user.clear(name);
-    await user.type(name, 'AlHayat Contract Test');
+    // This contract test needs one field update, not a full-page render per keystroke.
+    fireEvent.change(name, { target: { value: 'AlHayat Contract Test' } });
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
     await waitFor(() => expect(update).toHaveBeenCalledTimes(1));

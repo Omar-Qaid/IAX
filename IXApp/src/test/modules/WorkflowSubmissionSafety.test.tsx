@@ -13,6 +13,7 @@ import {
 } from '@modules/workflow/components/submissionRules';
 import type { PrintTemplateDocument } from '@shared/components/report-designer';
 import { toReportCompany } from '@shared/components/report-viewer/reportCompany';
+import { useCompanyStore } from '@core/company/useCompanyStore';
 
 vi.mock('@shared/components/report-viewer', () => ({
   requestControlTemplateBindings: (template: { bound?: boolean }) =>
@@ -67,6 +68,29 @@ function mount(props: React.ComponentProps<typeof DynamicForm> = { processId: 1 
 }
 
 describe('Submission failure recovery', () => {
+  it('reloads the same process ID for a different company and clears previous answers', async () => {
+    const originalCompany = useCompanyStore.getState().currentCompany;
+    const load = vi.spyOn(dynamicRequestFormApi, 'getDefinition').mockImplementation(async () => ({
+      ...definition(),
+      controls: definition().controls.map((control) => ({
+        ...control,
+        defaultValue: useCompanyStore.getState().currentCompany,
+      })),
+    }));
+    const view = mount();
+    try {
+      await waitFor(() => expect(screen.getByLabelText(/Reason/)).toHaveValue(originalCompany));
+      fireEvent.change(screen.getByLabelText(/Reason/), {
+        target: { value: 'Previous company answer' },
+      });
+      act(() => useCompanyStore.setState({ currentCompany: 'AUDIT2' }));
+      await waitFor(() => expect(screen.getByLabelText(/Reason/)).toHaveValue('AUDIT2'));
+      expect(load).toHaveBeenCalledTimes(2);
+    } finally {
+      view.unmount();
+      useCompanyStore.setState({ currentCompany: originalCompany });
+    }
+  });
   it('sends files with the submission and permits retry after failure without losing answers', async () => {
     vi.spyOn(dynamicRequestFormApi, 'getDefinition').mockResolvedValue(definition());
     const submit = vi
@@ -116,10 +140,13 @@ describe('Submission failure recovery', () => {
     const { client, ref } = mount();
     fireEvent.change(await screen.findByLabelText(/Reason/), { target: { value: 'Keep me' } });
     act(() =>
-      client.setQueryData(['workflow', 'dynamic-request-form', 1], {
-        ...definition(),
-        processName: 'Updated',
-      })
+      client.setQueryData(
+        ['workflow', 'dynamic-request-form', useCompanyStore.getState().currentCompany, 1],
+        {
+          ...definition(),
+          processName: 'Updated',
+        }
+      )
     );
     expect(screen.getByLabelText(/Reason/)).toHaveValue('Keep me');
     act(() => {

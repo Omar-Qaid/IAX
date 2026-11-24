@@ -1,4 +1,6 @@
 export const PERMISSIONS = {
+  CUSTOMER_PARAMETERS_VIEW: 'AccountsReceivable.CustParameters.View',
+  CUSTOMER_PARAMETERS_EDIT: 'AccountsReceivable.CustParameters.Edit',
   LEDGER_JOURNAL_VIEW: 'GeneralLedger.Journals.View',
   LEDGER_JOURNAL_CREATE: 'GeneralLedger.Journals.Create',
   LEDGER_JOURNAL_EDIT: 'GeneralLedger.Journals.Edit',
