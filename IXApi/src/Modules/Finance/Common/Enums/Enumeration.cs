@@ -581,7 +581,13 @@ namespace IAX.IXApi.Modules.Finance.Common
     {
         Daily = 0,
         CustPayment = 1,
-        VendDisbursement = 2
+        VendDisbursement = 2,
+        /// <summary>D365 PurchaseLedger: invoice register.</summary>
+        PurchaseLedger = 3,
+        /// <summary>D365 Approval: invoice approval journal.</summary>
+        Approval = 4,
+        /// <summary>D365 VendInvoiceRegister: vendor invoice recording.</summary>
+        VendInvoiceRegister = 5
     }
 
     public enum LedgerJournalCategory
