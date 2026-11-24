@@ -30,8 +30,7 @@ public sealed partial class CustCurrencyRevaluationService
                     ?? throw new SubledgerPostingException("The customer invoice was not found.");
                 await support.LockCustomerSettlementAsync(area, account, ct);
                 var trans = await db.Set<CustTrans>().SingleAsync(x => x.DataAreaId == area && x.RecId == transactionRecId, ct);
-                var open = await db.Set<CustTransOpen>().AsNoTracking().SingleOrDefaultAsync(
-                    x => x.DataAreaId == area && x.RefRecId == transactionRecId && x.AccountNum == account, ct);
+                var open = await OpenTotalAsync(db, area, transactionRecId, account, ct);
                 var voucher = await AdjustLockedAsync(area, trans, open, date, rateDate, ct);
                 await work.CommitTransactionAsync(ct);
                 return voucher;

@@ -116,8 +116,9 @@ public sealed class CustSettleOpenTransactionsService : BaseService<CustSettleme
             .Select(x => new { x.TransRecId, x.UtilizedCashDisc }).ToListAsync(ct);
         var taken = discounts.GroupBy(x => x.TransRecId).ToDictionary(x => x.Key, x => x.Sum(y => y.UtilizedCashDisc));
         foreach (var row in rows) row.CashDiscTaken = taken.GetValueOrDefault(row.TransRecId);
-        var reconciled = rows.All(x => x.AmountCur == x.OriginalAmountCur - x.SettledAmountCur
-            && x.AmountMst == x.OriginalAmountMst - x.SettledAmountMst);
+        // One transaction can have several open rows (one per installment of a payment schedule).
+        var reconciled = rows.GroupBy(x => x.TransRecId).All(g => g.Sum(x => x.AmountCur) == g.First().OriginalAmountCur - g.First().SettledAmountCur
+            && g.Sum(x => x.AmountMst) == g.First().OriginalAmountMst - g.First().SettledAmountMst);
         return new(200, new CustOpenTransDto(account, customerName, area, customer.CurrencyCode,
             accountingCurrency, rows.Sum(x => x.AmountMst), reconciled, rows), string.Empty);
     }
@@ -159,8 +160,8 @@ public sealed class CustSettleOpenTransactionsService : BaseService<CustSettleme
             var date = (input.SettleDate ?? DateTime.UtcNow).Date;
             if (marked.Any(x => x.Trans.TransDate.Date > date || x.Trans.LastSettleDate.Date > date))
                 return await Fail(422, "The settlement date precedes a marked transaction or its last settlement.", ct);
-            if (marked.Any(x => x.Open.AmountCur != x.Trans.AmountCur - x.Trans.SettleAmountCur
-                || x.Open.AmountMst != x.Trans.AmountMst - x.Trans.SettleAmountMst))
+            if (marked.GroupBy(x => x.Trans).Any(g => g.Sum(x => x.Open.AmountCur) != g.Key.AmountCur - g.Key.SettleAmountCur
+                || g.Sum(x => x.Open.AmountMst) != g.Key.AmountMst - g.Key.SettleAmountMst))
                 return await Fail(422, "The open balances do not reconcile with the marked customer transactions.", ct);
             var hasPrepayment = marked.Any(x => x.Trans.Prepayment == NoYes.Yes);
             if (hasPrepayment && (marked.Count != 2
@@ -187,7 +188,7 @@ public sealed class CustSettleOpenTransactionsService : BaseService<CustSettleme
             // D365 settles by due date, so the oldest obligation clears first.
             var debits = marked.Where(x => x.Open.AmountCur > 0)
                 .OrderBy(x => x.Open.DueDate == default ? x.Open.TransDate : x.Open.DueDate)
-                .ThenBy(x => x.Trans.RecId).ToList();
+                .ThenBy(x => x.Trans.RecId).ThenBy(x => x.Open.RecId).ToList();
             var credits = marked.Where(x => x.Open.AmountCur < 0)
                 .OrderBy(x => x.Open.DueDate == default ? x.Open.TransDate : x.Open.DueDate)
                 .ThenBy(x => x.Trans.RecId).ToList();
@@ -273,9 +274,9 @@ public sealed class CustSettleOpenTransactionsService : BaseService<CustSettleme
                 "The remaining balances have a rounding difference that requires a ledger voucher.");
         db.Set<CustSettlement>().AddRange(
             Settlement(area, account, date, settlementVoucher, debit.RecId, debitOpen.RecId,
-                credit.RecId, credit.Voucher, debitApplied, debit.TransType),
+                credit.RecId, credit.Voucher, debitApplied, debit.TransType, debitOpen.DueDate),
             Settlement(area, account, date, settlementVoucher, credit.RecId, creditOpen.RecId,
-                debit.RecId, debit.Voucher, creditApplied, credit.TransType));
+                debit.RecId, debit.Voucher, creditApplied, credit.TransType, creditOpen.DueDate));
     }
 
     /// <summary>
@@ -301,13 +302,16 @@ public sealed class CustSettleOpenTransactionsService : BaseService<CustSettleme
         open.AmountCur -= amount;
         open.AmountMst -= accounting;
         open.ReportingCurrencyAmount -= reporting;
-        // Fully settled transactions close and their open row goes, which is the invariant the
-        // settlement reversal rebuilds from.
+        // A settled open row goes; the transaction closes once nothing of it is left open (an invoice on a
+        // payment schedule has one open row per installment).
         if (open.AmountCur == 0m)
         {
-            trans.Closed = date;
-            trans.Settlement = CustSettlementStatus.Settled;
             db.Set<CustTransOpen>().Remove(open);
+            if (trans.SettleAmountCur == trans.AmountCur)
+            {
+                trans.Closed = date;
+                trans.Settlement = CustSettlementStatus.Settled;
+            }
         }
         return new SettledAmounts(amount, accounting, reporting);
     }
@@ -318,7 +322,7 @@ public sealed class CustSettleOpenTransactionsService : BaseService<CustSettleme
     /// <summary>Same row shape <c>CustPaymentService</c> writes, so the existing reversal applies.</summary>
     internal static CustSettlement Settlement(string area, string account, DateTime date, string settlementVoucher,
         long transRecId, long transOpen, long offsetRecId, string offsetVoucher, SettledAmounts amounts,
-        LedgerTransType type) => new()
+        LedgerTransType type, DateTime? dueDate = null) => new()
     {
         DataAreaId = area, AccountNum = account, TransDate = date, SettlementVoucher = settlementVoucher,
         TransCompany = area, TransType = type, TransRecId = transRecId, TransOpen = transOpen,
@@ -326,7 +330,7 @@ public sealed class CustSettleOpenTransactionsService : BaseService<CustSettleme
         OffsetTransVoucher = offsetVoucher,
         SettleAmountCur = amounts.Transaction, SettleAmountMst = amounts.Accounting,
         SettleAmountReporting = amounts.Reporting,
-        DueDate = date, ClosedDate = date,
+        DueDate = dueDate is { } due && due != default ? due : date, ClosedDate = date,
         CanBeReversed = NoYes.Yes
     };
 

@@ -1,4 +1,4 @@
-﻿using IAX.IXApi.Infrastructure.Identity;
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Administration.NumberSequences;
@@ -90,6 +90,8 @@ public sealed partial class VendorInvoiceService : BaseService<VendInvoiceJour>,
                 var term = await Db.Set<PaymTerm>().AsNoTracking()
                     .SingleOrDefaultAsync(x => x.DataAreaId == area && x.PaymTermId == order.Payment, ct);
                 if (term == null) return await Fail(422, "The purchase order payment terms were not found in this company.", ct);
+                if (!string.IsNullOrWhiteSpace(term.PaymSched))
+                    return await Fail(422, "Vendor invoices on a payment schedule are not supported yet.", ct);
                 try { dueDate = IAX.IXApi.Modules.Finance.Foundation.PaymentTerms.PaymentDueDateCalculator.Calculate(date, term); }
                 catch (InvalidOperationException ex) { return await Fail(422, ex.Message, ct); }
             }

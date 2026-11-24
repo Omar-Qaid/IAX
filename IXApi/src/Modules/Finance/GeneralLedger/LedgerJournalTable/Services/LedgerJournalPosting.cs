@@ -420,12 +420,16 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
             throw new SubledgerPostingException("Selected settlement requires a customer credit and a marked invoice in this company.");
 
         await new SubledgerPostingSupport(db).LockCustomerSettlementAsync(area, credit.AccountNum, ct);
-        var marked = await (
+        var markedRows = await (
             from debit in db.Set<CustTrans>()
             join open in db.Set<CustTransOpen>() on debit.RecId equals open.RefRecId
             where debit.RecId == line.MarkedInvoiceRecId && debit.DataAreaId == area && open.DataAreaId == area
                 && debit.AccountNum == credit.AccountNum && open.AccountNum == credit.AccountNum
-            select new { Debit = debit, Open = open }).SingleOrDefaultAsync(ct);
+            select new { Debit = debit, Open = open }).ToListAsync(ct);
+        // An invoice on a payment schedule has one open row per installment: the credit settles the earliest
+        // installment whose open amount it matches.
+        var marked = markedRows.OrderBy(x => x.Open.DueDate).ThenBy(x => x.Open.RecId)
+            .FirstOrDefault(x => x.Open.AmountCur == -creditOpen.AmountCur) ?? markedRows.FirstOrDefault();
         if (marked != null)
         {
             // A tracking query can reuse balances loaded before the settlement lock.

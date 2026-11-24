@@ -17,13 +17,11 @@ public sealed partial class CustCurrencyRevaluationService(IUnitOfWork work, ICu
             throw new SubledgerPostingException("A company must be selected.");
 
         var db = work.Context;
-        var invoice = await (
-            from trans in db.Set<CustTrans>().AsNoTracking()
-            join open in db.Set<CustTransOpen>().AsNoTracking() on trans.RecId equals open.RefRecId
-            where trans.RecId == transactionRecId && trans.DataAreaId == area && open.DataAreaId == area
-                && trans.AccountNum == open.AccountNum && trans.Invoice != "" && open.AmountCur > 0m
-            select new { Trans = trans, Open = open }).SingleOrDefaultAsync(ct);
-        if (invoice == null) return null;
+        var found = await db.Set<CustTrans>().AsNoTracking()
+            .SingleOrDefaultAsync(x => x.RecId == transactionRecId && x.DataAreaId == area && x.Invoice != "", ct);
+        var total = found == null ? null : await OpenTotalAsync(db, area, transactionRecId, found.AccountNum, ct);
+        if (found == null || total == null || total.AmountCur <= 0m) return null;
+        var invoice = new { Trans = found, Open = total };
 
         var ledger = await db.Set<Ledger>().AsNoTracking().SingleOrDefaultAsync(x => x.DataAreaId == area, ct)
             ?? throw new SubledgerPostingException("A ledger is required for the selected company.");
@@ -37,5 +35,22 @@ public sealed partial class CustCurrencyRevaluationService(IUnitOfWork work, ICu
             translation.ToAccounting(invoice.Open.AmountCur), translation.ReportingCurrency,
             invoice.Open.ReportingCurrencyAmount + invoice.Trans.ReportingExchAdjustmentUnrealized,
             translation.ToReporting(invoice.Open.AmountCur));
+    }
+
+    /// <summary>
+    /// The open balance of an invoice across all its open rows. An invoice on a payment schedule has one open row
+    /// per installment; revaluation, as in D365, revalues the transaction's whole open balance.
+    /// </summary>
+    internal static async Task<CustTransOpen?> OpenTotalAsync(Microsoft.EntityFrameworkCore.DbContext db, string area,
+        long transRecId, string account, CancellationToken ct)
+    {
+        var rows = await db.Set<CustTransOpen>().AsNoTracking()
+            .Where(x => x.DataAreaId == area && x.RefRecId == transRecId && x.AccountNum == account).ToListAsync(ct);
+        if (rows.Count == 0) return null;
+        return new CustTransOpen
+        {
+            DataAreaId = area, AccountNum = account, RefRecId = transRecId, AmountCur = rows.Sum(x => x.AmountCur),
+            AmountMst = rows.Sum(x => x.AmountMst), ReportingCurrencyAmount = rows.Sum(x => x.ReportingCurrencyAmount)
+        };
     }
 }

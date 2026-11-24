@@ -25,7 +25,7 @@ namespace IAX.IXApi.Tests;
 /// The voucher becomes Dr Bank for the cash, Dr cash discount for the discount, Cr customer for
 /// both: the customer's balance falls by what was cleared, not only by what was banked.
 /// </summary>
-public class CashDiscountSettlementTests
+public partial class CashDiscountSettlementTests
 {
     private const decimal Invoice = 1000m;
 

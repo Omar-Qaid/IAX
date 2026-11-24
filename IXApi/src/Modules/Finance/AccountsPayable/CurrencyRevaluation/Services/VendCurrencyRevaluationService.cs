@@ -25,13 +25,11 @@ public sealed class VendCurrencyRevaluationService(IUnitOfWork work, ICurrentUse
         var area = user.GetDataAreaId();
         if (string.IsNullOrWhiteSpace(area)) throw new SubledgerPostingException("A company must be selected.");
         var db = work.Context;
-        var invoice = await (
-            from trans in db.Set<VendTrans>().AsNoTracking()
-            join open in db.Set<VendTransOpen>().AsNoTracking() on trans.RecId equals open.RefRecId
-            where trans.RecId == transactionRecId && trans.DataAreaId == area && open.DataAreaId == area
-                && trans.AccountNum == open.AccountNum && trans.Invoice != "" && open.AmountCur < 0m
-            select new { Trans = trans, Open = open }).SingleOrDefaultAsync(ct);
-        if (invoice == null) return null;
+        var found = await db.Set<VendTrans>().AsNoTracking()
+            .SingleOrDefaultAsync(x => x.RecId == transactionRecId && x.DataAreaId == area && x.Invoice != "", ct);
+        var total = found == null ? null : await OpenTotalAsync(db, area, transactionRecId, found.AccountNum, ct);
+        if (found == null || total == null || total.AmountCur >= 0m) return null;
+        var invoice = new { Trans = found, Open = total };
         var ledger = await db.Set<Ledger>().AsNoTracking().SingleOrDefaultAsync(x => x.DataAreaId == area, ct)
             ?? throw new SubledgerPostingException("A ledger is required for the selected company.");
         RequireSameReportingCurrency(ledger);
@@ -42,6 +40,20 @@ public sealed class VendCurrencyRevaluationService(IUnitOfWork work, ICurrentUse
         return new VendRevaluationPreview(transactionRecId, invoice.Trans.CurrencyCode, invoice.Open.AmountCur,
             ledger.AccountingCurrency, invoice.Open.AmountMst + invoice.Trans.VendExchAdjustmentUnrealized,
             translation.ToAccounting(invoice.Open.AmountCur));
+    }
+
+    /// <summary>The open balance of an invoice across all its open rows (one per installment on a payment schedule).</summary>
+    internal static async Task<VendTransOpen?> OpenTotalAsync(DbContext db, string area, long transRecId, string account,
+        CancellationToken ct)
+    {
+        var rows = await db.Set<VendTransOpen>().AsNoTracking()
+            .Where(x => x.DataAreaId == area && x.RefRecId == transRecId && x.AccountNum == account).ToListAsync(ct);
+        if (rows.Count == 0) return null;
+        return new VendTransOpen
+        {
+            DataAreaId = area, AccountNum = account, RefRecId = transRecId,
+            AmountCur = rows.Sum(x => x.AmountCur), AmountMst = rows.Sum(x => x.AmountMst)
+        };
     }
 
     public Task<string?> PostAsync(long transactionRecId, DateOnly postingDate, DateOnly rateDate, CancellationToken ct) =>
@@ -66,8 +78,7 @@ public sealed class VendCurrencyRevaluationService(IUnitOfWork work, ICurrentUse
                     ?? throw new SubledgerPostingException("The vendor invoice was not found.");
                 await new SubledgerPostingSupport(db).LockVendorSettlementAsync(area, account, ct);
                 var trans = await db.Set<VendTrans>().SingleAsync(x => x.DataAreaId == area && x.RecId == transactionRecId, ct);
-                var open = await db.Set<VendTransOpen>().AsNoTracking().SingleOrDefaultAsync(
-                    x => x.DataAreaId == area && x.RefRecId == transactionRecId && x.AccountNum == account, ct);
+                var open = await OpenTotalAsync(db, area, transactionRecId, account, ct);
                 var voucher = await AdjustLockedAsync(area, trans, open, postingDate.ToDateTime(TimeOnly.MinValue), rateDate, ct);
                 await work.CommitTransactionAsync(ct);
                 return voucher;

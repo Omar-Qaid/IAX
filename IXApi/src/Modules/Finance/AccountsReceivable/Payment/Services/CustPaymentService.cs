@@ -1,4 +1,4 @@
-﻿using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.Settlement;
 using IAX.IXApi.Modules.Finance.Common;
@@ -179,10 +179,12 @@ public sealed partial class CustPaymentService : BaseService<CustTrans>, ICustPa
                 if (openInvoices.Count == 0)
                     return await Fail(422, $"Invoice '{input.SettleInvoiceId}' has no open balance for this customer.", ct);
             }
-            if (openInvoices.Any(x => x.Open.AmountCur != x.Trans.AmountCur - x.Trans.SettleAmountCur
-                || x.Open.AmountMst != x.Trans.AmountMst - x.Trans.SettleAmountMst
-                || x.Open.ReportingCurrencyAmount != x.Trans.ReportingCurrencyAmount
-                    - CustSettlementRestore.ReportingSettled(x.Trans, x.Open)))
+            // An invoice on a payment schedule has one open row per installment: the rows together must equal
+            // what is left of the transaction.
+            if (openInvoices.GroupBy(x => x.Trans).Any(g => g.Sum(x => x.Open.AmountCur) != g.Key.AmountCur - g.Key.SettleAmountCur
+                || g.Sum(x => x.Open.AmountMst) != g.Key.AmountMst - g.Key.SettleAmountMst
+                || g.Sum(x => x.Open.ReportingCurrencyAmount) != g.Key.ReportingCurrencyAmount
+                    - CustSettlementRestore.ReportingSettled(g.Key, g.Select(x => x.Open))))
                 return await Fail(422, "Customer open balances require reconciliation before settlement.", ct);
             var remaining = input.Amount;
             var settled = new List<object>();
@@ -195,7 +197,7 @@ public sealed partial class CustPaymentService : BaseService<CustTrans>, ICustPa
             var settledAccounting = 0m;
             var settledReporting = 0m;
             var realizedExchange = 0m;
-            foreach (var invoice in openInvoices.OrderBy(x => x.Open.DueDate).ThenBy(x => x.Trans.RecId))
+            foreach (var invoice in openInvoices.OrderBy(x => x.Open.DueDate).ThenBy(x => x.Trans.RecId).ThenBy(x => x.Open.RecId))
             {
                 if (remaining <= 0) break;
                 if (invoice.Trans.TransDate.Date > date)
@@ -229,7 +231,7 @@ public sealed partial class CustPaymentService : BaseService<CustTrans>, ICustPa
                 if (settlementVoucher.Length == 0)
                     settlementVoucher = (await numbers.NextAsync("CustSettlement", area, ct)).Code;
                 var invoiceRow = Settlement(area, customer.AccountNum, date, settlementVoucher, invoice.Trans.RecId,
-                    invoice.Open.RecId, paymentTrans.RecId, voucher, settle, invoice.Trans.TransType);
+                    invoice.Open.RecId, paymentTrans.RecId, voucher, settle, invoice.Trans.TransType, invoice.Open.DueDate);
                 invoiceRow.UtilizedCashDisc = discount;
                 if (discount > 0m)
                 {
@@ -278,9 +280,12 @@ public sealed partial class CustPaymentService : BaseService<CustTrans>, ICustPa
                 invoice.Open.ReportingCurrencyAmount -= invoiceReporting;
                 if (invoice.Open.AmountCur <= 0)
                 {
-                    invoice.Trans.Closed = date;
-                    invoice.Trans.Settlement = CustSettlementStatus.Settled;
                     Db.Set<CustTransOpen>().Remove(invoice.Open);
+                    if (invoice.Trans.SettleAmountCur == invoice.Trans.AmountCur)
+                    {
+                        invoice.Trans.Closed = date;
+                        invoice.Trans.Settlement = CustSettlementStatus.Settled;
+                    }
                 }
                 paymentTrans.SettleAmountCur -= cash;
                 paymentTrans.SettleAmountMst += paymentRow.SettleAmountMst;
@@ -405,12 +410,13 @@ public sealed partial class CustPaymentService : BaseService<CustTrans>, ICustPa
     }
 
     private static CustSettlement Settlement(string area, string account, DateTime date, string settlementVoucher,
-        long transRecId, long transOpen, long offsetRecId, string offsetVoucher, decimal amount, LedgerTransType type) => new()
+        long transRecId, long transOpen, long offsetRecId, string offsetVoucher, decimal amount, LedgerTransType type,
+        DateTime? dueDate = null) => new()
     {
         DataAreaId = area, AccountNum = account, TransDate = date, SettlementVoucher = settlementVoucher, TransCompany = area,
         TransType = type, TransRecId = transRecId, TransOpen = transOpen, OffsetRecId = offsetRecId,
         OffsetAccountNum = account, OffsetCompany = area, OffsetTransVoucher = offsetVoucher,
-        SettleAmountCur = amount, DueDate = date, ClosedDate = date,
+        SettleAmountCur = amount, DueDate = dueDate is { } due && due != default ? due : date, ClosedDate = date,
         // Marks the match as in force, so CustSettlementReversalService can reverse it once.
         CanBeReversed = NoYes.Yes
     };

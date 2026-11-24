@@ -1,4 +1,4 @@
-﻿using IAX.IXApi.Modules.Finance.Common;
+using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 
 namespace IAX.IXApi.Modules.Finance.Foundation.PaymentTerms;
@@ -7,8 +7,10 @@ public static class PaymentDueDateCalculator
 {
     public static DateTime Calculate(DateTime invoiceDate, PaymTerm term)
     {
-        if (!string.IsNullOrWhiteSpace(term.PaymDayId) || !string.IsNullOrWhiteSpace(term.PaymSched) || term.CutOffDay != 0 || term.AdditionalMonths != 0)
-            throw new InvalidOperationException("Payment-day calendars and installment schedules require a supported payment schedule before invoicing.");
+        // A payment schedule (PaymSched) is applied after this: the due date here is the first installment's,
+        // and PaymentScheduleOpenRows splits the open transaction into one row per installment.
+        if (!string.IsNullOrWhiteSpace(term.PaymDayId) || term.CutOffDay != 0 || term.AdditionalMonths != 0)
+            throw new InvalidOperationException("Payment-day calendars require a supported payment-day setup before invoicing.");
         if (term.NumOfMonths < 0 || term.NumOfDays < 0 || term.AdditionalMonths < 0)
             throw new InvalidOperationException("Payment-term offsets cannot be negative.");
         var date = invoiceDate.Date;

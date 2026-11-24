@@ -1,4 +1,4 @@
-﻿using IAX.IXApi.Infrastructure.Identity;
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.Settlement;
@@ -346,10 +346,13 @@ public sealed class FreeTextInvoiceService(
             throw new SubledgerPostingException("The original free text invoice journal was not found.");
         var debit = await Db.Set<CustTrans>().SingleOrDefaultAsync(x => x.DataAreaId == area
             && x.AccountNum == account && x.Invoice == source.InvoiceId && x.Voucher == source.LedgerVoucher, ct);
-        var debitOpen = debit == null ? null : await Db.Set<CustTransOpen>().SingleOrDefaultAsync(x =>
-            x.DataAreaId == area && x.AccountNum == account && x.RefRecId == debit.RecId, ct);
-        if (debit == null || debitOpen == null || debit.AmountCur <= 0m || debitOpen.AmountCur != debit.AmountCur
-            || debitOpen.AmountMst != debit.AmountMst || debitOpen.ReportingCurrencyAmount != debit.ReportingCurrencyAmount)
+        // One open row per installment when the invoice is on a payment schedule; together they must be the whole invoice.
+        var debitOpen = debit == null ? new List<CustTransOpen>() : await Db.Set<CustTransOpen>().Where(x =>
+            x.DataAreaId == area && x.AccountNum == account && x.RefRecId == debit.RecId)
+            .OrderBy(x => x.DueDate).ThenBy(x => x.RecId).ToListAsync(ct);
+        if (debit == null || debitOpen.Count == 0 || debit.AmountCur <= 0m || debitOpen.Sum(x => x.AmountCur) != debit.AmountCur
+            || debitOpen.Sum(x => x.AmountMst) != debit.AmountMst
+            || debitOpen.Sum(x => x.ReportingCurrencyAmount) != debit.ReportingCurrencyAmount)
             throw new SubledgerPostingException("The original invoice must be fully open. Reverse its settlements before correcting it.");
 
         var ledger = await support.LoadLedgerContextAsync(area, date, LedgerPostingModule.Customer,
@@ -454,8 +457,9 @@ public sealed class FreeTextInvoiceService(
         Db.Add(creditOpen);
         await unitOfWork.CompleteAsync(ct);
         var settlement = (await numbers.NextAsync("CustSettlement", area, ct)).Code;
-        CustSettleOpenTransactionsService.ApplyPair(Db, area, account, date, settlement,
-            debit, debitOpen, credit, creditOpen, debit.AmountCur);
+        foreach (var row in debitOpen)
+            CustSettleOpenTransactionsService.ApplyPair(Db, area, account, date, settlement,
+                debit, row, credit, creditOpen, row.AmountCur);
     }
 
     private async Task PostInvoiceAsync(string area, CustInvoiceTable header, List<CustInvoiceLine> lines,
@@ -615,17 +619,20 @@ public sealed class FreeTextInvoiceService(
         };
         Db.Set<CustTrans>().Add(custTrans);
         await unitOfWork.CompleteAsync(ct);
-        Db.Set<CustTransOpen>().Add(new CustTransOpen
-        {
-            DataAreaId = area,
-            AccountNum = header.InvoiceAccount,
-            RefRecId = custTrans.RecId,
-            TransDate = header.InvoiceDate.Date,
-            DueDate = header.DueDate,
-            AmountCur = total,
-            AmountMst = totalAccounting,
-            ReportingCurrencyAmount = totalReporting
-        });
+        // Terms with a payment schedule give one open row per installment, each with its own due date (D365).
+        foreach (var installment in await Foundation.PaymentTerms.PaymentScheduleOpenRows.SplitAsync(Db, area,
+                     header.Payment, header.DueDate, total, totalAccounting, totalReporting, ct))
+            Db.Set<CustTransOpen>().Add(new CustTransOpen
+            {
+                DataAreaId = area,
+                AccountNum = header.InvoiceAccount,
+                RefRecId = custTrans.RecId,
+                TransDate = header.InvoiceDate.Date,
+                DueDate = installment.DueDate,
+                AmountCur = installment.AmountCur,
+                AmountMst = installment.AmountMst,
+                ReportingCurrencyAmount = installment.ReportingAmount
+            });
 
         journal.SalesBalance = netTotal;
         journal.SalesBalanceMst = translation.ToAccounting(netTotal);

@@ -71,4 +71,16 @@ public sealed class PaymentScheduleCalculatorTests
         var error = Assert.Throws<InvalidOperationException>(() => PaymentScheduleCalculator.Calculate(1000m, Due, schedule, []));
         Assert.Contains("Total", error.Message);
     }
+
+    [Fact]
+    public void Open_rows_carry_each_installments_share_of_the_accounting_and_reporting_amounts()
+    {
+        var schedule = new PaymSched { Name = "S", PayBy = PaymSchedBy.NumOfPayment, NumOfPayment = 3, QtyUnit = 1, PeriodUnit = PeriodUnit.Month };
+        var installments = PaymentScheduleCalculator.Calculate(100m, Due, schedule, []);
+        var rows = PaymentScheduleOpenRows.Split(installments, 100m, 375m, 100m);
+        Assert.Equal(new[] { 33.33m, 33.33m, 33.34m }, rows.Select(x => x.AmountCur));
+        Assert.Equal(new[] { 124.99m, 124.99m, 125.02m }, rows.Select(x => x.AmountMst));
+        Assert.Equal(375m, rows.Sum(x => x.AmountMst));
+        Assert.Equal(100m, rows.Sum(x => x.ReportingAmount));
+    }
 }

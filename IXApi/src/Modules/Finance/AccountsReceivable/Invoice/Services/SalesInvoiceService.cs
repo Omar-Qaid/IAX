@@ -1,4 +1,4 @@
-﻿using IAX.IXApi.Infrastructure.Identity;
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Administration.NumberSequences;
@@ -549,16 +549,23 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
         // The open row carries the discount it could earn, so it can be read without re-deriving
         // it. Settlement resolves the discount itself through the same resolver, so this is
         // reporting detail rather than the figure settlement depends on.
-        var terms = await Foundation.CashDiscount.CashDiscountResolver.ResolveAsync(Db, area,
-            custTrans.CashDiscCode, custTrans.CashDiscBaseDate, amount, ct);
-        Db.Set<CustTransOpen>().Add(new CustTransOpen
+        // Terms with a payment schedule give one open row per installment, each with its own due date (D365).
+        var installments = await Foundation.PaymentTerms.PaymentScheduleOpenRows.SplitAsync(Db, area, custTrans.PaymTermId,
+            dueDate, amount, accountingAmount, reportingAmount, ct);
+        foreach (var installment in installments)
         {
-            DataAreaId = area, AccountNum = invoiceAccount, RefRecId = custTrans.RecId, TransDate = date,
-            DueDate = dueDate, AmountCur = amount, AmountMst = accountingAmount, ReportingCurrencyAmount = reportingAmount,
-            CashDiscDate = terms.Applies ? terms.DiscountDate : default,
-            PossibleCashDisc = terms.PossibleAmount,
-            CashDiscountLedgerDimension = terms.Discount?.CashDiscLedgerDimension ?? 0
-        });
+            var terms = await Foundation.CashDiscount.CashDiscountResolver.ResolveAsync(Db, area,
+                custTrans.CashDiscCode, custTrans.CashDiscBaseDate, installment.AmountCur, ct);
+            Db.Set<CustTransOpen>().Add(new CustTransOpen
+            {
+                DataAreaId = area, AccountNum = invoiceAccount, RefRecId = custTrans.RecId, TransDate = date,
+                DueDate = installment.DueDate, AmountCur = installment.AmountCur, AmountMst = installment.AmountMst,
+                ReportingCurrencyAmount = installment.ReportingAmount,
+                CashDiscDate = terms.Applies ? terms.DiscountDate : default,
+                PossibleCashDisc = terms.PossibleAmount,
+                CashDiscountLedgerDimension = terms.Discount?.CashDiscLedgerDimension ?? 0
+            });
+        }
     }
 
     /// <summary>

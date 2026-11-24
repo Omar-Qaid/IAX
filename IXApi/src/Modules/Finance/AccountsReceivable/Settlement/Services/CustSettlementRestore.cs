@@ -71,9 +71,9 @@ internal static class CustSettlementRestore
             if (trans == null)
                 return $"The customer transaction behind settlement '{settlementVoucher}' no longer exists.";
 
-            var open = await db.Set<CustTransOpen>()
-                .FirstOrDefaultAsync(x => x.DataAreaId == area && x.RefRecId == trans.RecId, ct);
-            trans.SettleAmountReporting = ReportingSettled(trans, open) - group.Sum(x => x.SettleAmountReporting);
+            var openRows = await db.Set<CustTransOpen>()
+                .Where(x => x.DataAreaId == area && x.RefRecId == trans.RecId).ToListAsync(ct);
+            trans.SettleAmountReporting = ReportingSettled(trans, openRows) - group.Sum(x => x.SettleAmountReporting);
             trans.SettleAmountCur -= group.Sum(x => x.SettleAmountCur);
             trans.SettleAmountMst -= group.Sum(x => x.SettleAmountMst);
             if (trans.SettleAmountCur == 0m)
@@ -82,7 +82,11 @@ internal static class CustSettlementRestore
                 trans.LastSettleVoucher = string.Empty;
                 trans.LastSettleAccountNum = string.Empty;
             }
-            RestoreOpen(db, area, trans, open);
+            if (group.All(x => x.TransOpen != 0) && (openRows.Count > 1 || group.Select(x => x.TransOpen).Distinct().Count() > 1
+                    || openRows.Any(o => group.All(x => x.TransOpen != o.RecId))))
+                RestoreInstallments(db, area, trans, openRows, group);
+            else
+                RestoreOpen(db, area, trans, openRows.FirstOrDefault());
         }
         return null;
     }
@@ -93,6 +97,57 @@ internal static class CustSettlementRestore
     /// the restore exact whether the row was decremented on a partial settlement or removed on a
     /// full one.
     /// </summary>
+    internal static decimal ReportingSettled(CustTrans trans, IEnumerable<CustTransOpen> openRows)
+    {
+        if (trans.SettleAmountReporting != 0m || trans.SettleAmountCur == 0m)
+            return trans.SettleAmountReporting;
+        return trans.ReportingCurrencyAmount - openRows.Sum(x => x.ReportingCurrencyAmount);
+    }
+
+    /// <summary>
+    /// Gives each settled amount back to the open row (installment) it was taken from, as D365 restores the
+    /// open transaction with its own due date. A row that was settled in full is recreated with that due date.
+    /// Any rounding left between the rows and the transaction lands on the last row.
+    /// </summary>
+    private static void RestoreInstallments(DbContext db, string area, CustTrans trans, List<CustTransOpen> openRows,
+        IEnumerable<CustSettlement> settled)
+    {
+        foreach (var row in settled)
+        {
+            var open = openRows.FirstOrDefault(x => x.RecId == row.TransOpen && x.RecId != 0)
+                ?? openRows.FirstOrDefault(x => x.RecId == 0 && x.DueDate == row.DueDate);
+            if (open == null)
+            {
+                open = new CustTransOpen
+                {
+                    DataAreaId = area, AccountNum = trans.AccountNum, RefRecId = trans.RecId,
+                    TransDate = trans.TransDate, DueDate = row.DueDate
+                };
+                db.Set<CustTransOpen>().Add(open);
+                openRows.Add(open);
+            }
+            open.AmountCur += row.SettleAmountCur;
+            open.AmountMst += row.SettleAmountMst;
+            open.ReportingCurrencyAmount += row.SettleAmountReporting;
+        }
+        var remaining = trans.AmountCur - trans.SettleAmountCur;
+        if (remaining != 0m)
+        {
+            trans.Closed = default;
+            trans.Settlement = CustSettlementStatus.None;
+        }
+        var last = openRows.OrderBy(x => x.DueDate).LastOrDefault();
+        if (last != null)
+        {
+            last.AmountCur += remaining - openRows.Sum(x => x.AmountCur);
+            last.AmountMst += trans.AmountMst - trans.SettleAmountMst - openRows.Sum(x => x.AmountMst);
+            last.ReportingCurrencyAmount += trans.ReportingCurrencyAmount - trans.SettleAmountReporting
+                - openRows.Sum(x => x.ReportingCurrencyAmount);
+        }
+        foreach (var empty in openRows.Where(x => x.AmountCur == 0m).ToList())
+            db.Set<CustTransOpen>().Remove(empty);
+    }
+
     internal static decimal ReportingSettled(CustTrans trans, CustTransOpen? open)
     {
         if (trans.SettleAmountReporting != 0m || trans.SettleAmountCur == 0m)
