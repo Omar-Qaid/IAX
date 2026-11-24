@@ -1,4 +1,4 @@
-﻿# Finance — gap analysis index
+# Finance — gap analysis index
 
 **Last updated:** 2026-11-08
 
@@ -12,16 +12,15 @@ counted as gaps.
 | Accounts payable | [AccountsPayable/GAPS.md](AccountsPayable/GAPS.md) | No purchase **discount** agreements; Registration / Invoice pool (optional per spec); net unit price & charges matching |
 | Accounts receivable | [AccountsReceivable/GAPS.md](AccountsReceivable/GAPS.md) | Return dispositions; settlement priority and cash discount on the settlement path |
 | Inventory | [Inventory/GAPS.md](Inventory/GAPS.md) | SQL Server verification; four unsupported inventory models |
-| Foundation | [Foundation/GAPS.md](Foundation/GAPS.md) | Tax origins other than percentage-of-net are refused, not calculated; payment schedules |
+| Foundation | [Foundation/GAPS.md](Foundation/GAPS.md) | Tax origins other than percentage-of-net are refused, not calculated |
 | Common (shared posting) | [Common/GAPS.md](Common/GAPS.md) | Posting lock unproven under SQL Server; two overlapping posting exception types |
 
 ## The four findings that cut across every module
 
 1. **Three themes recur, and they are worth naming before the module files.** First, several features
    stop at setup: a table, controller and validator exist, nothing reads them. `SpecTrans`,
-   `TaxExemptCodeTable`, `PaymSched` and most of `TaxTable`'s calculation columns are all in this
-   state, and `PaymSched` is the sharp case — configuring one makes its customers' invoices
-   unpostable. Second, **documents can be started but not ended**: a purchase order cannot be
+   `TaxExemptCodeTable` and most of `TaxTable`'s calculation columns are in this state
+   (`PaymSched` was, until installments were implemented on 2026-11-24). Second, **documents can be started but not ended**: a purchase order cannot be
    cancelled at all, a partly delivered sales order cannot be cancelled either, and a credit note or
    on-account payment on either side creates an open row that no process can ever apply. **This
    whole theme was closed on 2026-11-03**: both cancellation halves, so an order can be ended on

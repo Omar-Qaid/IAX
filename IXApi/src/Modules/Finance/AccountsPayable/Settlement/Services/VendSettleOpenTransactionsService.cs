@@ -123,7 +123,7 @@ public sealed class VendSettleOpenTransactionsService : BaseService<VendSettleme
             // on-account payment is a debit and positive. Oldest obligation settles first.
             var invoices = marked.Where(x => x.Open.AmountCur < 0)
                 .OrderBy(x => x.Open.DueDate == default ? x.Open.TransDate : x.Open.DueDate)
-                .ThenBy(x => x.Trans.RecId).ToList();
+                .ThenBy(x => x.Trans.RecId).ThenBy(x => x.Open.RecId).ToList();
             var offsets = marked.Where(x => x.Open.AmountCur > 0)
                 .OrderBy(x => x.Open.DueDate == default ? x.Open.TransDate : x.Open.DueDate)
                 .ThenBy(x => x.Trans.RecId).ToList();
@@ -224,11 +224,13 @@ public sealed class VendSettleOpenTransactionsService : BaseService<VendSettleme
         if (invoice.VendExchAdjustmentUnrealized != 0m || invoice.ReportingExchAdjustmentUnrealized != 0m
             || offset.VendExchAdjustmentUnrealized != 0m || offset.ReportingExchAdjustmentUnrealized != 0m)
             throw new SubledgerPostingException("Reverse the unrealized currency revaluation before settling these transactions.");
-        var accounting = Accounting(invoice, amount);
+        // An open row settled in full gives up exactly what it carries, so installment rounding never strands.
+        var accounting = amount == -invoiceOpen.AmountCur ? -invoiceOpen.AmountMst : Accounting(invoice, amount);
         db.Set<VendSettlement>().Add(new VendSettlement
         {
             DataAreaId = area, AccountNum = account,
             InvoiceTransRecId = invoice.RecId, PaymentTransRecId = offset.RecId,
+            TransOpen = invoiceOpen.RecId, DueDate = invoiceOpen.DueDate,
             TransDate = date, Voucher = voucher,
             AmountCur = amount, AmountMst = accounting,
             CanBeReversed = NoYes.Yes
@@ -288,8 +290,9 @@ public sealed class VendSettleOpenTransactionsService : BaseService<VendSettleme
     private static void CloseIfSettled(DbContext db, VendTrans trans, VendTransOpen open, DateTime date)
     {
         if (open.AmountCur != 0m) return;
-        trans.Closed = date;
         db.Set<VendTransOpen>().Remove(open);
+        // With a payment schedule the transaction closes only with its last installment.
+        if (trans.SettleAmountCur == trans.AmountCur) trans.Closed = date;
     }
 
     private async Task<PurchResult> Fail(int status, string message, CancellationToken ct)

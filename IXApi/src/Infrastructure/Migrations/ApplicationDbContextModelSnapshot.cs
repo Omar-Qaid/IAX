@@ -3869,6 +3869,9 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasMaxLength(4)
                         .HasColumnType("nvarchar(4)");
 
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<decimal>("ExchAdjustment")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
@@ -3905,6 +3908,9 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<DateTime>("TransDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<long>("TransOpen")
+                        .HasColumnType("bigint");
 
                     b.Property<decimal>("UtilizedCashDisc")
                         .HasPrecision(18, 4)
@@ -4133,8 +4139,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasIndex("RefRecId");
 
-                    b.HasIndex("DataAreaId", "RefRecId")
-                        .IsUnique();
+                    b.HasIndex("DataAreaId", "RefRecId");
 
                     b.ToTable("VendTransOpen", (string)null);
                 });

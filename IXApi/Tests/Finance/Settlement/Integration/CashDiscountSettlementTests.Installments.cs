@@ -1,5 +1,6 @@
 using IAX.IXApi.Modules.Finance.AccountsReceivable.Payment;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.Settlement;
+using IAX.IXApi.Modules.Finance.AccountsPayable;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
@@ -83,5 +84,49 @@ public partial class CashDiscountSettlementTests
         Assert.Equal(new[] { 400m, 300m, 300m }, open.Select(x => x.AmountMst));
         var invoice = await db.Set<CustTrans>().AsNoTracking().SingleAsync(x => x.RecId == 10);
         Assert.Equal(0m, invoice.SettleAmountCur);
+    }
+
+    private static async Task SplitVendorInvoiceIntoInstallmentsAsync(DbContext db)
+    {
+        var invoice = await db.Set<VendTrans>().SingleAsync(x => x.RecId == 20);
+        invoice.CashDiscCode = string.Empty;
+        db.Remove(await db.Set<VendTransOpen>().SingleAsync(x => x.RefRecId == 20));
+        decimal[] amounts = [400m, 300m, 300m];
+        for (var i = 0; i < 3; i++)
+            db.Add(new VendTransOpen
+            {
+                RecId = 200 + i, DataAreaId = "dat", AccountNum = "V-001", RefRecId = 20, TransDate = new DateTime(2026, 1, 1),
+                DueDate = InstallmentDue[i], AmountCur = -amounts[i], AmountMst = -amounts[i]
+            });
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+    }
+
+    [Fact]
+    public async Task A_vendor_payment_settles_installments_by_due_date_and_its_reversal_restores_each_installment()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        await SplitVendorInvoiceIntoInstallmentsAsync(db);
+
+        var paid = await NewVendService(db).PostAsync(
+            new VendPaymentPostDto("V-001", "BANK-1", 500m, "req-inst", new DateTime(2026, 1, 20)), default);
+        Assert.True(paid.StatusCode == 200, paid.Message);
+        var open = await db.Set<VendTransOpen>().AsNoTracking().Where(x => x.RefRecId == 20).OrderBy(x => x.DueDate).ToListAsync();
+        Assert.Equal(new[] { -200m, -300m }, open.Select(x => x.AmountCur));
+        var rows = await db.Set<VendSettlement>().AsNoTracking().Where(x => x.InvoiceTransRecId == 20).OrderBy(x => x.DueDate).ToListAsync();
+        Assert.Equal(new[] { 400m, 100m }, rows.Select(x => x.AmountCur));
+        Assert.Equal(new[] { InstallmentDue[0], InstallmentDue[1] }, rows.Select(x => x.DueDate));
+        Assert.Equal(new long[] { 200, 201 }, rows.Select(x => x.TransOpen));
+        Assert.Equal(default, (await db.Set<VendTrans>().AsNoTracking().SingleAsync(x => x.RecId == 20)).Closed);
+        db.ChangeTracker.Clear();
+
+        Assert.Null(await VendSettlementRestore.ApplyAsync(db, "dat", rows[0].Voucher, new DateTime(2026, 1, 21), "REV-V1", default));
+        await db.SaveChangesAsync();
+        open = await db.Set<VendTransOpen>().AsNoTracking().Where(x => x.RefRecId == 20).OrderBy(x => x.DueDate).ToListAsync();
+        Assert.Equal(new[] { -400m, -300m, -300m }, open.Select(x => x.AmountCur));
+        Assert.Equal(InstallmentDue, open.Select(x => x.DueDate));
+        Assert.Equal(0m, (await db.Set<VendTrans>().AsNoTracking().SingleAsync(x => x.RecId == 20)).SettleAmountCur);
     }
 }

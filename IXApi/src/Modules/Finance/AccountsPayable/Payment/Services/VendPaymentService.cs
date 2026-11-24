@@ -118,7 +118,9 @@ public sealed partial class VendPaymentService(IUnitOfWork work, ICurrentUserSer
             }
             else
                 vendorAccount = await support.ResolveVendorSummaryAsync(area, vendor, ct);
-            if (invoices.Any(x => x.Open.AmountCur != x.Trans.AmountCur - x.Trans.SettleAmountCur || x.Open.AmountMst != x.Trans.AmountMst - x.Trans.SettleAmountMst))
+            // One open row per installment on a payment schedule: the rows together must equal what is left.
+            if (invoices.GroupBy(x => x.Trans).Any(g => g.Sum(x => x.Open.AmountCur) != g.Key.AmountCur - g.Key.SettleAmountCur
+                || g.Sum(x => x.Open.AmountMst) != g.Key.AmountMst - g.Key.SettleAmountMst))
                 return await Fail("Vendor open balances require reconciliation before settlement.", ct);
             var journalNum = (await numbers.NextAsync("LedgerJournalTable", area, ct)).Code;
             LedgerJournalName? journalSetup = null;
@@ -148,7 +150,7 @@ public sealed partial class VendPaymentService(IUnitOfWork work, ICurrentUserSer
             // Cash discount taken per discount account, so a voucher covering invoices on
             // different discount codes credits each configured account for its own share.
             var discountsByAccount = new Dictionary<long, decimal>();
-            foreach (var invoice in invoices.OrderBy(x => x.Open.DueDate).ThenBy(x => x.Trans.RecId))
+            foreach (var invoice in invoices.OrderBy(x => x.Open.DueDate).ThenBy(x => x.Trans.RecId).ThenBy(x => x.Open.RecId))
             {
                 if (remaining == 0) break;
                 if (invoice.Trans.TransDate.Date > date) return await Fail("A payment cannot settle a future-dated invoice.", ct);
@@ -185,7 +187,9 @@ public sealed partial class VendPaymentService(IUnitOfWork work, ICurrentUserSer
                 // The payable clears at the accounting value the invoice itself carried, while the
                 // cash and discount leave at the payment date's rate. The difference between the
                 // two is the realized exchange gain or loss on this settlement.
-                var invoiceAccounting = invoice.Trans.AmountCur == 0m
+                // An open row settled in full gives up exactly what it carries, so installment rounding never strands.
+                var invoiceAccounting = settled == openAmount ? -invoice.Open.AmountMst
+                    : invoice.Trans.AmountCur == 0m
                     ? settled
                     : decimal.Round(settled * Math.Abs(invoice.Trans.AmountMst / invoice.Trans.AmountCur), 2, MidpointRounding.AwayFromZero);
                 var paidAccounting = translation.ToAccounting(cash) + translation.ToAccounting(discount);
@@ -193,6 +197,7 @@ public sealed partial class VendPaymentService(IUnitOfWork work, ICurrentUserSer
                 settledAccounting += invoiceAccounting;
                 Db.Add(new VendSettlement { DataAreaId = area, AccountNum = vendor.AccountNum, InvoiceTransRecId = invoice.Trans.RecId,
                     PaymentTransRecId = payment.RecId, TransDate = date, Voucher = voucher, AmountCur = settled,
+                    TransOpen = invoice.Open.RecId, DueDate = invoice.Open.DueDate,
                     // The accounting amount the reversal restores from, so it must be what was
                     // actually taken off the transaction rather than the transaction amount.
                     AmountMst = invoiceAccounting,
@@ -205,8 +210,8 @@ public sealed partial class VendPaymentService(IUnitOfWork work, ICurrentUserSer
                 invoice.Open.AmountMst += invoiceAccounting;
                 if (invoice.Open.AmountCur == 0)
                 {
-                    invoice.Trans.Closed = date;
                     Db.Remove(invoice.Open);
+                    if (invoice.Trans.SettleAmountCur == invoice.Trans.AmountCur) invoice.Trans.Closed = date;
                 }
                 payment.SettleAmountCur += cash;
                 payment.SettleAmountMst += translation.ToAccounting(cash);

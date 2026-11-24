@@ -19,6 +19,12 @@ public class VendSettlement : Entity<long>
     [MaxLength(20)] public string AccountNum { get; set; } = "";
     public long InvoiceTransRecId { get; set; }
     public long PaymentTransRecId { get; set; }
+
+    /// <summary>D365 VendSettlement.TransOpen: the invoice's open row (installment) this match settled.</summary>
+    public long TransOpen { get; set; }
+
+    /// <summary>D365 VendSettlement.DueDate: the due date of that open row.</summary>
+    public DateTime DueDate { get; set; }
     public DateTime TransDate { get; set; }
     [MaxLength(20)] public string Voucher { get; set; } = "";
     public decimal AmountCur { get; set; }

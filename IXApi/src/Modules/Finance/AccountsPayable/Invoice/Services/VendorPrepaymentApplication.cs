@@ -71,10 +71,14 @@ public sealed partial class VendorInvoiceService
             var available = payments.Sum() - applications.Sum(x => x.AmountCur);
             if (amount > available)
                 return await Fail(422, "The application exceeds the paid prepayment amount available.", ct);
-            var open = await Db.Set<VendTransOpen>().SingleOrDefaultAsync(x => x.DataAreaId == area
-                && x.AccountNum == order.InvoiceAccount && x.RefRecId == finalTrans.RecId, ct);
-            if (open == null || amount > -open.AmountCur || open.AmountCur != finalTrans.AmountCur - finalTrans.SettleAmountCur
-                || open.AmountMst != finalTrans.AmountMst - finalTrans.SettleAmountMst || open.AmountMst != open.AmountCur)
+            // One open row per installment when the final invoice is on a payment schedule; earliest due is applied first.
+            var openRows = await Db.Set<VendTransOpen>().Where(x => x.DataAreaId == area
+                && x.AccountNum == order.InvoiceAccount && x.RefRecId == finalTrans.RecId)
+                .OrderBy(x => x.DueDate).ThenBy(x => x.RecId).ToListAsync(ct);
+            if (openRows.Count == 0 || amount > -openRows.Sum(x => x.AmountCur)
+                || openRows.Sum(x => x.AmountCur) != finalTrans.AmountCur - finalTrans.SettleAmountCur
+                || openRows.Sum(x => x.AmountMst) != finalTrans.AmountMst - finalTrans.SettleAmountMst
+                || openRows.Any(x => x.AmountMst != x.AmountCur))
                 return await Fail(422, "The final invoice has insufficient or unreconciled open balance.", ct);
 
             var context = await support.LoadLedgerContextAsync(area, date, LedgerPostingModule.Vendor, _currentUser.GetCurrentUserId(), ct);
@@ -117,22 +121,28 @@ public sealed partial class VendorInvoiceService
             {
                 DataAreaId = area, GeneralJournalEntry = entry.RecId, Voucher = voucher, VoucherDataAreaId = area, AccountingDate = date
             });
-            var settlementRow = new VendSettlement
+            VendSettlement? settlementRow = null;
+            var left = amount;
+            foreach (var open in openRows)
             {
-                DataAreaId = area, AccountNum = order.InvoiceAccount, InvoiceTransRecId = finalTrans.RecId,
-                PaymentTransRecId = offset.RecId, TransDate = date, Voucher = voucher, AmountCur = amount, AmountMst = amount,
-                CanBeReversed = NoYes.No
-            };
-            Db.Add(settlementRow);
+                if (left == 0m) break;
+                var part = Math.Min(left, -open.AmountCur);
+                settlementRow = new VendSettlement
+                {
+                    DataAreaId = area, AccountNum = order.InvoiceAccount, InvoiceTransRecId = finalTrans.RecId,
+                    PaymentTransRecId = offset.RecId, TransOpen = open.RecId, DueDate = open.DueDate,
+                    TransDate = date, Voucher = voucher, AmountCur = part, AmountMst = part,
+                    CanBeReversed = NoYes.No
+                };
+                Db.Add(settlementRow);
+                open.AmountCur += part;
+                open.AmountMst += part;
+                if (open.AmountCur == 0) Db.Remove(open);
+                left -= part;
+            }
             finalTrans.SettleAmountCur -= amount;
             finalTrans.SettleAmountMst -= amount;
-            open.AmountCur += amount;
-            open.AmountMst += amount;
-            if (open.AmountCur == 0)
-            {
-                finalTrans.Closed = date;
-                Db.Remove(open);
-            }
+            if (finalTrans.SettleAmountCur == finalTrans.AmountCur) finalTrans.Closed = date;
             definition.PrepayApplicationRemaining -= amount;
             await _unitOfWork.CompleteAsync(ct);
             await new PurchaseSourceAccounting(Db).VerifyBalancedAsync(entry, ct);

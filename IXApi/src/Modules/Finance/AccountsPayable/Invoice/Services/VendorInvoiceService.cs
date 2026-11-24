@@ -90,8 +90,6 @@ public sealed partial class VendorInvoiceService : BaseService<VendInvoiceJour>,
                 var term = await Db.Set<PaymTerm>().AsNoTracking()
                     .SingleOrDefaultAsync(x => x.DataAreaId == area && x.PaymTermId == order.Payment, ct);
                 if (term == null) return await Fail(422, "The purchase order payment terms were not found in this company.", ct);
-                if (!string.IsNullOrWhiteSpace(term.PaymSched))
-                    return await Fail(422, "Vendor invoices on a payment schedule are not supported yet.", ct);
                 try { dueDate = IAX.IXApi.Modules.Finance.Foundation.PaymentTerms.PaymentDueDateCalculator.Calculate(date, term); }
                 catch (InvalidOperationException ex) { return await Fail(422, ex.Message, ct); }
             }
@@ -304,7 +302,15 @@ public sealed partial class VendorInvoiceService : BaseService<VendInvoiceJour>,
             };
             Db.Set<VendTrans>().Add(vendorTransaction);
             await _unitOfWork.CompleteAsync(ct);
-            VendorOpenBalance.Add(Db, vendorTransaction);
+            // Terms with a payment schedule give one open row per installment, each with its own due date (D365).
+            foreach (var installment in await IAX.IXApi.Modules.Finance.Foundation.PaymentTerms.PaymentScheduleOpenRows.SplitAsync(
+                         Db, area, order.Payment, dueDate, vendorTransaction.AmountCur, vendorTransaction.AmountMst,
+                         vendorTransaction.AmountMst, ct))
+                Db.Add(new VendTransOpen
+                {
+                    DataAreaId = area, AccountNum = vendorTransaction.AccountNum, RefRecId = vendorTransaction.RecId,
+                    TransDate = date, DueDate = installment.DueDate, AmountCur = installment.AmountCur, AmountMst = installment.AmountMst
+                });
             Db.Set<VendInvoiceJour>().Add(new VendInvoiceJour
             {
                 DataAreaId = area, InvoiceId = vendorInvoiceId, InternalInvoiceId = internalId, InvoiceDate = date,

@@ -63,6 +63,7 @@ internal static class VendSettlementRestore
             {
                 DataAreaId = area, AccountNum = row.AccountNum,
                 InvoiceTransRecId = row.InvoiceTransRecId, PaymentTransRecId = row.PaymentTransRecId,
+                TransOpen = row.TransOpen, DueDate = row.DueDate,
                 TransDate = date, Voucher = reversalVoucher,
                 AmountCur = -row.AmountCur, AmountMst = -row.AmountMst,
                 CanBeReversed = NoYes.No
@@ -86,9 +87,55 @@ internal static class VendSettlementRestore
                 - rows.Where(x => x.PaymentTransRecId == recId).Sum(x => x.AmountCur);
             trans.SettleAmountMst += rows.Where(x => x.InvoiceTransRecId == recId).Sum(x => x.AmountMst)
                 - rows.Where(x => x.PaymentTransRecId == recId).Sum(x => x.AmountMst);
-            await RestoreOpenAsync(db, area, trans, ct);
+            var invoiceRows = rows.Where(x => x.InvoiceTransRecId == recId).ToList();
+            var openRows = await db.Set<VendTransOpen>()
+                .Where(x => x.DataAreaId == area && x.RefRecId == trans.RecId).ToListAsync(ct);
+            if (invoiceRows.Count > 0 && rows.All(x => x.PaymentTransRecId != recId) && invoiceRows.All(x => x.TransOpen != 0)
+                && (openRows.Count > 1 || invoiceRows.Select(x => x.TransOpen).Distinct().Count() > 1
+                    || openRows.Any(o => invoiceRows.All(x => x.TransOpen != o.RecId))))
+                RestoreInstallments(db, area, trans, openRows, invoiceRows);
+            else
+                await RestoreOpenAsync(db, area, trans, ct);
         }
         return null;
+    }
+
+    /// <summary>
+    /// Gives each settled amount back to the invoice's open row (installment) it was taken from, recreating a
+    /// fully settled installment with its own due date, as D365 restores the open transaction. Any rounding left
+    /// between the rows and the transaction lands on the last row.
+    /// </summary>
+    private static void RestoreInstallments(DbContext db, string area, VendTrans trans, List<VendTransOpen> openRows,
+        IEnumerable<VendSettlement> settled)
+    {
+        foreach (var row in settled)
+        {
+            var open = openRows.FirstOrDefault(x => x.RecId == row.TransOpen && x.RecId != 0)
+                ?? openRows.FirstOrDefault(x => x.RecId == 0 && x.DueDate == row.DueDate);
+            if (open == null)
+            {
+                open = new VendTransOpen
+                {
+                    DataAreaId = area, AccountNum = trans.AccountNum, RefRecId = trans.RecId,
+                    TransDate = trans.TransDate, DueDate = row.DueDate
+                };
+                db.Add(open);
+                openRows.Add(open);
+            }
+            // The invoice is a credit: settling added to its open amount, so the reversal takes it back off.
+            open.AmountCur -= row.AmountCur;
+            open.AmountMst -= row.AmountMst;
+        }
+        var remaining = trans.AmountCur - trans.SettleAmountCur;
+        if (remaining != 0m) trans.Closed = default;
+        var last = openRows.OrderBy(x => x.DueDate).LastOrDefault();
+        if (last != null)
+        {
+            last.AmountCur += remaining - openRows.Sum(x => x.AmountCur);
+            last.AmountMst += trans.AmountMst - trans.SettleAmountMst - openRows.Sum(x => x.AmountMst);
+        }
+        foreach (var empty in openRows.Where(x => x.AmountCur == 0m).ToList())
+            db.Set<VendTransOpen>().Remove(empty);
     }
 
     /// <summary>
