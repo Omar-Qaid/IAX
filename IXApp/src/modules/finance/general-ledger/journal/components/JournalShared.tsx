@@ -23,7 +23,7 @@ import {
 } from '../api/ledgerJournalApi';
 
 /** Query keys of one journal type in one company (types never share cached rows). */
-export const paymentJournalKeys = (company: string, journalType: LedgerJournalTypeId = 1) =>
+export const paymentJournalKeys = (company: string, journalType: LedgerJournalTypeId = 7) =>
   ['ledger-journals', journalType, company] as const;
 export const paymentJournalSx = {
   '& .MuiTab-root': { minHeight: 32, minWidth: 0, px: 1.2, fontSize: 11, textTransform: 'none' },
@@ -176,7 +176,7 @@ export function JournalFieldGroups({ groups }: { groups: JournalFieldGroup[] }) 
 
 /** Validate / simulate / post for journals of one type, with their report and confirmation dialogs. */
 export function usePaymentJournalActions(
-  journalType: LedgerJournalTypeId = 1,
+  journalType: LedgerJournalTypeId = 7,
   title = 'customer payment journal'
 ) {
   const api = ledgerJournalApiFor(journalType);

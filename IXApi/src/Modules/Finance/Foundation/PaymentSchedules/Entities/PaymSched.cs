@@ -35,7 +35,7 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // Subsidiary Tax & Charge Distribution Matrices
         // ==========================================================
         // Enum Properties
-        public PaymSchedTaxDist TaxDistribution { get; set; } // Dictates if tax is fully allocated to the 1st installment or split proportionally
+        public PaymSchedTaxDistribution TaxDistribution { get; set; } // Dictates if tax is fully allocated to the 1st installment or split proportionally
         public PaymSchedMiscChargeDist McrMiscChargeDist { get; set; } // Strategic distribution rule for miscellaneous sales charges
 
         // ==========================================================

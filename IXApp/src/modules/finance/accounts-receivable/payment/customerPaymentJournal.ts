@@ -4,7 +4,7 @@ import { customerJournalApi } from './api/customerJournalApi';
 
 /** D365 customer payment journal (LedgerJournalType CustPayment): customer-specific behaviour. */
 export const CUSTOMER_PAYMENT_JOURNAL: LedgerJournalKind = {
-  journalType: 1,
+  journalType: 7,
   title: 'Customer payment journal',
   linesTitle: 'Customer payments',
   journalTypeLabel: 'Customer payment',

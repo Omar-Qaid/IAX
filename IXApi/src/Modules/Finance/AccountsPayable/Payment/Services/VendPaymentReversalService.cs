@@ -76,7 +76,7 @@ public sealed class VendPaymentReversalService : BaseService<VendTrans>, IVendPa
                 x => x.DataAreaId == area && x.JournalNum == number, ct);
             if (original == null)
                 return await Fail(404, $"Payment journal '{number}' was not found in the selected company.", ct);
-            if (original.JournalType != LedgerJournalType.VendDisbursement)
+            if (original.JournalType != LedgerJournalType.Payment)
                 return await Fail(422, $"Journal '{number}' is not a vendor payment journal.", ct);
             if (original.Posted != NoYes.Yes)
                 return await Fail(422, "Only a posted payment can be reversed; delete an unposted journal instead.", ct);
@@ -177,7 +177,7 @@ public sealed class VendPaymentReversalService : BaseService<VendTrans>, IVendPa
             {
                 DataAreaId = area, JournalNum = reversalJournal, JournalName = original.JournalName,
                 Name = Truncate($"Reversal of {number}", FieldLengths.Name),
-                JournalType = LedgerJournalType.VendDisbursement, NumOfLines = 1, CurrencyCode = currency,
+                JournalType = LedgerJournalType.Payment, NumOfLines = 1, CurrencyCode = currency,
                 JournalTotalCredit = amount, JournalTotalDebit = amount,
                 OffsetAccountType = LedgerJournalACType.Bank, OffsetLedgerDimension = line.OffsetLedgerDimension,
                 OriginalJournalNum = number, OriginalCompany = area,

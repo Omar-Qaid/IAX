@@ -621,7 +621,7 @@ public sealed class FreeTextInvoiceService(
         await unitOfWork.CompleteAsync(ct);
         // Terms with a payment schedule give one open row per installment, each with its own due date (D365).
         foreach (var installment in await Foundation.PaymentTerms.PaymentScheduleOpenRows.SplitAsync(Db, area,
-                     header.Payment, header.DueDate, total, totalAccounting, totalReporting, ct))
+                     header.Payment, header.DueDate, total, totalAccounting, totalReporting, ct, taxTotal))
             Db.Set<CustTransOpen>().Add(new CustTransOpen
             {
                 DataAreaId = area,

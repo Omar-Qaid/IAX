@@ -83,4 +83,17 @@ public sealed class PaymentScheduleCalculatorTests
         Assert.Equal(375m, rows.Sum(x => x.AmountMst));
         Assert.Equal(100m, rows.Sum(x => x.ReportingAmount));
     }
+
+    [Theory]
+    [InlineData(PaymSchedTaxDistribution.FirstRate, 450, 300, 300)]
+    [InlineData(PaymSchedTaxDistribution.LastRate, 300, 300, 450)]
+    public void FirstRate_and_LastRate_put_all_the_tax_on_one_installment(PaymSchedTaxDistribution distribution,
+        decimal first, decimal second, decimal third)
+    {
+        // 1050 = 900 before tax + 150 tax: the 900 is scheduled in three, the 150 goes on one installment.
+        var schedule = new PaymSched { Name = "S", PayBy = PaymSchedBy.NumOfPayment, NumOfPayment = 3, QtyUnit = 1, PeriodUnit = PeriodUnit.Month };
+        var installments = PaymentScheduleOpenRows.PlaceTax(
+            PaymentScheduleCalculator.Calculate(900m, Due, schedule, []), 150m, distribution);
+        Assert.Equal(new[] { first, second, third }, installments.Select(x => x.Amount));
+    }
 }

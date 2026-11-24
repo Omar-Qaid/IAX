@@ -174,12 +174,12 @@ const lines = createEntityApi<Omit<PaymentJournalLine, 'id'>, PaymentJournalLine
   toRecord: record<PaymentJournalLine>,
   toDto: dto,
 });
-/** D365 LedgerJournalType: 0 = Daily (general journal), 1 = customer payment, 2 = vendor payment. */
-export type LedgerJournalTypeId = 0 | 1 | 2;
+/** D365 LedgerJournalType values: 0 = Daily (general journal), 7 = CustPayment, 4 = Payment (vendor disbursement). */
+export type LedgerJournalTypeId = 0 | 7 | 4;
 const journalTypeNames: Record<LedgerJournalTypeId, string> = {
   0: 'general journal',
-  1: 'customer payment journal',
-  2: 'vendor payment journal',
+  7: 'customer payment journal',
+  4: 'vendor payment journal',
 };
 
 /** The journal API of one journal type: lists, reads and names only journals of that type. */
@@ -284,7 +284,7 @@ export function ledgerJournalApiFor(journalType: LedgerJournalTypeId): LedgerJou
 export const ledgerJournalCustPaymApi = ledgerJournalApiFor(1);
 export function newPaymentJournal(
   company: string,
-  journalType: LedgerJournalTypeId = 1
+  journalType: LedgerJournalTypeId = 7
 ): PaymentJournal {
   return {
     id: '',

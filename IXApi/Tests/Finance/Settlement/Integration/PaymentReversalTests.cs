@@ -456,7 +456,7 @@ public class PaymentReversalTests
         db.Add(new LedgerJournalTable
         {
             RecId = 1, DataAreaId = "dat", JournalNum = "LJT-VPAY", JournalName = "GEN",
-            Name = "Vendor payment", JournalType = LedgerJournalType.VendDisbursement, NumOfLines = 1,
+            Name = "Vendor payment", JournalType = LedgerJournalType.Payment, NumOfLines = 1,
             CurrencyCode = "SAR", JournalTotalCredit = amount, JournalTotalDebit = amount,
             OffsetAccountType = LedgerJournalACType.Bank, OffsetLedgerDimension = 1,
             Posted = NoYes.Yes, PostedDateTime = Posted

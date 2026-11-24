@@ -416,7 +416,7 @@ public partial class CashDiscountSettlementTests
             // The vendor disbursement journal a refund posts into, which LedgerJournalSetupCheck
             // requires to resolve uniquely and to match the header type.
             new LedgerJournalName { RecId = 1, DataAreaId = "dat", JournalName = "VendPaym",
-                JournalType = LedgerJournalType.VendDisbursement },
+                JournalType = LedgerJournalType.Payment },
             new VendLedgerAccounts { RecId = 1, DataAreaId = "dat", AccountCode = AccountCode.All, SummaryLedgerDimension = 2 },
             new VendTrans
             {

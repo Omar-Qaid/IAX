@@ -36,17 +36,17 @@ vi.mock('@core/company/useCompanyStore', () => ({
 
 const vendApi = ledgerJournalApiFor(2);
 const dailyApi = ledgerJournalApiFor(0);
-const header = (journalType: 0 | 2): PaymentJournal => ({
+const header = (journalType: 0 | 4): PaymentJournal => ({
   ...newPaymentJournal('dat', journalType),
   id: '41',
   recId: 41,
   journalNum: 'GJ-26-0041',
-  journalName: journalType === 2 ? 'VPS' : 'JV',
+  journalName: journalType === 4 ? 'VPS' : 'JV',
   currencyCode: 'SAR',
   offsetLedgerDimension: 7,
 });
 const line = (journalType: 0 | 2, values: Partial<PaymentJournalLine>): PaymentJournalLine => ({
-  ...newPaymentJournalLine(header(journalType), journalType === 2 ? 2 : 0),
+  ...newPaymentJournalLine(header(journalType), journalType === 4 ? 2 : 0),
   id: '51',
   recId: 51,
   lineNum: 1,
@@ -76,7 +76,7 @@ beforeEach(() => {
 
 describe('Vendor payment journal', () => {
   it('lists only vendor payment journals with the vendor captions', async () => {
-    const list = vi.spyOn(vendApi, 'list').mockResolvedValue([header(2)]);
+    const list = vi.spyOn(vendApi, 'list').mockResolvedValue([header(4)]);
     vi.spyOn(vendApi, 'names').mockResolvedValue([]);
     render(<LedgerJournalListVendPaym />);
     expect(await screen.findByText('GJ-26-0041')).toBeInTheDocument();
@@ -86,9 +86,9 @@ describe('Vendor payment journal', () => {
   });
 
   it('marks the vendor invoice equal to the payment debit and saves the settlement', async () => {
-    vi.spyOn(vendApi, 'get').mockResolvedValue(header(2));
+    vi.spyOn(vendApi, 'get').mockResolvedValue(header(4));
     vi.spyOn(vendApi, 'journalLines').mockResolvedValue([
-      line(2, { ledgerDimensionName: 'V-001', amountCurDebit: 3919.73, txt: 'Fuel' }),
+      line(4, { ledgerDimensionName: 'V-001', amountCurDebit: 3919.73, txt: 'Fuel' }),
     ]);
     const open = vi.spyOn(vendorJournalApi, 'openTransactions').mockResolvedValue([
       {
@@ -139,7 +139,7 @@ describe('Vendor payment journal', () => {
     );
   });
   it('adds a vendor payment line through the vendor lookup and saves it as a debit', async () => {
-    vi.spyOn(vendApi, 'get').mockResolvedValue(header(2));
+    vi.spyOn(vendApi, 'get').mockResolvedValue(header(4));
     vi.spyOn(vendApi, 'journalLines').mockResolvedValue([]);
     const create = vi.spyOn(vendApi.lines, 'create').mockImplementation(async (row) => ({
       ...row,
@@ -169,9 +169,9 @@ describe('Vendor payment journal', () => {
   });
 
   it('opens the vendor transactions of the selected line', async () => {
-    vi.spyOn(vendApi, 'get').mockResolvedValue(header(2));
+    vi.spyOn(vendApi, 'get').mockResolvedValue(header(4));
     vi.spyOn(vendApi, 'journalLines').mockResolvedValue([
-      line(2, { ledgerDimensionName: 'V-001', amountCurDebit: 100 }),
+      line(4, { ledgerDimensionName: 'V-001', amountCurDebit: 100 }),
     ]);
     render(<LedgerJournalTransVendPaym />);
     await screen.findByText('JV-26-000051');

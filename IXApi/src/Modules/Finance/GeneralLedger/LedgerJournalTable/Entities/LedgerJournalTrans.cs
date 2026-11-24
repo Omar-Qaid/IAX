@@ -224,7 +224,7 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // Enum Properties
         public NoYes DelayTaxCalculation { get; set; }
         public IntracomVatDueDate_W IntracomVatDueDate_W { get; set; }
-        public TaxDirectionControl TaxDirectionControl { get; set; }
+        public NoYes TaxDirectionControl { get; set; }
 
         // ==========================================================
         // United States 1099 Compliance Matrices

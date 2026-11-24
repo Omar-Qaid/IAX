@@ -11,7 +11,7 @@ export const GENERAL_LEDGER_ROUTE_PATHS = {
   VEND_TRANS: '/accounts-payable/VendTrans/:accountNum',
   vendTrans: (accountNum: string) =>
     `/accounts-payable/VendTrans/${encodeURIComponent(accountNum)}`,
-  /** D365 vendor payment journal (LedgerJournalType VendDisbursement). */
+  /** D365 vendor payment journal (LedgerJournalType Payment). */
   LEDGER_JOURNAL_LIST_VEND_PAYM: '/accounts-payable/LedgerJournalListVendPaym',
   LEDGER_JOURNAL_TRANS_VEND_PAYM: '/accounts-payable/LedgerJournalTransVendPaym/:journalId',
   ledgerJournalTransVendPaym: (journalId: string | number) =>

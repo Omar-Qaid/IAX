@@ -13,7 +13,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.PaymentSchedules
         public PaymSchedBy PayBy { get; set; }
         public PeriodUnit PeriodUnit { get; set; }
         public int QtyUnit { get; set; }
-        public PaymSchedTaxDist TaxDistribution { get; set; }
+        public PaymSchedTaxDistribution TaxDistribution { get; set; }
         public PaymSchedMiscChargeDist McrMiscChargeDist { get; set; }
         public decimal McrMinOrderValue { get; set; }
         public decimal McrMaxOrderValue { get; set; }

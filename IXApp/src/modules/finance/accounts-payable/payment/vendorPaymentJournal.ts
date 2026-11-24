@@ -2,9 +2,9 @@ import type { LedgerJournalKind } from '../../general-ledger/journal/config/jour
 import { GENERAL_LEDGER_ROUTE_PATHS } from '../../general-ledger/routes/generalLedgerRoutePaths';
 import { vendorJournalApi } from './api/vendorJournalApi';
 
-/** D365 vendor payment journal (LedgerJournalType VendDisbursement): vendor-specific behaviour. */
+/** D365 vendor payment journal (LedgerJournalType Payment): vendor-specific behaviour. */
 export const VENDOR_PAYMENT_JOURNAL: LedgerJournalKind = {
-  journalType: 2,
+  journalType: 4,
   title: 'Vendor payment journal',
   linesTitle: 'Vendor payments',
   journalTypeLabel: 'Vendor disbursement',

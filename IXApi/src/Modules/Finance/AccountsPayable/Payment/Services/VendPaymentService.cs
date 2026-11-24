@@ -128,7 +128,7 @@ public sealed partial class VendPaymentService(IUnitOfWork work, ICurrentUserSer
             if (!string.IsNullOrWhiteSpace(bank.VendPaymentJournalName))
             {
                 journalSetup = await Db.Set<LedgerJournalName>().SingleOrDefaultAsync(x => x.DataAreaId == area && x.JournalName == bank.VendPaymentJournalName && !x.IsDeleted && x.IsActive, ct);
-                if (journalSetup == null || journalSetup.JournalType != LedgerJournalType.VendDisbursement)
+                if (journalSetup == null || journalSetup.JournalType != LedgerJournalType.Payment)
                     return await Fail("The bank vendor-payment journal name must be an active vendor disbursement journal.", ct);
                 var configuredSequence = await Db.Set<SysNumberSequence>().SingleOrDefaultAsync(x => x.DataAreaId == area && x.RecId == journalSetup.NumberSequenceTable && !x.IsDeleted && x.IsActive, ct);
                 if (configuredSequence == null) return await Fail("The vendor-payment journal voucher sequence is unavailable.", ct);
@@ -223,7 +223,7 @@ public sealed partial class VendPaymentService(IUnitOfWork work, ICurrentUserSer
             if (remaining == 0) payment.Closed = date;
             else VendorOpenBalance.Add(Db, payment);
             Db.Add(new LedgerJournalTable { DataAreaId = area, JournalNum = journalNum, JournalName = journalSetup?.JournalName ?? "VendPaym", NumberSequenceTable = journalSetup?.NumberSequenceTable ?? 0, Name = $"Vendor payment {vendor.AccountNum}",
-                JournalType = LedgerJournalType.VendDisbursement, NumOfLines = 1, CurrencyCode = currency, JournalTotalCredit = input.Amount,
+                JournalType = LedgerJournalType.Payment, NumOfLines = 1, CurrencyCode = currency, JournalTotalCredit = input.Amount,
                 JournalTotalDebit = input.Amount, OffsetAccountType = LedgerJournalACType.Bank, OffsetLedgerDimension = bank.LedgerDimension,
                 Posted = NoYes.Yes, PostedDateTime = DateTime.UtcNow });
             var journalLine = new LedgerJournalTrans { DataAreaId = area, JournalNum = journalNum, LineNum = 1, Voucher = voucher, TransDate = date,

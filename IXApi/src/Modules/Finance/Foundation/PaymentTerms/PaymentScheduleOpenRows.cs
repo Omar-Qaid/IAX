@@ -16,7 +16,8 @@ public sealed record OpenRowSplit(DateTime DueDate, decimal AmountCur, decimal A
 internal static class PaymentScheduleOpenRows
 {
     public static async Task<IReadOnlyList<OpenRowSplit>> SplitAsync(DbContext db, string area, string paymTermId,
-        DateTime dueDate, decimal amountCur, decimal amountMst, decimal reportingAmount, CancellationToken ct)
+        DateTime dueDate, decimal amountCur, decimal amountMst, decimal reportingAmount, CancellationToken ct,
+        decimal taxCur = 0m)
     {
         var single = new[] { new OpenRowSplit(dueDate.Date, amountCur, amountMst, reportingAmount) };
         if (string.IsNullOrWhiteSpace(paymTermId)) return single;
@@ -26,14 +27,26 @@ internal static class PaymentScheduleOpenRows
 
         var schedule = await db.Set<PaymSched>().AsNoTracking().FirstOrDefaultAsync(x => x.Name == term.PaymSched, ct)
             ?? throw new SubledgerPostingException($"Payment schedule '{term.PaymSched}' on terms '{paymTermId}' was not found.");
-        if (schedule.TaxDistribution != PaymSchedTaxDist.Proportionate)
-            throw new SubledgerPostingException(
-                $"Payment schedule '{schedule.Name}' uses sales tax distribution {schedule.TaxDistribution}; only Proportionate is supported.");
         var lines = await db.Set<PaymSchedLine>().AsNoTracking().Where(x => x.Name == schedule.Name).ToListAsync(ct);
         IReadOnlyList<PaymentInstallment> installments;
-        try { installments = PaymentScheduleCalculator.Calculate(amountCur, dueDate, schedule, lines); }
+        // D365 PaymSchedTaxDistribution: Proportional spreads the tax with the invoice; FirstRate and LastRate
+        // schedule the amount before tax and put all the tax on the first or the last installment.
+        var separateTax = schedule.TaxDistribution != PaymSchedTaxDistribution.Proportional && taxCur != 0m;
+        try { installments = PaymentScheduleCalculator.Calculate(separateTax ? amountCur - taxCur : amountCur, dueDate, schedule, lines); }
         catch (InvalidOperationException ex) { throw new SubledgerPostingException(ex.Message); }
+        if (separateTax) installments = PlaceTax(installments, taxCur, schedule.TaxDistribution);
         return Split(installments, amountCur, amountMst, reportingAmount);
+    }
+
+    /// <summary>Adds the whole tax to the first (FirstRate) or last (LastRate) installment.</summary>
+    public static IReadOnlyList<PaymentInstallment> PlaceTax(IReadOnlyList<PaymentInstallment> installments, decimal tax,
+        PaymSchedTaxDistribution distribution)
+    {
+        if (distribution == PaymSchedTaxDistribution.Proportional || tax == 0m) return installments;
+        var list = installments.ToList();
+        var at = distribution == PaymSchedTaxDistribution.FirstRate ? 0 : list.Count - 1;
+        list[at] = list[at] with { Amount = list[at].Amount + tax };
+        return list;
     }
 
     /// <summary>Carries each installment's share into the accounting and reporting currencies.</summary>

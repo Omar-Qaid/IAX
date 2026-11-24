@@ -123,7 +123,7 @@ public sealed partial class VendPaymentService
                 journalSetup = await Db.Set<LedgerJournalName>().AsNoTracking().SingleOrDefaultAsync(
                     x => x.DataAreaId == area && x.JournalName == bank.VendPaymentJournalName
                         && !x.IsDeleted && x.IsActive, ct);
-                if (journalSetup == null || journalSetup.JournalType != LedgerJournalType.VendDisbursement)
+                if (journalSetup == null || journalSetup.JournalType != LedgerJournalType.Payment)
                     return await RefundFail(422,
                         "The bank vendor-payment journal name must be an active vendor disbursement journal.", ct);
                 var configured = await Db.Set<SysNumberSequence>().AsNoTracking().SingleOrDefaultAsync(
@@ -141,7 +141,7 @@ public sealed partial class VendPaymentService
                 DataAreaId = area, JournalNum = journalNum,
                 JournalName = journalSetup?.JournalName ?? "VendPaym",
                 NumberSequenceTable = journalSetup?.NumberSequenceTable ?? 0,
-                Name = $"Vendor refund {account}", JournalType = LedgerJournalType.VendDisbursement,
+                Name = $"Vendor refund {account}", JournalType = LedgerJournalType.Payment,
                 NumOfLines = 2, CurrencyCode = currency, JournalTotalDebit = amount
             };
             // Two explicit lines, as the customer refund posts them, rather than a bank offset:

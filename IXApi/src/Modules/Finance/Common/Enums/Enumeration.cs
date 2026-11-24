@@ -408,62 +408,62 @@ namespace IAX.IXApi.Modules.Finance.Common
         SalesIssue = 61,
         SalesCommission = 62,
 
-        PdsCWProfit = 63,
+        PdsCWProfit = 68,
 
-        PurchConsump = 64,
-        PurchDisc = 65,
-        PurchCash = 66,
-        PurchFreight = 67,
-        PurchFee = 68,
-        PurchPostage = 69,
-        PurchOffsetAccount = 70,
-        PurchaseInvoiceRoundOff = 71,
+        PurchConsump = 71,
+        PurchDisc = 72,
+        PurchCash = 73,
+        PurchFreight = 74,
+        PurchFee = 75,
+        PurchPostage = 76,
+        PurchOffsetAccount = 77,
+        PurchaseInvoiceRoundOff = 78,
 
-        PurchMarkupFreight = 72,
-        PurchMarkupCustoms = 73,
-        PurchMarkupInsurance = 74,
+        PurchMarkupFreight = 79,
+        PurchMarkupCustoms = 80,
+        PurchMarkupInsurance = 81,
 
-        PurchPckSlp = 75,
-        PurchOffsetAccountPckSlp = 76,
+        PurchPckSlp = 82,
+        PurchOffsetAccountPckSlp = 83,
 
-        PurchReceipt = 77,
+        PurchReceipt = 84,
 
-        PurchStdProfit = 78,
-        PurchStdLoss = 79,
-        PurchStdOffsetAccount = 80,
+        PurchStdProfit = 85,
+        PurchStdLoss = 86,
+        PurchStdOffsetAccount = 87,
 
-        InventReceipt = 81,
-        InventIssue = 82,
-        InventProfit = 83,
-        InventLoss = 84,
-        InventStdProfit = 85,
-        InventStdLoss = 86,
+        InventReceipt = 91,
+        InventIssue = 92,
+        InventProfit = 93,
+        InventLoss = 94,
+        InventStdProfit = 95,
+        InventStdLoss = 96,
 
-        Opening_ES = 87,
+        Opening_ES = 97,
 
-        PurchReq = 88,
-        PurchOrder = 89,
-        APInvoice = 90,
+        PurchReq = 98,
+        PurchOrder = 99,
+        APInvoice = 100,
 
-        Budget = 91,
+        Budget = 101,
 
-        PurchOrderYearEnd = 92,
+        PurchOrderYearEnd = 102,
 
-        InflationAdjustment_MX = 93,
+        InflationAdjustment_MX = 103,
 
-        ProdReportFinished = 94,
-        ProdReportFinishedOffsetAccount = 95,
+        ProdReportFinished = 105,
+        ProdReportFinishedOffsetAccount = 106,
 
-        ProdIssue = 96,
-        ProdIssueOffsetAccount = 97,
+        ProdIssue = 107,
+        ProdIssueOffsetAccount = 108,
 
-        ProdReceipt = 98,
-        ProdReceiptOffsetAccount = 99,
+        ProdReceipt = 109,
+        ProdReceiptOffsetAccount = 110,
 
-        ProdPicklistOffsetAccount = 100,
-        ProdPicklist = 101,
+        ProdPicklistOffsetAccount = 111,
+        ProdPicklist = 112,
 
-        ProdWIPValuation = 102
+        ProdWIPValuation = 113
     }
     public enum PostingType
     {
@@ -579,15 +579,17 @@ namespace IAX.IXApi.Modules.Finance.Common
     }
     public enum LedgerJournalType
     {
+        // D365 F&O LedgerJournalType values (members used here only).
         Daily = 0,
-        CustPayment = 1,
-        VendDisbursement = 2,
         /// <summary>D365 PurchaseLedger: invoice register.</summary>
-        PurchaseLedger = 3,
+        PurchaseLedger = 2,
         /// <summary>D365 Approval: invoice approval journal.</summary>
-        Approval = 4,
+        Approval = 3,
+        /// <summary>D365 Payment: vendor disbursement (vendor payment journal).</summary>
+        Payment = 4,
+        CustPayment = 7,
         /// <summary>D365 VendInvoiceRegister: vendor invoice recording.</summary>
-        VendInvoiceRegister = 5
+        VendInvoiceRegister = 10
     }
 
     public enum LedgerJournalCategory
@@ -1342,22 +1344,16 @@ namespace IAX.IXApi.Modules.Finance.Common
         RoundUp = 1,
         RoundDown = 2
     }
-    public enum TaxDirectionControl
-    {
-        None = 0,
-        Standard = 1,
-        Custom = 2
-    }
     public enum TaxDirection
     {
         Incoming = 0,
         Outgoing = 1,
-        /// <summary>D365 UseTax. Kept for value parity with D365; no use tax posting is implemented.</summary>
-        UseTax = 2,
         /// <summary>D365 TaxExemptPurchase: an exempt purchase, posted with a zero tax amount for reporting.</summary>
-        TaxExemptPurchase = 3,
+        TaxExemptPurchase = 2,
         /// <summary>D365 TaxExemptSales: an exempt sale, posted with a zero tax amount for reporting.</summary>
-        TaxExemptSales = 4
+        TaxExemptSales = 3,
+        /// <summary>D365 UseTax. Kept for value parity with D365; no use tax posting is implemented.</summary>
+        UseTax = 4
     }
     public enum TaxCountryRegionType
     {
@@ -1529,10 +1525,12 @@ namespace IAX.IXApi.Modules.Finance.Common
         None = 0,
         ExpiryDate = 1
     }
-    public enum PaymSchedTaxDist
+    /// <summary>D365 PaymSchedTaxDistribution: how sales tax is spread over a payment schedule's installments.</summary>
+    public enum PaymSchedTaxDistribution
     {
-        None = 0,
-        Proportionate = 1
+        Proportional = 0,
+        FirstRate = 1,
+        LastRate = 2
     }
     public enum PaymSchedMiscChargeDist
     {

@@ -305,7 +305,7 @@ public sealed partial class VendorInvoiceService : BaseService<VendInvoiceJour>,
             // Terms with a payment schedule give one open row per installment, each with its own due date (D365).
             foreach (var installment in await IAX.IXApi.Modules.Finance.Foundation.PaymentTerms.PaymentScheduleOpenRows.SplitAsync(
                          Db, area, order.Payment, dueDate, vendorTransaction.AmountCur, vendorTransaction.AmountMst,
-                         vendorTransaction.AmountMst, ct))
+                         vendorTransaction.AmountMst, ct, -totalTax))
                 Db.Add(new VendTransOpen
                 {
                     DataAreaId = area, AccountNum = vendorTransaction.AccountNum, RefRecId = vendorTransaction.RecId,

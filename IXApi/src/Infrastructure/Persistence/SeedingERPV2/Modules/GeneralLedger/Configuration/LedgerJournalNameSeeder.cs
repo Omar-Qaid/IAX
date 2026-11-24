@@ -18,7 +18,7 @@ public sealed class LedgerJournalNameSeeder : IDataSeeder
     public async Task SeedAsync(SeedContext c, CancellationToken ct)
     {
 
-        foreach (var (code, type, seq) in new[] { ("APV2-INV", LedgerJournalType.Daily, "APV2-VOUCH"), ("APV2-PAY", LedgerJournalType.VendDisbursement, "APV2-PAY") })
+        foreach (var (code, type, seq) in new[] { ("APV2-INV", LedgerJournalType.Daily, "APV2-VOUCH"), ("APV2-PAY", LedgerJournalType.Payment, "APV2-PAY") })
         {
             var sequence = await c.RequireAsync<SysNumberSequence>(x => x.NumberSequence == seq, ct);
             await c.EnsureAsync<LedgerJournalName>(x => x.JournalName == code,

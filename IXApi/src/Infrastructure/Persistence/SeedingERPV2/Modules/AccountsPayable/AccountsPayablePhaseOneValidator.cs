@@ -55,7 +55,7 @@ public sealed class AccountsPayablePhaseOneValidator : ISeedValidator
         Check(mode.AccountType == LedgerJournalACType.Bank && mode.PaymentLedgerDimension == bank.LedgerDimension,
             "payment method/bank ledger reference differs.");
         var paymentJournal = await c.RequireAsync<LedgerJournalName>(x => x.JournalName == mode.PaymJournalNameId, ct);
-        Check(paymentJournal.JournalType == LedgerJournalType.VendDisbursement && paymentJournal.JournalName == bank.VendPaymentJournalName,
+        Check(paymentJournal.JournalType == LedgerJournalType.Payment && paymentJournal.JournalName == bank.VendPaymentJournalName,
             "payment journal is not the configured vendor payment journal.");
         foreach (var code in new[] { "APV2-INV", paymentJournal.JournalName })
         {

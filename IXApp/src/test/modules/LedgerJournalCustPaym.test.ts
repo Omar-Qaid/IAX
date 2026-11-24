@@ -19,11 +19,11 @@ describe('customer payment journal API', () => {
         success: true,
         data: [
           { recId: 1, journalType: 0 },
-          { recId: 2, journalType: 1 },
+          { recId: 2, journalType: 7 },
         ],
       },
     });
-    expect(await api.list()).toEqual([{ recId: 2, id: '2', journalType: 1 }]);
+    expect(await api.list()).toEqual([{ recId: 2, id: '2', journalType: 7 }]);
     vi.mocked(apiClient.get).mockResolvedValueOnce({
       data: { success: true, data: { recId: 1, journalType: 0 } },
     });
@@ -74,11 +74,11 @@ describe('customer payment journal API', () => {
           success: true,
           data: [
             { recId: 1, journalType: 0 },
-            { recId: 2, journalType: 1 },
+            { recId: 2, journalType: 7 },
           ],
         },
       });
-    expect(await api.list()).toEqual([{ recId: 2, id: '2', journalType: 1 }]);
+    expect(await api.list()).toEqual([{ recId: 2, id: '2', journalType: 7 }]);
     vi.mocked(apiClient.get)
       .mockRejectedValueOnce(notFound)
       .mockResolvedValueOnce({

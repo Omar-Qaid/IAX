@@ -394,7 +394,7 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
                 DataAreaId = area, GeneralJournalEntry = entry.RecId, Voucher = invoiceId, VoucherDataAreaId = area, AccountingDate = date
             });
             await AddCustomerTransactionAsync(area, order, invoiceAccount, invoiceId, date, dueDate, total, LedgerTransType.Sales,
-                $"Sales order {order.SalesId}", totalAccounting, totalReporting, ct);
+                $"Sales order {order.SalesId}", totalAccounting, totalReporting, ct, totalTax);
 
             var journal = new CustInvoiceJour
             {
@@ -527,7 +527,7 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
 
     private async Task AddCustomerTransactionAsync(string area, SalesTable order, string invoiceAccount, string invoiceId,
         DateTime date, DateTime dueDate, decimal amount, LedgerTransType type, string text,
-        decimal accountingAmount, decimal reportingAmount, CancellationToken ct)
+        decimal accountingAmount, decimal reportingAmount, CancellationToken ct, decimal taxAmount = 0m)
     {
         // AmountCur is what the customer owes in the order currency; AmountMst and the reporting
         // amount are the same debt as the ledger recorded it, passed in so the two cannot differ.
@@ -551,7 +551,7 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
         // reporting detail rather than the figure settlement depends on.
         // Terms with a payment schedule give one open row per installment, each with its own due date (D365).
         var installments = await Foundation.PaymentTerms.PaymentScheduleOpenRows.SplitAsync(Db, area, custTrans.PaymTermId,
-            dueDate, amount, accountingAmount, reportingAmount, ct);
+            dueDate, amount, accountingAmount, reportingAmount, ct, taxAmount);
         foreach (var installment in installments)
         {
             var terms = await Foundation.CashDiscount.CashDiscountResolver.ResolveAsync(Db, area,

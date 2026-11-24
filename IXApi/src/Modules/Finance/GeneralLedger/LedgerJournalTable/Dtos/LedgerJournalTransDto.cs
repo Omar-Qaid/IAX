@@ -94,7 +94,7 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger
         public DateTime TransferredOn { get; set; }
         public string TransferredTo { get; set; } = string.Empty;
         public string TaxWithholdGroup { get; set; } = string.Empty;
-        public TaxDirectionControl TaxDirectionControl { get; set; }
+        public NoYes TaxDirectionControl { get; set; }
         public decimal CashDiscAmount { get; set; }
         public DateTime DateCashDisc { get; set; }
         public string VatNumJournal { get; set; } = string.Empty;

@@ -204,7 +204,7 @@
       "payBy": "NumOfPayment",
       "periodUnit": "Month",
       "qtyUnit": 1,
-      "taxDistribution": "Proportionate",
+      "taxDistribution": "Proportional",
       "mcrFlexiblePlan": "No"
     }
   ],
